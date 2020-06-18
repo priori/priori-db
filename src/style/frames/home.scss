@@ -1,0 +1,51 @@
+/* home screen */
+.connections { border-collapse: collapse; width: 100%; margin-left: -1px;
+  &>*>tr>td, &>*>tr>th {border: solid 1px #bbb;padding: 10px;border-right: 0;}
+  tbody>tr:hover td { background: #ddd }
+}
+.connections--edit-button, .connections--add-button {
+  position: fixed; bottom: 8px; font-size: 20px; vertical-align: middle;
+  border-radius: 30px; width: 40px; height: 40px; text-align: center; background: rgba(100, 100, 100, 0.5);
+}
+
+.connections--add-button { right: 10px; }
+.connections--edit-button { right: 61px; }
+.connections--edit-button:hover, .connections--add-button:hover { background: rgba(100, 100, 100, 0.8); }
+.connections { border-top: 1px solid #ddd; }
+.connection { font-size: 15px; padding: 8px 12px 8px 28px; border-bottom: 1px solid rgba(0,0,0,.12); word-break: break-all; }
+.connection:hover { background: #eee }
+.connection i.fa.fa-pencil {  left: 7px; position: absolute; color: #092; }
+.connection--editing { color: #072; }
+.connection--port--default, .connection--database--any { opacity: .3 }
+.connection--dark { text-shadow: 0 1px 1px rgba(0,0,0,.4) }
+.connection--dark .connection--port--default, .connection--dark .connection--database--any { opacity: 0.6 }
+.connection--host { font-weight: bold; }
+.connection--port, .connection--database { font-size: 13px }
+.connection--user { font-family: monospace; font-size: 13px; letter-spacing: -0.5px; }
+.connection>* { vertical-align: text-bottom; }
+.connection--name { font-size: 20px; font-weight: bold; position: relative; top: 2px; }
+.bases-wrapper { z-index: 1 }
+.bases-inner-wrapper { max-height: 100%; overflow: auto; box-shadow: 0 4px 40px rgba(0, 0, 0, 0.35); }
+.connections { border-top: 1px solid #ddd; overflow: auto; position: absolute; top: 0;
+  left: 0; right: 0; bottom: 0; }
+.connections--edit-button2 { position: fixed; left: 50%; margin-left: 220px; top: 20px; background: #fafafa;
+  box-shadow: 0 3px 6px rgba(0,0,0,.3); border-radius: 25px; height: 50px; width: 50px; font-size: 27px; }
+.connections--edit-button2:hover { background: #f8f8f8 }
+
+.bases-wrapper { position: absolute; left: 0; right: 0; bottom: 0; top: 0; background: rgba(256,256,256,.5)}
+.bases { position: absolute; left: 50%; margin-left: -200px; top: 20px; bottom: 20px; width: 400px; }
+.bases-inner-wrapper { box-shadow: 0 4px 40px rgba(0,0,0,.35) }
+.base { background: white;  padding: 20px; border-bottom: 1px solid #eee; }
+.base:last-of-type { border-bottom: 0 }
+.base:hover { background: #ddd; }
+
+.new-connection { font-size: 16px; line-height: 15px;
+    height: 385px; position: absolute; width: 210px; left: 50%; margin-left: -105px; top: 50%; margin-top: -185px; }
+.new-connection input { display: block; padding: 4px; font-size: 16px; }
+.new-connection button { padding: 7px }
+
+.connection-error { position: absolute; right: 25px; bottom: 16px; font-size: 13px; color: #d32; max-width: 193px;
+   text-align: right; }
+
+.error { color: #e00 }
+.error input { border-color: #e00; }

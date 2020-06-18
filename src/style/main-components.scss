@@ -1,0 +1,21 @@
+.app-content, .tabs-header, .nav { position: absolute; }
+.frame { z-index: 1; overflow: hidden}
+.frame.active { z-index: 2; overflow: visible}
+.app-content {left: 250px;top: 40px;bottom: 0;right: 0;background: #e4e4e4;}
+.tabs-header {right: 0;left: 250px;top: 0;height: 40px;background: #aaa;overflow: hidden; z-index: 3; }
+.tabs.moving .tab{ position: absolute }
+.tabs.moving { left: 1px }
+.header { position: absolute; left: 0; top: 0; width: 250px; height: 40px; background: #e4e4e4;
+    line-height: 40px; z-index: 3; font-size: 12px; padding: 0 7px; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; font-weight: bold; text-align: center; }
+
+.frame::-webkit-scrollbar { width: 10px; height: 10px; }
+.frame::-webkit-scrollbar-track {}
+.frame::-webkit-scrollbar-thumb { background-color: #ccc; }
+.frame::-webkit-scrollbar-thumb:hover { background-color: #bbb; }
+
+.app-content>.frame { position: absolute; left: 0; right: 0; bottom: 0; top: 0; background: #e4e4e4; }
+.app-content button { background: #ddd; border-radius: 5px; border: 0; font-size: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.7); padding: 10px 20px !important; }
+.app-content button:hover { background: #ccc }
+.app-content button:active { background: #c4c4c4 }

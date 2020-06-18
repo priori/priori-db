@@ -1,0 +1,29 @@
+.not-grid-result{ position: absolute; top: 300px; left: 0; right: 0; bottom: 0; overflow: auto; padding-bottom: 20px; }
+.not-grid-result::-webkit-scrollbar { width: 10px; height: 10px; }
+/* .not-grid-result::-webkit-scrollbar-track {} */
+.not-grid-result::-webkit-scrollbar-thumb { background-color: #ccc; }
+.not-grid-result::-webkit-scrollbar-thumb:hover { background-color: #bbb; }
+
+.notice { position: relative; }
+.notice .fa { position: absolute; right: 6px; top: 9px; color: #ccc; }
+.notice .fa.fa-eye { right: 25px; }
+.notice:hover .fa { color: #999 }
+.notice .fa:hover { color: #000 !important;}
+.notice-details { clear: both; padding-top: 5px; font-size: 12px; }
+.notice-details span { margin-right: 17px; white-space: nowrap; }
+.full-view .fa-eye { display: block !important; color: #038 !important; }
+
+.query-tab button { position: absolute; right: 20px; margin-top: -54px;z-index: 2; }
+.query-tab .mensagem { position: absolute; margin-top: -36px; right: 138px;
+    font-weight: bold; font-size: 13px; background: white; z-index: 2; padding: 5px; }
+.query-tab .mensagem.error { color: #d22 }
+
+.running span { position: absolute; right: 66px; top: 9px; background: #ddd; 
+    padding: 2px 4px; border-radius: 4px; z-index: 3; font-size: 13px; }
+.running span:hover { background: #ccc;}
+
+.notices { padding: 10px; }
+.notice-type { background: #ed0; margin-right: 8px; }
+.notice { clear: both; border-bottom: 1px solid #bbb; padding: 5px; }
+.notice::after { display: table; clear: both; content: '' }
+.notice-message, .notice-type{ float: left; padding: 6px 9px; font-size: 12px; }
