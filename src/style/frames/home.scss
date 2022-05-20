@@ -40,8 +40,10 @@
 .base:hover { background: #ddd; }
 
 .new-connection { font-size: 16px; line-height: 15px;
-    height: 385px; position: absolute; width: 210px; left: 50%; margin-left: -105px; top: 50%; margin-top: -185px; }
-.new-connection input { display: block; padding: 4px; font-size: 16px; }
+    height: 385px; position: absolute; width: 210px; left: 50%; 
+    margin-left: -105px; top: 50%; margin-top: -185px; }
+.new-connection input { padding: 4px; font-size: 16px; margin-bottom: 10px; margin-top: 4px }
+.new-connection input:focus { padding: 3px; border: 2px solid #029 !important }
 .new-connection button { padding: 7px }
 
 .connection-error { position: absolute; right: 25px; bottom: 16px; font-size: 13px; color: #d32; max-width: 193px;
