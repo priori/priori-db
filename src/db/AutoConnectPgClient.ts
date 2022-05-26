@@ -1,8 +1,14 @@
-import { Connection, Result } from "./Connection";
-import { PgClient } from "./PgClient";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-underscore-dangle */
+import assert from 'assert';
+import { Connection, Result } from './Connection';
+import { PgClient } from './PgClient';
+
 export class AutoConnectPgClient {
   db: PgClient | null = null;
-  pid: number;
+
+  pid: number | undefined;
+
   pending: {
     resolve: any;
     fireError: any;
@@ -10,34 +16,33 @@ export class AutoConnectPgClient {
     arrayRowMode: boolean;
     args?: any[];
   }[] = [];
+
   listener: (n: any) => void;
+
   constructor(listener: (n: any) => void) {
     this.listener = listener;
   }
 
   async stopRunningQuery() {
-    if (!this.pid) throw "Invalid pid.";
-    return await Connection.query("SELECT pg_cancel_backend($1)", [this.pid]);
+    if (!this.pid) throw new Error('Invalid pid.');
+    return Connection.query('SELECT pg_cancel_backend($1)', [this.pid]);
   }
 
   async _query(query: string, args?: Array<any>): Promise<Result> {
     if (this.db)
-      return new Promise<Result>((resolve, fireError) => {
-        if (!this.db) throw "never";
-        this.db
-          ._query(query, args)
-          .then(resolve)
-          .catch(fireError);
+      return new Promise<Result>((resolve, reject) => {
+        if (!this.db) throw new Error('never');
+        this.db._query(query, args).then(resolve).catch(reject);
       });
-    return new Promise<Result>((resolve, fireError) => {
+    return new Promise<Result>((resolve, reject) => {
       this.pending.push({
         resolve,
-        fireError,
+        fireError: reject,
         query,
         arrayRowMode: false,
-        args
+        args,
       });
-      if (this.pending.length == 1) this.openConnection();
+      if (this.pending.length === 1) this.openConnection();
     });
   }
 
@@ -45,42 +50,48 @@ export class AutoConnectPgClient {
     if (this.db) this.db.done();
   }
 
-  query(query: string, args?: any[]): Promise<Result> {
+  query(
+    query: string,
+    args?: (number | string | Date | null)[]
+  ): Promise<Result> {
     if (this.db)
-      return new Promise<Result>((resolve, fireError) => {
-        if (!this.db) throw "never";
-        this.db
-          .query(query, args)
-          .then(resolve)
-          .catch(fireError);
+      return new Promise<Result>((resolve, reject) => {
+        if (!this.db) throw new Error('never');
+        this.db.query(query, args).then(resolve).catch(reject);
       });
-    return new Promise<Result>((resolve, fireError) => {
+    return new Promise<Result>((resolve, reject) => {
       this.pending.push({
         resolve,
-        fireError,
+        fireError: reject,
         query,
         arrayRowMode: true,
-        args
+        args,
       });
-      if (this.pending.length == 1) this.openConnection();
+      if (this.pending.length === 1) this.openConnection();
     });
   }
+
   private openConnection() {
     Connection.openConnection().then(
-      db => {
-        db.query("SELECT pg_backend_pid()").then(result => {
-          this.pid = result.rows[0][0];
+      (db) => {
+        // eslint-disable-next-line promise/no-nesting
+        db.query('SELECT pg_backend_pid()').then((result) => {
+          const pid = result.rows[0][0];
+          this.pid = pid;
           this.db = db;
-          this.db.pgClient.on("notice", this.listener);
+          this.db.pgClient.on('notice', this.listener);
           this.execPendingQueries();
         });
       },
-      e => console.error(e)
+      // eslint-disable-next-line no-console
+      (e) => console.error(e)
     );
   }
+
   private async execPendingQueries() {
     for (const e of this.pending) {
       try {
+        // eslint-disable-next-line no-await-in-loop
         const res = await this.exec(e);
         e.resolve(res);
       } catch (err) {
@@ -88,6 +99,7 @@ export class AutoConnectPgClient {
       }
     }
   }
+
   private exec(e: {
     resolve: any;
     fireError: any;
@@ -95,16 +107,19 @@ export class AutoConnectPgClient {
     arrayRowMode: boolean;
     args?: any[];
   }) {
-    if (!this.db) throw "never";
+    assert(!!this.db);
     if (e.arrayRowMode)
       return this.db.query(e.query, e.args).then(e.resolve, e.fireError);
-    else return this.db._query(e.query, e.args).then(e.resolve, e.fireError);
+    return this.db._query(e.query, e.args).then(e.resolve, e.fireError);
   }
 
   async list(query: string) {
     let res = await this._query(query);
-    if (res instanceof Array) res = res[0];
-    if (!res.rows) throw "Invalid result for list.";
+    if (res instanceof Array) {
+      const res0 = res[0];
+      res = res0;
+    }
+    if (!res.rows) throw new Error('Invalid result for list.');
     return res.rows;
   }
 

@@ -1,36 +1,48 @@
-import { ConnectionConfiguration, passwords, savePasswords } from "./db/pgpass";
-import { AppState, FrameProps, NavSchema } from "./types";
-import { DB } from "./db/DB";
-import { Connection } from "./db/Connection";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import assert from 'assert';
+import {
+  ConnectionConfiguration,
+  passwords as currentPasswords,
+  savePasswords,
+} from './db/pgpass';
+import { AppState, FrameProps, NavSchema } from './types';
+import { DB } from './db/DB';
+import { Connection } from './db/Connection';
 
 export function throwError(err: any) {
   if (err.message) alert(err.message);
-  else if (typeof err == "string") alert(err);
+  else if (typeof err === 'string') alert(err);
   else alert(JSON.stringify(err));
 }
 
+let listener: ((_: any) => void) | undefined;
+
 // ((window as any).current) ||
 let current: AppState = {
-  passwords,
+  passwords: currentPasswords,
   connected: false,
   editConnections: false,
   tabs: [],
   tabsSort: [],
-  title: "",
-  newConnection: !passwords || !passwords.length || false,
-  newSchema: false
+  title: '',
+  newConnection: !currentPasswords || !currentPasswords.length || false,
+  newSchema: false,
 };
 (window as any).uidCount = (window as any).uidCount || 1;
 if ((window as any).current) current = (window as any).current as AppState;
 
-export function editConnectionSelected() {
-  const {password} = current;
-  if ( password ) {
-    const index = current.passwords.findIndex(p => p.host === password.host &&
-        p.port === password.port && p.database === password.database &&
-        p.user === password.user && p.host === password.host && p.password === password.password);
-    editConnection2(password, index);
-  }
+function fire() {
+  (window as any).current = current;
+  if (!listener) throw new Error('Listener não encontrado.');
+  listener(current);
+}
+export function sub(fn: (_: AppState) => void) {
+  if (listener) throw new Error('listener já configurado');
+  listener = fn;
+  fn(current);
+}
+export function currentState() {
+  return current;
 }
 
 export function setBases(bases: string[]) {
@@ -39,7 +51,7 @@ export function setBases(bases: string[]) {
     // editConnection: undefined,
     editConnections: false,
     newConnection: false,
-    bases
+    bases,
   };
   fire();
 }
@@ -47,62 +59,61 @@ export function editingAll() {
   current = {
     ...current,
     editConnections: !current.editConnections,
-    connectionError: undefined
+    connectionError: undefined,
   };
   fire();
 }
 
 export function fullView(name: string) {
-  if (!current.schemas) throw "e1";
-  const currentSchema = current.schemas.find(s => s.name == name);
-  if (!currentSchema) throw "e2";
+  assert(!!current.schemas);
+  const currentSchema = current.schemas.find((s) => s.name === name);
+  assert(!!currentSchema);
   if (currentSchema.fullView) {
     current = {
       ...current,
-      schemas: current.schemas.map(
-        s =>
-          s.name == name
-            ? {
-                ...s,
-                open: true,
-                fullView: false,
-                domains: undefined,
-                functions: undefined,
-                collations: undefined,
-                sequences: undefined
-              }
-            : s
-      )
+      schemas: current.schemas.map((s) =>
+        s.name === name
+          ? {
+              ...s,
+              open: true,
+              fullView: false,
+              domains: undefined,
+              functions: undefined,
+              collations: undefined,
+              sequences: undefined,
+            }
+          : s
+      ),
     };
     fire();
     return;
   }
 
   DB.listEntitiesFromSchema(name).then(
-    res => {
+    (res) => {
       const { tables, domains, functions, collations, sequences } = res;
-      if (!current.schemas) throw "e!";
+      assert(!!current.schemas);
       current = {
         ...current,
-        schemas: current.schemas.map(
-          s =>
-            s.name == name
-              ? {
-                  ...s,
-                  open: true,
-                  fullView: true,
-                  tables,
-                  domains,
-                  functions,
-                  collations,
-                  sequences
-                }
-              : s
-        )
+        schemas: current.schemas.map((s) =>
+          s.name === name
+            ? {
+                ...s,
+                open: true,
+                fullView: true,
+                tables,
+                domains,
+                functions,
+                collations,
+                sequences,
+              }
+            : s
+        ),
       };
       fire();
     },
-    err => console.error(err)
+    // eslint-disable-next-line no-console
+    (err) => console.error(err)
   );
 }
 
@@ -110,87 +121,91 @@ export function newConf() {
   current = {
     ...current,
     newConnection: true,
-    connectionError: undefined
+    connectionError: undefined,
   };
   fire();
 }
-export function setConnectionError(err: any) {
+export function setConnectionError(err: unknown) {
   current = {
     ...current,
-    connectionError: err
+    connectionError: err,
   };
   fire();
 }
 function newFrame(frame: FrameProps) {
-  const tabs = current.tabs.map(c => ({ ...c, active: false }));
-  const i = current.tabs.findIndex(c => c.active);
+  const tabs = current.tabs.map((c) => ({ ...c, active: false }));
+  const i = current.tabs.findIndex((c) => c.active);
   current = {
     ...current,
     tabs: [
-      ...tabs.filter((_, i2) => i2 <= i || i == -1),
+      ...tabs.filter((_, i2) => i2 <= i || i === -1),
       frame,
-      ...tabs.filter((_, i2) => i2 > i)
+      ...tabs.filter((_, i2) => i2 > i),
     ],
-    tabsSort: [...current.tabsSort, frame.uid]
+    tabsSort: [...current.tabsSort, frame.uid],
   };
   fire();
 }
 export function schemaInfo2(name: string) {
-  const uid = (window as any).uidCount++;
+  const uid = (window as any).uidCount;
+  (window as any).uidCount += 1;
   newFrame({
-    title: name + " info",
-    type: "schemainfo",
+    title: `${name} info`,
+    type: 'schemainfo',
     active: true,
     uid,
-    schema: name
+    schema: name,
   });
 }
 export function openTable2(schema: string, t: { name: string; type: string }) {
-  const uid = (window as any).uidCount++;
+  const uid = (window as any).uidCount;
+  (window as any).uidCount += 1;
   newFrame({
-    title: schema + "." + t.name,
-    type: "table",
+    title: `${schema}.${t.name}`,
+    type: 'table',
     schema,
     table: t.name,
     active: true,
-    uid
+    uid,
   });
 }
-export function removeError2(){
+export function removeError2() {
   current = {
     ...current,
-    connectionError: undefined
+    connectionError: undefined,
   };
   fire();
 }
 export function tableInfo2(schema: string, table: string) {
-  const uid = (window as any).uidCount++;
+  const uid = (window as any).uidCount;
+  (window as any).uidCount += 1;
   newFrame({
-    title: schema + "." + table + " info",
-    type: "tableinfo",
+    title: `${schema}.${table} info`,
+    type: 'tableinfo',
     active: true,
     uid,
     schema,
-    table
+    table,
   });
 }
 export function newTable2(schema: string) {
-  const uid = (window as any).uidCount++;
-  DB.types().then(types => {
+  const uid = (window as any).uidCount;
+  (window as any).uidCount += 1;
+  DB.types().then((types) => {
     newFrame({
-      title: "Nova Tabela",
-      type: "newtable",
+      title: 'Nova Tabela',
+      type: 'newtable',
       active: true,
       uid,
       schema,
-      types
+      types,
     });
   });
 }
 export function updateTabText(editing: FrameProps | null, value: string) {
   current = {
     ...current,
-    tabs: current.tabs.map(t => (t == editing ? { ...t, title: value } : t))
+    tabs: current.tabs.map((t) => (t === editing ? { ...t, title: value } : t)),
   };
   fire();
 }
@@ -198,40 +213,60 @@ export function updateTabText(editing: FrameProps | null, value: string) {
 export function newSchema2() {
   current = {
     ...current,
-    newSchema: true
+    newSchema: true,
   };
   fire();
 }
+function filterTabs(fn: (c: FrameProps) => boolean) {
+  const tabsSort = current.tabsSort.filter((uid) =>
+    fn(current.tabs.find((tab) => tab.uid === uid) as FrameProps)
+  );
+  current = {
+    ...current,
+    tabs: current.tabs
+      .filter(fn)
+      .map((tab) =>
+        tabsSort.length && tabsSort[tabsSort.length - 1] === tab.uid
+          ? { ...tab, active: true }
+          : tab
+      ),
+    tabsSort,
+  };
+}
 export function dropSchema2(name: string) {
-  Connection.query('DROP SCHEMA "' + name + '"').then(
+  Connection.query(`DROP SCHEMA "${name}"`).then(
     () => {
       current = {
         ...current,
-        schemas: (current.schemas as NavSchema[]).filter(sc => sc.name != name)
+        schemas: (current.schemas as NavSchema[]).filter(
+          (sc) => sc.name !== name
+        ),
       };
       filterTabs((c: FrameProps) => {
-        return !(c.type == "schemainfo" && c.schema == name);
+        return !(c.type === 'schemainfo' && c.schema === name);
       });
       fire();
     },
-    (err: any) => {
+    (err) => {
       throwError(err);
     }
   );
 }
 export function dropSchemaCascade2(name: string) {
-  Connection.query('DROP SCHEMA "' + name + '" CASCADE').then(
+  Connection.query(`DROP SCHEMA "${name}" CASCADE`).then(
     () => {
       current = {
         ...current,
-        schemas: (current.schemas as NavSchema[]).filter(sc => sc.name != name)
+        schemas: (current.schemas as NavSchema[]).filter(
+          (sc) => sc.name !== name
+        ),
       };
       filterTabs((c: FrameProps) => {
-        return !(c.type == "schemainfo" && c.schema == name);
+        return !(c.type === 'schemainfo' && c.schema === name);
       });
       fire();
     },
-    (err: any) => {
+    (err) => {
       throwError(err);
     }
   );
@@ -240,12 +275,12 @@ export function dropSchemaCascade2(name: string) {
 export function cancelCreateSchema2() {
   current = {
     ...current,
-    newSchema: false
+    newSchema: false,
   };
   fire();
 }
 export function createSchema2(name: string) {
-  Connection.query('CREATE SCHEMA "' + name + '"').then(
+  Connection.query(`CREATE SCHEMA "${name}"`).then(
     () => {
       current = {
         ...current,
@@ -256,35 +291,18 @@ export function createSchema2(name: string) {
             open: false,
             fullView: false,
             sequencesOpen: false,
-            functionsOpen: false
-          }
+            functionsOpen: false,
+          },
         ],
-        newSchema: false
+        newSchema: false,
       };
       fire();
     },
-    err => {
+    (err) => {
       throwError(err);
     }
   );
   // fire()
-}
-function filterTabs(fn: (c: FrameProps) => boolean) {
-  const tabsSort = current.tabsSort.filter(uid =>
-    fn(current.tabs.find(tab => tab.uid == uid) as FrameProps)
-  );
-  current = {
-    ...current,
-    tabs: current.tabs
-      .filter(fn)
-      .map(
-        tab =>
-          tabsSort.length && tabsSort[tabsSort.length - 1] == tab.uid
-            ? { ...tab, active: true }
-            : tab
-      ),
-    tabsSort: tabsSort
-  };
 }
 
 export function changeTabsSort2(sort: number[]) {
@@ -295,89 +313,89 @@ export function changeTabsSort2(sort: number[]) {
   current = {
     ...current,
     tabs: newTabs,
-    tabsSort: sort
+    tabsSort: sort,
   };
   fire();
 }
 export function reloadNav() {
   DB.listSchemas().then(
-    newSchemas => {
-      let schemas = newSchemas.map((sc: string) => {
-        if (!current.schemas) throw "Invalid schemas.";
-        const currentSchema = current.schemas.find(s2 => s2.name == sc);
+    (newSchemas) => {
+      const schemas = newSchemas.map((sc: string) => {
+        if (!current.schemas) throw new Error('Invalid schemas.');
+        const currentSchema = current.schemas.find((s2) => s2.name === sc);
         if (currentSchema && currentSchema.open) {
+          // eslint-disable-next-line promise/no-nesting
           DB.listTablesFromSchema(currentSchema.name).then(
-            (tables: { name: string; type: string }[]) => {
-              if (!current.schemas) throw "Invalid schemas.";
+            (res) => {
+              const tables = res as { name: string; type: string }[];
+              if (!current.schemas) throw new Error('Invalid schemas.');
               current = {
                 ...current,
-                schemas: current.schemas.map(
-                  s =>
-                    s.name == currentSchema.name
-                      ? {
-                          ...s,
-                          open: true,
-                          tables
-                        }
-                      : s
-                )
+                schemas: current.schemas.map((s) =>
+                  s.name === currentSchema.name
+                    ? {
+                        ...s,
+                        open: true,
+                        tables,
+                      }
+                    : s
+                ),
               };
               fire();
             },
-            err => console.error(err)
+            // eslint-disable-next-line no-console
+            (err) => console.error(err)
           );
           return currentSchema;
         }
         return {
           name: sc,
-          open: false
+          open: false,
         };
       });
       if (schemas) {
         current = {
           ...current,
-          schemas: schemas as NavSchema[]
+          schemas: schemas as NavSchema[],
         };
         fire();
       }
     },
-    err => {
+    (err) => {
       throwError(err);
     }
   );
 }
 export function closeTab2(c: FrameProps) {
-  const tabsSort = current.tabsSort.filter(uid => uid != c.uid);
+  const tabsSort = current.tabsSort.filter((uid) => uid !== c.uid);
   current = {
     ...current,
     tabs: current.tabs
-      .filter(tab => c.uid != tab.uid)
-      .map(
-        tab =>
-          tabsSort.length && tabsSort[tabsSort.length - 1] == tab.uid
-            ? { ...tab, active: true }
-            : tab
+      .filter((tab) => c.uid !== tab.uid)
+      .map((tab) =>
+        tabsSort.length && tabsSort[tabsSort.length - 1] === tab.uid
+          ? { ...tab, active: true }
+          : tab
       ),
-    tabsSort: tabsSort
+    tabsSort,
   };
   fire();
 }
 export function activateTab2(c: FrameProps) {
-  const tabs = current.tabs.map(
-    tab =>
-      c.uid == tab.uid ? { ...tab, active: true } : { ...tab, active: false }
+  const tabs = current.tabs.map((tab) =>
+    c.uid === tab.uid ? { ...tab, active: true } : { ...tab, active: false }
   );
   current = {
     ...current,
     tabs,
-    tabsSort: [...current.tabsSort.filter(uid => uid != c.uid), c.uid]
+    tabsSort: [...current.tabsSort.filter((uid) => uid !== c.uid), c.uid],
   };
   fire();
 }
 export function closeConnectionError2() {
   current = {
     ...current,
-    connectionError: undefined
+    connectionError: undefined,
   };
   fire();
 }
@@ -386,22 +404,23 @@ export function setConnection(password: ConnectionConfiguration) {
   fire();
 }
 export function newQuery2() {
-  const uid = (window as any).uidCount++;
-  newFrame({ title: "Nova Consulta", type: "query", active: true, uid });
+  const uid = (window as any).uidCount;
+  (window as any).uidCount += 1;
+  newFrame({ title: 'Nova Consulta', type: 'query', active: true, uid });
 }
 export function addConnectionConfiguration(
   conf: ConnectionConfiguration,
   index?: number
 ) {
   let passwords;
-  if (typeof index == "number") {
-    passwords = current.passwords.map((c, i) => (i == index ? conf : c));
+  if (typeof index === 'number') {
+    passwords = current.passwords.map((c, i) => (i === index ? conf : c));
   } else {
     passwords = [...current.passwords, conf];
   }
   current = {
     ...current,
-    passwords
+    passwords,
   };
   fire();
 }
@@ -410,36 +429,31 @@ export function connected(database: string, schemas: string[]) {
   current = {
     ...current,
     connected: true,
-    schemas: schemas.map(s => ({
+    schemas: schemas.map((s) => ({
       name: s,
       open: false,
       fullView: false,
       sequencesOpen: false,
-      functionsOpen: false
+      functionsOpen: false,
     })),
-    title:
-      c.user +
-      "@" +
-      c.host +
-      (c.port != 5432 ? ":" + c.port : "") +
-      "/" +
-      database
+    title: `${c.user}@${c.host}${
+      c.port !== 5432 ? `:${c.port}` : ''
+    }/${database}`,
   };
   fire();
 }
 export function toggleSchema(name: string) {
-  if (!current.schemas) throw "Schemas não econtrado.";
+  if (!current.schemas) throw new Error('Schemas não econtrado.');
   current = {
     ...current,
-    schemas: current.schemas.map(
-      s =>
-        s.name == name
-          ? {
-              ...s,
-              open: !s.open
-            }
-          : s
-    )
+    schemas: current.schemas.map((s) =>
+      s.name === name
+        ? {
+            ...s,
+            open: !s.open,
+          }
+        : s
+    ),
   };
   fire();
 }
@@ -447,19 +461,18 @@ export function openSchemaSuccess(
   name: string,
   tables: { name: string; type: string }[]
 ) {
-  if (!current.schemas) throw "Schemas não econtrado.";
+  if (!current.schemas) throw new Error('Schemas não econtrado.');
   current = {
     ...current,
-    schemas: current.schemas.map(
-      s =>
-        s.name == name
-          ? {
-              ...s,
-              open: true,
-              tables
-            }
-          : s
-    )
+    schemas: current.schemas.map((s) =>
+      s.name === name
+        ? {
+            ...s,
+            open: true,
+            tables,
+          }
+        : s
+    ),
   };
   fire();
 }
@@ -471,7 +484,7 @@ export function saveConnection2(con: ConnectionConfiguration, index?: number) {
       newConnection: false,
       editConnection: undefined,
       editConnections: false,
-      connectionError: undefined
+      connectionError: undefined,
     };
     fire();
   });
@@ -486,7 +499,7 @@ export function cancelConnection2() {
     newConnection: false,
     editConnection: undefined,
     editConnections: false,
-    connectionError: undefined
+    connectionError: undefined,
   };
   fire();
 }
@@ -496,18 +509,35 @@ export function editConnection2(con: ConnectionConfiguration, index: number) {
     connectionError: undefined,
     editConnection: {
       connection: con,
-      index
-    }
+      index,
+    },
   };
   fire();
 }
+
+export function editConnectionSelected() {
+  const { password } = current;
+  if (password) {
+    const index = current.passwords.findIndex(
+      (p) =>
+        p.host === password.host &&
+        p.port === password.port &&
+        p.database === password.database &&
+        p.user === password.user &&
+        p.host === password.host &&
+        p.password === password.password
+    );
+    editConnection2(password, index);
+  }
+}
+
 export function removeConnection2(index: number) {
   current = {
     ...current,
     passwords: current.passwords.filter((_, i) => i !== index),
     editConnection: undefined,
     editConnections: false,
-    connectionError: undefined
+    connectionError: undefined,
   };
   savePasswords(currentState().passwords, () => {
     current = {
@@ -515,43 +545,28 @@ export function removeConnection2(index: number) {
       newConnection: false,
       editConnection: undefined,
       editConnections: false,
-      connectionError: undefined
+      connectionError: undefined,
     };
     fire();
   });
 }
 export function openSequences(schema: NavSchema) {
-  if (!current.schemas) throw "never!";
+  assert(!!current.schemas);
   current = {
     ...current,
-    schemas: current.schemas.map(
-      sc => (sc == schema ? { ...sc, sequencesOpen: !sc.sequencesOpen } : sc)
-    )
+    schemas: current.schemas.map((sc) =>
+      sc === schema ? { ...sc, sequencesOpen: !sc.sequencesOpen } : sc
+    ),
   };
   fire();
 }
 export function openFunctions(schema: NavSchema) {
-  if (!current.schemas) throw "never!";
+  assert(!!current.schemas);
   current = {
     ...current,
-    schemas: current.schemas.map(
-      sc => (sc == schema ? { ...sc, functionsOpen: !sc.functionsOpen } : sc)
-    )
+    schemas: current.schemas.map((sc) =>
+      sc === schema ? { ...sc, functionsOpen: !sc.functionsOpen } : sc
+    ),
   };
   fire();
-}
-
-let listener: ((_: any) => void) | undefined;
-function fire() {
-  (window as any).current = current;
-  if (!listener) throw "Listener não encontrado.";
-  listener(current);
-}
-export function sub(fn: (_: AppState) => void) {
-  if (listener) throw "listener já configurado";
-  listener = fn;
-  fn(current);
-}
-export function currentState() {
-  return current;
 }

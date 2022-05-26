@@ -1,17 +1,18 @@
-import * as React from "react";
-import { Result } from "../db/Connection";
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+import React, { Component, CSSProperties, ReactNode } from 'react';
+import { Result } from '../db/Connection';
 
 const letterSize = 6;
 
 export interface GridProps {
-  style: { [key: string]: string | number };
-  result?: Result;
+  style: CSSProperties;
+  result: Result | undefined;
 }
 export interface GridCoreProps {
-  style: { [key: string]: string | number };
+  // style: CSSProperties;
   result: Result;
   width: number;
-  height: number;
+  // height: number;
 }
 
 export interface GridState {
@@ -22,175 +23,114 @@ export interface GridState {
 // export interface GridResult {
 //   sizes: number[];
 // }
+
+function getValString(val: unknown) {
+  return val === null
+    ? 'null'
+    : val instanceof Date
+    ? val.toLocaleString()
+    : typeof val === 'object'
+    ? JSON.stringify(val)
+    : `${val}`;
+}
+
 function buildWidths(res: Result) {
-  const fieldsSizes = res.fields.map((f, index) => {
-    let max: number = f.name.length;
-    res.rows.forEach(row => {
-      const val = row[index],
-        valString = getValString(val),
-        length = valString.length;
-      if (length > max) {
-        max = length;
-      }
-    });
+  const fieldsSizes = res.fields.map((f) => {
+    const max = f.name.length;
+    // res.rows.forEach((row) => {
+    //   const val = row[index];
+    //   const valString = getValString(val);
+    //   const th = valString.length;
+    //   if (length > max) {
+    //     max = length;
+    //   }
+    // });
     return max;
   });
   return fieldsSizes.map(
-    maxLength => (maxLength > 40 ? 40 : maxLength) * letterSize + 11
+    (maxLength) => (maxLength > 40 ? 40 : maxLength) * letterSize + 11
   );
 }
+// const navWidth = 250,
+const rowHeight = 23;
+const scrollWidth = 10;
+const headerHeight = 21;
+// medidos em tamanho de linha
+const rowsByRender = 200;
+const topRenderOffset = 50;
+const allowedBottomDistance = 50;
+const allowedTopDistance = 10;
 
-function getValString(val: any) {
+function getType(val: unknown) {
   return val === null
-    ? "null"
+    ? 'null'
+    : typeof val === 'boolean' ||
+      typeof val === 'string' ||
+      typeof val === 'number'
+    ? typeof val
     : val instanceof Date
-      ? val.toLocaleString()
-      : typeof val == "object" ? JSON.stringify(val) : val + "";
-}
-
-const // navWidth = 250,
-  rowHeight = 23,
-  scrollWidth = 10,
-  headerHeight = 21,
-  // medidos em tamanho de linha
-  rowsByRender = 200,
-  topRenderOffset = 50,
-  allowedBottomDistance = 50,
-  allowedTopDistance = 10;
-
-function getType(val: any) {
-  return val === null
-    ? "null"
-    : typeof val == "boolean" ||
-      typeof val == "string" ||
-      typeof val == "number"
-      ? typeof val
-      : val instanceof Date ? "date" : undefined;
+    ? 'date'
+    : undefined;
 }
 
 function buildRoundedWidhts(initialWidths: number[], initialWidth: number) {
   const minWidth = initialWidths.reduce((a: number, b: number) => a + b, 1);
   const finalWidth = initialWidth > minWidth ? initialWidth : minWidth;
   const ratio = finalWidth / minWidth;
-  const floatSizes = initialWidths.map((w: number) => w * ratio );
-  const roundedSizes = floatSizes.map( w => Math.round(w) );
-  const fields = initialWidths.map( (_,i) => i );
+  const floatSizes = initialWidths.map((w: number) => w * ratio);
+  const roundedSizes = floatSizes.map((w) => Math.round(w));
+  const fields = initialWidths.map((_, i) => i);
   const sortedByDiff = [...fields];
-  sortedByDiff.sort( (aIndex,bIndex) => {
+  sortedByDiff.sort((aIndex, bIndex) => {
     const floatA = floatSizes[aIndex];
     const roundedA = roundedSizes[aIndex];
     const floatB = floatSizes[bIndex];
     const roundedB = roundedSizes[bIndex];
-    return ( floatB - roundedB ) - ( floatA - roundedA );
+    return floatB - roundedB - (floatA - roundedA);
   });
-  const totalRounded = roundedSizes.reduce( (a, b) => a + b );
+  const totalRounded = roundedSizes.reduce((a, b) => a + b);
   const finalWidths = [...roundedSizes];
-  if ( finalWidth > totalRounded ) {
+  if (finalWidth > totalRounded) {
     let temQueSomar = finalWidth - totalRounded;
-    while ( temQueSomar > 0 ) {
-      for ( const index of sortedByDiff ) {
-        finalWidths[index]++;
-        temQueSomar--;
-        if ( temQueSomar == 0 )
-          break;
+    while (temQueSomar > 0) {
+      for (const index of sortedByDiff) {
+        finalWidths[index] += 1;
+        temQueSomar -= 1;
+        if (temQueSomar === 0) break;
       }
     }
-  } else if ( finalWidth < totalRounded ) {
+  } else if (finalWidth < totalRounded) {
     let temQueSub = totalRounded - finalWidth;
-    while ( temQueSub > 0 ) {
-      for ( let c = sortedByDiff.length-1; c >= 0; c-- ) {
+    while (temQueSub > 0) {
+      for (let c = sortedByDiff.length - 1; c >= 0; c -= 1) {
         const index = sortedByDiff[c];
-        finalWidths[index]--;
-        temQueSub--;
-        if ( temQueSub == 0 )
-          break;
+        finalWidths[index] -= 1;
+        temQueSub -= 1;
+        if (temQueSub === 0) break;
       }
     }
   }
   return {
     widths: finalWidths,
-    width: finalWidth
-  }
+    width: finalWidth,
+  };
 }
 
-interface SizeControlledAreaProps {
-  render: (width:number,height:number) => React.ReactNode;
-  style: { [key: string]: string | number };
-  className?: string
-}
-class SizeControlledArea extends React.Component<SizeControlledAreaProps,{width:number,height:number}|{width:undefined,height:undefined}> {
-  private el: HTMLDivElement;
-
-  constructor(props:SizeControlledAreaProps) {
-    super(props);
-    this.state = {
-      width: undefined,
-      height: undefined
-    };
-    this.ref = this.ref.bind(this);
-    this.resizeListener = this.resizeListener.bind(this);
-    window.addEventListener("resize", this.resizeListener);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("resize", this.resizeListener);
-  }
-
-  private timeout2: any = null;
-  private resizeListener() {
-    if (this.timeout2) clearTimeout(this.timeout2);
-    this.timeout2 = setTimeout(() => {
-      if ( !this.el || !this.el.parentElement )
-        return;
-      this.setState({
-        width: this.el.offsetWidth,
-        height: this.el.offsetWidth
-      })
-    }, 250);
-  }
-  ref(el:HTMLDivElement|null){
-    if (!el )return;
-    this.el = el;
-    this.setState({
-      width: el.offsetWidth,
-      height: el.offsetWidth
-    })
-  }
-  render() {
-    return <div style={this.props.style} className={this.props.className} ref={this.ref}>
-      {
-        typeof this.state.width !== "undefined" && typeof this.state.height !== "undefined" ?
-            this.props.render(this.state.width, this.state.height)
-            : null
-      }
-    </div>
-  }
-}
-
-export function Grid(props:GridProps) {
-  const res = props.result;
-  if (res) {
-    return <SizeControlledArea
-        style={props.style}
-        className="grid"
-        render={(width: number, height: number) => <GridCore
-            result={res}
-            style={props.style}
-            width={width}
-            height={height}
-        />}/>;
-  }
-  return <div className="grid" />;
-}
-
-function selectPos(widths:number[],colIndex:number,rowIndex:number,scrollTop:number,scrollLeft:number, containerWidth:number) {
+function selectPos(
+  widths: number[],
+  colIndex: number,
+  rowIndex: number,
+  scrollTop: number,
+  scrollLeft: number,
+  containerWidth: number
+) {
   let fieldLeft = 0;
   for (const c in widths) {
     const w = widths[c];
-    if (colIndex + "" == c) break;
+    if (`${colIndex}` === c) break;
     fieldLeft += w;
   }
-  fieldLeft++;
+  fieldLeft += 1;
   const top = headerHeight + rowIndex * rowHeight - scrollTop + 1;
   const selectedCellLeft = fieldLeft - (scrollLeft < 0 ? 0 : scrollLeft);
   const left = selectedCellLeft < 0 ? 0 : selectedCellLeft;
@@ -198,17 +138,28 @@ function selectPos(widths:number[],colIndex:number,rowIndex:number,scrollTop:num
   const originalWidth = widths[colIndex] - 1 - leftCrop;
   const needToCropRight = originalWidth + left > containerWidth;
   const width = needToCropRight ? containerWidth - left : originalWidth;
-  return {top,left,leftCrop,width};
+  return { top, left, leftCrop, width };
 }
 
-export class GridCore extends React.Component<GridCoreProps, GridState> {
+export class GridCore extends Component<GridCoreProps, GridState> {
+  private headerEl: HTMLElement | null = null;
+
+  private scrollLeft = 0;
+
+  private scrollTop = 0;
+
+  private timeout: ReturnType<typeof setTimeout> | null = null;
+
+  private el: HTMLElement | null = null;
+
+  private selectedEl: HTMLElement | null = null;
 
   constructor(props: GridCoreProps) {
     super(props);
     this.state = {
       widths: buildWidths(props.result),
       // width: window.innerWidth - navWidth - scrollWidth,
-      slice: [0, rowsByRender]
+      slice: [0, rowsByRender],
     };
     this.setHeader = this.setHeader.bind(this);
     this.setEl = this.setEl.bind(this);
@@ -216,39 +167,51 @@ export class GridCore extends React.Component<GridCoreProps, GridState> {
     this.gridContentScrollListener = this.gridContentScrollListener.bind(this);
   }
 
-  setEl( el: HTMLElement | null ){
-    this.el = el;
-  }
-
-  componentWillReceiveProps(next: GridCoreProps) {
-    if (next.result != this.props.result) {
-      this.scrollLeft = this.scrollTop = 0;
-      this.setState({
-        ...this.state,
-        widths: next.result ? buildWidths(next.result) : undefined,
-        selected: undefined
-      });
+  UNSAFE_componentWillReceiveProps(next: GridCoreProps) {
+    if (next.result !== this.props.result) {
+      this.scrollTop = 0;
+      this.scrollLeft = 0;
+      this.setState((state) => ({
+        ...state,
+        widths: next.result ? buildWidths(next.result) : [],
+        selected: undefined,
+      }));
     }
   }
 
-  private headerEl: HTMLElement | null = null;
+  setEl(el: HTMLElement | null) {
+    this.el = el;
+  }
+
   private setHeader(el: HTMLElement | null) {
     this.headerEl = el;
   }
 
-  private scrollLeft = 0;
-  private scrollTop = 0;
-  private timeout: any = null;
-  private gridContentScrollListener(e: React.UIEvent<HTMLDivElement>) {
+  private getColIndex(x: number) {
+    const { widths } = buildRoundedWidhts(
+      this.state.widths,
+      this.props.width - 1
+    );
+    let left = 0;
+    let indexCount = -1;
+    for (const w of widths) {
+      if (x < left) return indexCount;
+      left += w;
+      indexCount += 1;
+    }
+    return widths.length - 1;
+  }
+
+  private gridContentScrollListener(e: React.UIEvent<HTMLElement>) {
     const container = e.target as HTMLElement;
     this.scrollLeft = container.scrollLeft;
     this.scrollTop = container.scrollTop;
     if (this.headerEl) {
-      this.headerEl.style.marginLeft = "-" + container.scrollLeft + "px";
+      this.headerEl.style.marginLeft = `-${container.scrollLeft}px`;
       if (container.scrollTop > 10) {
-        this.headerEl.style.boxShadow = "rgba(0, 0, 0, 0.5) -3px 0px 10px";
+        this.headerEl.style.boxShadow = 'rgba(0, 0, 0, 0.5) -3px 0px 10px';
       } else {
-        this.headerEl.style.boxShadow = "";
+        this.headerEl.style.boxShadow = '';
       }
     }
     this.updateSelectPos();
@@ -264,130 +227,136 @@ export class GridCore extends React.Component<GridCoreProps, GridState> {
           currentIndex > topRenderOffset
             ? currentIndex - topRenderOffset
             : currentIndex;
-        this.setState({
-          ...this.state,
-          slice: [start, start + rowsByRender]
-        });
+        this.setState((state) => ({
+          ...state,
+          slice: [start, start + rowsByRender],
+        }));
       }
     }, 1500);
   }
 
-  private el: HTMLElement | null;
-  private clickListener(e: React.MouseEvent<HTMLDivElement>) {
+  private clickListener(e: React.MouseEvent<HTMLElement>) {
     const el = this.el as HTMLElement;
     const rect = el.getBoundingClientRect();
-    let x = e.clientX - rect.left,
-      y = e.clientY - rect.top - headerHeight;
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top - headerHeight;
     if (x < 0 || y < 0 || x > el.offsetWidth || y > el.offsetHeight) return;
     x += this.scrollLeft;
     y += this.scrollTop;
-    const rowIndex = Math.floor(y / rowHeight),
-      colIndex = this.getColIndex(x);
-    if ( rowIndex >= this.props.result.rows.length || colIndex >= this.props.result.fields.length ||
-      this.state.selected && this.state.selected.rowIndex === rowIndex && this.state.selected.colIndex === colIndex)
+    const rowIndex = Math.floor(y / rowHeight);
+    const colIndex = this.getColIndex(x);
+    if (
+      rowIndex >= this.props.result.rows.length ||
+      colIndex >= this.props.result.fields.length ||
+      (this.state.selected &&
+        this.state.selected.rowIndex === rowIndex &&
+        this.state.selected.colIndex === colIndex)
+    )
       return;
-    this.setState({
-      ...this.state,
-      selected: { rowIndex, colIndex }
-    });
-  }
-
-  private getColIndex(x: number) {
-    const {widths} = buildRoundedWidhts( this.state.widths, this.props.width-1 );
-    let left = 0,
-      indexCount = -1;
-    for (const w of widths) {
-      if (x < left) return indexCount;
-      left += w;
-      indexCount++;
-    }
-    return widths.length - 1;
+    this.setState((state) => ({
+      ...state,
+      selected: { rowIndex, colIndex },
+    }));
   }
 
   private updateSelectPos() {
-    if (
-      !this.state.selected ||
-      !this.selectedEl
-    )
-      return;
-    const {top,left,leftCrop,width} = selectPos ( buildRoundedWidhts( this.state.widths, this.props.width-1 ).widths,
-        this.state.selected.colIndex, this.state.selected.rowIndex, this.scrollTop, this.scrollLeft, this.props.width );
-    this.selectedEl.style.top = top + "px";
-    this.selectedEl.style.left = left + "px";
+    if (!this.state.selected || !this.selectedEl) return;
+    const { top, left, leftCrop, width } = selectPos(
+      buildRoundedWidhts(this.state.widths, this.props.width - 1).widths,
+      this.state.selected.colIndex,
+      this.state.selected.rowIndex,
+      this.scrollTop,
+      this.scrollLeft,
+      this.props.width
+    );
+    this.selectedEl.style.top = `${top}px`;
+    this.selectedEl.style.left = `${left}px`;
     const wrapper2El = this.selectedEl.firstChild as HTMLDivElement;
-    wrapper2El.style.marginLeft = "-" + leftCrop + "px";
+    wrapper2El.style.marginLeft = `-${leftCrop}px`;
     // wrapper2El.style.width = originalWidth + "px";
-    this.selectedEl.style.width = width + "px";
-    this.selectedEl.style.display = top < 0 || width < 0 ? "none" : "";
+    this.selectedEl.style.width = `${width}px`;
+    this.selectedEl.style.display = top < 0 || width < 0 ? 'none' : '';
   }
 
-  private selected(widths: number[]) {
-    if ( !this.state.selected )
-      return;
+  private selected(widths: number[]): JSX.Element {
+    if (!this.state.selected) return <></>;
     const row = this.props.result.rows[this.state.selected.rowIndex];
-    const val = row[this.state.selected.colIndex],
-        type = getType(val),
-        valString = getValString(val);
-    const {top,left,leftCrop,width} = selectPos(widths,this.state.selected.colIndex,this.state.selected.rowIndex,
-        this.scrollTop, this.scrollLeft, this.props.width - scrollWidth );
-    const key = this.state.selected.rowIndex + "/" + this.state.selected.colIndex;
+    const val = row[this.state.selected.colIndex];
+    const type = getType(val);
+    const valString = getValString(val);
+    const { top, left, leftCrop, width } = selectPos(
+      widths,
+      this.state.selected.colIndex,
+      this.state.selected.rowIndex,
+      this.scrollTop,
+      this.scrollLeft,
+      this.props.width - scrollWidth
+    );
+    const key = `${this.state.selected.rowIndex}/${this.state.selected.colIndex}`;
     const even = this.state.selected.rowIndex % 2;
 
     return (
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           top,
           zIndex: 2,
           left,
           width,
-          display: top < 0 || width < 0 ? "none" : ""
+          display: top < 0 || width < 0 ? 'none' : '',
         }}
         key={key}
         ref={(el: HTMLDivElement) => {
           this.selectedEl = el;
           if (this.selectedEl) {
-            this.selectedEl.classList.remove("active");
+            this.selectedEl.classList.remove('active');
             setTimeout(() => {
-              if (this.selectedEl) this.selectedEl.classList.add("active");
+              if (this.selectedEl) this.selectedEl.classList.add('active');
             }, 10);
           }
         }}
-        className={
-          "selected-cell-wrapper " +
-          type +
-          (even ? " even" : " odd")
-        }
+        className={`selected-cell-wrapper ${type}${even ? ' even' : ' odd'}`}
       >
-        <div style={{ marginLeft: -leftCrop + "px", height: (rowHeight - 1)+"px" }} className="selected-cell-wrapper2">
+        <div
+          style={{ marginLeft: `${-leftCrop}px`, height: `${rowHeight - 1}px` }}
+          className="selected-cell-wrapper2"
+        >
           <div className="selected-cell">
-          {valString && valString.length > 200
-            ? valString.substr(0, 200) + "..."
-            : valString}
+            {valString && valString.length > 200
+              ? `${valString.substring(0, 200)}...`
+              : valString}
           </div>
         </div>
       </div>
     );
   }
 
-  private selectedEl: HTMLElement | null = null;
-
   render() {
-    const {widths, width} = buildRoundedWidhts( this.state.widths, this.props.width-1 );
-    const gridContentMarginTop = "-" + headerHeight + "px";
-    const gridContentHeight = headerHeight + this.props.result.rows.length * rowHeight + "px";
-    const gridContentTableTop = this.state.slice[0] * rowHeight + "px";
-    const visibleRows = this.props.result.rows.filter( (_, i) =>
-        (this.state.slice as number[])[0] <= i && i <= (this.state.slice as number[])[1] );
+    const { widths, width } = buildRoundedWidhts(
+      this.state.widths,
+      this.props.width - 1
+    );
+    const gridContentMarginTop = `-${headerHeight}px`;
+    const gridContentHeight = `${
+      headerHeight + this.props.result.rows.length * rowHeight
+    }px`;
+    const gridContentTableTop = `${this.state.slice[0] * rowHeight}px`;
+    const visibleRows = this.props.result.rows.filter(
+      (_, i) =>
+        (this.state.slice as number[])[0] <= i &&
+        i <= (this.state.slice as number[])[1]
+    );
     const visibleStartingInEven = this.state.slice[0] % 2;
     const gridContentTableWidth = width;
     return (
+      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
       <div
-        style={{ top: 0, left: 0, bottom: 0, right: 0, position: "absolute" }}
+        style={{ top: 0, left: 0, bottom: 0, right: 0, position: 'absolute' }}
         onClick={this.clickListener}
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
         tabIndex={0}
         // onBlur={() => {
-          // this.setState({selected:undefined});
+        // this.setState({selected:undefined});
         // }}
         ref={this.setEl}
       >
@@ -414,18 +383,18 @@ export class GridCore extends React.Component<GridCoreProps, GridState> {
             style={{
               marginTop: gridContentMarginTop,
               height: gridContentHeight,
-              borderBottom: "1px solid #ddd"
+              borderBottom: '1px solid #ddd',
             }}
           >
             <table
               className="content-table"
               style={{
                 width: gridContentTableWidth,
-                position: "relative",
-                top: gridContentTableTop
+                position: 'relative',
+                top: gridContentTableTop,
               }}
             >
-              <thead style={{ visibility: "hidden" }}>
+              <thead style={{ visibility: 'hidden' }}>
                 <tr>
                   {this.props.result.fields.map((f, index) => (
                     <th key={index} style={{ width: widths[index] }}>
@@ -436,30 +405,28 @@ export class GridCore extends React.Component<GridCoreProps, GridState> {
               </thead>
               <tbody>
                 {visibleStartingInEven ? (
-                  <tr style={{ display: "none" }} />
-                ) : (
-                  null
-                )}
+                  <tr style={{ display: 'none' }} />
+                ) : null}
                 {visibleRows.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      {this.props.result.fields.map((_, index) => {
-                        const val = row[index];
-                        const type = getType(val);
-                        const valString = getValString(val);
-                        return (
-                          <td key={index}>
-                            <div className={type}>
-                              <div className="cell">
-                                {valString && valString.length > 200
-                                  ? valString.substr(0, 200) + "..."
-                                  : valString}
-                              </div>
+                  <tr key={rowIndex}>
+                    {this.props.result.fields.map((_, index) => {
+                      const val = row[index];
+                      const type = getType(val);
+                      const valString = getValString(val);
+                      return (
+                        <td key={index}>
+                          <div className={type}>
+                            <div className="cell">
+                              {valString && valString.length > 200
+                                ? `${valString.substring(0, 200)}...`
+                                : valString}
                             </div>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -467,4 +434,89 @@ export class GridCore extends React.Component<GridCoreProps, GridState> {
       </div>
     );
   }
+}
+
+interface SizeControlledAreaProps {
+  render: (width: number, height: number) => ReactNode;
+  style: CSSProperties;
+  className: string | undefined;
+}
+class SizeControlledArea extends Component<
+  SizeControlledAreaProps,
+  { width: number; height: number } | { width: undefined; height: undefined }
+> {
+  private el: HTMLDivElement | null = null;
+
+  private timeout2: ReturnType<typeof setTimeout> | null = null;
+
+  constructor(props: SizeControlledAreaProps) {
+    super(props);
+    this.state = {
+      width: undefined,
+      height: undefined,
+    };
+    this.ref = this.ref.bind(this);
+    this.resizeListener = this.resizeListener.bind(this);
+    window.addEventListener('resize', this.resizeListener);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.resizeListener);
+  }
+
+  private resizeListener() {
+    if (this.timeout2) clearTimeout(this.timeout2);
+    this.timeout2 = setTimeout(() => {
+      if (!this.el || !this.el.parentElement) return;
+      this.setState({
+        width: this.el.offsetWidth,
+        height: this.el.offsetWidth,
+      });
+    }, 250);
+  }
+
+  ref(el: HTMLDivElement | null) {
+    if (!el) return;
+    this.el = el;
+    this.setState({
+      width: el.offsetWidth,
+      height: el.offsetWidth,
+    });
+  }
+
+  render() {
+    return (
+      <div
+        style={this.props.style}
+        className={this.props.className}
+        ref={this.ref}
+      >
+        {typeof this.state.width !== 'undefined' &&
+        typeof this.state.height !== 'undefined'
+          ? this.props.render(this.state.width, this.state.height)
+          : null}
+      </div>
+    );
+  }
+}
+
+export function Grid(props: GridProps) {
+  const res = props.result;
+  if (res) {
+    return (
+      <SizeControlledArea
+        style={props.style}
+        className="grid"
+        render={(width: number /* , height: number */) => (
+          <GridCore
+            result={res}
+            /* style={props.style} */
+            width={width}
+            /* height={height} */
+          />
+        )}
+      />
+    );
+  }
+  return <div className="grid" />;
 }

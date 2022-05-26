@@ -1,4 +1,5 @@
-import { closeCurrent, newQuery, nextTab, prevTab } from "../actions";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { closeCurrent, newQuery, nextTab, prevTab } from '../actions';
 
 // window.addEventListener('mousedown', e =>{
 //     const el = e.target
@@ -13,7 +14,7 @@ import { closeCurrent, newQuery, nextTab, prevTab } from "../actions";
 // })
 
 function listener(e: KeyboardEvent) {
-  if (e.ctrlKey && e.key == "Tab") {
+  if (e.ctrlKey && e.key === 'Tab') {
     if (e.shiftKey) {
       prevTab();
     } else {
@@ -22,28 +23,28 @@ function listener(e: KeyboardEvent) {
     e.preventDefault();
     e.stopPropagation();
   } else if (
-    (e.ctrlKey && (e.key == "w" || e.key == "W")) ||
-    (e.ctrlKey && e.key == "F4")
+    (e.ctrlKey && (e.key === 'w' || e.key === 'W')) ||
+    (e.ctrlKey && e.key === 'F4')
   ) {
     closeCurrent();
     e.preventDefault();
     e.stopPropagation();
   } else if (
-    (e.ctrlKey && (e.key == "r" || e.key == "R" || e.key == "Enter")) ||
-    e.key == "F5"
+    (e.ctrlKey && (e.key === 'r' || e.key === 'R' || e.key === 'Enter')) ||
+    e.key === 'F5'
   ) {
     if ((window as any).f5) {
       (window as any).f5();
     }
-  } else if (e.ctrlKey && (e.key == "t" || e.key == "T")) {
+  } else if (e.ctrlKey && (e.key === 't' || e.key === 'T')) {
     newQuery();
-  } else if (e.ctrlKey && (e.key == "n" || e.key == "N")) {
+  } else if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) {
     // electron.ipcRenderer.send('newWindow')
-  } else if (e.key == "F11") {
-    if (document.webkitIsFullScreen) {
-      document.webkitExitFullscreen();
+  } else if (e.key === 'F11') {
+    if ((document as any).webkitIsFullScreen) {
+      (document as any).webkitExitFullscreen();
     } else {
-      document.documentElement.webkitRequestFullScreen();
+      (document.documentElement as any).webkitRequestFullScreen();
     }
     // } else if ( e.altKey && e.key == 'F4' ) {
   }
@@ -54,7 +55,7 @@ if ((window as any).stopShortcuts) {
   (window as any).stopShortcuts();
 }
 (window as any).stopShortcuts = () => {
-  window.removeEventListener("keydown", listener);
+  window.removeEventListener('keydown', listener);
 };
 
-window.addEventListener("keydown", listener);
+window.addEventListener('keydown', listener);

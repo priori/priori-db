@@ -1,4 +1,4 @@
-import { ConnectionConfiguration } from "./db/pgpass";
+import { ConnectionConfiguration } from './db/pgpass';
 
 export interface AbstractTabProps {
   readonly type: string;
@@ -7,10 +7,10 @@ export interface AbstractTabProps {
   readonly uid: number;
 }
 export interface QueryFrameProps extends AbstractTabProps {
-  readonly type: "query";
+  readonly type: 'query';
 }
 export interface TableFrameProps extends AbstractTabProps {
-  readonly type: "table";
+  readonly type: 'table';
   readonly table: string;
   readonly schema: string;
   readonly active: boolean;
@@ -28,17 +28,17 @@ export interface Type {
   allowPrecision: boolean;
 }
 export interface NewTableFrameProps extends AbstractTabProps {
-  readonly type: "newtable";
+  readonly type: 'newtable';
   readonly schema: string;
   readonly types: Type[];
 }
 export interface TableInfoFrameProps extends AbstractTabProps {
-  readonly type: "tableinfo";
+  readonly type: 'tableinfo';
   readonly table: string;
   readonly schema: string;
 }
 export interface SchemaInfoFrameProps extends AbstractTabProps {
-  readonly type: "schemainfo";
+  readonly type: 'schemainfo';
   readonly schema: string;
 }
 export type FrameProps =
@@ -60,7 +60,7 @@ export interface NavSchema {
 }
 
 export interface AppState {
-  connectionError?: any;
+  connectionError?: unknown;
   newConnection: boolean;
   editConnections: boolean;
   newSchema: boolean;

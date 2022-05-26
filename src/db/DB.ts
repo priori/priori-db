@@ -1,15 +1,15 @@
-import { Connection } from "./Connection";
-import { Type } from "../types";
+import { Connection } from './Connection';
+import { Type } from '../types';
 
 export const DB = {
   async listDatabases() {
-    let sql =
-      "SELECT DISTINCT catalog_name db_name FROM information_schema.schemata;";
-    return await Connection.list(sql);
+    const sql =
+      'SELECT DISTINCT catalog_name db_name FROM information_schema.schemata;';
+    return Connection.list(sql);
   },
 
   async listSchemas() {
-    let res = await Connection.list(
+    const res = await Connection.list(
       `
           SELECT schema_name "name"
           FROM information_schema.schemata
@@ -23,25 +23,25 @@ export const DB = {
         `,
       [Connection.database]
     );
-    return res.map((i: any) => i.name as string);
+    return res.map((i) => i.name as string);
   },
 
   async listEntitiesFromSchema(schemaName: string) {
     const entities = (await Connection.list(
       `SELECT
               relname as "name",
-              CASE 
-              WHEN relkind IN ('v') THEN 'VIEW' 
-              WHEN relkind IN ('m') THEN 'MATERIALIZED VIEW' 
-              WHEN relkind IN ('r') THEN 'BASE TABLE' 
-              when relkind in ('S') then 'SEQUENCE' 
+              CASE
+              WHEN relkind IN ('v') THEN 'VIEW'
+              WHEN relkind IN ('m') THEN 'MATERIALIZED VIEW'
+              WHEN relkind IN ('r') THEN 'BASE TABLE'
+              when relkind in ('S') then 'SEQUENCE'
               ELSE relkind||'' END as type
-          FROM pg_class t 
+          FROM pg_class t
           WHERE t.relnamespace = (select n.oid FROM pg_namespace n WHERE n.nspname = $1)  AND
             relkind IN ('m','v','r','S')
-            
+
             UNION
-            
+
           select p.proname || '('||oidvectortypes(proargtypes)||')' "name", 'FUNCTION' "type" FROM pg_proc p
           WHERE p.pronamespace= (select n.oid FROM pg_namespace n WHERE n.nspname = $1) -- AND prolang != 12 -- internal
 
@@ -50,15 +50,18 @@ export const DB = {
     )) as { type: string; name: string }[];
 
     const tables = entities.filter(
-      e => e.type == "VIEW" || e.type == "BASE TABLE" || e.type == "MATERIALIZED VIEW"
+      (e) =>
+        e.type === 'VIEW' ||
+        e.type === 'BASE TABLE' ||
+        e.type === 'MATERIALIZED VIEW'
     );
 
     return {
       tables,
       domains: [],
-      functions: entities.filter(e => e.type == "FUNCTION"),
+      functions: entities.filter((e) => e.type === 'FUNCTION'),
       collations: [],
-      sequences: entities.filter(e => e.type == "SEQUENCE")
+      sequences: entities.filter((e) => e.type === 'SEQUENCE'),
     };
   },
 
@@ -85,7 +88,7 @@ export const DB = {
             relnamespace=typnamespace AND relname = substring(typname FROM 2)::name
             AND relkind != 'c'))
             AND nsp.nspname != 'information_schema'
-            
+
                 UNION SELECT 'smallserial', 0, 2, 'b', 0, 'pg_catalog', false, false
                 UNION SELECT 'bigserial', 0, 8, 'b', 0, 'pg_catalog', false, false
                 UNION SELECT 'serial', 0, 4, 'b', 0, 'pg_catalog', false, false
@@ -101,23 +104,23 @@ export const DB = {
       is_collatable: boolean;
     }[];
 
-    return types.map(type => {
-      let allowLength = !!(!type.name.endsWith("[]") && type.length == -1);
-      if (type.name.endsWith("[]")) {
+    return types.map((type) => {
+      let allowLength = !!(!type.name.endsWith('[]') && type.length === -1);
+      if (type.name.endsWith('[]')) {
         const name = type.name.substr(0, type.name.length - 2);
-        const el = types.find(el => el.name == name);
-        allowLength = (el && el.length == -1) || false;
+        const el = types.find((el2) => el2.name === name);
+        allowLength = (el && el.length === -1) || false;
       }
       return {
         ...type,
         allowLength,
-        allowPrecision: type.name == "numeric" || type.name == "numeric[]"
+        allowPrecision: type.name === 'numeric' || type.name === 'numeric[]',
       } as Type;
     });
   },
 
   async getSchema(schemaId: number) {
-    let res = await Connection.list(
+    const res = await Connection.list(
       `SELECT n.oid schema_id, n.nspname AS schema_name,
             pg_catalog.pg_get_userbyid(n.nspowner) AS schema_owner,
             pg_catalog.obj_description(n.oid, 'pg_namespace') AS schema_comment
@@ -131,7 +134,7 @@ export const DB = {
 
   async listTables() {
     // and views
-    let res = await Connection.list(
+    const res = await Connection.list(
       `SELECT
           s.catalog_name db, s.schema_name, t.table_name, t.table_type,
           t.is_insertable_into, t.is_typed,
@@ -166,14 +169,14 @@ export const DB = {
   },
   async listTablesFromSchema(schemaName: string) {
     // and views
-    let res = await Connection.list(
+    const res = await Connection.list(
       `SELECT
                   relname as "name",
-                  CASE 
-                    WHEN relkind IN ('m') THEN 'MATERIALIZED VIEW' 
-                    WHEN relkind IN ('v') THEN 'VIEW' 
+                  CASE
+                    WHEN relkind IN ('m') THEN 'MATERIALIZED VIEW'
+                    WHEN relkind IN ('v') THEN 'VIEW'
                     ELSE 'BASE TABLE' END as type
-              FROM pg_class t 
+              FROM pg_class t
               WHERE t.relnamespace = (select oid FROM pg_namespace WHERE nspname = $1) AND
                 relkind IN ('m','v','r')
               ORDER BY relname`,
@@ -182,7 +185,7 @@ export const DB = {
     return res;
   },
   async listSequences(schemaName: string) {
-    let res = await Connection.list(
+    const res = await Connection.list(
       `SELECT
             *, sequence_name, data_type, minimum_value, maximum_value, start_value
           FROM information_schema.sequences
@@ -193,7 +196,7 @@ export const DB = {
     return res;
   },
   async listFunctions(schemaName: string) {
-    let res = await Connection.list(
+    const res = await Connection.list(
       `SELECT  p.proname
           FROM  pg_catalog.pg_namespace n
           JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid
@@ -203,7 +206,8 @@ export const DB = {
     return res;
   },
   async listDataTypes() {
-    let res = await Connection.list(`SELECT DISTINCT pg_catalog.format_type(t.oid, NULL) d_types
+    const res =
+      await Connection.list(`SELECT DISTINCT pg_catalog.format_type(t.oid, NULL) d_types
           FROM pg_catalog.pg_type t
               LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
           WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
@@ -242,7 +246,7 @@ export const DB = {
         `);
   },
   async listCols(schemaName: string, tableName: string) {
-    let res = await Connection.list(
+    const res = await Connection.list(
       `SELECT ordinal_position, column_name, COLUMNS.data_type, COLUMNS.udt_name udt_type,
           CASE WHEN COLUMNS.data_type='ARRAY' THEN e.data_type||'[]' WHEN (column_default ilike 'nextval(%' AND is_nullable='NO') THEN 'serial' ELSE COLUMNS.data_type END field_type,
           column_default, CASE WHEN is_nullable='YES' THEN true else false end is_nullable, COLUMNS.character_maximum_length,
@@ -280,9 +284,9 @@ export const DB = {
     return res;
   },
   async listIndexes(schemaName: string, tableName: string) {
-    let res = await Connection.list(
-      `SELECT 
-              c.relname "name", 
+    const res = await Connection.list(
+      `SELECT
+              c.relname "name",
               pg_get_indexdef(c.oid) "definition",
               (select amname FROM pg_am WHERE pg_am.oid = c.relam) "type",
               i.indisprimary pk,
@@ -291,7 +295,7 @@ export const DB = {
             FROM pg_class c
             INNER JOIN pg_index i ON i.indexrelid = c.oid
             WHERE c.relkind = 'i' AND
-              i.indrelid = (SELECT t.oid FROM pg_class t 
+              i.indrelid = (SELECT t.oid FROM pg_class t
                             WHERE t.relnamespace = (select oid FROM pg_namespace WHERE nspname = $1) AND
                		  t.relname = $2)`,
       [schemaName, tableName]
@@ -299,11 +303,26 @@ export const DB = {
     // for ( const i of res ) {
     //     const cols =
     // }
-    return res;
+    return res as {
+      name: string;
+      definition: string;
+      type: string;
+      pk: boolean;
+      cols: {
+        column_name: string;
+        data_type: string;
+        column_default: string;
+        is_nullable: boolean | string;
+        comment: string;
+        length: number;
+        scale: number;
+        is_primary: boolean;
+      }[];
+    }[];
   },
 
   async listTableMetadata(schemaName: string, tableName: string) {
-    let sql = `
+    const sql = `
             SELECT DISTINCT
                 a.attnum as num,
                 a.attname as name,
@@ -326,7 +345,7 @@ export const DB = {
             AND NOT a.attisdropped
             AND nsp.nspname = CAST($1 as text) AND pgc.relname = CAST($2 as text)
             ORDER BY a.attnum;`;
-    let res = await Connection.list(sql, [schemaName, tableName]);
+    const res = await Connection.list(sql, [schemaName, tableName]);
     return res;
   },
 
@@ -365,7 +384,7 @@ export const DB = {
   //     });
   // },
   async listUsers() {
-    let sql = `SELECT u.usename AS user_name,
+    const sql = `SELECT u.usename AS user_name,
             u.usesysid AS user_id,
             CASE WHEN u.usesuper AND u.usecreatedb THEN CAST('superuser, create database' AS pg_catalog.text)
                 WHEN u.usesuper THEN CAST('superuser' AS pg_catalog.text)
@@ -373,9 +392,9 @@ export const DB = {
                 ELSE CAST('' AS pg_catalog.text)
             END AS user_attr
             FROM pg_catalog.pg_user u`;
-    let res = await Connection.list(sql);
+    const res = await Connection.list(sql);
     return res;
-  }
+  },
   /*
     manageSchema(schema:Schema){
         let me=this;
@@ -422,4 +441,5 @@ export const DB = {
     */
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).DB = DB;

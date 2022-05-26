@@ -1,5 +1,5 @@
-import { ConnectionConfiguration, savePasswords } from "./db/pgpass";
-import { Connection } from "./db/Connection";
+import { ConnectionConfiguration, savePasswords } from './db/pgpass';
+import { Connection } from './db/Connection';
 import {
   connected,
   currentState,
@@ -28,10 +28,11 @@ import {
   dropSchema2,
   dropSchemaCascade2,
   reloadNav,
-  changeTabsSort2, removeError2
-} from "./state";
-import { DB } from "./db/DB";
-import { FrameProps } from "./types";
+  changeTabsSort2,
+  removeError2,
+} from './state';
+import { DB } from './db/DB';
+import { FrameProps } from './types';
 
 export function open(c: ConnectionConfiguration) {
   setConnection(c);
@@ -41,10 +42,10 @@ export function open(c: ConnectionConfiguration) {
         FROM pg_database
         WHERE datistemplate = false;`
   ).then(
-    res => {
-      setBases(res.map(r => r.name) as string[]);
+    (res) => {
+      setBases(res.map((r) => r.name) as string[]);
     },
-    err => setConnectionError(err)
+    (err) => setConnectionError(err)
   );
 }
 export function closeConnectionError() {
@@ -71,18 +72,19 @@ export function newConnection(conf: ConnectionConfiguration, index?: number) {
         FROM pg_database
         WHERE datistemplate = false;`
   ).then(
-    res => {
+    (res) => {
       addConnectionConfiguration(conf, index);
-      savePasswords(currentState().passwords, err => {
+      savePasswords(currentState().passwords, (err) => {
         if (err) {
+          // eslint-disable-next-line no-console
           console.error(err);
         } else {
           setConnection(conf);
-          setBases(res.map(r => r.name) as string[]);
+          setBases(res.map((r) => r.name) as string[]);
         }
       });
     },
-    (err: any) => setConnectionError(err)
+    (err: unknown) => setConnectionError(err)
   );
 }
 
@@ -113,22 +115,22 @@ export function cancelCreateSchema() {
 export function closeCurrent() {
   if (!currentState().tabs.length) {
     window.close();
-  } else closeTab2(currentState().tabs.find(c => c.active) as FrameProps);
+  } else closeTab2(currentState().tabs.find((c) => c.active) as FrameProps);
 }
 
 export function nextTab() {
   const state = currentState();
-  if (state.tabs.length == 0) return;
-  const activeIndex = state.tabs.findIndex(c => c.active);
-  if (activeIndex == state.tabs.length - 1) activateTab2(state.tabs[0]);
+  if (state.tabs.length === 0) return;
+  const activeIndex = state.tabs.findIndex((c) => c.active);
+  if (activeIndex === state.tabs.length - 1) activateTab2(state.tabs[0]);
   else activateTab2(state.tabs[activeIndex + 1]);
 }
 
 export function prevTab() {
   const state = currentState();
-  if (state.tabs.length == 0) return;
-  const activeIndex = state.tabs.findIndex(c => c.active);
-  if (activeIndex == 0) activateTab2(state.tabs[state.tabs.length - 1]);
+  if (state.tabs.length === 0) return;
+  const activeIndex = state.tabs.findIndex((c) => c.active);
+  if (activeIndex === 0) activateTab2(state.tabs[state.tabs.length - 1]);
   else activateTab2(state.tabs[activeIndex - 1]);
 }
 
@@ -151,13 +153,14 @@ export function connect(s: string) {
   ).then(
     () => {
       DB.listSchemas().then(
-        schemas => {
+        (schemas) => {
           connected(s, schemas);
         },
-        err => setConnectionError(err)
+        (err) => setConnectionError(err)
       );
     },
-    err => {
+    (err) => {
+      // eslint-disable-next-line no-console
       console.error(err);
       setConnectionError(err);
     }
@@ -174,15 +177,16 @@ export function changeTabsSort(sort: number[]) {
 
 export function openSchema(name: string) {
   const state = currentState();
-  if (!state.schemas) throw "Schemas não configurados.";
-  const schema = state.schemas.find(c => c.name == name);
-  if (!schema) throw "Schema não encontrado. (" + name + ")";
+  if (!state.schemas) throw new Error('Schemas não configurados.');
+  const schema = state.schemas.find((c) => c.name === name);
+  if (!schema) throw new Error(`Schema não encontrado. (${name})`);
   if (!schema.tables)
     DB.listTablesFromSchema(name).then(
-      (tables: { name: string; type: string }[]) => {
-        openSchemaSuccess(name, tables);
+      (tables) => {
+        openSchemaSuccess(name, tables as { name: string; type: string }[]);
       },
-      err => console.error(err)
+      // eslint-disable-next-line no-console
+      (err) => console.error(err)
     );
   else toggleSchema(name);
 }

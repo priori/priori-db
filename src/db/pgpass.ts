@@ -1,5 +1,6 @@
-const path = (window as any).require("path");
-const fs = (window as any).require("fs");
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const path = (window as any).require('path');
+const fs = (window as any).require('fs');
 
 // windows: %APPDATA%\postgresql\pgpass.conf
 // linux: $HOME/.pgpass
@@ -7,14 +8,14 @@ function getPasswordsFileName() {
   if ((window as any).process.env.APPDATA) {
     return path.join(
       (window as any).process.env.APPDATA,
-      "postgresql",
-      "pgpass.conf"
+      'postgresql',
+      'pgpass.conf'
     );
-  } else if ((window as any).process.env.HOME) {
-    return path.join((window as any).process.env.HOME, ".pgpass");
-  } else {
-    return null;
   }
+  if ((window as any).process.env.HOME) {
+    return path.join((window as any).process.env.HOME, '.pgpass');
+  }
+  return null;
 }
 
 export function savePasswords(
@@ -23,10 +24,10 @@ export function savePasswords(
 ) {
   const fileName = getPasswordsFileName();
   const content = passwords
-    .map(p => `${p.host}:${p.port}:${p.database}:${p.user}:${p.password}`)
+    .map((p) => `${p.host}:${p.port}:${p.database}:${p.user}:${p.password}`)
     .filter((v, i, a) => a.indexOf(v) === i)
-    .join("\n");
-  const dir = path.join((window as any).process.env.APPDATA, "postgresql");
+    .join('\n');
+  const dir = path.join((window as any).process.env.APPDATA, 'postgresql');
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
   }
@@ -44,22 +45,19 @@ export interface ConnectionConfiguration {
 function getPasswords(): Array<ConnectionConfiguration> {
   const fileName = getPasswordsFileName();
   if (fileName && fs.existsSync(fileName)) {
-    const str = fs
-      .readFileSync(fileName)
-      .toString()
-      .trim();
+    const str = fs.readFileSync(fileName).toString().trim();
     if (!str) return [];
     return str
-      .split("\n")
+      .split('\n')
       .filter((v: string, i: number, a: string[]) => a.indexOf(v) === i)
-      .map((a: string) => a.trim().split(":"))
+      .map((a: string) => a.trim().split(':'))
       .map((a: Array<string>) => {
         return {
           host: a[0],
-          port: parseInt(a[1]),
+          port: parseInt(a[1], 10),
           database: a[2],
           user: a[3],
-          password: a[4]
+          password: a[4],
         };
       });
   }

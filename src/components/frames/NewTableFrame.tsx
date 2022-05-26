@@ -1,11 +1,9 @@
-import * as React from "react";
-import { FrameProps, NewTableFrameProps, Type } from "../../types";
-import { Frame } from "./Frame";
-import { ListInput } from "../util/ListInput";
-import { DB } from "../../db/DB";
-import { Connection } from "../../db/Connection";
-import { throwError } from "../../state";
-import { closeThisAndReloadNav } from "../../actions";
+import { NewTableFrameProps, Type } from '../../types';
+import { Frame } from './Frame';
+import { ListInput } from '../util/ListInput';
+import { Connection } from '../../db/Connection';
+import { throwError } from '../../state';
+import { closeThisAndReloadNav } from '../../actions';
 
 export interface ColumnNewTable {
   name: string;
@@ -24,8 +22,8 @@ export interface NewTable {
   comment: string;
   like?: string;
   columns: ColumnNewTable[];
-  hasOids: any;
-  unlogged: any;
+  // hasOids: any;
+  // unlogged: any;
 }
 
 // class OpenCloseCategory extends Component<any,any> {
@@ -55,78 +53,80 @@ export class NewTableFrame extends Frame<
     this.state = {
       constraintsOpen: false,
       newTable: {
-        name: "",
-        owner: "",
+        name: '',
+        owner: '',
         schema: props.schema,
-        tableSpace: "",
-        comment: "",
-        unlogged: false,
-        hasOids: null,
-        columns: []
-      }
+        tableSpace: '',
+        comment: '',
+        // unlogged: false,
+        // hasOids: null,
+        columns: [],
+      },
     };
   }
 
   save() {
-    const pks = this.state.newTable.columns.filter(col => col.primaryKey);
+    const pks = this.state.newTable.columns.filter((col) => col.primaryKey);
 
     const query = `CREATE TABLE "${this.props.schema}"."${
       this.state.newTable.name
     }"
         (
         ${this.state.newTable.columns
-          .map(col => {
-            if (!col.type) throw "Invalid type.";
+          .map((col) => {
+            if (!col.type) throw new Error('Invalid type.');
 
-            return (
-              `"${col.name}" ${col.type.name} ` +
-              ((col.type.allowLength || col.type.allowPrecision) && col.length
+            return `"${col.name}" ${col.type.name} ${
+              (col.type.allowLength || col.type.allowPrecision) && col.length
                 ? `( ${col.length}${
                     col.type.allowPrecision && col.precision
-                      ? ", " + col.precision
-                      : ""
+                      ? `, ${col.precision}`
+                      : ''
                   } )`
-                : "") +
-              (col.notNull ? " NOT NULL" : "") +
-              (pks.length == 1 && col.primaryKey ? " PRIMARY KEY" : "")
-            );
+                : ''
+            }${col.notNull ? ' NOT NULL' : ''}${
+              pks.length === 1 && col.primaryKey ? ' PRIMARY KEY' : ''
+            }`;
           })
-          .join(",\n")}
+          .join(',\n')}
             ${
               pks.length > 1
-                ? "PRIMARY KEY (" +
-                  pks.map(col => ` "${col.name}"`).join(", ") +
-                  ")"
-                : ""
+                ? `PRIMARY KEY (${pks
+                    .map((col) => ` "${col.name}"`)
+                    .join(', ')})`
+                : ''
             }
         )
         `;
 
+    // eslint-disable-next-line promise/catch-or-return
     Connection.query(query).then(
+      // eslint-disable-next-line promise/always-return
       () => {
         closeThisAndReloadNav(this.props);
       },
-      err => {
+      (err) => {
         throwError(err);
       }
     );
   }
 
+  // eslint-disable-next-line class-methods-use-this
   newEntry() {
     return {
-      name: "",
+      name: '',
       type: null,
-      length: "",
-      precision: "",
+      length: '',
+      precision: '',
       notNull: false,
-      primaryKey: false
+      primaryKey: false,
     };
   }
 
   onChangeCols(cols: ColumnNewTable[]) {
     this.setState({
       ...this.state,
-      newTable: { ...this.state.newTable, columns: cols }
+      newTable: { ...this.state.newTable, columns: cols },
     });
   }
 
@@ -140,25 +140,26 @@ export class NewTableFrame extends Frame<
         <div className="columns-form-column-name">
           <input
             defaultValue={c.name}
-            onChange={e =>
+            onChange={(e) =>
               set({ ...c, name: (e.target as HTMLInputElement).value })
             }
           />
         </div>
         <div className="columns-form-column-type">
           <select
-            onChange={e =>
+            onChange={(e) =>
               set({
                 ...c,
                 type:
                   this.props.types.find(
-                    t => t.name == (e.target as HTMLSelectElement).value
-                  ) || null
+                    (t) => t.name === (e.target as HTMLSelectElement).value
+                  ) || null,
               })
             }
           >
+            {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
             <option value="" />
-            {this.props.types.map(type => (
+            {this.props.types.map((type) => (
               <option key={type.name} value={type.name}>
                 {type.name}
               </option>
@@ -169,8 +170,8 @@ export class NewTableFrame extends Frame<
           {c.type && c.type.allowLength ? (
             <input
               type="number"
-              style={{ width: "60px" }}
-              onChange={e =>
+              style={{ width: '60px' }}
+              onChange={(e) =>
                 set({ ...c, length: (e.target as HTMLInputElement).value })
               }
             />
@@ -180,8 +181,8 @@ export class NewTableFrame extends Frame<
           {c.type && c.type.allowPrecision ? (
             <input
               type="number"
-              style={{ width: "60px" }}
-              onChange={e =>
+              style={{ width: '60px' }}
+              onChange={(e) =>
                 set({ ...c, precision: (e.target as HTMLInputElement).value })
               }
             />
@@ -192,11 +193,25 @@ export class NewTableFrame extends Frame<
             <i
               tabIndex={0}
               className="fa fa-check-square-o"
+              role="checkbox"
+              aria-label="Not null"
+              aria-checked
+              onKeyDown={(e) => {
+                if (e.key === 'Space' || e.key === ' ' || e.key === 'Enter')
+                  set({ ...c, notNull: false });
+              }}
               onClick={() => set({ ...c, notNull: false })}
             />
           ) : (
             <i
               tabIndex={0}
+              role="checkbox"
+              aria-checked={false}
+              aria-label="Not null"
+              onKeyDown={(e) => {
+                if (e.key === 'Space' || e.key === ' ' || e.key === 'Enter')
+                  set({ ...c, notNull: true });
+              }}
               className="fa fa-square-o"
               onClick={() => set({ ...c, notNull: true })}
             />
@@ -206,6 +221,13 @@ export class NewTableFrame extends Frame<
           {c.primaryKey ? (
             <i
               tabIndex={0}
+              role="checkbox"
+              aria-label="Primary Key"
+              aria-checked
+              onKeyDown={(e) => {
+                if (e.key === 'Space' || e.key === ' ' || e.key === 'Enter')
+                  set({ ...c, primaryKey: false });
+              }}
               className="fa fa-check-square-o"
               onClick={() => set({ ...c, primaryKey: false })}
             />
@@ -213,13 +235,30 @@ export class NewTableFrame extends Frame<
             <i
               tabIndex={0}
               className="fa fa-square-o"
+              role="checkbox"
+              aria-label="Primary Key"
+              aria-checked={false}
+              onKeyDown={(e) => {
+                if (e.key === 'Space' || e.key === ' ' || e.key === 'Enter')
+                  set({ ...c, primaryKey: true });
+              }}
               onClick={() => set({ ...c, primaryKey: true })}
             />
           )}
         </div>
         <div className="columns-form-column-drop">
           {drop && (
-            <i tabIndex={0} className="fa fa-close" onClick={() => drop()} />
+            <i
+              tabIndex={0}
+              className="fa fa-close"
+              role="button"
+              aria-label="Close"
+              onKeyDown={(e) => {
+                if (e.key === 'Space' || e.key === ' ' || e.key === 'Enter')
+                  drop();
+              }}
+              onClick={() => drop()}
+            />
           )}
         </div>
       </div>
@@ -229,22 +268,24 @@ export class NewTableFrame extends Frame<
   render() {
     return (
       <div
-        className={"frame new-table" + (this.props.active ? " active" : "")}
-        ref={el => (this.el = el)}
-        style={{ overflowX: "auto", overflowY: "scroll" }}
+        className={`frame new-table${this.props.active ? ' active' : ''}`}
+        ref={(el) => {
+          this.el = el;
+        }}
+        style={{ overflowX: 'auto', overflowY: 'scroll' }}
       >
-        <div style={{ width: "720px" }}>
+        <div style={{ width: '720px' }}>
           <h1>New Table in {this.props.schema}</h1>
           <div className="form-field input-form-field">
-            Name:{" "}
+            Name:{' '}
             <input
-              onChange={e =>
+              onChange={(e) =>
                 this.setState({
                   ...this.state,
                   newTable: {
                     ...this.state.newTable,
-                    name: (e.target as HTMLInputElement).value
-                  }
+                    name: (e.target as HTMLInputElement).value,
+                  },
                 })
               }
             />
@@ -272,7 +313,7 @@ export class NewTableFrame extends Frame<
                         defaultValue={this.state.newTable.comment}
                         onChange={e=>this.setState({...this.state,newTable:{...this.state.newTable,
                           comment:(e.target as HTMLTextAreaElement).value}})} ></textarea>
-                </div>*/}
+                </div> */}
           <h2>Columns</h2>
 
           <div className="columns-form">
@@ -586,7 +627,9 @@ IS 'asdf asdf';
                 </OpenCloseCategory><br/>
                         */}
           <br />
-          <button onClick={() => this.save()}>Save</button>
+          <button type="button" onClick={() => this.save()}>
+            Save
+          </button>
         </div>
       </div>
     );

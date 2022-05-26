@@ -1,0 +1,19 @@
+{
+  "name": "priori-db",
+  "description": "Priori DB",
+  "version": "0.0.1",
+  "author": {
+    "name": "Leonardo Priori",
+    "email": "leonardopriori@gmail.com",
+    "url": "https://github.com/priori/priori-db"
+  },
+  "main": "./dist/main/main.js",
+  "scripts": {
+    "electron-rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
+    "postinstall": "npm run electron-rebuild && npm run link-modules",
+    "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
+  },
+  "dependencies": {
+    "pg": "^8.7.3"
+  }
+}

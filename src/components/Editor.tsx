@@ -1,15 +1,19 @@
-import * as React from "react";
-import { Component } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Component, CSSProperties } from 'react';
 
-export class Editor extends Component<any, any> {
+export interface EditorProps {
+  style: CSSProperties | undefined;
+}
+export class Editor extends Component<EditorProps, never> {
   editor: any = null;
+
   focus = false;
 
-  constructor(props: { style: { [k: string]: string | number } }) {
-    super(props);
-    this.state = {};
-  }
+  el: HTMLElement | null = null;
 
+  timeout?: ReturnType<typeof setTimeout>;
+
+  // eslint-disable-next-line react/sort-comp
   show() {
     setTimeout(() => {
       this.editor.getInputField().focus();
@@ -27,28 +31,26 @@ export class Editor extends Component<any, any> {
     return query;
   }
 
-  el: HTMLElement | null = null;
-  timeout: any = null;
   setEditor(el: HTMLDivElement | null) {
     if (!el) {
       this.timeout = setTimeout(() => {
-        if (this.el) this.el.innerHTML = "";
+        if (this.el) this.el.innerHTML = '';
         this.el = null;
       }, 1);
       return;
     }
     if (this.timeout) {
       clearTimeout(this.timeout);
-      this.timeout = null;
+      this.timeout = undefined;
     }
-    if (el == this.el) return;
+    if (el === this.el) return;
     this.el = el;
-    const editor = (this.editor = (window as any).CodeMirror(el, {
-      value: "",
+    this.editor = (window as any).CodeMirror(el, {
+      value: '',
       lineNumbers: true,
       lineWrapping: true,
-      mode: "text/x-sql"
-    }));
+      mode: 'text/x-sql',
+    });
     // var charWidth = editor.defaultCharWidth(), basePadding = 4;
     // editor.on("renderLine", function(cm:any, line:any, elt:any) {
     //     console.log(cm,line,elt);
@@ -56,17 +58,14 @@ export class Editor extends Component<any, any> {
     //     elt.style.textIndent = "-" + off + "px";
     //     elt.style.paddingLeft = (basePadding + off) + "px";
     // });
-    editor.refresh();
+    this.editor.refresh();
     this.editor.getInputField().focus();
   }
 
   render() {
+    const { style } = this.props;
     return (
-      <div
-        className="editor"
-        style={this.props.style}
-        ref={el => this.setEditor(el)}
-      />
+      <div className="editor" style={style} ref={(el) => this.setEditor(el)} />
     );
   }
 }

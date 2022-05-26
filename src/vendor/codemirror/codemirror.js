@@ -8,9 +8,11 @@
 // at http://marijnhaverbeke.nl/blog/#cm-internals .
 
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global.CodeMirror = factory());
+  // typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  // typeof define === 'function' && define.amd ? define(factory) :
+  // (global.CodeMirror = factory()); 
+  window.CodeMirror = factory();
+
 }(this, (function () { 'use strict';
 
 // Kludges for bugs and behavior differences that can't be feature

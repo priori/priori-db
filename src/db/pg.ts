@@ -1,17 +1,10 @@
-const pg = (window as any).require("pg") as PG;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const pg = (window as any).require('pg') as PG;
 
-(pg as any).types.setTypeParser(1082, function(val: any) {
-  return val;
-});
-(pg as any).types.setTypeParser(1114, function(val: any) {
-  return val;
-});
-(pg as any).types.setTypeParser(1184, function(val: any) {
-  return val;
-});
-(pg as any).types.setTypeParser(1186, function(val: any) {
-  return val;
-});
+(pg as any).types.setTypeParser(1082, (val: any) => val);
+(pg as any).types.setTypeParser(1114, (val: any) => val);
+(pg as any).types.setTypeParser(1184, (val: any) => val);
+(pg as any).types.setTypeParser(1186, (val: any) => val);
 
 export { pg };
 
