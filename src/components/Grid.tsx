@@ -154,6 +154,8 @@ export class GridCore extends Component<GridCoreProps, GridState> {
 
   private selectedEl: HTMLElement | null = null;
 
+  private lastScrollTime: Date | null = null;
+
   constructor(props: GridCoreProps) {
     super(props);
     this.state = {
@@ -215,8 +217,8 @@ export class GridCore extends Component<GridCoreProps, GridState> {
       }
     }
     this.updateSelectPos();
-    if (this.timeout) clearTimeout(this.timeout);
-    this.timeout = setTimeout(() => {
+    const fn = () => {
+      this.lastScrollTime = null;
       // relative to top. to render by the center use scrollTop + container.offsetHeight / 2
       const currentIndex = Math.floor(container.scrollTop / rowHeight);
       if (
@@ -232,7 +234,18 @@ export class GridCore extends Component<GridCoreProps, GridState> {
           slice: [start, start + rowsByRender],
         }));
       }
-    }, 1500);
+    };
+    if (this.timeout) clearTimeout(this.timeout);
+    const now = new Date();
+    if (
+      this.lastScrollTime &&
+      now.getTime() - this.lastScrollTime.getTime() > 200
+    ) {
+      fn();
+    } else {
+      if (!this.lastScrollTime) this.lastScrollTime = now;
+      this.timeout = setTimeout(fn, 200);
+    }
   }
 
   private clickListener(e: React.MouseEvent<HTMLElement>) {
