@@ -23,6 +23,7 @@ module.exports = {
     'react/destructuring-assignment': 'off',
     'no-nested-ternary': 'off',
     'promise/no-nesting': 'off',
+    'react/jsx-props-no-spreading': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

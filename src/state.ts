@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import assert from 'assert';
+import React from 'react';
 import {
   ConnectionConfiguration,
   passwords as currentPasswords,
@@ -15,7 +15,7 @@ export function throwError(err: any) {
   else alert(JSON.stringify(err));
 }
 
-let listener: ((_: any) => void) | undefined;
+let listener: ((_: AppState) => void) | undefined;
 
 // ((window as any).current) ||
 let current: AppState = {
@@ -36,11 +36,23 @@ function fire() {
   if (!listener) throw new Error('Listener não encontrado.');
   listener(current);
 }
-export function sub(fn: (_: AppState) => void) {
-  if (listener) throw new Error('listener já configurado');
-  listener = fn;
-  fn(current);
+
+export function useAppState() {
+  const [state, setState] = React.useState(current);
+  React.useEffect(() => {
+    let mounted = true;
+    listener = (newState) => {
+      if (mounted) setState(newState);
+      // else state = state;
+    };
+    return () => {
+      mounted = false;
+      listener = undefined;
+    };
+  }, []);
+  return state;
 }
+
 export function currentState() {
   return current;
 }
