@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-underscore-dangle */
 import assert from 'assert';
-import { Connection, Result } from './Connection';
+import { Connection } from './Connection';
 import { PgClient } from './PgClient';
+import { Result } from './util';
 
 export class AutoConnectPgClient {
   db: PgClient | null = null;
@@ -28,11 +28,11 @@ export class AutoConnectPgClient {
     return Connection.query('SELECT pg_cancel_backend($1)', [this.pid]);
   }
 
-  async _query(query: string, args?: Array<any>): Promise<Result> {
+  async pgQuery(query: string, args?: Array<any>): Promise<Result> {
     if (this.db)
       return new Promise<Result>((resolve, reject) => {
         if (!this.db) throw new Error('never');
-        this.db._query(query, args).then(resolve).catch(reject);
+        this.db.pgQuery(query, args).then(resolve).catch(reject);
       });
     return new Promise<Result>((resolve, reject) => {
       this.pending.push({
@@ -47,7 +47,7 @@ export class AutoConnectPgClient {
   }
 
   done() {
-    if (this.db) this.db.done();
+    if (this.db && this.db.done) this.db.done();
   }
 
   query(
@@ -77,7 +77,7 @@ export class AutoConnectPgClient {
         // eslint-disable-next-line promise/no-nesting
         db.query('SELECT pg_backend_pid()').then((result) => {
           const pid = result.rows[0][0];
-          this.pid = pid;
+          this.pid = pid as number;
           this.db = db;
           this.db.pgClient.on('notice', this.listener);
           this.execPendingQueries();
@@ -110,11 +110,11 @@ export class AutoConnectPgClient {
     assert(!!this.db);
     if (e.arrayRowMode)
       return this.db.query(e.query, e.args).then(e.resolve, e.fireError);
-    return this.db._query(e.query, e.args).then(e.resolve, e.fireError);
+    return this.db.pgQuery(e.query, e.args).then(e.resolve, e.fireError);
   }
 
   async list(query: string) {
-    let res = await this._query(query);
+    let res = await this.pgQuery(query);
     if (res instanceof Array) {
       const res0 = res[0];
       res = res0;

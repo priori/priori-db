@@ -1,23 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-underscore-dangle */
-// eslint-disable-next-line import/no-cycle
-import { Result, toResut } from './Connection';
+import { PoolClient } from 'pg';
+import { Result, toResut } from './util';
 
 export class PgClient {
-  pgClient: any;
+  pgClient: PoolClient;
 
-  done() {
-    this._done();
-  }
+  done: (() => void) | null;
 
-  _done: any;
-
-  constructor(pgClient: any, done: () => void) {
+  constructor(pgClient: PoolClient, done: () => void) {
     this.pgClient = pgClient;
-    this._done = done;
+    this.done = done;
   }
 
-  async _query(query: string, args?: Array<any>): Promise<Result> {
+  async pgQuery(query: string, args?: Array<any>): Promise<Result> {
     return new Promise<Result>((resolve, reject) => {
       this.pgClient.query(query, args).then(resolve).catch(reject);
     });
@@ -27,13 +22,13 @@ export class PgClient {
     return new Promise<Result>((resolve, reject) => {
       this.pgClient
         .query({ text: query, rowMode: 'array', values: args })
-        .then((res: Result[] | Result) => resolve(toResut(res)))
+        .then((res) => resolve(toResut(res)))
         .catch(reject);
     });
   }
 
   async list(query: string, args?: Array<any>) {
-    const res = await this._query(query, args);
+    const res = await this.pgQuery(query, args);
     return res.rows;
   }
 
