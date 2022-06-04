@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from 'path';
 import fs from 'fs';
 
@@ -16,7 +15,7 @@ function getPasswordsFileName() {
 
 export function savePasswords(
   passwords: ConnectionConfiguration[],
-  callBack: (err: any) => void
+  callBack: fs.NoParamCallback
 ) {
   const fileName = getPasswordsFileName();
   if (!fileName) return;
