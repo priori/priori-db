@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from 'react';
 import { askToCloseCurrent, newQuery, nextTab, prevTab } from '../actions';
 
@@ -21,6 +20,14 @@ export function useF5(fn: () => void) {
   return () => {
     listeners = listeners.filter((f) => f !== fn2);
   };
+}
+
+interface DocumentWithFullscreen extends Document {
+  webkitIsFullScreen?: boolean;
+  webkitExitFullscreen?: () => void;
+}
+interface HTMLElementWithFullscreen extends HTMLElement {
+  webkitRequestFullScreen?: () => void;
 }
 
 export function useShortcuts() {
@@ -52,10 +59,12 @@ export function useShortcuts() {
     } else if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) {
       // electron.ipcRenderer.send('newWindow')
     } else if (e.key === 'F11') {
-      if ((document as any).webkitIsFullScreen) {
-        (document as any).webkitExitFullscreen();
+      if ((document as DocumentWithFullscreen).webkitIsFullScreen) {
+        const doc = document as DocumentWithFullscreen;
+        if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
       } else {
-        (document.documentElement as any).webkitRequestFullScreen();
+        const el = document.documentElement as HTMLElementWithFullscreen;
+        if (el.webkitRequestFullScreen) el.webkitRequestFullScreen();
       }
       // } else if ( e.altKey && e.key == 'F4' ) {
     }
