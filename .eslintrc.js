@@ -24,6 +24,7 @@ module.exports = {
     'no-nested-ternary': 'off',
     'promise/no-nesting': 'off',
     'react/jsx-props-no-spreading': 'off',
+    'import/no-cycle': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

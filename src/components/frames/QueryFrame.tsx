@@ -3,7 +3,6 @@ import { NoticeMessage } from 'pg-protocol/dist/messages';
 import assert from 'assert';
 import { Result } from 'db/util';
 import { useEvent } from 'util/useEvent';
-// eslint-disable-next-line import/no-cycle
 import { useTab } from '../main/App';
 import { Editor } from '../Editor';
 import { Grid } from '../Grid';

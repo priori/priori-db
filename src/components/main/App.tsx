@@ -8,7 +8,6 @@ import { Nav } from './Nav';
 import { Tabs } from './Tabs';
 import { Home } from './home/Home';
 import { cancelCreateSchema, createSchema, useAskToClose } from '../../actions';
-// eslint-disable-next-line import/no-cycle
 import { Frame } from './Frame';
 
 const classNames = {

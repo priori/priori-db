@@ -1,9 +1,7 @@
 import { FrameProps } from 'types';
 import { equals } from 'components/util/equals';
 import React from 'react';
-// eslint-disable-next-line import/no-cycle
 import assert from 'assert';
-// eslint-disable-next-line import/no-cycle
 import { QueryFrame } from '../frames/QueryFrame';
 import { TableFrame } from '../frames/TableFrame';
 import { NewTableFrame } from '../frames/NewTableFrame';
