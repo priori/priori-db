@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import assert from 'assert';
+import { NoticeMessage } from 'pg-protocol/dist/messages';
+import { useEffect, useState } from 'react';
+import { useEvent } from 'util/useEvent';
 import { Connection } from './Connection';
 import { PgClient } from './PgClient';
 import { Result } from './util';
@@ -17,9 +20,9 @@ export class AutoConnectPgClient {
     args?: any[];
   }[] = [];
 
-  listener: (n: any) => void;
+  listener: (n: NoticeMessage) => void;
 
-  constructor(listener: (n: any) => void) {
+  constructor(listener: (n: NoticeMessage) => void) {
     this.listener = listener;
   }
 
@@ -127,4 +130,13 @@ export class AutoConnectPgClient {
     const res = await this.list(query);
     return res[0] || null;
   }
+}
+
+export function useAutoConnectPgClient(notice: (a: NoticeMessage) => void) {
+  const noticeCall = useEvent(notice);
+  const [client] = useState(() => new AutoConnectPgClient(noticeCall));
+  useEffect(() => {
+    return () => client.done();
+  }, [client]);
+  return client;
 }

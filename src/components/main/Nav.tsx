@@ -6,7 +6,7 @@ import {
   schemaInfo,
   tableInfo,
 } from '../../actions';
-import { FrameProps, NavSchema } from '../../types';
+import { NavSchema, Tab } from '../../types';
 import { fullView, openFunctions, openSequences } from '../../state';
 
 function height(schema: NavSchema) {
@@ -22,7 +22,7 @@ function height(schema: NavSchema) {
   }
   return schema.tables.length * 20 + 20;
 }
-export function Nav(props: { schemas: NavSchema[]; tabs: FrameProps[] }) {
+export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
   const active = props.tabs.find((c) => c.active) || null;
   return (
     <div className="nav">
@@ -103,14 +103,16 @@ export function Nav(props: { schemas: NavSchema[]; tabs: FrameProps[] }) {
                 schema.tables.map((t) => {
                   const isActive =
                     active &&
-                    (active.type === 'table' || active.type === 'tableinfo') &&
-                    active.schema === schema.name &&
-                    active.table === t.name;
+                    (active.props.type === 'table' ||
+                      active.props.type === 'tableinfo') &&
+                    active.props.schema === schema.name &&
+                    active.props.table === t.name;
                   const isOpen = props.tabs.find(
                     (c) =>
-                      (c.type === 'table' || c.type === 'tableinfo') &&
-                      c.schema === schema.name &&
-                      c.table === t.name
+                      (c.props.type === 'table' ||
+                        c.props.type === 'tableinfo') &&
+                      c.props.schema === schema.name &&
+                      c.props.table === t.name
                   );
                   return (
                     <div

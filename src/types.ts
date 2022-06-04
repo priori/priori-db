@@ -2,8 +2,6 @@ import { ConnectionConfiguration } from './db/pgpass';
 
 export interface AbstractTabProps {
   readonly type: string;
-  readonly title: string;
-  readonly active: boolean;
   readonly uid: number;
 }
 export interface QueryFrameProps extends AbstractTabProps {
@@ -13,7 +11,6 @@ export interface TableFrameProps extends AbstractTabProps {
   readonly type: 'table';
   readonly table: string;
   readonly schema: string;
-  readonly active: boolean;
 }
 export interface Type {
   name: string;
@@ -59,8 +56,14 @@ export interface NavSchema {
   functions?: { name: string; type: string }[];
 }
 
+export interface Tab {
+  readonly title: string;
+  readonly active: boolean;
+  readonly props: FrameProps;
+}
+
 export interface AppState {
-  connectionError?: unknown;
+  connectionError?: Error;
   newConnection: boolean;
   editConnections: boolean;
   newSchema: boolean;
@@ -73,7 +76,7 @@ export interface AppState {
   connected: boolean;
   password?: ConnectionConfiguration;
   schemas?: NavSchema[];
-  tabs: FrameProps[];
+  tabs: Tab[];
   tabsSort: number[];
   title: string;
 }

@@ -15,6 +15,7 @@ export interface Result {
       | { [k: string]: string | null | number | boolean }[]
       | { [k: string]: string | null | number | boolean };
   }>;
+  rowCount: number;
   fields: Array<ResultField>;
   prev?: Result;
 }

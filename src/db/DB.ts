@@ -216,8 +216,8 @@ export const DB = {
           ORDER BY 1;`);
     return res;
   },
-  listCols2(schemaName: string, tableName: string) {
-    return Connection.list(`
+  async listCols2(schemaName: string, tableName: string) {
+    const res = await Connection.list(`
             SELECT
             cols.column_name,
             cols.data_type,
@@ -244,6 +244,16 @@ export const DB = {
     WHERE table_schema = '${schemaName}'
         AND table_name   = '${tableName}'
         `);
+    return res as {
+      column_name: string;
+      data_type: string;
+      column_default: string;
+      is_nullable: boolean | string;
+      comment: string;
+      length: number;
+      scale: number;
+      is_primary: boolean;
+    }[];
   },
   async listCols(schemaName: string, tableName: string) {
     const res = await Connection.list(

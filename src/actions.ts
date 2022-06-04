@@ -1,3 +1,5 @@
+import assert from 'assert';
+import { useEffect } from 'react';
 import { ConnectionConfiguration, savePasswords } from './db/pgpass';
 import { Connection } from './db/Connection';
 import {
@@ -32,7 +34,7 @@ import {
   removeError2,
 } from './state';
 import { DB } from './db/DB';
-import { FrameProps } from './types';
+import { FrameProps, Tab } from './types';
 
 export function open(c: ConnectionConfiguration) {
   setConnection(c);
@@ -43,7 +45,7 @@ export function open(c: ConnectionConfiguration) {
         WHERE datistemplate = false;`
   ).then(
     (res) => {
-      setBases(res.map((r) => r.name) as string[]);
+      setBases(res.map((r) => (r as { name: string }).name) as string[]);
     },
     (err) => setConnectionError(err)
   );
@@ -80,11 +82,11 @@ export function newConnection(conf: ConnectionConfiguration, index?: number) {
           console.error(err);
         } else {
           setConnection(conf);
-          setBases(res.map((r) => r.name) as string[]);
+          setBases(res.map((r) => (r as { name: string }).name) as string[]);
         }
       });
     },
-    (err: unknown) => setConnectionError(err)
+    (err: Error) => setConnectionError(err)
   );
 }
 
@@ -112,12 +114,6 @@ export function cancelCreateSchema() {
   cancelCreateSchema2();
 }
 
-export function closeCurrent() {
-  if (!currentState().tabs.length) {
-    window.close();
-  } else closeTab2(currentState().tabs.find((c) => c.active) as FrameProps);
-}
-
 export function nextTab() {
   const state = currentState();
   if (state.tabs.length === 0) return;
@@ -134,12 +130,37 @@ export function prevTab() {
   else activateTab2(state.tabs[activeIndex - 1]);
 }
 
-export function activateTab(c: FrameProps) {
+export function activateTab(c: Tab) {
   activateTab2(c);
 }
 
+let askToCloseHandler: ((uid: number) => boolean) | undefined;
+export function useAskToClose(fn: (uid: number) => boolean) {
+  useEffect(() => {
+    if (askToCloseHandler) throw new Error('useAskToCloseListener!');
+    askToCloseHandler = fn;
+    return () => {
+      askToCloseHandler = undefined;
+    };
+  }, [fn]);
+}
+
+export function askToCloseTab(c: FrameProps) {
+  if (!askToCloseHandler || askToCloseHandler(c.uid)) closeTab2(c.uid);
+}
+
 export function closeTab(c: FrameProps) {
-  closeTab2(c);
+  closeTab2(c.uid);
+}
+
+export function askToCloseCurrent() {
+  if (!currentState().tabs.length) {
+    window.close();
+  } else {
+    const props = currentState().tabs.find((c) => c.active)?.props;
+    assert(props);
+    askToCloseTab(props);
+  }
 }
 
 export function openTable(schema: string, t: { name: string; type: string }) {
@@ -166,9 +187,9 @@ export function connect(s: string) {
     }
   );
 }
-export function closeThisAndReloadNav(props: FrameProps) {
+export function closeThisAndReloadNav(uid: number) {
   reloadNav();
-  closeTab2(props);
+  closeTab2(uid);
 }
 
 export function changeTabsSort(sort: number[]) {

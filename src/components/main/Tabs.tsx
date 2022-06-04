@@ -1,22 +1,27 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 import { Component } from 'react';
-import { activateTab, changeTabsSort, closeTab, newQuery } from '../../actions';
-import { AbstractTabProps, FrameProps } from '../../types';
+import {
+  activateTab,
+  changeTabsSort,
+  askToCloseTab,
+  newQuery,
+} from '../../actions';
+import { Tab } from '../../types';
 import { updateTabText } from '../../state';
 
 export interface TabsProps {
-  tabs: FrameProps[];
+  tabs: Tab[];
 }
-export interface Tab extends AbstractTabProps {
+export interface TabWidth extends Tab {
   width: number;
 }
 export interface TabsState {
-  tabs: Tab[];
+  tabs: TabWidth[];
   sorting: boolean;
   initialClientX: number;
   offset: number;
-  editing: FrameProps | null;
+  editing: Tab | null;
 }
 
 export class Tabs extends Component<TabsProps, TabsState> {
@@ -59,7 +64,9 @@ export class Tabs extends Component<TabsProps, TabsState> {
   UNSAFE_componentWillReceiveProps(next: TabsProps) {
     if (this.state.sorting) this.applySort();
     const tabs = next.tabs.map((t) => {
-      const currentTab = this.state.tabs.find((t2) => t2.uid === t.uid);
+      const currentTab = this.state.tabs.find(
+        (t2) => t2.props.uid === t.props.uid
+      );
       const current = currentTab || t;
       return {
         ...current,
@@ -78,8 +85,8 @@ export class Tabs extends Component<TabsProps, TabsState> {
     }, 1);
   }
 
-  onDoubleClick(t: FrameProps) {
-    if (t.type === 'query') {
+  onDoubleClick(t: Tab) {
+    if (t.props.type === 'query') {
       this.setState((state) => ({
         ...state,
         editing: t,
@@ -113,7 +120,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
     }));
   }
 
-  private mouseDown(e: React.MouseEvent<HTMLSpanElement>, t: FrameProps) {
+  private mouseDown(e: React.MouseEvent<HTMLSpanElement>, t: Tab) {
     activateTab(t);
     this.setState((state) => ({
       ...state,
@@ -128,7 +135,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
     const { tabs } = this.calculate();
     tabs.sort((a, b) => a.left - b.left);
     this.applySort();
-    changeTabsSort(tabs.map((a) => a.uid));
+    changeTabsSort(tabs.map((a) => a.props.uid));
   }
 
   private windowBlur() {
@@ -185,7 +192,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
               return (
                 <span
                   className={`tab${t.active ? ' active' : ''}`}
-                  key={t.uid}
+                  key={t.props.uid}
                   onMouseDown={(e) => {
                     if (this.state.editing !== t) {
                       if (this.state.editing && this.prevEl) {
@@ -223,7 +230,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
                     <i
                       className="fa fa-close"
                       onClick={(e) => {
-                        closeTab(t);
+                        askToCloseTab(t.props);
                         e.stopPropagation();
                       }}
                     />
@@ -246,7 +253,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
           {tabs.map((t) => (
             <span
               className={`tab${t.active ? ' active' : ''}`}
-              key={t.uid}
+              key={t.props.uid}
               style={{ width, position: 'absolute', left: t.left }}
             >
               <span className="tab-name">{t.title}</span>

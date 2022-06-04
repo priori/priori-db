@@ -1,5 +1,5 @@
+import { Component } from 'react';
 import { NewTableFrameProps, Type } from '../../types';
-import { Frame } from './Frame';
 import { ListInput } from '../util/ListInput';
 import { Connection } from '../../db/Connection';
 import { throwError } from '../../state';
@@ -42,7 +42,7 @@ export interface NewTable {
 // }
 class ColumnListInput extends ListInput<ColumnNewTable> {}
 
-export class NewTableFrame extends Frame<
+export class NewTableFrame extends Component<
   NewTableFrameProps,
   { constraintsOpen: boolean; newTable: NewTable }
 > {
@@ -65,6 +65,7 @@ export class NewTableFrame extends Frame<
     };
   }
 
+  // eslint-disable-next-line react/sort-comp
   save() {
     const pks = this.state.newTable.columns.filter((col) => col.primaryKey);
 
@@ -103,7 +104,7 @@ export class NewTableFrame extends Frame<
     Connection.query(query).then(
       // eslint-disable-next-line promise/always-return
       () => {
-        closeThisAndReloadNav(this.props);
+        closeThisAndReloadNav(this.props.uid);
       },
       (err) => {
         throwError(err);
@@ -120,14 +121,14 @@ export class NewTableFrame extends Frame<
       precision: '',
       notNull: false,
       primaryKey: false,
-    };
+    } as ColumnNewTable;
   }
 
   onChangeCols(cols: ColumnNewTable[]) {
-    this.setState({
-      ...this.state,
-      newTable: { ...this.state.newTable, columns: cols },
-    });
+    this.setState((state) => ({
+      ...state,
+      newTable: { ...state.newTable, columns: cols },
+    }));
   }
 
   colFormRender(
@@ -267,26 +268,20 @@ export class NewTableFrame extends Frame<
 
   render() {
     return (
-      <div
-        className={`frame new-table${this.props.active ? ' active' : ''}`}
-        ref={(el) => {
-          this.el = el;
-        }}
-        style={{ overflowX: 'auto', overflowY: 'scroll' }}
-      >
+      <>
         <div style={{ width: '720px' }}>
           <h1>New Table in {this.props.schema}</h1>
           <div className="form-field input-form-field">
             Name:{' '}
             <input
               onChange={(e) =>
-                this.setState({
-                  ...this.state,
+                this.setState((state) => ({
+                  ...state,
                   newTable: {
-                    ...this.state.newTable,
+                    ...state.newTable,
                     name: (e.target as HTMLInputElement).value,
                   },
-                })
+                }))
               }
             />
           </div>
@@ -631,7 +626,7 @@ IS 'asdf asdf';
             Save
           </button>
         </div>
-      </div>
+      </>
     );
   }
 }

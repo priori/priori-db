@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { Component, CSSProperties, ReactNode } from 'react';
-import { Result } from '../db/Connection';
+import { Result } from '../db/util';
 
 const letterSize = 6;
 

@@ -103,14 +103,28 @@ export const Connection = {
   async listFromConfiguration(c: ConnectionConfiguration, query: string) {
     const pg2 = pg;
     const database = c.database && c.database !== '*' ? c.database : 'postgres';
-    let success: (rows: Array<string | null | number | boolean>) => void;
+    let success: (
+      rows: Array<
+        | string
+        | null
+        | number
+        | boolean
+        | { [k: string]: string | null | number | boolean }
+      >
+    ) => void;
     let error: (e: Error) => void;
-    const promise = new Promise<Array<string | null | number | boolean>>(
-      (resolve, reject) => {
-        success = resolve;
-        error = reject;
-      }
-    );
+    const promise = new Promise<
+      Array<
+        | string
+        | null
+        | number
+        | boolean
+        | { [k: string]: string | null | number | boolean }
+      >
+    >((resolve, reject) => {
+      success = resolve;
+      error = reject;
+    });
     const client = new pg2.Client({
       user: c.user,
       database,

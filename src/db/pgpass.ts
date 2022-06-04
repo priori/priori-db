@@ -1,19 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const path = (window as any).require('path');
-const fs = (window as any).require('fs');
+import path from 'path';
+import fs from 'fs';
 
 // windows: %APPDATA%\postgresql\pgpass.conf
 // linux: $HOME/.pgpass
 function getPasswordsFileName() {
-  if ((window as any).process.env.APPDATA) {
-    return path.join(
-      (window as any).process.env.APPDATA,
-      'postgresql',
-      'pgpass.conf'
-    );
+  if (global.process.env.APPDATA) {
+    return path.join(global.process.env.APPDATA, 'postgresql', 'pgpass.conf');
   }
-  if ((window as any).process.env.HOME) {
-    return path.join((window as any).process.env.HOME, '.pgpass');
+  if (global.process.env.HOME) {
+    return path.join(global.process.env.HOME, '.pgpass');
   }
   return null;
 }
@@ -23,13 +19,21 @@ export function savePasswords(
   callBack: (err: any) => void
 ) {
   const fileName = getPasswordsFileName();
+  if (!fileName) return;
   const content = passwords
     .map((p) => `${p.host}:${p.port}:${p.database}:${p.user}:${p.password}`)
     .filter((v, i, a) => a.indexOf(v) === i)
     .join('\n');
-  const dir = path.join((window as any).process.env.APPDATA, 'postgresql');
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir);
+  if (global.process.env.APPDATA) {
+    const dir = path.join(global.process.env.APPDATA, 'postgresql');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
+  } else if (global.process.env.HOME) {
+    const dir = path.join(global.process.env.HOME, '.pgpass');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
   }
   fs.writeFile(fileName, content, callBack);
 }
