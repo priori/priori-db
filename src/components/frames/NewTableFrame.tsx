@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { NewTableFrameProps, Type } from '../../types';
 import { ListInput } from '../util/ListInput';
 import { Connection } from '../../db/Connection';
@@ -29,51 +29,40 @@ export interface NewTable {
 // class OpenCloseCategory extends Component<any,any> {
 //     constructor(props:any){
 //         super(props)
-//         this.state = {open:false}
+//         state = {open:false}
 //     }
 //     render(){
-//         return <div style={{opacity: this.state.open ? 1 : 0.5, borderLeft: '4px solid #ccc', paddingLeft: '10px'}}>
+//         return <div style={{opacity: state.open ? 1 : 0.5, borderLeft: '4px solid #ccc', paddingLeft: '10px'}}>
 //             <h2 onClick={e=>{
-//                 this.setState({open:!this.state.open})
-//             }}>{this.state.open?'- ':'+ '}{this.props.title}</h2>
-//             {this.state.open ? this.props.children: null}
+//                 setState({open:!state.open})
+//             }}>{state.open?'- ':'+ '}{props.title}</h2>
+//             {state.open ? props.children: null}
 //         </div>
 //     }
 // }
 class ColumnListInput extends ListInput<ColumnNewTable> {}
 
-export class NewTableFrame extends Component<
-  NewTableFrameProps,
-  { constraintsOpen: boolean; newTable: NewTable }
-> {
-  constructor(props: NewTableFrameProps) {
-    super(props);
-    this.onChangeCols = this.onChangeCols.bind(this);
-    this.colFormRender = this.colFormRender.bind(this);
-    this.state = {
-      constraintsOpen: false,
-      newTable: {
-        name: '',
-        owner: '',
-        schema: props.schema,
-        tableSpace: '',
-        comment: '',
-        // unlogged: false,
-        // hasOids: null,
-        columns: [],
-      },
-    };
-  }
+export function NewTableFrame(props: NewTableFrameProps) {
+  const [state, setState] = useState({
+    constraintsOpen: false,
+    newTable: {
+      name: '',
+      owner: '',
+      schema: props.schema,
+      tableSpace: '',
+      comment: '',
+      // unlogged: false,
+      // hasOids: null,
+      columns: [],
+    },
+  } as { constraintsOpen: boolean; newTable: NewTable });
 
-  // eslint-disable-next-line react/sort-comp
-  save() {
-    const pks = this.state.newTable.columns.filter((col) => col.primaryKey);
+  function save() {
+    const pks = state.newTable.columns.filter((col) => col.primaryKey);
 
-    const query = `CREATE TABLE "${this.props.schema}"."${
-      this.state.newTable.name
-    }"
+    const query = `CREATE TABLE "${props.schema}"."${state.newTable.name}"
         (
-        ${this.state.newTable.columns
+        ${state.newTable.columns
           .map((col) => {
             if (!col.type) throw new Error('Invalid type.');
 
@@ -100,11 +89,9 @@ export class NewTableFrame extends Component<
         )
         `;
 
-    // eslint-disable-next-line promise/catch-or-return
     Connection.query(query).then(
-      // eslint-disable-next-line promise/always-return
       () => {
-        closeThisAndReloadNav(this.props.uid);
+        closeThisAndReloadNav(props.uid);
       },
       (err) => {
         throwError(err);
@@ -112,8 +99,7 @@ export class NewTableFrame extends Component<
     );
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  newEntry() {
+  const newEntry = () => {
     return {
       name: '',
       type: null,
@@ -122,20 +108,20 @@ export class NewTableFrame extends Component<
       notNull: false,
       primaryKey: false,
     } as ColumnNewTable;
-  }
+  };
 
-  onChangeCols(cols: ColumnNewTable[]) {
-    this.setState((state) => ({
-      ...state,
+  const onChangeCols = (cols: ColumnNewTable[]) => {
+    setState((state2) => ({
+      ...state2,
       newTable: { ...state.newTable, columns: cols },
     }));
-  }
+  };
 
-  colFormRender(
+  const colFormRender = (
     c: ColumnNewTable,
     set: (e2: ColumnNewTable) => void,
     drop: (() => void) | null
-  ) {
+  ) => {
     return (
       <div className="columns-form-column">
         <div className="columns-form-column-name">
@@ -152,7 +138,7 @@ export class NewTableFrame extends Component<
               set({
                 ...c,
                 type:
-                  this.props.types.find(
+                  props.types.find(
                     (t) => t.name === (e.target as HTMLSelectElement).value
                   ) || null,
               })
@@ -160,7 +146,7 @@ export class NewTableFrame extends Component<
           >
             {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
             <option value="" />
-            {this.props.types.map((type) => (
+            {props.types.map((type) => (
               <option key={type.name} value={type.name}>
                 {type.name}
               </option>
@@ -264,70 +250,69 @@ export class NewTableFrame extends Component<
         </div>
       </div>
     );
-  }
+  };
 
-  render() {
-    return (
-      <>
-        <div style={{ width: '720px' }}>
-          <h1>New Table in {this.props.schema}</h1>
-          <div className="form-field input-form-field">
-            Name:{' '}
-            <input
-              onChange={(e) =>
-                this.setState((state) => ({
-                  ...state,
-                  newTable: {
-                    ...state.newTable,
-                    name: (e.target as HTMLInputElement).value,
-                  },
-                }))
-              }
-            />
-          </div>
-          {/*
+  return (
+    <>
+      <div style={{ width: '720px' }}>
+        <h1>New Table in {props.schema}</h1>
+        <div className="form-field input-form-field">
+          Name:{' '}
+          <input
+            onChange={(e) =>
+              setState((state2) => ({
+                ...state2,
+                newTable: {
+                  ...state.newTable,
+                  name: (e.target as HTMLInputElement).value,
+                },
+              }))
+            }
+          />
+        </div>
+        {/*
                 <div className="form-field combo-form-field">
                     Owner:
-                    <input onChange={e=>this.setState({...this.state,newTable:{...this.state.newTable,
+                    <input onChange={e=>setState({...state,newTable:{...state.newTable,
                       owner:(e.target as HTMLInputElement).value}})} /> (combo)
                 </div>
                 <div className="form-field combo-form-field">
                     Schema:
-                    <input defaultValue={this.state.newTable.schema}
-                           onChange={e=>this.setState({...this.state,newTable:{...this.state.newTable,
+                    <input defaultValue={state.newTable.schema}
+                           onChange={e=>setState({...state,newTable:{...state.newTable,
                             schema:(e.target as HTMLInputElement).value}})} /> (combo)
                 </div>
                 <div className="form-field combo-form-field">
                     TableSpace:
-                    <input onChange={e=>this.setState({...this.state,newTable:{...this.state.newTable,
+                    <input onChange={e=>setState({...state,newTable:{...state.newTable,
                       tableSpace:(e.target as HTMLInputElement).value}})} /> (combo)
                 </div>
                 <div className="form-field textarea-form-field">
                     Comment:
                     <textarea
-                        defaultValue={this.state.newTable.comment}
-                        onChange={e=>this.setState({...this.state,newTable:{...this.state.newTable,
+                        defaultValue={state.newTable.comment}
+                        onChange={e=>setState({...state,newTable:{...state.newTable,
                           comment:(e.target as HTMLTextAreaElement).value}})} ></textarea>
                 </div> */}
-          <h2>Columns</h2>
+        <h2>Columns</h2>
 
-          <div className="columns-form">
-            <div className="head">
-              <div className="columns-form-head-name">Name</div>
-              <div className="columns-form-head-type">Data Type</div>
-              <div className="columns-form-head-length">Length</div>
-              <div className="columns-form-head-precision">Precision</div>
-              <div className="columns-form-head-notnull">Not Null</div>
-              <div className="columns-form-head-pk">Primary Key</div>
-            </div>
-            <ColumnListInput
-              entries={this.state.newTable.columns}
-              newEntry={this.newEntry}
-              onChange={this.onChangeCols}
-              entryRender={this.colFormRender}
-            />
+        <div className="columns-form">
+          <div className="head">
+            <div className="columns-form-head-name">Name</div>
+            <div className="columns-form-head-type">Data Type</div>
+            <div className="columns-form-head-length">Length</div>
+            <div className="columns-form-head-precision">Precision</div>
+            <div className="columns-form-head-notnull">Not Null</div>
+            <div className="columns-form-head-pk">Primary Key</div>
           </div>
-          {/*
+          <ColumnListInput
+            entries={state.newTable.columns}
+            newEntry={newEntry}
+            onChange={onChangeCols}
+            entryRender={colFormRender}
+          />
+        </div>
+        {/*
                 <OpenCloseCategory title="Constraints">
                     <h3>Primary Key</h3>
                     Name: <input type="text"/><br/>
@@ -372,7 +357,7 @@ export class NewTableFrame extends Component<
                                 <td>
                                     Local: <select>
                                         <option></option>
-                                        {this.state.newTable.columns.filter(c=>c.name).map(c=> <option value={c.name} key={c.name}>
+                                        {state.newTable.columns.filter(c=>c.name).map(c=> <option value={c.name} key={c.name}>
                                             {c.name}
                                         </option>)}
                                 </select><br/>
@@ -453,7 +438,7 @@ export class NewTableFrame extends Component<
                                 <td>
                                     <select>
                                         <option></option>
-                                    {this.state.newTable.columns.filter(c=>c.name).map(c=> <option value={c.name} key={c.name}>
+                                    {state.newTable.columns.filter(c=>c.name).map(c=> <option value={c.name} key={c.name}>
                                         {c.name}
                                     </option>)}
                                 </select></td>
@@ -486,18 +471,18 @@ export class NewTableFrame extends Component<
                     Fill factor: <input type="number"/>
                 </div>
                 <div className="form-field checkbox-form-field"
-                     onClick={e=>this.setState({newTable:{...this.state.newTable,hasOids:!this.state.newTable.hasOids}})}>
-                    {this.state.newTable.hasOids? <i className="fa fa-check-square-o"/>: <i className="fa fa-square-o"/> }{' '}
+                     onClick={e=>setState({newTable:{...state.newTable,hasOids:!state.newTable.hasOids}})}>
+                    {state.newTable.hasOids? <i className="fa fa-check-square-o"/>: <i className="fa fa-square-o"/> }{' '}
                     Has Oids
                 </div>
                 <div className="form-field checkbox-form-field"
-                     onClick={e=>this.setState({newTable:{...this.state.newTable,unlogged:!this.state.newTable.unlogged}})}>
-                    {this.state.newTable.unlogged? <i className="fa fa-check-square-o"/>: <i className="fa fa-square-o"/> }{' '}
+                     onClick={e=>setState({newTable:{...state.newTable,unlogged:!state.newTable.unlogged}})}>
+                    {state.newTable.unlogged? <i className="fa fa-check-square-o"/>: <i className="fa fa-square-o"/> }{' '}
                     Unlogged
                 </div>
-                <div style={{ opacity: !this.state.newTable.like ? 0.5 : 1 }}>
+                <div style={{ opacity: !state.newTable.like ? 0.5 : 1 }}>
                     <div className="form-field input-form-field">
-                        Like: <input onChange={e=>this.setState({newTable:{...this.state.newTable,like:e.target.value}})} /> (combo)
+                        Like: <input onChange={e=>setState({newTable:{...state.newTable,like:e.target.value}})} /> (combo)
                     </div>
                     <div className="form-field checkbox-form-field not-checked">
                         <i className="fa fa-square-o"/> With default value
@@ -621,12 +606,11 @@ IS 'asdf asdf';
 `} /><br/>
                 </OpenCloseCategory><br/>
                         */}
-          <br />
-          <button type="button" onClick={() => this.save()}>
-            Save
-          </button>
-        </div>
-      </>
-    );
-  }
+        <br />
+        <button type="button" onClick={() => save()}>
+          Save
+        </button>
+      </div>
+    </>
+  );
 }
