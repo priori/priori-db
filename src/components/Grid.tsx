@@ -1,6 +1,14 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { Component, CSSProperties } from 'react';
+import React, {
+  CSSProperties,
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Result } from '../db/util';
+import { equals } from './util/equals';
 import { SizeControlledArea } from './util/SizeControlledArea';
 
 const letterSize = 6;
@@ -17,13 +25,9 @@ export interface GridCoreProps {
 }
 
 export interface GridState {
-  widths: number[];
   slice: [number, number];
   selected?: { rowIndex: number; colIndex: number };
 }
-// export interface GridResult {
-//   sizes: number[];
-// }
 
 function getValString(val: unknown) {
   return val === null
@@ -35,17 +39,17 @@ function getValString(val: unknown) {
     : `${val}`;
 }
 
-function buildWidths(res: Result) {
-  const fieldsSizes = res.fields.map((f) => {
-    const max = f.name.length;
-    // res.rows.forEach((row) => {
-    //   const val = row[index];
-    //   const valString = getValString(val);
-    //   const th = valString.length;
-    //   if (length > max) {
-    //     max = length;
-    //   }
-    // });
+function buildBaseWidths(res: Result) {
+  const fieldsSizes = res.fields.map((f, index) => {
+    let max = f.name.length;
+    for (const row of res.rows) {
+      const val = row[index];
+      const valString = getValString(val);
+      const { length } = valString;
+      if (length > max) {
+        max = length;
+      }
+    }
     return max;
   });
   return fieldsSizes.map(
@@ -74,13 +78,13 @@ function getType(val: unknown) {
     : undefined;
 }
 
-function buildRoundedWidhts(initialWidths: number[], initialWidth: number) {
-  const minWidth = initialWidths.reduce((a: number, b: number) => a + b, 1);
-  const finalWidth = initialWidth > minWidth ? initialWidth : minWidth;
+function buildFinalWidths(initialColsWidths: number[], areaWidth: number) {
+  const minWidth = initialColsWidths.reduce((a: number, b: number) => a + b, 1);
+  const finalWidth = areaWidth > minWidth ? areaWidth : minWidth;
   const ratio = finalWidth / minWidth;
-  const floatSizes = initialWidths.map((w: number) => w * ratio);
+  const floatSizes = initialColsWidths.map((w: number) => w * ratio);
   const roundedSizes = floatSizes.map((w) => Math.round(w));
-  const fields = initialWidths.map((_, i) => i);
+  const fields = initialColsWidths.map((_, i) => i);
   const sortedByDiff = [...fields];
   sortedByDiff.sort((aIndex, bIndex) => {
     const floatA = floatSizes[aIndex];
@@ -142,172 +146,168 @@ function selectPos(
   return { top, left, leftCrop, width };
 }
 
-export class GridCore extends Component<GridCoreProps, GridState> {
-  private headerEl: HTMLElement | null = null;
+export function GridCore(props: GridCoreProps) {
+  const [state, setState] = useState({
+    slice: [0, rowsByRender],
+  } as GridState);
 
-  private scrollLeft = 0;
+  const baseWidths = useMemo(
+    () => buildBaseWidths(props.result),
+    [props.result]
+  );
 
-  private scrollTop = 0;
+  const headerElRef = useRef(null as HTMLTableElement | null);
 
-  private timeout: ReturnType<typeof setTimeout> | null = null;
+  const scrollRef = useRef({ left: 0, top: 0 });
 
-  private el: HTMLElement | null = null;
+  const timeoutRef = useRef(null as ReturnType<typeof setTimeout> | null);
 
-  private selectedEl: HTMLElement | null = null;
+  const elRef = useRef(null as HTMLDivElement | null);
 
-  private lastScrollTime: Date | null = null;
+  const selectedElRef = useRef(null as HTMLElement | null);
 
-  constructor(props: GridCoreProps) {
-    super(props);
-    this.state = {
-      widths: buildWidths(props.result),
-      // width: window.innerWidth - navWidth - scrollWidth,
-      slice: [0, rowsByRender],
-    };
-    this.setHeader = this.setHeader.bind(this);
-    this.setEl = this.setEl.bind(this);
-    this.clickListener = this.clickListener.bind(this);
-    this.gridContentScrollListener = this.gridContentScrollListener.bind(this);
-  }
+  const lastScrollTimeRef = useRef(null as Date | null);
 
-  UNSAFE_componentWillReceiveProps(next: GridCoreProps) {
-    if (next.result !== this.props.result) {
-      this.scrollTop = 0;
-      this.scrollLeft = 0;
-      this.setState((state) => ({
-        ...state,
-        widths: next.result ? buildWidths(next.result) : [],
-        selected: undefined,
-      }));
-    }
-  }
+  useEffect(() => {
+    scrollRef.current = { left: 0, top: 0 };
+    setState((state2) => ({
+      ...state2,
+      selected: undefined,
+    }));
+  }, [props.result]);
 
-  setEl(el: HTMLElement | null) {
-    this.el = el;
-  }
+  const { widths: finalWidths, width: gridContentTableWidth } = useMemo(
+    () => buildFinalWidths(baseWidths, props.width - 1),
+    [baseWidths, props.width]
+  );
+  const gridContentMarginTop = `-${headerHeight}px`;
+  const gridContentHeight = `${
+    headerHeight + props.result.rows.length * rowHeight
+  }px`;
+  const gridContentTableTop = `${state.slice[0] * rowHeight}px`;
+  const visibleRows = props.result.rows.filter(
+    (_, i) =>
+      (state.slice as number[])[0] <= i && i <= (state.slice as number[])[1]
+  );
+  const visibleStartingInEven = state.slice[0] % 2;
 
-  private setHeader(el: HTMLElement | null) {
-    this.headerEl = el;
-  }
-
-  private getColIndex(x: number) {
-    const { widths } = buildRoundedWidhts(
-      this.state.widths,
-      this.props.width - 1
-    );
+  function getColIndex(x: number) {
     let left = 0;
     let indexCount = -1;
-    for (const w of widths) {
+    for (const w of finalWidths) {
       if (x < left) return indexCount;
       left += w;
       indexCount += 1;
     }
-    return widths.length - 1;
+    return finalWidths.length - 1;
   }
 
-  private gridContentScrollListener(e: React.UIEvent<HTMLElement>) {
+  function updateSelectPos() {
+    if (!state.selected || !selectedElRef.current) return;
+    const { top, left, leftCrop, width } = selectPos(
+      finalWidths,
+      state.selected.colIndex,
+      state.selected.rowIndex,
+      scrollRef.current.top,
+      scrollRef.current.left,
+      props.width
+    );
+    const selectedEl = selectedElRef.current;
+    selectedEl.style.top = `${top}px`;
+    selectedEl.style.left = `${left}px`;
+    const wrapper2El = selectedEl.firstChild as HTMLDivElement;
+    wrapper2El.style.marginLeft = `-${leftCrop}px`;
+    selectedEl.style.width = `${width}px`;
+    selectedEl.style.display = top < 0 || width < 0 ? 'none' : '';
+  }
+
+  function gridContentScrollListener(e: React.UIEvent<HTMLElement>) {
     const container = e.target as HTMLElement;
-    this.scrollLeft = container.scrollLeft;
-    this.scrollTop = container.scrollTop;
-    if (this.headerEl) {
-      this.headerEl.style.marginLeft = `-${container.scrollLeft}px`;
+    scrollRef.current = {
+      left: container.scrollLeft,
+      top: container.scrollTop,
+    };
+    if (headerElRef.current) {
+      const headerEl = headerElRef.current;
+      headerEl.style.marginLeft = `-${container.scrollLeft}px`;
       if (container.scrollTop > 10) {
-        this.headerEl.style.boxShadow = 'rgba(0, 0, 0, 0.5) -3px 0px 10px';
+        headerEl.style.boxShadow = 'rgba(0, 0, 0, 0.5) -3px 0px 10px';
       } else {
-        this.headerEl.style.boxShadow = '';
+        headerEl.style.boxShadow = '';
       }
     }
-    this.updateSelectPos();
+    updateSelectPos();
     const fn = () => {
-      this.lastScrollTime = null;
+      lastScrollTimeRef.current = null;
       // relative to top. to render by the center use scrollTop + container.offsetHeight / 2
       const currentIndex = Math.floor(container.scrollTop / rowHeight);
       if (
-        (this.state.slice as number[])[0] - currentIndex < allowedTopDistance ||
-        currentIndex - (this.state.slice as number[])[1] < allowedBottomDistance
+        (state.slice as number[])[0] - currentIndex < allowedTopDistance ||
+        currentIndex - (state.slice as number[])[1] < allowedBottomDistance
       ) {
         const start =
           currentIndex > topRenderOffset
             ? currentIndex - topRenderOffset
             : currentIndex;
-        this.setState((state) => ({
-          ...state,
+        setState((state2) => ({
+          ...state2,
           slice: [start, start + rowsByRender],
         }));
       }
     };
-    if (this.timeout) clearTimeout(this.timeout);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     const now = new Date();
     if (
-      this.lastScrollTime &&
-      now.getTime() - this.lastScrollTime.getTime() > 200
+      lastScrollTimeRef.current &&
+      now.getTime() - lastScrollTimeRef.current.getTime() > 200
     ) {
       fn();
     } else {
-      if (!this.lastScrollTime) this.lastScrollTime = now;
-      this.timeout = setTimeout(fn, 200);
+      if (!lastScrollTimeRef.current) lastScrollTimeRef.current = now;
+      timeoutRef.current = setTimeout(fn, 200);
     }
   }
 
-  private clickListener(e: React.MouseEvent<HTMLElement>) {
-    const el = this.el as HTMLElement;
+  function clickListener(e: React.MouseEvent<HTMLElement>) {
+    const el = elRef.current as HTMLElement;
     const rect = el.getBoundingClientRect();
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top - headerHeight;
     if (x < 0 || y < 0 || x > el.offsetWidth || y > el.offsetHeight) return;
-    x += this.scrollLeft;
-    y += this.scrollTop;
+    x += scrollRef.current.left;
+    y += scrollRef.current.top;
     const rowIndex = Math.floor(y / rowHeight);
-    const colIndex = this.getColIndex(x);
+    const colIndex = getColIndex(x);
     if (
-      rowIndex >= this.props.result.rows.length ||
-      colIndex >= this.props.result.fields.length ||
-      (this.state.selected &&
-        this.state.selected.rowIndex === rowIndex &&
-        this.state.selected.colIndex === colIndex)
+      rowIndex >= props.result.rows.length ||
+      colIndex >= props.result.fields.length ||
+      (state.selected &&
+        state.selected.rowIndex === rowIndex &&
+        state.selected.colIndex === colIndex)
     )
       return;
-    this.setState((state) => ({
-      ...state,
+    setState((state2) => ({
+      ...state2,
       selected: { rowIndex, colIndex },
     }));
   }
 
-  private updateSelectPos() {
-    if (!this.state.selected || !this.selectedEl) return;
-    const { top, left, leftCrop, width } = selectPos(
-      buildRoundedWidhts(this.state.widths, this.props.width - 1).widths,
-      this.state.selected.colIndex,
-      this.state.selected.rowIndex,
-      this.scrollTop,
-      this.scrollLeft,
-      this.props.width
-    );
-    this.selectedEl.style.top = `${top}px`;
-    this.selectedEl.style.left = `${left}px`;
-    const wrapper2El = this.selectedEl.firstChild as HTMLDivElement;
-    wrapper2El.style.marginLeft = `-${leftCrop}px`;
-    // wrapper2El.style.width = originalWidth + "px";
-    this.selectedEl.style.width = `${width}px`;
-    this.selectedEl.style.display = top < 0 || width < 0 ? 'none' : '';
-  }
-
-  private selected(widths: number[]): JSX.Element {
-    if (!this.state.selected) return <></>;
-    const row = this.props.result.rows[this.state.selected.rowIndex];
-    const val = row[this.state.selected.colIndex];
+  function selectedRender(widths: number[]): JSX.Element {
+    if (!state.selected) return <></>;
+    const row = props.result.rows[state.selected.rowIndex];
+    const val = row[state.selected.colIndex];
     const type = getType(val);
     const valString = getValString(val);
     const { top, left, leftCrop, width } = selectPos(
       widths,
-      this.state.selected.colIndex,
-      this.state.selected.rowIndex,
-      this.scrollTop,
-      this.scrollLeft,
-      this.props.width - scrollWidth
+      state.selected.colIndex,
+      state.selected.rowIndex,
+      scrollRef.current.top,
+      scrollRef.current.left,
+      props.width - scrollWidth
     );
-    const key = `${this.state.selected.rowIndex}/${this.state.selected.colIndex}`;
-    const even = this.state.selected.rowIndex % 2;
+    const key = `${state.selected.rowIndex}/${state.selected.colIndex}`;
+    const even = state.selected.rowIndex % 2;
 
     return (
       <div
@@ -321,11 +321,12 @@ export class GridCore extends Component<GridCoreProps, GridState> {
         }}
         key={key}
         ref={(el: HTMLDivElement) => {
-          this.selectedEl = el;
-          if (this.selectedEl) {
-            this.selectedEl.classList.remove('active');
+          selectedElRef.current = el;
+          if (el) {
+            el.classList.remove('active');
             setTimeout(() => {
-              if (this.selectedEl) this.selectedEl.classList.add('active');
+              if (selectedElRef.current)
+                selectedElRef.current.classList.add('active');
             }, 10);
           }
         }}
@@ -345,128 +346,106 @@ export class GridCore extends Component<GridCoreProps, GridState> {
     );
   }
 
-  render() {
-    const { widths, width } = buildRoundedWidhts(
-      this.state.widths,
-      this.props.width - 1
-    );
-    const gridContentMarginTop = `-${headerHeight}px`;
-    const gridContentHeight = `${
-      headerHeight + this.props.result.rows.length * rowHeight
-    }px`;
-    const gridContentTableTop = `${this.state.slice[0] * rowHeight}px`;
-    const visibleRows = this.props.result.rows.filter(
-      (_, i) =>
-        (this.state.slice as number[])[0] <= i &&
-        i <= (this.state.slice as number[])[1]
-    );
-    const visibleStartingInEven = this.state.slice[0] % 2;
-    const gridContentTableWidth = width;
-    return (
-      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-      <div
-        style={{ top: 0, left: 0, bottom: 0, right: 0, position: 'absolute' }}
-        onClick={this.clickListener}
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-        tabIndex={0}
-        // onBlur={() => {
-        // this.setState({selected:undefined});
-        // }}
-        ref={this.setEl}
-      >
-        <div className="grid-header-wrapper">
+  return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+    <div
+      style={{ top: 0, left: 0, bottom: 0, right: 0, position: 'absolute' }}
+      onClick={clickListener}
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+      tabIndex={0}
+      // onBlur={() => {
+      // this.setState({selected:undefined});
+      // }}
+      ref={elRef}
+    >
+      <div className="grid-header-wrapper">
+        <table
+          className="grid-header"
+          style={{ width: gridContentTableWidth, zIndex: 3 }}
+          ref={headerElRef}
+        >
+          <thead>
+            <tr>
+              {props.result.fields.map((f, index) => (
+                <th key={index} style={{ width: finalWidths[index] }}>
+                  {f.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
+        </table>
+      </div>
+      {selectedRender(finalWidths)}
+      <div className="grid-content" onScroll={gridContentScrollListener}>
+        <div
+          style={{
+            marginTop: gridContentMarginTop,
+            height: gridContentHeight,
+            borderBottom: '1px solid #ddd',
+          }}
+        >
           <table
-            className="grid-header"
-            style={{ width: gridContentTableWidth, zIndex: 3 }}
-            ref={this.setHeader}
+            className="content-table"
+            style={{
+              width: gridContentTableWidth,
+              position: 'relative',
+              top: gridContentTableTop,
+            }}
           >
-            <thead>
+            <thead style={{ visibility: 'hidden' }}>
               <tr>
-                {this.props.result.fields.map((f, index) => (
-                  <th key={index} style={{ width: widths[index] }}>
+                {props.result.fields.map((f, index) => (
+                  <th key={index} style={{ width: finalWidths[index] }}>
                     {f.name}
                   </th>
                 ))}
               </tr>
             </thead>
+            <tbody>
+              {visibleStartingInEven ? (
+                <tr style={{ display: 'none' }} />
+              ) : null}
+              {visibleRows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {props.result.fields.map((_, index) => {
+                    const val = row[index];
+                    const type = getType(val);
+                    const valString = getValString(val);
+                    return (
+                      <td key={index}>
+                        <div className={type}>
+                          <div className="cell">
+                            {valString && valString.length > 200
+                              ? `${valString.substring(0, 200)}...`
+                              : valString}
+                          </div>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
-        {this.selected(widths)}
-        <div className="grid-content" onScroll={this.gridContentScrollListener}>
-          <div
-            style={{
-              marginTop: gridContentMarginTop,
-              height: gridContentHeight,
-              borderBottom: '1px solid #ddd',
-            }}
-          >
-            <table
-              className="content-table"
-              style={{
-                width: gridContentTableWidth,
-                position: 'relative',
-                top: gridContentTableTop,
-              }}
-            >
-              <thead style={{ visibility: 'hidden' }}>
-                <tr>
-                  {this.props.result.fields.map((f, index) => (
-                    <th key={index} style={{ width: widths[index] }}>
-                      {f.name}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {visibleStartingInEven ? (
-                  <tr style={{ display: 'none' }} />
-                ) : null}
-                {visibleRows.map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {this.props.result.fields.map((_, index) => {
-                      const val = row[index];
-                      const type = getType(val);
-                      const valString = getValString(val);
-                      return (
-                        <td key={index}>
-                          <div className={type}>
-                            <div className="cell">
-                              {valString && valString.length > 200
-                                ? `${valString.substring(0, 200)}...`
-                                : valString}
-                            </div>
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
-export function Grid(props: GridProps) {
-  const res = props.result;
-  if (res) {
-    return (
-      <SizeControlledArea
-        style={props.style}
-        className="grid"
-        render={(width: number /* , height: number */) => (
-          <GridCore
-            result={res}
-            /* style={props.style} */
-            width={width}
-            /* height={height} */
-          />
-        )}
-      />
-    );
-  }
-  return <div className="grid" />;
-}
+export const Grid = memo(
+  (props: GridProps) => {
+    const res = props.result;
+    if (res) {
+      return (
+        <SizeControlledArea
+          style={props.style}
+          className="grid"
+          render={(width: number) => <GridCore result={res} width={width} />}
+        />
+      );
+    }
+    return <div className="grid" />;
+  },
+  (a, b) => a.result === b.result && equals(a.style, b.style)
+);
