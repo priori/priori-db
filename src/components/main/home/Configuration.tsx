@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { Component } from 'react';
+import { useState } from 'react';
 import { ConnectionConfiguration } from '../../../db/pgpass';
 
 export interface NewConectionState {
@@ -17,46 +17,42 @@ interface NewConnectionProps {
   onSubmit: (c: ConnectionConfiguration) => void;
   onSave: (c: ConnectionConfiguration) => void;
 }
-export class NewConnection extends Component<
-  NewConnectionProps,
-  NewConectionState
-> {
-  UNSAFE_componentWillMount() {
-    const { connection } = this.props;
-    this.state = {
-      passwordNeeded: false,
-      port: connection ? `${connection.port}` : '',
-      host: connection ? connection.host : '',
-      database: connection ? connection.database : '',
-      user: connection ? connection.user : '',
-      password: connection ? connection.password : '',
-    };
-  }
+export function NewConnection(props: NewConnectionProps) {
+  const { connection } = props;
 
-  remove() {
+  const [state, setState] = useState({
+    passwordNeeded: false,
+    port: connection ? `${connection.port}` : '',
+    host: connection ? connection.host : '',
+    database: connection ? connection.database : '',
+    user: connection ? connection.user : '',
+    password: connection ? connection.password : '',
+  } as NewConectionState);
+
+  function remove() {
     if (
       window.confirm(
         'Do you really want to remove this connection configuration?'
       )
     ) {
-      assert(!!this.props.onRemove);
-      this.props.onRemove();
+      assert(!!props.onRemove);
+      props.onRemove();
     }
   }
 
-  cancel() {
-    assert(this.props.onCancel);
-    this.props.onCancel();
+  function cancel() {
+    assert(props.onCancel);
+    props.onCancel();
   }
 
-  save() {
-    const { database, host, port, user, password } = this.state;
+  function save() {
+    const { database, host, port, user, password } = state;
     if (!password) {
-      this.setState({ passwordNeeded: true });
+      setState((state2) => ({ ...state2, passwordNeeded: true }));
       return;
     }
-    this.setState({ passwordNeeded: false });
-    this.props.onSave({
+    setState((state2) => ({ ...state2, passwordNeeded: false }));
+    props.onSave({
       database: database || 'postgres',
       host: host || 'localhost',
       port: (port && parseInt(port, 10)) || 5432,
@@ -65,14 +61,14 @@ export class NewConnection extends Component<
     } as ConnectionConfiguration);
   }
 
-  submit() {
-    const { database, host, port, user, password } = this.state;
+  function submit() {
+    const { database, host, port, user, password } = state;
     if (!password) {
-      this.setState({ passwordNeeded: true });
+      setState((state2) => ({ ...state2, passwordNeeded: true }));
       return;
     }
-    this.setState({ passwordNeeded: false });
-    this.props.onSubmit({
+    setState((state2) => ({ ...state2, passwordNeeded: false }));
+    props.onSubmit({
       database: database || 'postgres',
       host: host || 'localhost',
       port: (port && parseInt(port, 10)) || 5432,
@@ -81,84 +77,92 @@ export class NewConnection extends Component<
     } as ConnectionConfiguration);
   }
 
-  render() {
-    const { connection } = this.props;
-    return (
-      <div className="new-connection">
-        Host:{' '}
+  return (
+    <div className="new-connection">
+      Host:{' '}
+      <input
+        placeholder="localhost"
+        defaultValue={connection ? connection.host : ''}
+        onChange={(e) =>
+          setState((state2) => ({
+            ...state2,
+            host: (e.target as HTMLInputElement).value,
+          }))
+        }
+      />
+      <br />
+      Port:{' '}
+      <input
+        placeholder="5432"
+        defaultValue={connection ? connection.port : ''}
+        onChange={(e) =>
+          setState((state2) => ({
+            ...state2,
+            port: (e.target as HTMLInputElement).value,
+          }))
+        }
+      />
+      <br />
+      Database:{' '}
+      <input
+        placeholder="postgres"
+        defaultValue={connection ? connection.database : ''}
+        onChange={(e) =>
+          setState((state2) => ({
+            ...state2,
+            database: (e.target as HTMLInputElement).value,
+          }))
+        }
+      />
+      <br />
+      User:{' '}
+      <input
+        placeholder="postgres"
+        defaultValue={connection ? connection.user : ''}
+        onChange={(e) =>
+          setState((state2) => ({
+            ...state2,
+            user: (e.target as HTMLInputElement).value,
+          }))
+        }
+      />
+      <br />
+      <span className={state.passwordNeeded ? 'error' : undefined}>
+        Password:{' '}
         <input
-          placeholder="localhost"
-          defaultValue={connection ? connection.host : ''}
+          defaultValue={connection ? connection.password : ''}
           onChange={(e) =>
-            this.setState({ host: (e.target as HTMLInputElement).value })
+            setState((state2) => ({
+              ...state2,
+              password: (e.target as HTMLInputElement).value,
+            }))
           }
+          type="password"
         />
-        <br />
-        Port:{' '}
-        <input
-          placeholder="5432"
-          defaultValue={connection ? connection.port : ''}
-          onChange={(e) =>
-            this.setState({ port: (e.target as HTMLInputElement).value })
-          }
-        />
-        <br />
-        Database:{' '}
-        <input
-          placeholder="postgres"
-          defaultValue={connection ? connection.database : ''}
-          onChange={(e) =>
-            this.setState({ database: (e.target as HTMLInputElement).value })
-          }
-        />
-        <br />
-        User:{' '}
-        <input
-          placeholder="postgres"
-          defaultValue={connection ? connection.user : ''}
-          onChange={(e) =>
-            this.setState({ user: (e.target as HTMLInputElement).value })
-          }
-        />
-        <br />
-        <span className={this.state.passwordNeeded ? 'error' : undefined}>
-          Password:{' '}
-          <input
-            defaultValue={connection ? connection.password : ''}
-            onChange={(e) =>
-              this.setState({ password: (e.target as HTMLInputElement).value })
-            }
-            type="password"
-          />
-        </span>
-        <br />
-        <div style={{ marginTop: '4px', marginBottom: '4px' }}>
-          <button onClick={() => this.submit()} type="button">
-            <i className="fa fa-chain" /> Save &amp; Connect
-          </button>{' '}
-          {this.props.onCancel ? (
-            <button
-              onClick={() => this.cancel()}
-              className="cancel"
-              type="button"
-            >
-              <i className="fa fa-rotate-left" /> Cancel
-            </button>
-          ) : null}
-        </div>
-        <button onClick={() => this.save()} type="button">
-          <i className="fa fa-save" /> Just Save
+      </span>
+      <br />
+      <div style={{ marginTop: '4px', marginBottom: '4px' }}>
+        <button onClick={() => submit()} type="button">
+          <i className="fa fa-chain" /> Save &amp; Connect
         </button>{' '}
-        {this.props.onRemove ? (
-          <button
-            style={{ color: '#e00' }}
-            onClick={() => this.remove()}
-            type="button"
-          >
-            <i className="fa fa-remove" /> Remove
+        {props.onCancel ? (
+          <button onClick={() => cancel()} className="cancel" type="button">
+            <i className="fa fa-rotate-left" /> Cancel
           </button>
-        ) : null}{' '}
+        ) : null}
       </div>
-    );
-  }
+      <button onClick={() => save()} type="button">
+        <i className="fa fa-save" /> Just Save
+      </button>{' '}
+      {props.onRemove ? (
+        <button
+          style={{ color: '#e00' }}
+          onClick={() => remove()}
+          type="button"
+        >
+          <i className="fa fa-remove" /> Remove
+        </button>
+      ) : null}{' '}
+    </div>
+  );
 }
