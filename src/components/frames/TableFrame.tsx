@@ -1,6 +1,5 @@
-import { Result } from 'db/util';
 import { useEffect, useState } from 'react';
-import { Connection } from '../../db/Connection';
+import { query } from '../../db/Connection';
 import { Grid } from '../Grid';
 import { TableFrameProps } from '../../types';
 
@@ -15,13 +14,13 @@ function buildSortSql() {
 export function TableFrame(props: TableFrameProps) {
   const [state, setState] = useState({ res: undefined as undefined | Result });
 
-  const query = `SELECT * FROM "${props.schema}"."${
+  const sql = `SELECT * FROM "${props.schema}"."${
     props.table
   }" ${buildWhere()}${buildSortSql()}LIMIT 1000`;
 
   useEffect(() => {
     let mounted = true;
-    Connection.query(query, []).then(
+    query(sql, [], true).then(
       (res) => {
         // res.fields.forEach( f => {
         //     const sortCol = this.sort.find( c => c.col == f.name )
@@ -42,7 +41,7 @@ export function TableFrame(props: TableFrameProps) {
     return () => {
       mounted = false;
     };
-  }, [query]);
+  }, [sql]);
 
   return (
     <>

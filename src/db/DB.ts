@@ -1,15 +1,15 @@
-import { Connection } from './Connection';
+import { list, databaseName } from './Connection';
 import { Type } from '../types';
 
 export const DB = {
   async listDatabases() {
     const sql =
       'SELECT DISTINCT catalog_name db_name FROM information_schema.schemata;';
-    return Connection.list(sql);
+    return list(sql);
   },
 
   async listSchemas() {
-    const res = await Connection.list(
+    const res = await list(
       `
           SELECT schema_name "name"
           FROM information_schema.schemata
@@ -21,13 +21,13 @@ export const DB = {
              -- nspacl IS NOT NULL
            ORDER BY 1
         `,
-      [Connection.database]
+      [databaseName()]
     );
     return res.map((i) => i.name as string);
   },
 
   async listEntitiesFromSchema(schemaName: string) {
-    const entities = (await Connection.list(
+    const entities = (await list(
       `SELECT
               relname as "name",
               CASE
@@ -66,7 +66,7 @@ export const DB = {
   },
 
   async types() {
-    const types = (await Connection.list(`SELECT *
+    const types = (await list(`SELECT *
             FROM
                 (SELECT
                     format_type(t.oid,NULL) AS name,
@@ -120,7 +120,7 @@ export const DB = {
   },
 
   async getSchema(schemaId: number) {
-    const res = await Connection.list(
+    const res = await list(
       `SELECT n.oid schema_id, n.nspname AS schema_name,
             pg_catalog.pg_get_userbyid(n.nspowner) AS schema_owner,
             pg_catalog.obj_description(n.oid, 'pg_namespace') AS schema_comment
@@ -134,7 +134,7 @@ export const DB = {
 
   async listTables() {
     // and views
-    const res = await Connection.list(
+    const res = await list(
       `SELECT
           s.catalog_name db, s.schema_name, t.table_name, t.table_type,
           t.is_insertable_into, t.is_typed,
@@ -163,13 +163,13 @@ export const DB = {
           WHERE catalog_name = CAST($1 as text) and (n.nspname !~ '^pg_' OR n.nspname='pg_catalog')
           ORDER BY s.schema_name, t.table_type,t.table_name
           `,
-      [Connection.database]
+      [databaseName()]
     );
     return res;
   },
   async listTablesFromSchema(schemaName: string) {
     // and views
-    const res = await Connection.list(
+    const res = await list(
       `SELECT
                   relname as "name",
                   CASE
@@ -185,18 +185,18 @@ export const DB = {
     return res;
   },
   async listSequences(schemaName: string) {
-    const res = await Connection.list(
+    const res = await list(
       `SELECT
             *, sequence_name, data_type, minimum_value, maximum_value, start_value
           FROM information_schema.sequences
           WHERE sequence_catalog= CAST($1 as text) AND
             sequence_schema= CAST($2 as text) ;`,
-      [Connection.database, schemaName]
+      [databaseName(), schemaName]
     );
     return res;
   },
   async listFunctions(schemaName: string) {
-    const res = await Connection.list(
+    const res = await list(
       `SELECT  p.proname
           FROM  pg_catalog.pg_namespace n
           JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid
@@ -207,7 +207,7 @@ export const DB = {
   },
   async listDataTypes() {
     const res =
-      await Connection.list(`SELECT DISTINCT pg_catalog.format_type(t.oid, NULL) d_types
+      await list(`SELECT DISTINCT pg_catalog.format_type(t.oid, NULL) d_types
           FROM pg_catalog.pg_type t
               LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
           WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
@@ -217,7 +217,7 @@ export const DB = {
     return res;
   },
   async listCols2(schemaName: string, tableName: string) {
-    const res = await Connection.list(`
+    const res = await list(`
             SELECT
             cols.column_name,
             cols.data_type,
@@ -256,7 +256,7 @@ export const DB = {
     }[];
   },
   async listCols(schemaName: string, tableName: string) {
-    const res = await Connection.list(
+    const res = await list(
       `SELECT ordinal_position, column_name, COLUMNS.data_type, COLUMNS.udt_name udt_type,
           CASE WHEN COLUMNS.data_type='ARRAY' THEN e.data_type||'[]' WHEN (column_default ilike 'nextval(%' AND is_nullable='NO') THEN 'serial' ELSE COLUMNS.data_type END field_type,
           column_default, CASE WHEN is_nullable='YES' THEN true else false end is_nullable, COLUMNS.character_maximum_length,
@@ -289,12 +289,12 @@ export const DB = {
                   WHERE tc.constraint_type in ('PRIMARY KEY', 'UNIQUE', 'FOREIGN KEY')
           ) as c ON c.dg=table_catalog AND c.sch=table_schema AND c.tb=table_name AND c.col_name=column_name
           WHERE table_catalog= CAST($1 as text) AND table_schema= CAST($2 as text) AND table_name = $3 ;`,
-      [Connection.database, schemaName, tableName]
+      [databaseName(), schemaName, tableName]
     );
     return res;
   },
   async listIndexes(schemaName: string, tableName: string) {
-    const res = await Connection.list(
+    const res = await list(
       `SELECT
               c.relname "name",
               pg_get_indexdef(c.oid) "definition",
@@ -355,7 +355,7 @@ export const DB = {
             AND NOT a.attisdropped
             AND nsp.nspname = CAST($1 as text) AND pgc.relname = CAST($2 as text)
             ORDER BY a.attnum;`;
-    const res = await Connection.list(sql, [schemaName, tableName]);
+    const res = await list(sql, [schemaName, tableName]);
     return res;
   },
 
@@ -402,7 +402,7 @@ export const DB = {
                 ELSE CAST('' AS pg_catalog.text)
             END AS user_attr
             FROM pg_catalog.pg_user u`;
-    const res = await Connection.list(sql);
+    const res = await list(sql);
     return res;
   },
   /*

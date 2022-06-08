@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TableInfoFrameProps } from '../../types';
-import { Connection } from '../../db/Connection';
+import { query } from '../../db/Connection';
 import { closeTab } from '../../actions';
 import { reloadNav, throwError } from '../../state';
 import { DB } from '../../db/DB';
@@ -56,9 +56,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   function dropCascade() {
     if (window.confirm('Do you really want to drop cascade this table?'))
-      Connection.query(
-        `DROP TABLE "${props.schema}"."${props.table}" CASCADE`
-      ).then(
+      query(`DROP TABLE "${props.schema}"."${props.table}" CASCADE`).then(
         () => {
           setTimeout(() => closeTab(props), 10);
           reloadNav();
@@ -71,7 +69,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   function drop() {
     if (window.confirm('Do you really want to drop this table?'))
-      Connection.query(`DROP TABLE "${props.schema}"."${props.table}"`).then(
+      query(`DROP TABLE "${props.schema}"."${props.table}"`).then(
         () => {
           setTimeout(() => closeTab(props), 10);
           reloadNav();
@@ -83,8 +81,8 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  function showQuery(query: string) {
-    alert(query);
+  function showQuery(q: string) {
+    alert(q);
   }
 
   return (
