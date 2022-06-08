@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { useEffect } from 'react';
 import { ConnectionConfiguration, savePasswords } from './db/pgpass';
-import { Connection } from './db/Connection';
+import { connect as dbConnect, listFromConfiguration } from './db/Connection';
 import {
   connected,
   currentState,
@@ -38,7 +38,7 @@ import { FrameProps, Tab } from './types';
 
 export function open(c: ConnectionConfiguration) {
   setConnection(c);
-  Connection.listFromConfiguration(
+  listFromConfiguration(
     c,
     `SELECT datname as name
         FROM pg_database
@@ -68,7 +68,7 @@ function removeError() {
 
 export function newConnection(conf: ConnectionConfiguration, index?: number) {
   removeError();
-  Connection.listFromConfiguration(
+  listFromConfiguration(
     conf,
     `SELECT datname as name
         FROM pg_database
@@ -168,10 +168,7 @@ export function openTable(schema: string, t: { name: string; type: string }) {
 }
 
 export function connect(s: string) {
-  Connection.connect(
-    currentState().password as ConnectionConfiguration,
-    s
-  ).then(
+  dbConnect(currentState().password as ConnectionConfiguration, s).then(
     () => {
       DB.listSchemas().then(
         (schemas) => {

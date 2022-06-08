@@ -1,12 +1,12 @@
 import { MutableRefObject, useRef, useState } from 'react';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import assert from 'assert';
-import { Result } from 'db/util';
 import { useEvent } from 'util/useEvent';
+import { QueryArrayResult } from 'pg';
 import { useTab } from '../main/App';
 import { Editor } from '../Editor';
 import { Grid } from '../Grid';
-import { useAutoConnectPgClient } from '../../db/AutoConnectPgClient';
+import { useExclusiveConnection } from '../../db/ExclusiveConnection';
 
 interface QFNoticeMessage extends NoticeMessage {
   fullView?: boolean | undefined;
@@ -15,7 +15,7 @@ interface QueryFrameState {
   running: boolean;
   notices: QFNoticeMessage[];
   resetNotices: boolean;
-  res: Result | null;
+  res: QueryArrayResult | null;
   time: null | number;
   error: {
     code: string;
@@ -88,7 +88,7 @@ export function QueryFrame() {
     error: null,
   } as QueryFrameState);
 
-  const db = useAutoConnectPgClient((notice: NoticeMessage) => {
+  const db = useExclusiveConnection((notice: NoticeMessage) => {
     setState({
       ...state,
       resetNotices: false,
@@ -104,7 +104,7 @@ export function QueryFrame() {
     const start = new Date().getTime();
     setState({ ...state, running: true, resetNotices: true });
     try {
-      const res = await db.query(query, []);
+      const res = await db.query(query, [], true);
       setState({
         ...state,
         running: false,

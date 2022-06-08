@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NewTableFrameProps, Type } from '../../types';
 import { ListInput } from '../util/ListInput';
-import { Connection } from '../../db/Connection';
+import { query } from '../../db/Connection';
 import { throwError } from '../../state';
 import { closeThisAndReloadNav } from '../../actions';
 
@@ -60,7 +60,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
   function save() {
     const pks = state.newTable.columns.filter((col) => col.primaryKey);
 
-    const query = `CREATE TABLE "${props.schema}"."${state.newTable.name}"
+    const sql = `CREATE TABLE "${props.schema}"."${state.newTable.name}"
         (
         ${state.newTable.columns
           .map((col) => {
@@ -89,7 +89,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
         )
         `;
 
-    Connection.query(query).then(
+    query(sql).then(
       () => {
         closeThisAndReloadNav(props.uid);
       },

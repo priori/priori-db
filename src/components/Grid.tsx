@@ -1,4 +1,6 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
+import { assert } from 'console';
+import { QueryArrayResult } from 'pg';
 import React, {
   CSSProperties,
   memo,
@@ -7,7 +9,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Result } from '../db/util';
 import { equals } from './util/equals';
 import { SizeControlledArea } from './util/SizeControlledArea';
 
@@ -15,11 +16,11 @@ const letterSize = 6;
 
 export interface GridProps {
   style: CSSProperties;
-  result: Result | undefined;
+  result: QueryArrayResult | undefined;
 }
 export interface GridCoreProps {
   // style: CSSProperties;
-  result: Result;
+  result: QueryArrayResult;
   width: number;
   // height: number;
 }
@@ -39,7 +40,7 @@ function getValString(val: unknown) {
     : `${val}`;
 }
 
-function buildBaseWidths(res: Result) {
+function buildBaseWidths(res: QueryArrayResult) {
   const fieldsSizes = res.fields.map((f, index) => {
     let max = f.name.length;
     for (const row of res.rows) {
@@ -181,6 +182,7 @@ export function GridCore(props: GridCoreProps) {
     [baseWidths, props.width]
   );
   const gridContentMarginTop = `-${headerHeight}px`;
+  assert(props.result.rows instanceof Array);
   const gridContentHeight = `${
     headerHeight + props.result.rows.length * rowHeight
   }px`;
