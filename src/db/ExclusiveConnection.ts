@@ -119,7 +119,12 @@ export function useExclusiveConnection(notice: (a: NoticeMessage) => void) {
   const [client] = useState(() => new ExclusiveConnection(noticeCall));
   useEffect(() => {
     return () => {
-      if (client.pid) client.stopRunningQuery();
+      if (client.pid) {
+        client.stopRunningQuery().then(() => {
+          client.db?.release();
+        });
+        return;
+      }
       client.db?.release();
     };
   }, [client]);
