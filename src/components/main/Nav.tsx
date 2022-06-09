@@ -2,9 +2,12 @@ import {
   newSchema,
   newTable,
   openSchema,
-  openTable,
-  schemaInfo,
-  tableInfo,
+  pikTable,
+  pikSchemaInfo,
+  pikTableInfo,
+  keepOpenTable,
+  keepTableInfo,
+  keepSchemaInfo,
 } from '../../actions';
 import { NavSchema, Tab } from '../../types';
 import { fullView, openFunctions, openSequences } from '../../state';
@@ -65,12 +68,15 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                 tabIndex={0}
                 className="schema-info"
                 onClick={(e) => {
-                  schemaInfo(schema.name);
+                  pikSchemaInfo(schema.name);
                   e.stopPropagation();
+                }}
+                onDoubleClick={() => {
+                  keepSchemaInfo(schema.name);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') {
-                    schemaInfo(schema.name);
+                    pikSchemaInfo(schema.name);
                     e.stopPropagation();
                   }
                 }}
@@ -131,14 +137,17 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                         role="button"
                         tabIndex={0}
                         className="table-name"
-                        onClick={() => openTable(schema.name, t)}
+                        onClick={() => pikTable(schema.name, t)}
+                        onDoubleClick={() => {
+                          keepOpenTable(schema.name, t);
+                        }}
                         onKeyDown={(e) => {
                           if (
                             e.key === ' ' ||
                             e.key === 'Enter' ||
                             e.key === 'Space'
                           ) {
-                            openTable(schema.name, t);
+                            pikTable(schema.name, t);
                           }
                         }}
                       >
@@ -151,8 +160,11 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                           tabIndex={0}
                           className="table-info"
                           onClick={(e) => {
-                            tableInfo(schema.name, t.name);
+                            pikTableInfo(schema.name, t.name);
                             e.stopPropagation();
+                          }}
+                          onDoubleClick={() => {
+                            keepTableInfo(schema.name, t.name);
                           }}
                           onKeyDown={(e) => {
                             if (
@@ -160,7 +172,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                               e.key === 'Enter' ||
                               e.key === 'Space'
                             ) {
-                              tableInfo(schema.name, t.name);
+                              pikTableInfo(schema.name, t.name);
                               e.stopPropagation();
                             }
                           }}

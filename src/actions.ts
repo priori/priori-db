@@ -7,14 +7,14 @@ import {
   currentState,
   newQuery2,
   openSchemaSuccess,
-  openTable2,
+  pikTable2,
   setBases,
   setConnection,
   toggleSchema,
   closeTab2,
   activateTab2,
-  schemaInfo2,
-  tableInfo2,
+  pikSchemaInfo2,
+  pikTableInfo2,
   newTable2,
   newSchema2,
   addConnectionConfiguration,
@@ -32,6 +32,10 @@ import {
   reloadNav,
   changeTabsSort2,
   removeError2,
+  keepTabOpen2,
+  keepTable2,
+  keepSchemaInfo2,
+  keepTableInfo2,
 } from './state';
 import { DB } from './db/DB';
 import { FrameProps, Tab } from './types';
@@ -50,16 +54,29 @@ export function open(c: ConnectionConfiguration) {
     (err) => setConnectionError(err)
   );
 }
+
 export function closeConnectionError() {
   closeConnectionError2();
 }
 
-export function schemaInfo(name: string) {
-  schemaInfo2(name);
+export function keepTabOpen(t: Tab | number) {
+  keepTabOpen2(typeof t === 'number' ? t : t.props.uid);
 }
 
-export function tableInfo(schema: string, table: string) {
-  tableInfo2(schema, table);
+export function pikSchemaInfo(name: string) {
+  pikSchemaInfo2(name);
+}
+
+export function keepSchemaInfo(name: string) {
+  keepSchemaInfo2(name);
+}
+
+export function pikTableInfo(schema: string, table: string) {
+  pikTableInfo2(schema, table);
+}
+
+export function keepTableInfo(schema: string, table: string) {
+  keepTableInfo2(schema, table);
 }
 
 function removeError() {
@@ -163,8 +180,15 @@ export function askToCloseCurrent() {
   }
 }
 
-export function openTable(schema: string, t: { name: string; type: string }) {
-  openTable2(schema, t);
+export function pikTable(schema: string, t: { name: string; type: string }) {
+  pikTable2(schema, t);
+}
+
+export function keepOpenTable(
+  schema: string,
+  t: { name: string; type: string }
+) {
+  keepTable2(schema, t);
 }
 
 export function connect(s: string) {
@@ -184,6 +208,7 @@ export function connect(s: string) {
     }
   );
 }
+
 export function closeThisAndReloadNav(uid: number) {
   reloadNav();
   closeTab2(uid);

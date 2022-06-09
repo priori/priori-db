@@ -6,6 +6,7 @@ import {
   changeTabsSort,
   askToCloseTab,
   newQuery,
+  keepTabOpen,
 } from '../../actions';
 import { Tab } from '../../types';
 import { updateTabText } from '../../state';
@@ -91,6 +92,8 @@ export class Tabs extends Component<TabsProps, TabsState> {
         ...state,
         editing: t,
       }));
+    } else {
+      keepTabOpen(t);
     }
   }
 
@@ -191,8 +194,10 @@ export class Tabs extends Component<TabsProps, TabsState> {
               const { width } = this.state.tabs[index];
               return (
                 <span
-                  className={`tab${t.active ? ' active' : ''}`}
-                  key={t.props.uid}
+                  className={`tab${t.active ? ' active' : ''}${
+                    t.keep ? '' : ' pik'
+                  }`}
+                  key={t.keep ? t.props.uid : -index}
                   onMouseDown={(e) => {
                     if (this.state.editing !== t) {
                       if (this.state.editing && this.prevEl) {
@@ -222,7 +227,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
                       }
                     />
                   ) : (
-                    <span className="tab-name">{t.title}...</span>
+                    <span className="tab-name">{t.title}</span>
                   )}
                   {this.state.editing === t ? (
                     <i className="fa fa-close" />
@@ -250,10 +255,12 @@ export class Tabs extends Component<TabsProps, TabsState> {
     return (
       <div className="tabs-header">
         <span className="tabs">
-          {tabs.map((t) => (
+          {tabs.map((t, index) => (
             <span
-              className={`tab${t.active ? ' active' : ''}`}
-              key={t.props.uid}
+              className={`tab${t.active ? ' active' : ''}${
+                t.keep ? '' : ' pik'
+              }`}
+              key={t.keep ? t.props.uid : -index}
               style={{ width, position: 'absolute', left: t.left }}
             >
               <span className="tab-name">{t.title}</span>

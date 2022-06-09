@@ -59,6 +59,7 @@ export interface NavSchema {
 export interface Tab {
   readonly title: string;
   readonly active: boolean;
+  readonly keep: boolean;
   readonly props: FrameProps;
 }
 

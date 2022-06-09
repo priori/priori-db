@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { keepTabOpen } from 'actions';
+import { useEvent } from 'util/useEvent';
+import { QueryArrayResult } from 'pg';
 import { query } from '../../db/Connection';
 import { Grid } from '../Grid';
 import { TableFrameProps } from '../../types';
@@ -12,7 +15,9 @@ function buildSortSql() {
 }
 
 export function TableFrame(props: TableFrameProps) {
-  const [state, setState] = useState({ res: undefined as undefined | Result });
+  const [state, setState] = useState({
+    res: undefined as undefined | QueryArrayResult,
+  });
 
   const sql = `SELECT * FROM "${props.schema}"."${
     props.table
@@ -43,10 +48,15 @@ export function TableFrame(props: TableFrameProps) {
     };
   }, [sql]);
 
+  const onscroll = useEvent(() => {
+    keepTabOpen(props.uid);
+  });
+
   return (
     <>
       {state.res && (
         <Grid
+          onScroll={onscroll}
           style={{
             position: 'absolute',
             top: 0,

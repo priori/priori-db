@@ -17,11 +17,13 @@ const letterSize = 6;
 export interface GridProps {
   style: CSSProperties;
   result: QueryArrayResult | undefined;
+  onScroll: () => void;
 }
 export interface GridCoreProps {
   // style: CSSProperties;
   result: QueryArrayResult;
   width: number;
+  onScroll: () => void;
   // height: number;
 }
 
@@ -224,6 +226,7 @@ export function GridCore(props: GridCoreProps) {
   }
 
   function gridContentScrollListener(e: React.UIEvent<HTMLElement>) {
+    props.onScroll();
     const container = e.target as HTMLElement;
     scrollRef.current = {
       left: container.scrollLeft,
@@ -443,11 +446,16 @@ export const Grid = memo(
         <SizeControlledArea
           style={props.style}
           className="grid"
-          render={(width: number) => <GridCore result={res} width={width} />}
+          render={(width: number) => (
+            <GridCore result={res} width={width} onScroll={props.onScroll} />
+          )}
         />
       );
     }
     return <div className="grid" />;
   },
-  (a, b) => a.result === b.result && equals(a.style, b.style)
+  (a, b) =>
+    a.result === b.result &&
+    equals(a.style, b.style) &&
+    a.onScroll === b.onScroll
 );

@@ -7,10 +7,10 @@ import {
 } from './db/pgpass';
 import { AppState, NavSchema, Tab } from './types';
 import { DB } from './db/DB';
-import { Connection } from './db/Connection';
+import { query } from './db/Connection';
 
-export function throwError(err: Error) {
-  if (err.message) alert(err.message);
+export function throwError(err: unknown) {
+  if (err instanceof Error && err.message) alert(err.message);
   else if (typeof err === 'string') alert(err);
   else alert(JSON.stringify(err));
 }
@@ -145,6 +145,35 @@ export function setConnectionError(err: Error) {
   };
   fire();
 }
+export function activateTab2(c: Tab) {
+  const tabs = current.tabs.map((tab) =>
+    c.props.uid === tab.props.uid
+      ? { ...tab, active: true }
+      : { ...tab, active: false }
+  );
+  current = {
+    ...current,
+    tabs,
+    tabsSort: [
+      ...current.tabsSort.filter((uid) => uid !== c.props.uid),
+      c.props.uid,
+    ],
+  };
+  fire();
+}
+export function keepTabOpen2(uid: number) {
+  const tabs = current.tabs.map((tab) =>
+    uid === tab.props.uid
+      ? { ...tab, active: true, keep: true }
+      : { ...tab, active: false }
+  );
+  current = {
+    ...current,
+    tabs,
+    tabsSort: [...current.tabsSort.filter((uid2) => uid2 !== uid), uid],
+  };
+  fire();
+}
 
 function newFrame(frame: Tab) {
   const tabs = current.tabs.map((c) => ({ ...c, active: false }));
@@ -152,21 +181,52 @@ function newFrame(frame: Tab) {
   current = {
     ...current,
     tabs: [
-      ...tabs.filter((_, i2) => i2 <= i || i === -1),
+      ...tabs.filter(
+        (f, i2) => (i2 <= i || i === -1) && (frame.keep || f.keep)
+      ),
       frame,
-      ...tabs.filter((_, i2) => i2 > i),
+      ...tabs.filter((f, i2) => i2 > i && (frame.keep || f.keep)),
     ],
     tabsSort: [...current.tabsSort, frame.props.uid],
   };
   fire();
 }
 
-export function schemaInfo2(name: string) {
+export function pikSchemaInfo2(name: string) {
+  const openTab = current.tabs.find(
+    (tab) => tab.props.type === 'schemainfo' && tab.props.schema === name
+  );
+  if (openTab) {
+    activateTab2(openTab);
+    return;
+  }
   const uid = uidCount;
   uidCount += 1;
   newFrame({
     title: `${name} info`,
     active: true,
+    keep: false,
+    props: {
+      uid,
+      type: 'schemainfo',
+      schema: name,
+    },
+  });
+}
+export function keepSchemaInfo2(name: string) {
+  const openTab = current.tabs.find(
+    (tab) => tab.props.type === 'schemainfo' && tab.props.schema === name
+  );
+  if (openTab) {
+    keepTabOpen2(openTab.props.uid);
+    return;
+  }
+  const uid = uidCount;
+  uidCount += 1;
+  newFrame({
+    title: `${name} info`,
+    active: true,
+    keep: true,
     props: {
       uid,
       type: 'schemainfo',
@@ -175,12 +235,49 @@ export function schemaInfo2(name: string) {
   });
 }
 
-export function openTable2(schema: string, t: { name: string; type: string }) {
+export function pikTable2(schema: string, t: { name: string; type: string }) {
+  const openTab = current.tabs.find(
+    (tab) =>
+      tab.props.type === 'table' &&
+      tab.props.schema === schema &&
+      tab.props.table === t.name
+  );
+  if (openTab) {
+    activateTab2(openTab);
+    return;
+  }
   const uid = uidCount;
   uidCount += 1;
   newFrame({
     title: `${schema}.${t.name}`,
     active: true,
+    keep: false,
+    props: {
+      uid,
+      table: t.name,
+      type: 'table',
+      schema,
+    },
+  });
+}
+
+export function keepTable2(schema: string, t: { name: string; type: string }) {
+  const openTab = current.tabs.find(
+    (tab) =>
+      tab.props.type === 'table' &&
+      tab.props.schema === schema &&
+      tab.props.table === t.name
+  );
+  if (openTab) {
+    keepTabOpen2(openTab.props.uid);
+    return;
+  }
+  const uid = uidCount;
+  uidCount += 1;
+  newFrame({
+    title: `${schema}.${t.name}`,
+    active: true,
+    keep: true,
     props: {
       uid,
       table: t.name,
@@ -198,12 +295,48 @@ export function removeError2() {
   fire();
 }
 
-export function tableInfo2(schema: string, table: string) {
+export function pikTableInfo2(schema: string, table: string) {
+  const openTab = current.tabs.find(
+    (tab) =>
+      tab.props.type === 'tableinfo' &&
+      tab.props.schema === schema &&
+      tab.props.table === table
+  );
+  if (openTab) {
+    activateTab2(openTab);
+    return;
+  }
   const uid = uidCount;
   uidCount += 1;
   newFrame({
     title: `${schema}.${table} info`,
     active: true,
+    keep: false,
+    props: {
+      uid,
+      type: 'tableinfo',
+      schema,
+      table,
+    },
+  });
+}
+export function keepTableInfo2(schema: string, table: string) {
+  const openTab = current.tabs.find(
+    (tab) =>
+      tab.props.type === 'tableinfo' &&
+      tab.props.schema === schema &&
+      tab.props.table === table
+  );
+  if (openTab) {
+    keepTabOpen2(openTab.props.uid);
+    return;
+  }
+  const uid = uidCount;
+  uidCount += 1;
+  newFrame({
+    title: `${schema}.${table} info`,
+    active: true,
+    keep: true,
     props: {
       uid,
       type: 'tableinfo',
@@ -220,6 +353,7 @@ export function newTable2(schema: string) {
     newFrame({
       title: 'Nova Tabela',
       active: true,
+      keep: true,
       props: {
         uid,
         type: 'newtable',
@@ -263,7 +397,7 @@ function filterTabs(fn: (c: Tab) => boolean) {
 }
 
 export function dropSchema2(name: string) {
-  Connection.query(`DROP SCHEMA "${name}"`).then(
+  query(`DROP SCHEMA "${name}"`).then(
     () => {
       current = {
         ...current,
@@ -283,7 +417,7 @@ export function dropSchema2(name: string) {
 }
 
 export function dropSchemaCascade2(name: string) {
-  Connection.query(`DROP SCHEMA "${name}" CASCADE`).then(
+  query(`DROP SCHEMA "${name}" CASCADE`).then(
     () => {
       current = {
         ...current,
@@ -310,7 +444,7 @@ export function cancelCreateSchema2() {
   fire();
 }
 export function createSchema2(name: string) {
-  Connection.query(`CREATE SCHEMA "${name}"`).then(
+  query(`CREATE SCHEMA "${name}"`).then(
     () => {
       current = {
         ...current,
@@ -411,22 +545,6 @@ export function closeTab2(uid: number) {
   };
   fire();
 }
-export function activateTab2(c: Tab) {
-  const tabs = current.tabs.map((tab) =>
-    c.props.uid === tab.props.uid
-      ? { ...tab, active: true }
-      : { ...tab, active: false }
-  );
-  current = {
-    ...current,
-    tabs,
-    tabsSort: [
-      ...current.tabsSort.filter((uid) => uid !== c.props.uid),
-      c.props.uid,
-    ],
-  };
-  fire();
-}
 
 export function closeConnectionError2() {
   current = {
@@ -446,6 +564,7 @@ export function newQuery2() {
   uidCount += 1;
   newFrame({
     title: 'Nova Consulta',
+    keep: true,
     props: {
       uid,
       type: 'query',
