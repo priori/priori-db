@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useService } from 'util/useService';
 import { TableInfoFrameProps } from '../../types';
 import { query } from '../../db/Connection';
 import { closeTab } from '../../actions';
@@ -36,23 +36,15 @@ export interface TableInfoFrameState {
   }[];
 }
 export function TableInfoFrame(props: TableInfoFrameProps) {
-  const [state, setState] = useState({} as TableInfoFrameState);
-
-  useEffect(() => {
-    // DB.listCols(this.props.schema,this.props.table).then(r=>console.log(r))
-    DB.listCols2(props.schema, props.table).then((res) => {
-      // console.log(res)
-      // AND udt_catalog = '${baseName}'
-      setState((state2) => ({
-        ...state2,
-        cols: res,
-      }));
-    });
-    DB.listIndexes(props.schema, props.table).then((res) =>
-      setState({ indexes: res })
-    );
-    // DB.listTableMetadata(this.props.schema,this.props.table).then(res=>console.log('meta:',res))
-  }, [props.schema, props.table]);
+  const service = useService(async () => {
+    const [cols, indexes] = await Promise.all([
+      DB.listCols2(props.schema, props.table),
+      DB.listIndexes(props.schema, props.table),
+      // DB.listTableMetadata(this.props.schema,this.props.table).then(res=>console.log('meta:',res))
+    ]);
+    return { cols, indexes } as TableInfoFrameState;
+  }, []);
+  const state = service.lastValidData || { indexes: null, cols: null };
 
   function dropCascade() {
     if (window.confirm('Do you really want to drop cascade this table?'))

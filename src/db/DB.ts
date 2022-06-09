@@ -1,6 +1,10 @@
 import { list, databaseName } from './Connection';
 import { Type } from '../types';
 
+function label(s: string) {
+  return `"${s.replaceAll('"', '""')}"`;
+}
+
 export const DB = {
   async listDatabases() {
     const sql =
@@ -217,6 +221,7 @@ export const DB = {
     return res;
   },
   async listCols2(schemaName: string, tableName: string) {
+    const regclass = `'${label(schemaName)}.${label(tableName)}'::regclass`;
     const res = await list(`
             SELECT
             cols.column_name,
@@ -231,15 +236,15 @@ export const DB = {
             FROM
                 pg_catalog.pg_class c
             WHERE
-                c.oid = '${schemaName}.${tableName}'::regclass::oid
+                c.oid = ${regclass}::oid
                 AND c.relname = cols.table_name
         ) AS comment
     FROM information_schema.columns cols
     LEFT JOIN pg_attribute a
-    ON a.attrelid = '${schemaName}.${tableName}'::regclass AND a.attname = column_name
+    ON a.attrelid = ${regclass} AND a.attname = column_name
 
     LEFT JOIN pg_index i
-    ON i.indisprimary AND i.indrelid = '${schemaName}.${tableName}'::regclass AND
+    ON i.indisprimary AND i.indrelid = ${regclass} AND
         a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
     WHERE table_schema = '${schemaName}'
         AND table_name   = '${tableName}'
