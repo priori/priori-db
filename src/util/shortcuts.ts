@@ -14,12 +14,14 @@ import { askToCloseCurrent, newQuery, nextTab, prevTab } from '../actions';
 // })
 
 let listeners = [] as (() => void)[];
-export function useF5(fn: () => void) {
-  const fn2 = () => fn();
-  listeners.push(fn2);
-  return () => {
-    listeners = listeners.filter((f) => f !== fn2);
-  };
+export function useF5(originalFn: () => void) {
+  useEffect(() => {
+    const fn2 = () => originalFn();
+    listeners.push(fn2);
+    return () => {
+      listeners = listeners.filter((f) => f !== fn2);
+    };
+  }, [originalFn]);
 }
 
 interface DocumentWithFullscreen extends Document {
