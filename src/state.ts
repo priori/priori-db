@@ -1,5 +1,6 @@
 import assert from 'assert';
 import React from 'react';
+import { equals } from 'components/util/equals';
 import {
   ConnectionConfiguration,
   passwords as currentPasswords,
@@ -39,10 +40,10 @@ export function useAppState() {
   React.useEffect(() => {
     let mounted = true;
     listener = (newState) => {
-      if (mounted) setState(newState);
-      else {
-        current = newState;
+      if (mounted) {
+        if (!equals(current, newState)) setState(newState);
       }
+      current = newState;
     };
     return () => {
       mounted = false;
@@ -162,6 +163,7 @@ export function activateTab2(c: Tab) {
   fire();
 }
 export function keepTabOpen2(uid: number) {
+  if (current.tabs.find((tab) => tab.props.uid === uid)?.keep) return;
   const tabs = current.tabs.map((tab) =>
     uid === tab.props.uid
       ? { ...tab, active: true, keep: true }
