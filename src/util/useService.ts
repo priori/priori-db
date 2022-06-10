@@ -78,5 +78,5 @@ export function useService<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, count]);
 
-  return state;
+  return state as ServiceState<T>;
 }
