@@ -29,6 +29,11 @@ let current: AppState = {
   newSchema: false,
 };
 let uidCount = 1;
+function generateUid() {
+  const uid = uidCount;
+  uidCount += 1;
+  return uid;
+}
 
 function fire() {
   if (!listener) throw new Error('Listener não encontrado.');
@@ -146,7 +151,7 @@ export function setConnectionError(err: Error) {
   };
   fire();
 }
-export function activateTab2(c: Tab) {
+export function activateTab(c: Tab) {
   const tabs = current.tabs.map((tab) =>
     c.props.uid === tab.props.uid
       ? { ...tab, active: true }
@@ -162,7 +167,7 @@ export function activateTab2(c: Tab) {
   };
   fire();
 }
-export function keepTabOpen2(uid: number) {
+export function keepTabOpen(uid: number) {
   if (current.tabs.find((tab) => tab.props.uid === uid)?.keep) return;
   const tabs = current.tabs.map((tab) =>
     uid === tab.props.uid
@@ -194,16 +199,15 @@ function newFrame(frame: Tab) {
   fire();
 }
 
-export function pikSchemaInfo2(name: string) {
+export function pikSchemaInfo(name: string) {
   const openTab = current.tabs.find(
     (tab) => tab.props.type === 'schemainfo' && tab.props.schema === name
   );
   if (openTab) {
-    activateTab2(openTab);
+    activateTab(openTab);
     return;
   }
-  const uid = uidCount;
-  uidCount += 1;
+  const uid = generateUid();
   newFrame({
     title: `${name} info`,
     active: true,
@@ -215,16 +219,15 @@ export function pikSchemaInfo2(name: string) {
     },
   });
 }
-export function keepSchemaInfo2(name: string) {
+export function keepSchemaInfo(name: string) {
   const openTab = current.tabs.find(
     (tab) => tab.props.type === 'schemainfo' && tab.props.schema === name
   );
   if (openTab) {
-    keepTabOpen2(openTab.props.uid);
+    keepTabOpen(openTab.props.uid);
     return;
   }
-  const uid = uidCount;
-  uidCount += 1;
+  const uid = generateUid();
   newFrame({
     title: `${name} info`,
     active: true,
@@ -237,7 +240,7 @@ export function keepSchemaInfo2(name: string) {
   });
 }
 
-export function pikTable2(schema: string, t: { name: string; type: string }) {
+export function pikTable(schema: string, t: { name: string; type: string }) {
   const openTab = current.tabs.find(
     (tab) =>
       tab.props.type === 'table' &&
@@ -245,11 +248,10 @@ export function pikTable2(schema: string, t: { name: string; type: string }) {
       tab.props.table === t.name
   );
   if (openTab) {
-    activateTab2(openTab);
+    activateTab(openTab);
     return;
   }
-  const uid = uidCount;
-  uidCount += 1;
+  const uid = generateUid();
   newFrame({
     title: `${schema}.${t.name}`,
     active: true,
@@ -263,7 +265,7 @@ export function pikTable2(schema: string, t: { name: string; type: string }) {
   });
 }
 
-export function keepTable2(schema: string, t: { name: string; type: string }) {
+export function keepTable(schema: string, t: { name: string; type: string }) {
   const openTab = current.tabs.find(
     (tab) =>
       tab.props.type === 'table' &&
@@ -271,11 +273,10 @@ export function keepTable2(schema: string, t: { name: string; type: string }) {
       tab.props.table === t.name
   );
   if (openTab) {
-    keepTabOpen2(openTab.props.uid);
+    keepTabOpen(openTab.props.uid);
     return;
   }
-  const uid = uidCount;
-  uidCount += 1;
+  const uid = generateUid();
   newFrame({
     title: `${schema}.${t.name}`,
     active: true,
@@ -289,7 +290,7 @@ export function keepTable2(schema: string, t: { name: string; type: string }) {
   });
 }
 
-export function removeError2() {
+export function removeError() {
   current = {
     ...current,
     connectionError: undefined,
@@ -297,7 +298,7 @@ export function removeError2() {
   fire();
 }
 
-export function pikTableInfo2(schema: string, table: string) {
+export function pikTableInfo(schema: string, table: string) {
   const openTab = current.tabs.find(
     (tab) =>
       tab.props.type === 'tableinfo' &&
@@ -305,11 +306,10 @@ export function pikTableInfo2(schema: string, table: string) {
       tab.props.table === table
   );
   if (openTab) {
-    activateTab2(openTab);
+    activateTab(openTab);
     return;
   }
-  const uid = uidCount;
-  uidCount += 1;
+  const uid = generateUid();
   newFrame({
     title: `${schema}.${table} info`,
     active: true,
@@ -322,7 +322,7 @@ export function pikTableInfo2(schema: string, table: string) {
     },
   });
 }
-export function keepTableInfo2(schema: string, table: string) {
+export function keepTableInfo(schema: string, table: string) {
   const openTab = current.tabs.find(
     (tab) =>
       tab.props.type === 'tableinfo' &&
@@ -330,11 +330,10 @@ export function keepTableInfo2(schema: string, table: string) {
       tab.props.table === table
   );
   if (openTab) {
-    keepTabOpen2(openTab.props.uid);
+    keepTabOpen(openTab.props.uid);
     return;
   }
-  const uid = uidCount;
-  uidCount += 1;
+  const uid = generateUid();
   newFrame({
     title: `${schema}.${table} info`,
     active: true,
@@ -348,9 +347,8 @@ export function keepTableInfo2(schema: string, table: string) {
   });
 }
 
-export function newTable2(schema: string) {
-  const uid = uidCount;
-  uidCount += 1;
+export function newTable(schema: string) {
+  const uid = generateUid();
   DB.types().then((types) => {
     newFrame({
       title: 'Nova Tabela',
@@ -374,7 +372,7 @@ export function updateTabText(editing: Tab | null, value: string) {
   fire();
 }
 
-export function newSchema2() {
+export function newSchema() {
   current = {
     ...current,
     newSchema: true,
@@ -398,7 +396,7 @@ function filterTabs(fn: (c: Tab) => boolean) {
   };
 }
 
-export function dropSchema2(name: string) {
+export function dropSchema(name: string) {
   query(`DROP SCHEMA "${name}"`).then(
     () => {
       current = {
@@ -418,7 +416,7 @@ export function dropSchema2(name: string) {
   );
 }
 
-export function dropSchemaCascade2(name: string) {
+export function dropSchemaCascade(name: string) {
   query(`DROP SCHEMA "${name}" CASCADE`).then(
     () => {
       current = {
@@ -438,14 +436,14 @@ export function dropSchemaCascade2(name: string) {
   );
 }
 
-export function cancelCreateSchema2() {
+export function cancelCreateSchema() {
   current = {
     ...current,
     newSchema: false,
   };
   fire();
 }
-export function createSchema2(name: string) {
+export function createSchema(name: string) {
   query(`CREATE SCHEMA "${name}"`).then(
     () => {
       current = {
@@ -471,7 +469,7 @@ export function createSchema2(name: string) {
   // fire()
 }
 
-export function changeTabsSort2(sort: number[]) {
+export function changeTabsSort(sort: number[]) {
   const newTabs = [...current.tabs];
   newTabs.sort((a, b) => {
     return sort.indexOf(a.props.uid) - sort.indexOf(b.props.uid);
@@ -532,7 +530,7 @@ export function reloadNav() {
     }
   );
 }
-export function closeTab2(uid: number) {
+export function closeTab(uid: number) {
   const tabsSort = current.tabsSort.filter((uid2) => uid2 !== uid);
   current = {
     ...current,
@@ -548,7 +546,7 @@ export function closeTab2(uid: number) {
   fire();
 }
 
-export function closeConnectionError2() {
+export function closeConnectionError() {
   current = {
     ...current,
     connectionError: undefined,
@@ -561,9 +559,8 @@ export function setConnection(password: ConnectionConfiguration) {
   fire();
 }
 
-export function newQuery2() {
-  const uid = uidCount;
-  uidCount += 1;
+export function newQuery() {
+  const uid = generateUid();
   newFrame({
     title: 'Nova Consulta',
     keep: true,
@@ -647,7 +644,7 @@ export function openSchemaSuccess(
   fire();
 }
 
-export function saveConnection2(con: ConnectionConfiguration, index?: number) {
+export function saveConnection(con: ConnectionConfiguration, index?: number) {
   addConnectionConfiguration(con, index);
   savePasswords(currentState().passwords, () => {
     current = {
@@ -661,12 +658,12 @@ export function saveConnection2(con: ConnectionConfiguration, index?: number) {
   });
 }
 
-export function cancelSelectedConnetion2() {
+export function cancelSelectedConnetion() {
   current = { ...current, password: undefined, bases: undefined };
   fire();
 }
 
-export function cancelConnection2() {
+export function cancelConnection() {
   current = {
     ...current,
     newConnection: false,
@@ -677,7 +674,7 @@ export function cancelConnection2() {
   fire();
 }
 
-export function editConnection2(con: ConnectionConfiguration, index: number) {
+export function editConnection(con: ConnectionConfiguration, index: number) {
   current = {
     ...current,
     connectionError: undefined,
@@ -701,11 +698,11 @@ export function editConnectionSelected() {
         p.host === password.host &&
         p.password === password.password
     );
-    editConnection2(password, index);
+    editConnection(password, index);
   }
 }
 
-export function removeConnection2(index: number) {
+export function removeConnection(index: number) {
   current = {
     ...current,
     passwords: current.passwords.filter((_, i) => i !== index),
@@ -745,4 +742,18 @@ export function openFunctions(schema: NavSchema) {
     ),
   };
   fire();
+}
+export function nextTab() {
+  const s = current;
+  if (s.tabs.length === 0) return;
+  const activeIndex = s.tabs.findIndex((c) => c.active);
+  if (activeIndex === s.tabs.length - 1) activateTab(s.tabs[0]);
+  else activateTab(s.tabs[activeIndex + 1]);
+}
+export function prevTab() {
+  const s = current;
+  if (s.tabs.length === 0) return;
+  const activeIndex = s.tabs.findIndex((c) => c.active);
+  if (activeIndex === 0) activateTab(s.tabs[s.tabs.length - 1]);
+  else activateTab(s.tabs[activeIndex - 1]);
 }
