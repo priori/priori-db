@@ -35,9 +35,9 @@ export class ListInput<Entry extends object> extends Component<
 
   newEntry: Entry | undefined;
 
-  timeout: any;
+  timeout: ReturnType<typeof setTimeout> | null = null;
 
-  clone: any;
+  clone: HTMLElement | null = null;
 
   el: HTMLElement | null = null;
 
@@ -87,6 +87,7 @@ export class ListInput<Entry extends object> extends Component<
     const started = !!this.clone;
     if (started) {
       assert(!!this.positions);
+      assert(!!this.clone);
       const yMove = e.pageY - this.firstMousePos.y;
       const center = this.firstPos.y + yMove + this.clone.offsetHeight / 2;
       const pos = [...this.positions];
@@ -114,7 +115,10 @@ export class ListInput<Entry extends object> extends Component<
       entries.splice(dropPos, 0, entry);
       this.setNewState(entries);
     }
-    if (this.clone) this.clone.parentNode.removeChild(this.clone);
+    if (this.clone) {
+      assert(this.clone.parentNode);
+      this.clone.parentNode.removeChild(this.clone);
+    }
     if (this.lock) (this.lock.parentNode as HTMLElement).removeChild(this.lock);
     this.rowEl.style.display =
       (this.props.itemStyle && this.props.itemStyle.display) || null;
@@ -147,6 +151,7 @@ export class ListInput<Entry extends object> extends Component<
     e.stopPropagation();
     const xMove = e.pageX - this.firstMousePos.x;
     const yMove = e.pageY - this.firstMousePos.y;
+    assert(!!this.clone);
     const center = this.firstPos.y + yMove + this.clone.offsetHeight / 2;
     this.clone.style.top = `${
       this.firstPos.y +
