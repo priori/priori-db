@@ -158,25 +158,29 @@ export function QueryFrame() {
     },
   });
 
-  function cancel() {
+  const cancel = useEvent(() => {
     db.stopRunningQuery();
-  }
+  });
 
-  function removeNotice(n: NoticeMessage) {
-    setState({
-      ...state,
-      notices: state.notices.filter((n2) => n2 !== n),
-    });
-  }
+  const onCancelKeyDown = useEvent((e: React.KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Space' || e.key === 'Enter') cancel();
+  });
 
-  function fullViewNotice(n: NoticeMessage) {
-    setState({
-      ...state,
-      notices: state.notices.map((n2) =>
+  const removeNotice = useEvent((n: NoticeMessage) => {
+    setState((state2) => ({
+      ...state2,
+      notices: state2.notices.filter((n2) => n2 !== n),
+    }));
+  });
+
+  const fullViewNotice = useEvent((n: NoticeMessage) => {
+    setState((state2) => ({
+      ...state2,
+      notices: state2.notices.map((n2) =>
         n2 === n ? { ...n2, message: n2.message, fullView: !n2.fullView } : n2
       ),
-    });
-  }
+    }));
+  });
 
   return (
     <>
@@ -194,12 +198,7 @@ export function QueryFrame() {
           Execute
         </button>
       ) : (
-        <button
-          type="button"
-          onClick={() => {
-            execute();
-          }}
-        >
+        <button type="button" onClick={execute}>
           Execute
         </button>
       )}
@@ -210,15 +209,10 @@ export function QueryFrame() {
       {state.running ? (
         <div className="running">
           <span
-            onClick={() => {
-              cancel();
-            }}
+            onClick={cancel}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === ' ' || e.key === 'Space' || e.key === 'Enter')
-                cancel();
-            }}
+            onKeyDown={onCancelKeyDown}
           >
             Cancel execution
           </span>
@@ -246,8 +240,8 @@ export function QueryFrame() {
           <div>
             <Notices
               notices={state.notices}
-              onFullViewNotice={(n) => fullViewNotice(n)}
-              onRemoveNotice={(n) => removeNotice(n)}
+              onFullViewNotice={fullViewNotice}
+              onRemoveNotice={removeNotice}
             />
             <Grid
               style={{
@@ -276,8 +270,8 @@ export function QueryFrame() {
         <div className="not-grid-result">
           <Notices
             notices={state.notices}
-            onFullViewNotice={(n) => fullViewNotice(n)}
-            onRemoveNotice={(n) => removeNotice(n)}
+            onFullViewNotice={fullViewNotice}
+            onRemoveNotice={removeNotice}
           />
           {state.res && state.res.rowCount ? (
             <div
