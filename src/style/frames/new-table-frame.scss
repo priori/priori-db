@@ -1,18 +1,75 @@
+.frame.active.new-table {
+  overflow: auto;
+}
 
-.columns-form { text-align: center;}
-.columns-form-column { padding: 2px; }
-.columns-form>.head { text-align: center; font-weight: bold; font-size: 11px; }
-.columns-form>.head, .columns-form-column { display: flex; }
-.columns-form-head-name, .columns-form-column-name { width: 30%; }
-.columns-form-head-type, .columns-form-column-type { width: 30%; }
-.columns-form-head-length, .columns-form-column-length { width: 10%; }
-.columns-form-head-precision, .columns-form-column-precision { width: 9%; }
-.columns-form-head-notnull, .columns-form-column-notnull { width: 8%; }
-.columns-form-head-pk, .columns-form-column-pk { width: 8%; }
-.columns-form-column-drop { width: 5%; }
-.columns-form-column input { padding: 5px; display: block; width: 100%; }
-.columns-form-column select { padding: 4px; width: 190px; border-color: #ccc; }
+.columns-form-column {
+  text-align: center;
+  padding: 2px;
+}
+.columns-form > .head {
+  text-align: center;
+  font-weight: bold;
+  font-size: 11px;
+}
+.columns-form > .head,
+.columns-form-column {
+  display: flex;
+}
+.columns-form-head-name,
+.columns-form-column-name {
+  width: 30%;
+}
+.columns-form-head-type,
+.columns-form-column-type {
+  width: 30%;
+}
+.columns-form-head-length,
+.columns-form-column-length {
+  width: 10%;
+}
+.columns-form-head-precision,
+.columns-form-column-precision {
+  width: 9%;
+}
+.columns-form-head-notnull,
+.columns-form-column-notnull {
+  width: 8%;
+}
+.columns-form-head-pk,
+.columns-form-column-pk {
+  width: 8%;
+}
+.columns-form-column-drop {
+  width: 5%;
+}
+.columns-form-column input {
+  padding: 5px;
+  display: block;
+  width: 100%;
+}
+.columns-form-column select {
+  padding: 4px;
+  width: 190px;
+  border-color: #ccc;
+}
 
-.new-table .table i.fa { font-size: 18px; width: 15px; display: inline-block; text-align: left; }
+.columns-form-column-notnull,
+.columns-form-column-pk,
+.columns-form-column-drop {
+  line-height: 28px;
+}
 
-.input-form-field input { padding: 5px; }
+.new-table .table i.fa {
+  font-size: 18px;
+  width: 15px;
+  display: inline-block;
+  text-align: left;
+}
+
+.input-form-field input {
+  padding: 5px;
+}
+body > .list-input-item {
+  background: white;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+}
