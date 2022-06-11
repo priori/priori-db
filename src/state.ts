@@ -44,11 +44,12 @@ export function useAppState() {
   const [hookState, setState] = React.useState(current);
   React.useEffect(() => {
     let mounted = true;
+    let prevState = current;
     listener = (newState) => {
       if (mounted) {
-        if (!equals(current, newState)) setState(newState);
+        if (!equals(prevState, newState)) setState(newState);
       }
-      current = newState;
+      prevState = newState;
     };
     return () => {
       mounted = false;
