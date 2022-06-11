@@ -87,6 +87,12 @@ export function App() {
     return true;
   });
 
+  const tabs = React.useMemo(() => {
+    const sortedTabs = [...state.tabs];
+    sortedTabs.sort((a, b) => a.props.uid - b.props.uid);
+    return sortedTabs;
+  }, [state.tabs]);
+
   if (state.connected) {
     return (
       <div
@@ -100,7 +106,7 @@ export function App() {
           <Nav schemas={state.schemas} tabs={state.tabs} />
         ) : undefined}
         <div className="app-content">
-          {state.tabs.map((t) => (
+          {tabs.map((t) => (
             <div
               key={t.props.uid}
               className={`frame ${classNames[t.props.type]}${
