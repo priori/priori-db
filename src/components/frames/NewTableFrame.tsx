@@ -1,8 +1,8 @@
 import { useState } from 'react';
+import { throwError } from 'util/throwError';
 import { NewTableFrameProps, Type } from '../../types';
 import { ListInput } from '../util/ListInput';
 import { query } from '../../db/Connection';
-import { throwError } from '../../state';
 import { closeThisAndReloadNav } from '../../actions';
 
 export interface ColumnNewTable {
