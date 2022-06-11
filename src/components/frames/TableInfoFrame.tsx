@@ -1,8 +1,8 @@
 import { useService } from 'util/useService';
 import { TableInfoFrameProps } from '../../types';
 import { query } from '../../db/Connection';
-import { closeTab } from '../../actions';
-import { reloadNav, throwError } from '../../state';
+import { reloadNav, closeTab } from '../../actions';
+import { throwError } from '../../state';
 import { DB } from '../../db/DB';
 
 export interface ColTableInfo {

@@ -10,8 +10,10 @@ import {
   removeConnection,
   cancelSelectedConnection,
   closeConnectionError,
+  newConf,
+  editingAll,
+  editConnectionSelected,
 } from '../../../actions';
-import { newConf, editingAll, editConnectionSelected } from '../../../state';
 import { AppState } from '../../../types';
 import { ConnectionConfiguration } from '../../../db/pgpass';
 import { NewConnection } from './Configuration';
@@ -103,7 +105,6 @@ export function Home(props: AppState) {
           </div>
         </div>
       ) : null}
-
       {props.passwords && props.passwords.length ? (
         <div className="connections">
           {props.passwords.map((p, i) => (
@@ -195,7 +196,6 @@ export function Home(props: AppState) {
       >
         <i className="fa fa-pencil" />
       </button>
-
       <button
         onClick={() => newConf()}
         type="button"

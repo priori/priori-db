@@ -7,9 +7,9 @@ import {
   askToCloseTab,
   newQuery,
   keepTabOpen,
+  updateTabText,
 } from '../../actions';
 import { Tab } from '../../types';
-import { updateTabText } from '../../state';
 
 export interface TabsProps {
   tabs: Tab[];

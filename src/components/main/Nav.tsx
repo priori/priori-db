@@ -8,9 +8,11 @@ import {
   keepOpenTable,
   keepTableInfo,
   keepSchemaInfo,
+  fullView,
+  openFunctions,
+  openSequences,
 } from '../../actions';
 import { NavSchema, Tab } from '../../types';
-import { fullView, openFunctions, openSequences } from '../../state';
 
 function height(schema: NavSchema) {
   if (!schema.open || !schema.tables) return 0;
