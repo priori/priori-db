@@ -2,7 +2,7 @@ import * as React from 'react';
 import { NewSchemaForm } from 'components/util/NewSchemaForm';
 import { useF5, useShortcuts } from 'util/shortcuts';
 import { useEffect, useRef, useContext } from 'react';
-import { Tab } from 'types';
+import { FrameType, Tab } from 'types';
 import { currentState, useAppState } from '../../state';
 import { Nav } from './Nav';
 import { Tabs } from './Tabs';
@@ -10,7 +10,7 @@ import { Home } from './home/Home';
 import { cancelCreateSchema, createSchema, useAskToClose } from '../../actions';
 import { Frame } from './Frame';
 
-const classNames = {
+const classNames: Record<FrameType, string> = {
   query: 'query-tab',
   table: 'table-tab',
   newtable: 'new-table',
