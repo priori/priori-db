@@ -73,6 +73,8 @@ export function useShortcuts() {
   }
   useEffect(() => {
     window.addEventListener('keydown', listener);
-    return () => window.removeEventListener('keydown', listener);
+    return () => {
+      window.removeEventListener('keydown', listener);
+    };
   }, []);
 }
