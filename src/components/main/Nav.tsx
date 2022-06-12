@@ -1,3 +1,4 @@
+import assert from 'assert';
 import {
   newSchema,
   newTable,
@@ -10,6 +11,7 @@ import {
   keepSchemaInfo,
   fullView,
   openFunctions,
+  openDomains,
   openSequences,
 } from '../../actions';
 import { NavSchema, Tab } from '../../types';
@@ -17,12 +19,13 @@ import { NavSchema, Tab } from '../../types';
 function height(schema: NavSchema) {
   if (!schema.open || !schema.tables) return 0;
   if (schema.fullView) {
-    if (!schema.functions || !schema.sequences) throw new Error('e!');
+    assert(schema.functions && schema.sequences && schema.domains);
     return (
       schema.tables.length * 20 +
-      40 +
+      3 * 20 +
       (schema.functionsOpen ? schema.functions.length * 20 : 0) +
-      (schema.sequencesOpen ? schema.sequences.length * 20 : 0)
+      (schema.sequencesOpen ? schema.sequences.length * 20 : 0) +
+      (schema.domainsOpen ? schema.domains.length * 20 : 0)
     );
   }
   return schema.tables.length * 20 + 20;
@@ -300,6 +303,57 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                         <div key={k} className="sequence">
                           <div className="sequence-name">
                             <i className="fa fa-list-ol" /> {f.name}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+              {schema.fullView && schema.domains ? (
+                <div
+                  className={`group${schema.domains.length ? '' : ' empty'}`}
+                >
+                  <div
+                    className={`group-name domains arrow${
+                      schema.domainsOpen ? ' open' : ''
+                    }`}
+                    onClick={() => {
+                      if (schema.domains && schema.domains.length)
+                        openDomains(schema);
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === ' ' ||
+                        e.key === 'Enter' ||
+                        e.key === 'Space'
+                      ) {
+                        if (schema.domains && schema.domains.length)
+                          openDomains(schema);
+                      }
+                    }}
+                  >
+                    Domains
+                    <span
+                      style={{
+                        float: 'right',
+                        fontWeight: 'bold',
+                        position: 'absolute',
+                        color: 'rgba(0,0,0,.2)',
+                        right: '10px',
+                      }}
+                    >
+                      {schema.domains.length}
+                    </span>
+                  </div>
+                  {schema.domainsOpen ? (
+                    <div className="domains">
+                      {schema.domains.map((f, k) => (
+                        <div key={k} className="domains">
+                          <div className="domain-name">
+                            <i className="fa fa-list-ul" /> {f.name}
                           </div>
                         </div>
                       ))}

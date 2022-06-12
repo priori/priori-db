@@ -308,10 +308,15 @@ export function createSchema(current: AppState, name: string) {
         fullView: false,
         sequencesOpen: false,
         functionsOpen: false,
-      },
+        domainsOpen: false,
+        tables: [],
+        domains: [],
+        sequences: [],
+        functions: [],
+      } as NavSchema,
     ],
     newSchema: false,
-  };
+  } as AppState;
 }
 
 export function changeTabsSort(current: AppState, sort: number[]) {
@@ -367,10 +372,76 @@ export function keepOpenTable(
   return keepTable(current, schema, t);
 }
 
-export function updateSchemas(current: AppState, schemas: NavSchema[]) {
+export function updateSchemas(
+  current: AppState,
+  schemas: {
+    tables: {
+      type:
+        | 'MATERIALIZED VIEW'
+        | 'VIEW'
+        | 'BASE TABLE'
+        | 'FUNCTION'
+        | 'SEQUENCE'
+        | 'DOMAIN';
+      name: string;
+      schema_id: number;
+    }[];
+    functions: {
+      type:
+        | 'MATERIALIZED VIEW'
+        | 'VIEW'
+        | 'BASE TABLE'
+        | 'FUNCTION'
+        | 'SEQUENCE'
+        | 'DOMAIN';
+      name: string;
+      schema_id: number;
+    }[];
+    sequences: {
+      type:
+        | 'MATERIALIZED VIEW'
+        | 'VIEW'
+        | 'BASE TABLE'
+        | 'FUNCTION'
+        | 'SEQUENCE'
+        | 'DOMAIN';
+      name: string;
+      schema_id: number;
+    }[];
+    domains: {
+      type:
+        | 'MATERIALIZED VIEW'
+        | 'VIEW'
+        | 'BASE TABLE'
+        | 'FUNCTION'
+        | 'SEQUENCE'
+        | 'DOMAIN';
+      name: string;
+      schema_id: number;
+    }[];
+    name: string;
+    schema_id: number;
+  }[]
+) {
+  const cSchemas = current.schemas;
   return {
     ...current,
-    schemas,
+    schemas: schemas.map((s) => {
+      const cSchema = cSchemas?.find((s2) => s2.name === s.name);
+      if (cSchema)
+        return {
+          ...cSchema,
+          ...s,
+        };
+      return {
+        ...s,
+        open: false,
+        fullView: false,
+        sequencesOpen: false,
+        domainsOpen: false,
+        functionsOpen: false,
+      };
+    }),
   };
 }
 
@@ -436,14 +507,20 @@ export function addConnectionConfiguration(
 export function connected(
   current: AppState,
   database: string,
-  schemas: string[]
+  schemas: {
+    name: string;
+    tables: { name: string; type: string }[];
+    sequences: { name: string; type: string }[];
+    functions: { name: string; type: string }[];
+    domains: { name: string; type: string }[];
+  }[]
 ) {
   const c = current.password as ConnectionConfiguration;
   return {
     ...current,
     connected: true,
     schemas: schemas.map((s) => ({
-      name: s,
+      ...s,
       open: false,
       fullView: false,
       sequencesOpen: false,
@@ -452,7 +529,7 @@ export function connected(
     title: `${c.user}@${c.host}${
       c.port !== 5432 ? `:${c.port}` : ''
     }/${database}`,
-  };
+  } as AppState;
 }
 
 export function toggleSchema(current: AppState, name: string) {
@@ -464,26 +541,6 @@ export function toggleSchema(current: AppState, name: string) {
         ? {
             ...s,
             open: !s.open,
-          }
-        : s
-    ),
-  };
-}
-
-export function openSchemaSuccess(
-  current: AppState,
-  name: string,
-  tables: { name: string; type: string }[]
-) {
-  if (!current.schemas) throw new Error('Schemas não econtrado.');
-  return {
-    ...current,
-    schemas: current.schemas.map((s) =>
-      s.name === name
-        ? {
-            ...s,
-            open: true,
-            tables,
           }
         : s
     ),
@@ -576,6 +633,16 @@ export function openFunctions(current: AppState, schema: NavSchema) {
   };
 }
 
+export function openDomains(current: AppState, schema: NavSchema) {
+  assert(!!current.schemas);
+  return {
+    ...current,
+    schemas: current.schemas.map((sc) =>
+      sc === schema ? { ...sc, domainsOpen: !sc.domainsOpen } : sc
+    ),
+  };
+}
+
 export function nextTab(current: AppState) {
   const s = current;
   if (s.tabs.length === 0) return s;
@@ -592,24 +659,7 @@ export function prevTab(current: AppState) {
   return activateTab(s, s.tabs[activeIndex - 1]);
 }
 
-export function openFullView(
-  current: AppState,
-  name: string,
-  tables: {
-    type: string;
-    name: string;
-  }[],
-  domains: never[],
-  functions: {
-    type: string;
-    name: string;
-  }[],
-  collations: never[],
-  sequences: {
-    type: string;
-    name: string;
-  }[]
-) {
+export function openFullView(current: AppState, name: string) {
   return {
     ...current,
     schemas: current.schemas?.map((s) =>
@@ -618,11 +668,6 @@ export function openFullView(
             ...s,
             open: true,
             fullView: true,
-            tables,
-            domains,
-            functions,
-            collations,
-            sequences,
           }
         : s
     ),

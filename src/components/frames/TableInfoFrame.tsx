@@ -40,7 +40,7 @@ export interface TableInfoFrameState {
 export function TableInfoFrame(props: TableInfoFrameProps) {
   const service = useService(async () => {
     const [cols, indexes] = await Promise.all([
-      DB.listCols2(props.schema, props.table),
+      DB.listCols(props.schema, props.table),
       DB.listIndexes(props.schema, props.table),
       // DB.listTableMetadata(this.props.schema,this.props.table).then(res=>console.log('meta:',res))
     ]);

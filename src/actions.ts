@@ -13,6 +13,7 @@ import { FrameProps } from './types';
 
 export const {
   openFunctions,
+  openDomains,
   openSequences,
   newConf,
   editingAll,
@@ -144,7 +145,7 @@ export function connect(s: string) {
   assert(password);
   dbConnect(password, s).then(
     () => {
-      DB.listSchemas().then(
+      DB.listAll().then(
         (schemas) => {
           state.connected(s, schemas);
         },
@@ -160,35 +161,8 @@ export function connect(s: string) {
 }
 
 export async function reloadNav() {
-  const current = currentState();
-  assert(current.schemas);
-  const schemas = [...current.schemas];
-  const newSchemas = await DB.listSchemas();
-  for (const sc of newSchemas) {
-    const index = schemas.findIndex((s2) => s2.name === sc);
-    const currentSchema = schemas[index];
-    if (currentSchema && currentSchema.open) {
-      // eslint-disable-next-line no-await-in-loop
-      const res = await DB.listTablesFromSchema(currentSchema.name);
-      const tables = res as { name: string; type: string }[];
-      schemas[index] = {
-        ...currentSchema,
-        tables,
-      };
-    } else if (!currentSchema) {
-      schemas.push({
-        name: sc,
-        open: false,
-        fullView: false,
-        sequencesOpen: false,
-        functionsOpen: false,
-        tables: [],
-        sequences: [],
-        functions: [],
-      });
-    }
-  }
-  state.updateSchemas(schemas);
+  const newSchemas = await DB.listAll();
+  state.updateSchemas(newSchemas);
 }
 
 export function closeThisAndReloadNav(uid: number) {
@@ -205,18 +179,7 @@ export function openSchema(name: string) {
   if (!s.schemas) throw new Error('Schemas não configurados.');
   const schema = s.schemas.find((c) => c.name === name);
   if (!schema) throw new Error(`Schema não encontrado. (${name})`);
-  if (!schema.tables)
-    DB.listTablesFromSchema(name).then(
-      (tables) => {
-        state.openSchemaSuccess(
-          name,
-          tables as { name: string; type: string }[]
-        );
-      },
-      // eslint-disable-next-line no-console
-      (err) => console.error(err)
-    );
-  else state.toggleSchema(name);
+  state.toggleSchema(name);
 }
 
 export function saveConnection(con: ConnectionConfiguration, index?: number) {
@@ -248,20 +211,5 @@ export function fullView(name: string) {
     state.closeFullView(name);
     return;
   }
-  DB.listEntitiesFromSchema(name).then(
-    (res) => {
-      const { tables, domains, functions, collations, sequences } = res;
-      assert(!!current.schemas);
-      state.openFullView(
-        name,
-        tables,
-        domains,
-        functions,
-        collations,
-        sequences
-      );
-    },
-    // eslint-disable-next-line no-console
-    (err) => console.error(err)
-  );
+  state.openFullView(name);
 }

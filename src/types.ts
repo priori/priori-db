@@ -65,10 +65,12 @@ export interface NavSchema {
   open: boolean;
   fullView: boolean;
   sequencesOpen: boolean;
+  domainsOpen: boolean;
   functionsOpen: boolean;
-  tables?: { name: string; type: string }[];
-  sequences?: { name: string; type: string }[];
-  functions?: { name: string; type: string }[];
+  tables: { name: string; type: string }[];
+  sequences: { name: string; type: string }[];
+  functions: { name: string; type: string }[];
+  domains: { name: string; type: string }[];
 }
 
 export interface Tab0<T extends FrameType> {

@@ -1,81 +1,247 @@
-
 div.nav {
-    left: 0;top: 40px;bottom: 0;width: 250px;background: #f8f8f8;overflow: auto;
-    &::-webkit-scrollbar { width: 7px; }
-    &::-webkit-scrollbar-track {}
-    &::-webkit-scrollbar-thumb { background-color: #eee; }
-    &::-webkit-scrollbar-thumb:hover { background-color: #ddd; }
-    .schema { position: relative;}
-    .schema-name, .group-name, .table-name {padding: 2px 20px 2px 20px;font-size: 12px;}
-    .new-schema {position: fixed;bottom: 0;left: 205px;font-size: 22px;padding: 4px;opacity: .5;z-index: 2;}
-    .new-schema:hover { opacity: 1; }
-    .arrow:after { content: ''; border-top: 6px solid transparent;
-      border-bottom: 6px solid transparent; border-left: 6px solid #444; height: 0;
-      display: block; position: absolute; left: 9px; top: 4px; transition: transform .25s; }
-    .arrow.open:after { transform: rotate(90deg); }
-    .tables { transition: height .25s }
-    .schema sup { font-size: 8px }
-    .function, .sequence, .table, .schema-name, .group-name { position: relative; }
-    .table-name, .schema-name, .group-name, .function-name, .sequence-name {
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;  }
-    .table-type { display: inline-block; margin-right: 5px; margin-top: 1px;
-      position: relative; top: 1px; font-size: 14px;
+  left: 0;
+  top: 40px;
+  bottom: 0;
+  width: 250px;
+  background: #f8f8f8;
+  overflow: auto;
+  &::-webkit-scrollbar {
+    width: 7px;
+  }
+  &::-webkit-scrollbar-track {
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #eee;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #ddd;
+  }
+  .schema {
+    position: relative;
+  }
+  .schema-name,
+  .group-name,
+  .table-name {
+    padding: 2px 20px 2px 20px;
+    font-size: 12px;
+  }
+  .new-schema {
+    position: fixed;
+    bottom: 0;
+    left: 205px;
+    font-size: 22px;
+    padding: 4px;
+    opacity: 0.5;
+    z-index: 2;
+  }
+  .new-schema:hover {
+    opacity: 1;
+  }
+  .arrow:after {
+    content: '';
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 6px solid #444;
+    height: 0;
+    display: block;
+    position: absolute;
+    left: 9px;
+    top: 4px;
+    transition: transform 0.25s;
+  }
+  .arrow.open:after {
+    transform: rotate(90deg);
+  }
+  .tables {
+    transition: height 0.25s;
+  }
+  .schema sup {
+    font-size: 8px;
+  }
+  .function,
+  .sequence,
+  .domain,
+  .table,
+  .schema-name,
+  .group-name {
+    position: relative;
+  }
+  .table-name,
+  .schema-name,
+  .group-name,
+  .function-name,
+  .sequence-name,
+  .domain-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .table-type {
+    display: inline-block;
+    margin-right: 5px;
+    margin-top: 1px;
+    position: relative;
+    top: 1px;
+    font-size: 14px;
+  }
+  .schema-name,
+  .group-name,
+  .table-name,
+  .schema-name,
+  .function-name {
+    padding-right: 0;
+  }
+  .schema-name:hover,
+  .group-name:hover,
+  .table:hover .table-name,
+  .function:hover .function-name,
+  .sequence:hover .sequence-name,
+  .domain:hover .domain-name {
+    padding-right: 20px;
+  }
+
+  .schema-info,
+  .table-info,
+  .new-table,
+  .view-mode {
+    font-size: 12px;
+    right: 5px;
+    position: absolute;
+    top: 3px;
+    color: #888;
+    display: none;
+  }
+  .new-table {
+    right: 22px;
+  }
+  .view-mode {
+    right: 39px;
+  }
+  .schema-name:hover .schema-info,
+  .schema-name:hover .new-table,
+  .table:hover .table-info,
+  .schema-name:hover .view-mode {
+    display: block;
+  }
+
+  .full-view.open .view-mode {
+    display: inline;
+    color: #1155cc;
+  }
+  .new-table:hover,
+  .schema-info:hover,
+  .table-info:hover,
+  .view-mode:hover {
+    color: #000;
+  }
+
+  .group-name.arrow:after {
+    left: 23px !important;
+  }
+  .group-name {
+    padding-left: 37px !important;
+  }
+  .function-name::before {
+    content: 'F';
+    font-weight: 900;
+    margin-right: 5px;
+    letter-spacing: -2px;
+    font-size: 13px;
+    opacity: 0.75;
+    margin-right: 16px;
+  }
+  i.table-type.fa.fa-th {
+    opacity: 0.65;
+  }
+  .schema-name:hover,
+  .group-name:hover,
+  .table:hover,
+  .sequence-name:hover,
+  .domain-name:hover,
+  .function-name:hover {
+    background: #dfdfdf;
+  }
+  .more {
+    text-align: center;
+  }
+  .more:hover {
+    background: #dfdfdf;
+  }
+  .table-name,
+  .sequence-name,
+  .domain-name,
+  .function-name {
+    font-size: 13px;
+    display: block;
+  }
+  .function-name,
+  .sequence-name,
+  .domain-name {
+    padding-left: 38px;
+  }
+  .fa-list-ol {
+    font-size: 14px;
+  }
+  .function,
+  .sequence,
+  .domain {
+    line-height: 20px;
+    height: 20px;
+  }
+  .table.open {
+    color: #04b;
+    background: #eee;
+  }
+  .table.open:hover {
+    background: #ddd;
+  }
+  .table.active {
+    background: #1976d2;
+    color: white;
+    text-shadow: 0 1px 1px #15c;
+  }
+  .table.active:hover {
+    background: #15d;
+  }
+  .table.active:hover i {
+    color: white;
+  }
+
+  .view .fa.fa-table {
+    color: #181;
+  }
+  .mview .fa.fa-table {
+    color: #060;
+  }
+  .fa.fa-table {
+    color: #007;
+  }
+
+  .table.active {
+    .fa.fa-table {
+      color: #fff;
     }
-    .schema-name, .group-name, .table-name, .schema-name, .function-name {padding-right: 0;}
-    .schema-name:hover, .group-name:hover, .table:hover .table-name,
-      .function:hover .function-name, .sequence:hover .sequence-name{ padding-right: 20px }
-
-    .schema-info, .table-info, .new-table, .view-mode {
-      font-size:12px; right: 5px; position:absolute; top: 3px;
-      color: #888; display: none }
-    .new-table { right: 22px; }
-    .view-mode { right: 39px }
-    .schema-name:hover .schema-info, .schema-name:hover .new-table,
-      .table:hover .table-info, .schema-name:hover .view-mode {
-      display: block }
-  
-    .full-view .view-mode { display: inline; color: #1155cc; }
-    .new-table:hover, .schema-info:hover, .table-info:hover, .view-mode:hover { color: #000 }
-
-    .group-name.arrow:after {left: 23px !important;}
-    .group-name { padding-left: 37px !important; }
-    .function-name::before { content: 'F'; font-weight: 900; margin-right: 5px; letter-spacing: -2px;
-        font-size: 13px; opacity: .75;  margin-right: 16px }
-    i.table-type.fa.fa-th { opacity: .65; }
-    .schema-name:hover, .group-name:hover, .table:hover, .sequence-name:hover,
-    .function-name:hover { background: #dfdfdf }
-    .more{ text-align: center; }
-    .more:hover { background: #dfdfdf;}
-    .table-name, .sequence-name, .function-name {font-size: 13px; display: block;}
-    .function-name, .sequence-name { padding-left: 38px }
-    .fa-list-ol { font-size: 14px }
-    .function, .sequence { line-height: 20px; height: 20px; }
-    .table.open { color: #04b; background: #eee }
-    .table.open:hover { background: #ddd }
-    .table.active { background: #1976D2; color: white; text-shadow: 0 1px 1px #15c }
-    .table.active:hover { background: #15d }
-    .table.active:hover i { color: white; }
-
-
-    .view .fa.fa-table { color: #181; }
-    .mview .fa.fa-table { color: #060; }
-    .fa.fa-table { color: #007; }
-
-    .table.active {
-        .fa.fa-table { color: #fff; }
-        .view .fa.fa-table { color: #ff0; }
-        .mview .fa.fa-table { color: #ff0; }
+    .view .fa.fa-table {
+      color: #ff0;
     }
-    .group.empty {
-        .group-name { color: rgba(0,0,0,.4) }
-        .arrow:after { border-left-color: #aaa }
-    }
-
-    .function-name:after {
-        content: '( )';
-        position: absolute;
-        left: 47px;
-        font-size: 9px;
-        margin-top: 1px;
+    .mview .fa.fa-table {
+      color: #ff0;
     }
   }
+  .group.empty {
+    .group-name {
+      color: rgba(0, 0, 0, 0.4);
+    }
+    .arrow:after {
+      border-left-color: #aaa;
+    }
+  }
+
+  .function-name:after {
+    content: '( )';
+    position: absolute;
+    left: 47px;
+    font-size: 9px;
+    margin-top: 1px;
+  }
+}
