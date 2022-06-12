@@ -17,13 +17,15 @@ const letterSize = 6;
 export interface GridProps {
   style: CSSProperties;
   result: QueryArrayResult | undefined;
-  onScroll: () => void;
+  // eslint-disable-next-line react/require-default-props
+  onScroll?: (() => void) | undefined;
 }
 export interface GridCoreProps {
   // style: CSSProperties;
   result: QueryArrayResult;
   width: number;
-  onScroll: () => void;
+  // eslint-disable-next-line react/require-default-props
+  onScroll?: (() => void) | undefined;
   // height: number;
 }
 
@@ -82,6 +84,9 @@ function getType(val: unknown) {
 }
 
 function buildFinalWidths(initialColsWidths: number[], areaWidth: number) {
+  if (initialColsWidths.length === 0) {
+    return { finalWidths: [], widths: [] };
+  }
   const minWidth = initialColsWidths.reduce((a: number, b: number) => a + b, 1);
   const finalWidth = areaWidth > minWidth ? areaWidth : minWidth;
   const ratio = finalWidth / minWidth;
@@ -226,7 +231,7 @@ export function GridCore(props: GridCoreProps) {
   }
 
   function gridContentScrollListener(e: React.UIEvent<HTMLElement>) {
-    props.onScroll();
+    if (props.onScroll) props.onScroll();
     const container = e.target as HTMLElement;
     scrollRef.current = {
       left: container.scrollLeft,
