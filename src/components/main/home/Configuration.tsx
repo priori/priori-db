@@ -29,15 +29,16 @@ export function NewConnection(props: NewConnectionProps) {
     password: connection ? connection.password : '',
   } as NewConectionState);
 
+  const [removeConfirmation, setRemoveConfirmation] = useState(false);
   function remove() {
-    if (
-      window.confirm(
-        'Do you really want to remove this connection configuration?'
-      )
-    ) {
-      assert(!!props.onRemove);
-      props.onRemove();
-    }
+    setRemoveConfirmation(true);
+  }
+  function yesClick() {
+    assert(!!props.onRemove);
+    props.onRemove();
+  }
+  function noClick() {
+    setRemoveConfirmation(false);
   }
 
   function cancel() {
@@ -140,6 +141,33 @@ export function NewConnection(props: NewConnectionProps) {
           type="password"
         />
       </span>
+      {removeConfirmation ? (
+        <div
+          className="dialog"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={0}
+          ref={(el) => {
+            if (el) el.focus();
+          }}
+          onBlur={(e) => {
+            const dialogEl = e.currentTarget;
+            setTimeout(() => {
+              if (dialogEl.contains(document.activeElement)) return;
+              noClick();
+            }, 1);
+          }}
+        >
+          Do you really want to remove this connection configuration?
+          <div>
+            <button type="button" onClick={yesClick}>
+              Yes
+            </button>{' '}
+            <button type="button" onClick={noClick}>
+              No
+            </button>
+          </div>
+        </div>
+      ) : null}
       <br />
       <div style={{ marginTop: '4px', marginBottom: '4px' }}>
         <button onClick={() => submit()} type="button">

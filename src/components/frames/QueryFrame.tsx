@@ -3,6 +3,7 @@ import { NoticeMessage } from 'pg-protocol/dist/messages';
 import assert from 'assert';
 import { useEvent } from 'util/useEvent';
 import { QueryArrayResult } from 'pg';
+import { closeTabNow } from 'actions';
 import { useTab } from '../main/App';
 import { Editor } from '../Editor';
 import { Grid } from '../Grid';
@@ -76,7 +77,7 @@ function Notices({
   );
 }
 
-export function QueryFrame() {
+export function QueryFrame({ uid }: { uid: number }) {
   const editorRef: MutableRefObject<Editor | null> = useRef(null);
 
   const [state, setState] = useState({
@@ -134,6 +135,17 @@ export function QueryFrame() {
     }
   });
 
+  const [closeConfirm, setcloseConfirm] = useState(false);
+
+  const yesClick = useEvent(async () => {
+    await db.stopRunningQuery();
+    closeTabNow(uid);
+  });
+
+  const noClick = useEvent(() => {
+    setcloseConfirm(false);
+  });
+
   useTab({
     f5() {
       execute();
@@ -150,8 +162,7 @@ export function QueryFrame() {
     },
     onClose() {
       if (state.running) {
-        if (window.confirm('A query is running. Do you wish to cancel it?'))
-          return true;
+        setcloseConfirm(true);
         return false;
       }
       return true;
@@ -184,6 +195,34 @@ export function QueryFrame() {
 
   return (
     <>
+      {closeConfirm ? (
+        <div
+          className="dialog"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={0}
+          ref={(el) => {
+            if (el) el.focus();
+          }}
+          onBlur={(e) => {
+            const dialogEl = e.currentTarget;
+            setTimeout(() => {
+              if (dialogEl.contains(document.activeElement)) return;
+              noClick();
+            }, 1);
+          }}
+        >
+          A query is running. Do you wish to cancel it?
+          <div>
+            <button type="button" onClick={yesClick}>
+              Yes
+            </button>{' '}
+            <button type="button" onClick={noClick}>
+              No
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <Editor ref={editorRef} style={{ height: '300px' }} />
       {state.res && state.res.fields && state.res.fields.length ? (
         <span className="mensagem">
@@ -194,11 +233,16 @@ export function QueryFrame() {
       ) : undefined}
       {/* <span className="mensagem error"></span> */}
       {state.running ? (
-        <button type="button" style={{ opacity: 0.5 }} disabled>
+        <button
+          type="button"
+          style={{ opacity: 0.5 }}
+          disabled
+          className="query-tab--execute"
+        >
           Execute
         </button>
       ) : (
-        <button type="button" onClick={execute}>
+        <button type="button" onClick={execute} className="query-tab--execute">
           Execute
         </button>
       )}

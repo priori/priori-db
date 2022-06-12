@@ -24,7 +24,7 @@ div.nav {
     .schema-name, .group-name, .table-name, .schema-name, .function-name {padding-right: 0;}
     .schema-name:hover, .group-name:hover, .table:hover .table-name,
       .function:hover .function-name, .sequence:hover .sequence-name{ padding-right: 20px }
-  
+
     .schema-info, .table-info, .new-table, .view-mode {
       font-size:12px; right: 5px; position:absolute; top: 3px;
       color: #888; display: none }
@@ -36,10 +36,10 @@ div.nav {
   
     .full-view .view-mode { display: inline; color: #1155cc; }
     .new-table:hover, .schema-info:hover, .table-info:hover, .view-mode:hover { color: #000 }
-  
+
     .group-name.arrow:after {left: 23px !important;}
     .group-name { padding-left: 37px !important; }
-    .function-name::before { content: 'F'; font-weight: 900; margin-right: 5px; letter-spacing: -2px; 
+    .function-name::before { content: 'F'; font-weight: 900; margin-right: 5px; letter-spacing: -2px;
         font-size: 13px; opacity: .75;  margin-right: 16px }
     i.table-type.fa.fa-th { opacity: .65; }
     .schema-name:hover, .group-name:hover, .table:hover, .sequence-name:hover,

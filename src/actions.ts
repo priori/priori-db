@@ -196,6 +196,10 @@ export function closeThisAndReloadNav(uid: number) {
   state.closeTab(uid);
 }
 
+export function closeTabNow(uid: number) {
+  state.closeTab(uid);
+}
+
 export function openSchema(name: string) {
   const s = currentState();
   if (!s.schemas) throw new Error('Schemas não configurados.');

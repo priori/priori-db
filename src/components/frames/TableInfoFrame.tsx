@@ -1,5 +1,7 @@
 import { useService } from 'util/useService';
 import { throwError } from 'util/throwError';
+import { useState } from 'react';
+import { useEvent } from 'util/useEvent';
 import { TableInfoFrameProps } from '../../types';
 import { query } from '../../db/Connection';
 import { reloadNav, closeTab } from '../../actions';
@@ -46,8 +48,26 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   }, []);
   const state = service.lastValidData || { indexes: null, cols: null };
 
-  function dropCascade() {
-    if (window.confirm('Do you really want to drop cascade this table?'))
+  const [dropState, set] = useState({
+    dropCascadeConfirmation: false,
+    dropConfirmation: false,
+  });
+  const dropCascade = useEvent(() => {
+    set({
+      dropCascadeConfirmation: true,
+      dropConfirmation: false,
+    });
+  });
+
+  const drop = useEvent(() => {
+    set({
+      dropCascadeConfirmation: false,
+      dropConfirmation: true,
+    });
+  });
+
+  const yesClick = useEvent(() => {
+    if (dropState.dropCascadeConfirmation)
       query(`DROP TABLE "${props.schema}"."${props.table}" CASCADE`).then(
         () => {
           setTimeout(() => closeTab(props), 10);
@@ -57,10 +77,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           throwError(err);
         }
       );
-  }
-
-  function drop() {
-    if (window.confirm('Do you really want to drop this table?'))
+    else
       query(`DROP TABLE "${props.schema}"."${props.table}"`).then(
         () => {
           setTimeout(() => closeTab(props), 10);
@@ -70,7 +87,14 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           throwError(err);
         }
       );
-  }
+  });
+
+  const noClick = useEvent(() => {
+    set({
+      dropCascadeConfirmation: false,
+      dropConfirmation: false,
+    });
+  });
 
   // eslint-disable-next-line class-methods-use-this
   function showQuery(q: string) {
@@ -82,11 +106,40 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       <h1>
         {props.schema}.{props.table}
       </h1>
+      {dropState.dropCascadeConfirmation || dropState.dropConfirmation ? (
+        <div className="dialog">
+          {dropState.dropCascadeConfirmation
+            ? 'Do you really want to drop cascade this table?'
+            : 'Do you really want to drop this table?'}
+          <div>
+            <button type="button" onClick={yesClick}>
+              Yes
+            </button>{' '}
+            <button type="button" onClick={noClick}>
+              No
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div>
-        <button type="button" onClick={() => drop()}>
+        <button
+          type="button"
+          onClick={
+            dropState.dropCascadeConfirmation || dropState.dropConfirmation
+              ? undefined
+              : drop
+          }
+        >
           Drop Table
         </button>{' '}
-        <button type="button" onClick={() => dropCascade()}>
+        <button
+          type="button"
+          onClick={
+            dropState.dropCascadeConfirmation || dropState.dropConfirmation
+              ? undefined
+              : dropCascade
+          }
+        >
           Drop Cascade
         </button>
         <br />

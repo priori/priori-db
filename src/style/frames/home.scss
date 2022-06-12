@@ -196,3 +196,18 @@
 .error input {
   border-color: #e00;
 }
+
+
+.new-connection .dialog {
+  position: absolute; font-size: 13px;
+  background: white;
+  left: 50%;
+  margin-left: -125px;
+  z-index: 2;
+  box-shadow: 0 1px 11px rgb(0 0 0 / 18%);
+  padding: 15px 10px;
+  width: 250px;
+  text-align: center;
+  button { margin: 5px; margin-top: 10px; font-size: 14px; padding: 6px 0; width: 50px;
+  text-align: center;}
+}

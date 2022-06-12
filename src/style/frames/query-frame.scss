@@ -13,12 +13,18 @@
 .notice-details span { margin-right: 17px; white-space: nowrap; }
 .full-view .fa-eye { display: block !important; color: #038 !important; }
 
-.query-tab button { position: absolute; right: 20px; margin-top: -54px;z-index: 2; }
+.query-tab button.query-tab--execute { position: absolute; right: 20px; margin-top: -54px;z-index: 2; }
+.frame.query-tab .dialog {
+  margin-top: 20px;
+  margin-left: 20px;
+  z-index: 99;
+  outline: none;
+}
 .query-tab .mensagem { position: absolute; margin-top: -36px; right: 138px;
     font-weight: bold; font-size: 13px; background: white; z-index: 2; padding: 5px; }
 .query-tab .mensagem.error { color: #d22 }
 
-.running span { position: absolute; right: 66px; top: 9px; background: #ddd; 
+.running span { position: absolute; right: 66px; top: 9px; background: #ddd;
     padding: 2px 4px; border-radius: 4px; z-index: 3; font-size: 13px; }
 .running span:hover { background: #ccc;}
 
