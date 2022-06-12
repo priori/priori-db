@@ -67,21 +67,22 @@ export function keepTabOpen(current: AppState, tab: Tab | number) {
 }
 
 function newFrame(current: AppState, fn: (uid: number) => Tab) {
-  const tabs = current.tabs.map((c) => ({ ...c, active: false }));
+  const tabs0 = current.tabs.map((c) => ({ ...c, active: false }));
   const i = current.tabs.findIndex((c) => c.active);
   const uid = current.uidCounter + 1;
   const frame = fn(uid);
+  const tabs = [
+    ...tabs0.filter((f, i2) => (i2 <= i || i === -1) && (frame.keep || f.keep)),
+    frame,
+    ...tabs0.filter((f, i2) => i2 > i && (frame.keep || f.keep)),
+  ];
   return {
     ...current,
     uidCounter: current.uidCounter + 1,
-    tabs: [
-      ...tabs.filter(
-        (f, i2) => (i2 <= i || i === -1) && (frame.keep || f.keep)
-      ),
-      frame,
-      ...tabs.filter((f, i2) => i2 > i && (frame.keep || f.keep)),
-    ],
-    tabsSort: [...current.tabsSort, uid],
+    tabs,
+    tabsSort: [...current.tabsSort, uid].filter(
+      (uid2) => !!tabs.find((t2) => t2.props.uid === uid2)
+    ),
   };
 }
 
