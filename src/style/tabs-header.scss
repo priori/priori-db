@@ -26,11 +26,11 @@
   .tab {
     height: 40px;
     line-height: 32px;
-    padding: 0 7px;
     float: left;
     overflow: hidden;
-    transition: width 0.5s, left 0.75s;
+    transition: width 0.5s, left 0.5s;
     padding-top: 4px;
+    box-shadow: 1px 0px rgb(0 0 0 / 20%);
   }
   .tab-name {
     white-space: nowrap;
@@ -38,6 +38,7 @@
     display: block;
     margin-right: 17px;
     text-overflow: ellipsis;
+    padding: 1px 7px;
   }
   .pik .tab-name {
     color: rgba(0, 0, 0, 0.2);
@@ -47,8 +48,6 @@
     position: relative;
     color: #444;
     overflow: hidden;
-    border-right: 1px solid #888;
-    border-left: 1px solid #888;
     margin-left: -1px;
   }
   .tab .fa-close {
@@ -68,13 +67,14 @@
     background: white;
     color: #000;
     z-index: 2;
-    transition: width 0.25s;
+    transition: width 0.5s;
     border-color: white;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   }
   .tab input {
     padding: 3px;
     margin-top: 5px;
+    margin-left: 10px;
     max-width: calc(100% - 20px);
   }
 }
