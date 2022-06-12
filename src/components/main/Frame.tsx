@@ -1,4 +1,4 @@
-import { FrameProps } from 'types';
+import { AbstractTabProps, FrameProps0, FrameType } from 'types';
 import { equals } from 'components/util/equals';
 import React from 'react';
 import assert from 'assert';
@@ -8,7 +8,11 @@ import { NewTableFrame } from '../frames/NewTableFrame';
 import { SchemaInfoFrame } from '../frames/SchemaInfoFrame';
 import { TableInfoFrame } from '../frames/TableInfoFrame';
 
-const framesTypes = {
+type FramesTypesMap<T> = T extends FrameType
+  ? Record<T, (props: FrameProps0<T>) => JSX.Element>
+  : never;
+
+const framesTypes: FramesTypesMap<FrameType> = {
   query: QueryFrame,
   table: TableFrame,
   newtable: NewTableFrame,
@@ -16,8 +20,12 @@ const framesTypes = {
   tableinfo: TableInfoFrame,
 };
 
+type FrameContainerProps = {
+  props: AbstractTabProps<FrameType>;
+};
+
 export const Frame = React.memo(
-  ({ props }: { props: FrameProps }) => {
+  ({ props }: FrameContainerProps) => {
     // eslint-disable-next-line react/prop-types
     const sType = props.type;
     const type = framesTypes[sType];
