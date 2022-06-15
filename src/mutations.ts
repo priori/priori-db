@@ -477,7 +477,7 @@ export function setConnection(
 
 export function newQuery(current: AppState) {
   return newFrame(current, (uid) => ({
-    title: 'Nova Consulta',
+    title: 'New Query',
     keep: true,
     props: {
       uid,
