@@ -28,6 +28,7 @@ export function connect(c: ConnectionConfiguration, db?: string) {
     password: c.password,
     host: c.host,
     port: c.port,
+    allowExitOnIdle: false,
   };
   let success: (pc: Pool) => void;
   let error: (e: Error) => void;
@@ -39,7 +40,7 @@ export function connect(c: ConnectionConfiguration, db?: string) {
   pool.connect((err, client) => {
     if (err) {
       try {
-        client.release();
+        client.release(true);
         // eslint-disable-next-line no-empty
       } catch {}
       if (typeof err === 'string' || typeof err === 'undefined')
@@ -52,7 +53,7 @@ export function connect(c: ConnectionConfiguration, db?: string) {
         c.port !== 5432 ? `:${c.port}` : ''
       }/${database}`;
       document.head.appendChild(title);
-      client.release();
+      client.release(true);
       assert(pool);
       success(pool);
     }
@@ -74,7 +75,7 @@ export function openConnection() {
         error(new Error(err));
       else if (err instanceof Error) error(err);
       else error(new Error(`${err}`));
-      client.release();
+      client.release(true);
     } else {
       success(client);
     }
@@ -196,7 +197,7 @@ export async function closeAll() {
         .filter((ac) => ac.pid)
         .map(async (ac) => {
           await ac.stopRunningQuery();
-          await ac.db?.release();
+          await ac.db?.release(true);
         })
     );
     await pool?.end();

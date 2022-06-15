@@ -124,7 +124,7 @@ export function useExclusiveConnection(notice: (a: NoticeMessage) => void) {
       if (client.pid) {
         client.stopRunningQuery().then(() => {
           exclusives.splice(exclusives.indexOf(client), 1);
-          client.db?.release();
+          client.db?.release(true);
         });
         return;
       }
