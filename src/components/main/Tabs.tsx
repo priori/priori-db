@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
-import { Component } from 'react';
+import { Component, MouseEventHandler } from 'react';
+import { useEvent } from 'util/useEvent';
 import {
   activateTab,
   changeTabsSort,
@@ -97,6 +98,15 @@ export class Tabs extends Component<TabsProps, TabsState> {
     }
   }
 
+  tabsDoubleClick: MouseEventHandler<HTMLSpanElement> = (e) => {
+    const el = e.target;
+    if (el instanceof HTMLElement) {
+      if (el.matches('span.tabs')) {
+        newQuery();
+      }
+    }
+  };
+
   blurInput(input: HTMLInputElement) {
     updateTabText(this.state.editing, input.value);
     this.setState((state) => ({
@@ -189,7 +199,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
     if (!this.state.sorting) {
       return (
         <div className="tabs-header">
-          <span className="tabs">
+          <span className="tabs" onDoubleClick={this.tabsDoubleClick}>
             {this.props.tabs.map((t, index) => {
               const { width } = this.state.tabs[index];
               return (
