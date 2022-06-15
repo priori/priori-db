@@ -3,11 +3,19 @@ import { NewSchemaForm } from 'components/util/NewSchemaForm';
 import { useF5, useShortcuts } from 'util/shortcuts';
 import { useEffect, useRef, useContext } from 'react';
 import { FrameType, Tab } from 'types';
+import { useWindowCloseConfirm } from 'components/util/useWindowCloseConfirm';
+import { hasOpenConnection } from 'db/Connection';
 import { currentState, useAppState } from '../../state';
 import { Nav } from './Nav';
 import { Tabs } from './Tabs';
 import { Home } from './home/Home';
-import { cancelCreateSchema, createSchema, useAskToClose } from '../../actions';
+import {
+  askToCloseWindow,
+  cancelAskToCloseWindow,
+  cancelCreateSchema,
+  createSchema,
+  useAskToClose,
+} from '../../actions';
 import { Frame } from './Frame';
 
 const classNames: Record<FrameType, string> = {
@@ -69,7 +77,9 @@ export function useTab(conf0: UseTabConf) {
 
 export function App() {
   useShortcuts();
+
   const state = useAppState();
+
   useF5(() => {
     const currenTab = state.tabs.find((t) => t.active);
     if (currenTab && confs[currenTab.props.uid]) {
@@ -77,6 +87,7 @@ export function App() {
       if (conf.f5) conf.f5();
     }
   });
+
   useAskToClose((uid) => {
     if (confs && confs[uid]) {
       const conf = confs[uid];
@@ -93,6 +104,15 @@ export function App() {
     return sortedTabs;
   }, [state.tabs]);
 
+  const closeNow = useWindowCloseConfirm(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    if (await hasOpenConnection()) {
+      askToCloseWindow();
+    } else {
+      closeNow();
+    }
+  });
+
   if (state.connected) {
     return (
       <div
@@ -100,6 +120,34 @@ export function App() {
           for (const f of listeners) f();
         }}
       >
+        {state.askToCloseWindow && (
+          <div
+            className="dialog--close-window"
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={0}
+            ref={(el) => {
+              if (el) el.focus();
+            }}
+            onBlur={(e) => {
+              const dialogEl = e.currentTarget;
+              setTimeout(() => {
+                if (dialogEl.contains(document.activeElement)) return;
+                cancelAskToCloseWindow();
+              }, 1);
+            }}
+          >
+            <div>
+              There is some running query or idle connection in transacion, are
+              you sure you want to close?
+            </div>
+            <button onClick={cancelAskToCloseWindow} type="button">
+              No
+            </button>{' '}
+            <button onClick={closeNow} type="button">
+              Yes
+            </button>
+          </div>
+        )}
         <div className="header">{state.title}</div>
         <Tabs tabs={state.tabs} />
         {state.schemas ? (

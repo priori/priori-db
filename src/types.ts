@@ -91,6 +91,7 @@ export interface AppState {
     index: number;
     connection: ConnectionConfiguration;
   };
+  askToCloseWindow: boolean;
   bases?: string[];
   passwords: ConnectionConfiguration[];
   connected: boolean;

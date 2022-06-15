@@ -3,21 +3,99 @@
   src: url('./Inconsolata-Regular.ttf');
 }
 
-* { box-sizing: border-box }
-body { background-color: rgba(0,0,0,0); margin: 0;font-family: sans-serif;cursor: default; overflow: hidden; user-select: none }
-button {background: rgba(0,0,0,.1);padding: 10px;border: none;outline: none;font-weight: bold;color: rgba(0,0,0,.8);}
-button:hover { background: rgba(0,0,0,.2) }
-button:focus {color: #018;background: rgba(0,0,0,.15);}
-input { border: solid 1px rgba(0,0,0,.2); outline: none; }
-input:focus { border: solid 1px #029 !important; }
+* {
+  box-sizing: border-box;
+}
+body {
+  background-color: rgba(0, 0, 0, 0);
+  margin: 0;
+  font-family: sans-serif;
+  cursor: default;
+  overflow: hidden;
+  user-select: none;
+}
+button {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border: none;
+  outline: none;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.8);
+}
+button:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+button:focus {
+  color: #018;
+  background: rgba(0, 0, 0, 0.15);
+}
+input {
+  border: solid 1px rgba(0, 0, 0, 0.2);
+  outline: none;
+}
+input:focus {
+  border: solid 1px #029 !important;
+}
 
-button.cancel { background: rgba(0,0,0,.04); }
-button.cancel:hover { background: rgba(0, 0, 0, .2) }
-button.cancel:focus { color: #018; background: rgba(0, 0, 0, .15); }
+button.cancel {
+  background: rgba(0, 0, 0, 0.04);
+}
+button.cancel:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+button.cancel:focus {
+  color: #018;
+  background: rgba(0, 0, 0, 0.15);
+}
 
-td:focus { outline: none }
-td:focus>div {transform: scale(1.1); background: white; box-shadow: 0 2px 9px rgba(0,0,0,.5); z-index: 2; }
-td:first-of-type:last-of-type:focus>div {transform: scale(1);left: 1px;right: 1px;position: absolute;top: 0;}
-td:first-of-type:focus>div {position: relative;left: 5%;}
-td:last-of-type:focus>div {position: relative;right: 5%;}
-tr:first-of-type>td>div {position: relative;top: 5%;}
+td:focus {
+  outline: none;
+}
+td:focus > div {
+  transform: scale(1.1);
+  background: white;
+  box-shadow: 0 2px 9px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+td:first-of-type:last-of-type:focus > div {
+  transform: scale(1);
+  left: 1px;
+  right: 1px;
+  position: absolute;
+  top: 0;
+}
+td:first-of-type:focus > div {
+  position: relative;
+  left: 5%;
+}
+td:last-of-type:focus > div {
+  position: relative;
+  right: 5%;
+}
+tr:first-of-type > td > div {
+  position: relative;
+  top: 5%;
+}
+
+.dialog--close-window {
+  position: absolute;
+  background: white;
+  box-shadow: 0 1px 11px rgb(0 0 0 / 18%);
+  padding: 20px;
+  text-align: center;
+  z-index: 4;
+  left: 50%;
+  top: 20px;
+  line-height: 1.2em;
+  margin-left: -200px;
+  width: 400px;
+  outline: none;
+  div {
+    padding-bottom: 20px;
+    padding-top: 10px;
+  }
+  button {
+    margin: 5px;
+    width: 60px;
+  }
+}

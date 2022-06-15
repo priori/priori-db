@@ -13,6 +13,7 @@ export function throwError(err: unknown) {
 let listener: ((_: AppState) => void) | undefined;
 
 let current: AppState = {
+  askToCloseWindow: false,
   uidCounter: 0,
   passwords: currentPasswords,
   connected: false,

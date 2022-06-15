@@ -114,17 +114,21 @@ class ExclusiveConnection {
   }
 }
 
+export const exclusives = [] as ExclusiveConnection[];
 export function useExclusiveConnection(notice: (a: NoticeMessage) => void) {
   const noticeCall = useEvent(notice);
   const [client] = useState(() => new ExclusiveConnection(noticeCall));
   useEffect(() => {
+    exclusives.push(client);
     return () => {
       if (client.pid) {
         client.stopRunningQuery().then(() => {
+          exclusives.splice(exclusives.indexOf(client), 1);
           client.db?.release();
         });
         return;
       }
+      exclusives.splice(exclusives.indexOf(client), 1);
       client.db?.release();
     };
   }, [client]);

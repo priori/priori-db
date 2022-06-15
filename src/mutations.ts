@@ -28,6 +28,20 @@ export function newConf(current: AppState) {
   };
 }
 
+export function cancelAskToCloseWindow(current: AppState) {
+  return {
+    ...current,
+    askToCloseWindow: false,
+  } as AppState;
+}
+
+export function askToCloseWindow(current: AppState) {
+  return {
+    ...current,
+    askToCloseWindow: true,
+  } as AppState;
+}
+
 export function setConnectionError(current: AppState, err: Error) {
   return {
     ...current,

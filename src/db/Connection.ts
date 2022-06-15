@@ -1,6 +1,8 @@
 import pg, { Pool, PoolClient, QueryArrayResult, QueryResult } from 'pg';
 import assert from 'assert';
 import { ConnectionConfiguration } from './pgpass';
+import { exclusives } from './ExclusiveConnection';
+import { DB } from './DB';
 
 pg.types.setTypeParser(1082, (val) => val);
 pg.types.setTypeParser(1114, (val) => val);
@@ -177,4 +179,33 @@ export async function first(
 ) {
   const res = await list(q, args);
   return res[0] || null;
+}
+
+export async function hasOpenConnection() {
+  if (!pool || exclusives.length === 0) return false;
+  const pids = exclusives
+    .map((ac) => ac.pid)
+    .filter((pid) => typeof pid === 'number') as number[];
+  return DB.existsSomePendingProcess(...pids);
+}
+
+export async function closeAll() {
+  try {
+    await Promise.all(
+      exclusives
+        .filter((ac) => ac.pid)
+        .map(async (ac) => {
+          await ac.stopRunningQuery();
+          await ac.db?.release();
+        })
+    );
+    await pool?.end();
+  } catch (err) {
+    try {
+      if (pool?.end) await pool?.end();
+    } catch (err2) {
+      throw new Error(err2 instanceof Error ? err2.message : `${err2}`);
+    }
+    throw new Error(err instanceof Error ? err.message : `${err}`);
+  }
 }

@@ -16,6 +16,8 @@ export const {
   openDomains,
   openSequences,
   newConf,
+  askToCloseWindow,
+  cancelAskToCloseWindow,
   editingAll,
   editConnectionSelected,
   updateTabText,

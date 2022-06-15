@@ -232,7 +232,34 @@ export const DB = {
       ),
     }));
   },
-};
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).DB = DB;
+  async inOpenTransaction(id: number) {
+    return (
+      (await first(`
+        select
+          count(*) > 0 open
+        from pg_stat_activity
+        where
+          state IN ('idle in transaction') and
+          xact_start is not null and
+          pid = ${id}
+    `)) as { open: boolean }
+    )?.open;
+  },
+
+  async existsSomePendingProcess(...ids: number[]): Promise<boolean> {
+    if (ids.length === 0) return false;
+    return (
+      (await first(`
+        select
+          count(*) > 0 has
+          -- xact_start <- data
+        from pg_stat_activity
+        where
+          state IN ('idle in transaction','active') and
+          xact_start is not null and
+          pid IN (${ids.join(', ')})
+    `)) as { has: boolean }
+    )?.has;
+  },
+};

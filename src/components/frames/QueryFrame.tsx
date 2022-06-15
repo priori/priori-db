@@ -4,6 +4,7 @@ import assert from 'assert';
 import { useEvent } from 'util/useEvent';
 import { QueryArrayResult } from 'pg';
 import { closeTabNow } from 'actions';
+import { DB } from 'db/DB';
 import { useTab } from '../main/App';
 import { Editor } from '../Editor';
 import { Grid } from '../Grid';
@@ -14,6 +15,7 @@ interface QFNoticeMessage extends NoticeMessage {
 }
 interface QueryFrameState {
   running: boolean;
+  openTransaction: boolean;
   notices: QFNoticeMessage[];
   resetNotices: boolean;
   res: QueryArrayResult | null;
@@ -106,9 +108,13 @@ export function QueryFrame({ uid }: { uid: number }) {
     setState({ ...state, running: true, resetNotices: true });
     try {
       const res = await db.query(query, [], true);
+      const openTransaction = !db.pid
+        ? false
+        : await DB.inOpenTransaction(db.pid);
       setState({
         ...state,
         running: false,
+        openTransaction,
         res,
         notices:
           (res && res.fields && res.fields.length) || state.resetNotices
@@ -121,6 +127,7 @@ export function QueryFrame({ uid }: { uid: number }) {
     } catch (err: unknown) {
       setState({
         running: false,
+        openTransaction: false,
         notices: state.resetNotices ? [] : state.notices,
         resetNotices: false,
         error: err as {
@@ -135,7 +142,8 @@ export function QueryFrame({ uid }: { uid: number }) {
     }
   });
 
-  const [closeConfirm, setcloseConfirm] = useState(false);
+  const [closeConfirm, setCloseConfirm] = useState(false);
+  const [closeConfirm2, setCloseConfirm2] = useState(false);
 
   const yesClick = useEvent(async () => {
     await db.stopRunningQuery();
@@ -143,7 +151,8 @@ export function QueryFrame({ uid }: { uid: number }) {
   });
 
   const noClick = useEvent(() => {
-    setcloseConfirm(false);
+    setCloseConfirm(false);
+    setCloseConfirm2(false);
   });
 
   useTab({
@@ -162,7 +171,11 @@ export function QueryFrame({ uid }: { uid: number }) {
     },
     onClose() {
       if (state.running) {
-        setcloseConfirm(true);
+        setCloseConfirm(true);
+        return false;
+      }
+      if (state.openTransaction) {
+        setCloseConfirm2(true);
         return false;
       }
       return true;
@@ -195,7 +208,7 @@ export function QueryFrame({ uid }: { uid: number }) {
 
   return (
     <>
-      {closeConfirm ? (
+      {closeConfirm || closeConfirm2 ? (
         <div
           className="dialog"
           // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
@@ -211,7 +224,10 @@ export function QueryFrame({ uid }: { uid: number }) {
             }, 1);
           }}
         >
-          A query is running. Do you wish to cancel it?
+          {closeConfirm2
+            ? 'Idle connection in transacion.'
+            : 'A query is running.'}{' '}
+          Do you wish to cancel it?
           <div>
             <button type="button" onClick={yesClick}>
               Yes
