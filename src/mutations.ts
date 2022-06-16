@@ -102,7 +102,7 @@ function newFrame(current: AppState, fn: (uid: number) => Tab) {
 
 export function pikSchemaInfo(current: AppState, name: string) {
   const openTab = current.tabs.find(
-    (tab) => tab.props.type === 'schemainfo' && tab.props.schema === name
+    (t) => t.props.type === 'schemainfo' && t.props.schema === name
   );
   if (openTab) {
     return activateTab(current, openTab);
@@ -117,6 +117,57 @@ export function pikSchemaInfo(current: AppState, name: string) {
       schema: name,
     },
   }));
+}
+
+function openOrActivateTab(
+  current: AppState,
+  type: 'function' | 'domain' | 'sequence',
+  schema: string,
+  name: string,
+  keep: boolean
+) {
+  const openTab = current.tabs.find(
+    (t) =>
+      t.props.type === type &&
+      t.props.schema === schema &&
+      t.props.name === name
+  );
+  if (openTab) {
+    if (keep && !openTab.keep) {
+      return keepTabOpen(current, openTab);
+    }
+    return activateTab(current, openTab);
+  }
+  return newFrame(current, (uid) => ({
+    title: `${schema}.${name}`,
+    active: true,
+    keep,
+    props: {
+      uid,
+      type,
+      schema,
+      name,
+    },
+  }));
+}
+
+export function pikFunction(current: AppState, schema: string, name: string) {
+  return openOrActivateTab(current, 'function', schema, name, false);
+}
+export function keepFunction(current: AppState, schema: string, name: string) {
+  return openOrActivateTab(current, 'function', schema, name, true);
+}
+export function pikDomain(current: AppState, schema: string, name: string) {
+  return openOrActivateTab(current, 'domain', schema, name, false);
+}
+export function keepDomain(current: AppState, schema: string, name: string) {
+  return openOrActivateTab(current, 'domain', schema, name, true);
+}
+export function pikSequence(current: AppState, schema: string, name: string) {
+  return openOrActivateTab(current, 'sequence', schema, name, false);
+}
+export function keepSequence(current: AppState, schema: string, name: string) {
+  return openOrActivateTab(current, 'sequence', schema, name, true);
 }
 
 export function keepSchemaInfo(current: AppState, name: string) {

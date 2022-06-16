@@ -2,6 +2,9 @@ import { AbstractTabProps, FrameProps0, FrameType } from 'types';
 import { equals } from 'components/util/equals';
 import React from 'react';
 import assert from 'assert';
+import { SequenceFrame } from 'components/frames/SequenceFrame';
+import { DomainFrame } from 'components/frames/DomainFrame';
+import { FunctionFrame } from 'components/frames/FunctionFrame';
 import { QueryFrame } from '../frames/QueryFrame';
 import { TableFrame } from '../frames/TableFrame';
 import { NewTableFrame } from '../frames/NewTableFrame';
@@ -18,19 +21,17 @@ const framesTypes: FramesTypesMap<FrameType> = {
   newtable: NewTableFrame,
   schemainfo: SchemaInfoFrame,
   tableinfo: TableInfoFrame,
-};
-
-type FrameContainerProps = {
-  props: AbstractTabProps<FrameType> &
-    AbstractTabProps<FrameType> & { type: FrameType };
+  sequence: SequenceFrame,
+  domain: DomainFrame,
+  function: FunctionFrame,
 };
 
 export const Frame = React.memo(
-  ({ props }: FrameContainerProps) => {
+  (props: AbstractTabProps<FrameType>) => {
     const sType = props.type;
     const type = framesTypes[sType];
     assert(type);
     return React.createElement(type, props);
   },
-  (a, b) => equals(a.props, b.props)
+  (a, b) => equals(a, b)
 );

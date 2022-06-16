@@ -153,14 +153,7 @@ div.nav {
   i.table-type.fa.fa-th {
     opacity: 0.65;
   }
-  .schema-name:hover,
-  .group-name:hover,
-  .table:hover,
-  .sequence-name:hover,
-  .domain-name:hover,
-  .function-name:hover {
-    background: #dfdfdf;
-  }
+
   .more {
     text-align: center;
   }
@@ -188,23 +181,36 @@ div.nav {
     line-height: 20px;
     height: 20px;
   }
-  .table.open {
-    color: #04b;
-    background: #eee;
+
+  .schema-name:hover,
+  .group-name:hover {
+    background: #dfdfdf;
   }
-  .table.open:hover {
-    background: #ddd;
-  }
-  .table.active {
-    background: #1976d2;
-    color: white;
-    text-shadow: 0 1px 1px #15c;
-  }
-  .table.active:hover {
-    background: #15d;
-  }
-  .table.active:hover i {
-    color: white;
+  .table,
+  .sequence,
+  .domain,
+  .function {
+    &:hover {
+      background: #dfdfdf;
+    }
+    &.open {
+      color: #04b;
+      background: #eee;
+    }
+    &.open:hover {
+      background: #ddd;
+    }
+    &.active {
+      background: #1976d2;
+      color: white;
+      text-shadow: 0 1px 1px #15c;
+    }
+    &.active:hover {
+      background: #15d;
+    }
+    &.active:hover i {
+      color: white;
+    }
   }
 
   .view .fa.fa-table {

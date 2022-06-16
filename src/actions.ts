@@ -41,6 +41,12 @@ export const {
   closeTab,
   keepOpenTable,
   pikTable,
+  pikFunction,
+  keepFunction,
+  pikDomain,
+  keepDomain,
+  pikSequence,
+  keepSequence,
 } = state;
 
 export async function open(c: ConnectionConfiguration) {

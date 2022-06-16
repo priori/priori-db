@@ -24,6 +24,9 @@ const classNames: Record<FrameType, string> = {
   newtable: 'new-table',
   schemainfo: 'schema-info',
   tableinfo: 'table-info',
+  function: 'function',
+  domain: 'domain',
+  sequence: 'sequence',
 };
 
 const TabContext = React.createContext(0);
@@ -166,7 +169,7 @@ export function App() {
               }`}
             >
               <TabContext.Provider value={t.props.uid}>
-                <Frame props={t.props} />
+                <Frame {...t.props} />
               </TabContext.Provider>
             </div>
           ))}

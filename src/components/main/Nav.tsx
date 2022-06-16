@@ -9,6 +9,12 @@ import {
   keepOpenTable,
   keepTableInfo,
   keepSchemaInfo,
+  pikFunction,
+  keepFunction,
+  pikDomain,
+  keepDomain,
+  pikSequence,
+  keepSequence,
   fullView,
   openFunctions,
   openDomains,
@@ -250,11 +256,50 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                   </div>
                   <div className="functions">
                     {schema.functionsOpen
-                      ? schema.functions.map((f, k) => (
-                          <div key={k} className="function">
-                            <div className="function-name">{f.name}</div>
-                          </div>
-                        ))
+                      ? schema.functions.map((f, k) => {
+                          const isActive =
+                            active &&
+                            active.props.type === 'function' &&
+                            active.props.schema === schema.name &&
+                            active.props.name === f.name;
+                          const isOpen = props.tabs.find(
+                            (c) =>
+                              c.props.type === 'function' &&
+                              c.props.schema === schema.name &&
+                              c.props.name === f.name
+                          );
+                          return (
+                            <div
+                              key={k}
+                              className={`function${isActive ? ' active' : ''}${
+                                isOpen ? ' open' : ''
+                              }`}
+                            >
+                              <div
+                                className="function-name"
+                                onClick={(e) => {
+                                  pikFunction(schema.name, f.name);
+                                  e.stopPropagation();
+                                }}
+                                onDoubleClick={() => {
+                                  keepFunction(schema.name, f.name);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (
+                                    e.key === ' ' ||
+                                    e.key === 'Enter' ||
+                                    e.key === 'Space'
+                                  ) {
+                                    pikFunction(schema.name, f.name);
+                                    e.stopPropagation();
+                                  }
+                                }}
+                              >
+                                {f.name}
+                              </div>
+                            </div>
+                          );
+                        })
                       : null}
                   </div>
                 </div>
@@ -299,13 +344,50 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                   </div>
                   {schema.sequencesOpen ? (
                     <div className="sequences">
-                      {schema.sequences.map((f, k) => (
-                        <div key={k} className="sequence">
-                          <div className="sequence-name">
-                            <i className="fa fa-list-ol" /> {f.name}
+                      {schema.sequences.map((f, k) => {
+                        const isActive =
+                          active &&
+                          active.props.type === 'sequence' &&
+                          active.props.schema === schema.name &&
+                          active.props.name === f.name;
+                        const isOpen = props.tabs.find(
+                          (c) =>
+                            c.props.type === 'sequence' &&
+                            c.props.schema === schema.name &&
+                            c.props.name === f.name
+                        );
+                        return (
+                          <div
+                            key={k}
+                            className={`sequence${isActive ? ' active' : ''}${
+                              isOpen ? ' open' : ''
+                            }`}
+                          >
+                            <div
+                              className="sequence-name"
+                              onClick={(e) => {
+                                pikSequence(schema.name, f.name);
+                                e.stopPropagation();
+                              }}
+                              onDoubleClick={() => {
+                                keepSequence(schema.name, f.name);
+                              }}
+                              onKeyDown={(e) => {
+                                if (
+                                  e.key === ' ' ||
+                                  e.key === 'Enter' ||
+                                  e.key === 'Space'
+                                ) {
+                                  pikSequence(schema.name, f.name);
+                                  e.stopPropagation();
+                                }
+                              }}
+                            >
+                              <i className="fa fa-list-ol" /> {f.name}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : null}
                 </div>
@@ -350,13 +432,50 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                   </div>
                   {schema.domainsOpen ? (
                     <div className="domains">
-                      {schema.domains.map((f, k) => (
-                        <div key={k} className="domains">
-                          <div className="domain-name">
-                            <i className="fa fa-list-ul" /> {f.name}
+                      {schema.domains.map((f, k) => {
+                        const isActive =
+                          active &&
+                          active.props.type === 'domain' &&
+                          active.props.schema === schema.name &&
+                          active.props.name === f.name;
+                        const isOpen = props.tabs.find(
+                          (c) =>
+                            c.props.type === 'domain' &&
+                            c.props.schema === schema.name &&
+                            c.props.name === f.name
+                        );
+                        return (
+                          <div
+                            key={k}
+                            className={`domain${isActive ? ' active' : ''}${
+                              isOpen ? ' open' : ''
+                            }`}
+                          >
+                            <div
+                              className="domain-name"
+                              onClick={(e) => {
+                                pikDomain(schema.name, f.name);
+                                e.stopPropagation();
+                              }}
+                              onDoubleClick={() => {
+                                keepDomain(schema.name, f.name);
+                              }}
+                              onKeyDown={(e) => {
+                                if (
+                                  e.key === ' ' ||
+                                  e.key === 'Enter' ||
+                                  e.key === 'Space'
+                                ) {
+                                  pikDomain(schema.name, f.name);
+                                  e.stopPropagation();
+                                }
+                              }}
+                            >
+                              <i className="fa fa-list-ul" /> {f.name}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : null}
                 </div>
