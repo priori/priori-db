@@ -21,7 +21,7 @@ const framesTypes: FramesTypesMap<FrameType> = {
 };
 
 type FrameContainerProps = {
-  props: AbstractTabProps<FrameType>;
+  props: AbstractTabProps<FrameType> & AbstractTabProps<FrameType>;
 };
 
 export const Frame = React.memo(
@@ -30,7 +30,7 @@ export const Frame = React.memo(
     const sType = props.type;
     const type = framesTypes[sType];
     assert(type);
-    return <>{React.createElement(type, props)}</>;
+    return React.createElement(type, props);
   },
   (a, b) => equals(a.props, b.props)
 );
