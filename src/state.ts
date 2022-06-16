@@ -4,12 +4,6 @@ import { passwords as currentPasswords } from './db/pgpass';
 import { AppState } from './types';
 import * as mutations from './mutations';
 
-export function throwError(err: unknown) {
-  if (err instanceof Error && err.message) alert(err.message);
-  else if (typeof err === 'string') alert(err);
-  else alert(JSON.stringify(err));
-}
-
 let listener: ((_: AppState) => void) | undefined;
 
 let current: AppState = {
