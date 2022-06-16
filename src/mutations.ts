@@ -407,10 +407,6 @@ export function closeFullView(current: AppState, name: string) {
             ...s,
             open: true,
             fullView: false,
-            domains: undefined,
-            functions: undefined,
-            collations: undefined,
-            sequences: undefined,
           }
         : s
     ),
