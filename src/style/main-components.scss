@@ -79,9 +79,9 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
   padding: 10px 20px !important;
 }
-.app-content button:hover {
+.app-content button:hover:not([disabled]) {
   background: #ccc;
 }
-.app-content button:active {
+.app-content button:active:not([disabled]) {
   background: #c4c4c4;
 }
