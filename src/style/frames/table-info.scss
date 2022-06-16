@@ -1,22 +1,53 @@
-.frame.table-info, .frame.schema-info, .frame.new-table {
-  position: absolute; top: 0; right: 0; left: 0; bottom: 0; padding: 20px;
-  background: white; }
-.table-info tbody td { font-size: 13px; }
-.table-info table {border-collapse:collapse}
-.table-info td, .table-info th { border: 1px solid #ccc; padding: 4px; }
-.table-info th {font-size: 12px}
-.frame.table-info{ overflow: auto; }
+.frame.table-info,
+.frame.schema-info,
+.frame.new-table,
+.frame.function,
+.frame.domain,
+.frame.sequence {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  padding: 20px;
+  background: white;
+}
+.table-info tbody td {
+  font-size: 13px;
+}
+.table-info table {
+  border-collapse: collapse;
+}
+.table-info td,
+.table-info th {
+  border: 1px solid #ccc;
+  padding: 4px;
+}
+.table-info th {
+  font-size: 12px;
+}
+.frame.table-info {
+  overflow: auto;
+}
 
-span.column { background: #ddd; padding: 1px 4px; border-radius: 3px; white-space: nowrap; }
+span.column {
+  background: #ddd;
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
 
 .frame .dialog {
   position: absolute;
   background: white;
-  margin-left: -10px; margin-top: -10px;
+  margin-left: -10px;
+  margin-top: -10px;
   z-index: 2;
   box-shadow: 0 1px 11px rgb(0 0 0 / 18%);
   padding: 20px;
   line-height: 3em;
   text-align: center;
-  button { margin: 5px;}
+  button {
+    margin: 5px;
+  }
 }
