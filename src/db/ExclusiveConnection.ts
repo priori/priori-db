@@ -20,13 +20,18 @@ class ExclusiveConnection {
 
   listener: (n: NoticeMessage) => void;
 
-  constructor(listener: (n: NoticeMessage) => void) {
+  onCreatePid: (pid: number) => void;
+
+  constructor(
+    listener: (n: NoticeMessage) => void,
+    onCreatePid: (pid: number) => void
+  ) {
     this.listener = listener;
+    this.onCreatePid = onCreatePid;
   }
 
-  async stopRunningQuery() {
-    if (!this.pid) throw new Error('Invalid pid.');
-    return query('SELECT pg_cancel_backend($1)', [this.pid]);
+  async stopRunningQuery(): Promise<void> {
+    if (this.pid) await query('SELECT pg_cancel_backend($1)', [this.pid]);
   }
 
   async query(
@@ -69,6 +74,7 @@ class ExclusiveConnection {
       });
       const pid = result.rows[0][0];
       this.pid = pid as number;
+      this.onCreatePid(this.pid);
       this.db = db;
       this.db.on('notice', this.listener);
       const { pending } = this;
@@ -115,9 +121,15 @@ class ExclusiveConnection {
 }
 
 export const exclusives = [] as ExclusiveConnection[];
-export function useExclusiveConnection(notice: (a: NoticeMessage) => void) {
+export function useExclusiveConnection(
+  notice: (a: NoticeMessage) => void,
+  onCreatePid: (pid: number) => void
+) {
   const noticeCall = useEvent(notice);
-  const [client] = useState(() => new ExclusiveConnection(noticeCall));
+  const onCreatePidCall = useEvent(onCreatePid);
+  const [client] = useState(
+    () => new ExclusiveConnection(noticeCall, onCreatePidCall)
+  );
   useEffect(() => {
     exclusives.push(client);
     return () => {

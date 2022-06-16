@@ -20,6 +20,7 @@ interface QueryFrameState {
   resetNotices: boolean;
   res: QueryArrayResult | null;
   time: null | number;
+  clientPid: number | null;
   error: {
     code: string;
     line: number;
@@ -86,18 +87,24 @@ export function QueryFrame({ uid }: { uid: number }) {
     running: false,
     notices: [] as NoticeMessage[],
     resetNotices: false,
+    clientPid: null,
     res: null,
     time: null,
     error: null,
   } as QueryFrameState);
 
-  const db = useExclusiveConnection((notice: NoticeMessage) => {
-    setState({
-      ...state,
-      resetNotices: false,
-      notices: state.resetNotices ? [notice] : [...state.notices, notice],
-    });
-  });
+  const db = useExclusiveConnection(
+    (notice: NoticeMessage) => {
+      setState((state2) => ({
+        ...state2,
+        resetNotices: false,
+        notices: state2.resetNotices ? [notice] : [...state2.notices, notice],
+      }));
+    },
+    (pid) => {
+      setState((state2) => ({ ...state2, clientPid: pid }));
+    }
+  );
 
   const execute = useEvent(async () => {
     if (state.running) return;
@@ -126,6 +133,7 @@ export function QueryFrame({ uid }: { uid: number }) {
       });
     } catch (err: unknown) {
       setState({
+        clientPid: state2.clientPid,
         running: false,
         openTransaction: false,
         notices: state.resetNotices ? [] : state.notices,
@@ -240,6 +248,7 @@ export function QueryFrame({ uid }: { uid: number }) {
       ) : null}
 
       <Editor ref={editorRef} style={{ height: '300px' }} />
+
       {state.res && state.res.fields && state.res.fields.length ? (
         <span className="mensagem">
           Query returned {state.res.rows.length} row
@@ -264,10 +273,8 @@ export function QueryFrame({ uid }: { uid: number }) {
       )}
 
       {state.running ? (
-        <i className="fa fa-circle-o-notch fa-spin fa-3x fa-fw" />
-      ) : null}
-      {state.running ? (
         <div className="running">
+          <i className="fa fa-circle-o-notch fa-spin fa-3x fa-fw" />
           <span
             onClick={cancel}
             role="button"
@@ -278,6 +285,13 @@ export function QueryFrame({ uid }: { uid: number }) {
           </span>
         </div>
       ) : null}
+
+      {state.clientPid ? (
+        <div className={`pid${state.running ? ' pid--running' : ''}`}>
+          {state.clientPid} <i className="fa fa-link" />
+        </div>
+      ) : null}
+
       {state.error ? (
         <div
           style={{

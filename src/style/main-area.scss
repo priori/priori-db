@@ -1,14 +1,40 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table.table,
+.table > * > * > td,
+table.table > * > * > th,
+table.table > * > td,
+table.table > * > th {
+  border: 1px solid #ddd;
+  padding: 5px;
+  font-size: 12px;
+  table-layout: auto;
+}
 
-.table { width: 100%; border-collapse: collapse; }
-table.table, .table>*>*>td, table.table>*>*>th, table.table>*>td, table.table>*>th {
-    border: 1px solid #ddd; padding: 5px; font-size: 12px; table-layout: auto; }
+.new-schema-form input {
+  padding: 8px;
+  width: 150px;
+}
+.new-schema-form {
+  z-index: 10000;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: rgba(256, 256, 256, 0.75);
+}
+.new-schema-form > div {
+  position: absolute;
+  bottom: 20px;
+  left: 75px;
+  background: white;
+  padding: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.33);
+}
 
-.new-schema-form input { padding: 8px; width: 150px; }
-.new-schema-form { z-index: 10000; position: fixed; bottom: 0; left: 0; right: 0; top: 0;
-    background: rgba(256,256,256,.75); }
-.new-schema-form>div { position: absolute; bottom: 20px; left: 75px; background: white; padding: 10px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.33); }
-
-.list-input>.list-input-item { transition: top .5s; }
-
-i.fa.fa-circle-o-notch.fa-spin { position: absolute; right: 0; top: 8px; color: #25c; }
+.list-input > .list-input-item {
+  transition: top 0.5s;
+}

@@ -110,3 +110,56 @@
   padding: 6px 9px;
   font-size: 12px;
 }
+
+.pid {
+  position: absolute;
+  right: 5px;
+  top: 8px;
+
+  background: #ddd;
+  font-size: 12px;
+  padding: 2px 4px 1px 4px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: default;
+  z-index: 2;
+
+  opacity: 0;
+  animation: opacity 0.3s;
+  animation-delay: 0.3s;
+  animation-fill-mode: forwards;
+  .fa-link {
+    color: #03a;
+  }
+}
+.pid--running {
+  top: 33px;
+  right: 66px;
+  transition: all 0.5s;
+}
+
+@keyframes opacity {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.running {
+  opacity: 0;
+  animation: opacity 1.5s;
+  animation-fill-mode: forwards;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 180px;
+  z-index: 2;
+  i.fa.fa-circle-o-notch.fa-spin {
+    position: absolute;
+    right: 0;
+    top: 8px;
+    color: #25c;
+  }
+}
