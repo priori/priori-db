@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { Component, MouseEventHandler } from 'react';
+import { Component, KeyboardEventHandler, MouseEventHandler } from 'react';
 import {
   activateTab,
   changeTabsSort,
@@ -84,6 +84,17 @@ export class Tabs extends Component<TabsProps, TabsState> {
       this.fit();
     }, 1);
   }
+
+  onInputKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+    } else if (e.key === 'Escape') {
+      this.setState((state) => ({
+        ...state,
+        editing: null,
+      }));
+    }
+  };
 
   onDoubleClick(t: Tab) {
     if (t.props.type === 'query') {
@@ -232,6 +243,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
                         }
                         this.prevEl = el;
                       }}
+                      onKeyDown={this.onInputKeyDown}
                       onBlur={(e) =>
                         this.blurInput(e.target as HTMLInputElement)
                       }
