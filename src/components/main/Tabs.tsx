@@ -2,7 +2,7 @@ import assert from 'assert';
 import { Component, KeyboardEventHandler, MouseEventHandler } from 'react';
 import {
   activateTab,
-  changeTabsSort,
+  updateHeaderTabsDisplayOrder,
   askToCloseTab,
   newQuery,
   keepTabOpen,
@@ -159,7 +159,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
     const { tabs } = this.calculate();
     tabs.sort((a, b) => a.left - b.left);
     this.applySort();
-    changeTabsSort(tabs.map((a) => a.props.uid));
+    updateHeaderTabsDisplayOrder(tabs.map((a) => a.props.uid));
   }
 
   private windowBlur() {

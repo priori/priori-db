@@ -35,7 +35,7 @@ export const {
   cancelConnection,
   cancelSelectedConnection,
   newSchema,
-  changeTabsSort,
+  updateHeaderTabsDisplayOrder,
   newQuery,
   keepTabOpen,
   closeTab,
