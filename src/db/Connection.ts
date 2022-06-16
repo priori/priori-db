@@ -1,5 +1,6 @@
 import pg, { PoolClient, QueryArrayResult, QueryResult } from 'pg';
 import assert from 'assert';
+import { grantError } from 'util/errors';
 import { ConnectionConfiguration } from './pgpass';
 import { exclusives } from './ExclusiveConnection';
 import { DB } from './DB';
@@ -46,15 +47,9 @@ export async function connect(c: ConnectionConfiguration, db?: string) {
     try {
       client?.release(true);
     } catch (err2) {
-      if (typeof err2 === 'string' || typeof err2 === 'undefined')
-        throw new Error(err2);
-      else if (err2 instanceof Error) throw err2;
-      else throw new Error(`${err2}`);
+      throw grantError(err2);
     }
-    if (typeof err === 'string' || typeof err === 'undefined')
-      throw new Error(err);
-    else if (err instanceof Error) throw err;
-    else throw new Error(`${err}`);
+    throw grantError(err);
   }
 }
 
@@ -68,10 +63,7 @@ export function openConnection() {
   assert(pool);
   pool.connect((err, client) => {
     if (err) {
-      if (typeof err === 'string' || typeof err === 'undefined')
-        error(new Error(err));
-      else if (err instanceof Error) error(err);
-      else error(new Error(`${err}`));
+      error(grantError(err));
       client.release(true);
     } else {
       success(client);
@@ -79,31 +71,14 @@ export function openConnection() {
   });
   return promise;
 }
-
 export async function listFromConfiguration(
   c: ConnectionConfiguration,
   query: string
 ) {
   const pg2 = pg;
-  let success: (
-    rows: Array<
-      | string
-      | null
-      | number
-      | boolean
-      | { [k: string]: string | null | number | boolean }
-    >
-  ) => void;
+  let success: (rows: QueryResult) => void;
   let error: (e: Error) => void;
-  const promise = new Promise<
-    Array<
-      | string
-      | null
-      | number
-      | boolean
-      | { [k: string]: string | null | number | boolean }
-    >
-  >((resolve, reject) => {
+  const promise = new Promise<QueryResult>((resolve, reject) => {
     success = resolve;
     error = reject;
   });
@@ -116,24 +91,16 @@ export async function listFromConfiguration(
   });
   client.connect((err) => {
     if (err) {
-      if (typeof err === 'string' || typeof err === 'undefined')
-        error(new Error(err));
-      else if (err instanceof Error) error(err);
-      else error(new Error(`${err}`));
+      error(grantError(err));
     } else {
       client.query(query, [], (err2, result) => {
         if (err2) {
-          if (typeof err2 === 'string' || typeof err2 === 'undefined')
-            error(new Error(err2));
-          else if (err2 instanceof Error) error(err2);
-          else error(new Error(`${err2}`));
+          error(grantError(err2));
         } else {
           client.end((err3) => {
             if (err3) throw err3;
           });
-          success(
-            result.rows.map((r) => (r as { name: string }).name) as string[]
-          );
+          success(result);
         }
       });
     }
@@ -208,4 +175,14 @@ export async function closeAll() {
     }
     throw new Error(err instanceof Error ? err.message : `${err}`);
   }
+}
+
+export async function listDatabases(c: ConnectionConfiguration) {
+  const res = await listFromConfiguration(
+    c,
+    `SELECT datname as name
+        FROM pg_database
+        WHERE datistemplate = false;`
+  );
+  return res.rows.map((r) => (r as { name: string }).name) as string[];
 }

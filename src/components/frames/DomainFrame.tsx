@@ -1,5 +1,5 @@
 import { closeTab, reloadNav } from 'actions';
-import { query } from 'db/Connection';
+import { DB } from 'db/DB';
 import { useState } from 'react';
 import { DomainFrameProps } from 'types';
 import { throwError } from 'util/throwError';
@@ -26,7 +26,7 @@ export function DomainFrame(props: DomainFrameProps) {
 
   const yesClick = useEvent(() => {
     if (state.dropCascadeConfirmation)
-      query(`DROP DOMAIN "${props.schema}"."${props.name}" CASCADE`).then(
+      DB.dropDomain(props.schema, props.name, true).then(
         () => {
           setTimeout(() => closeTab(props), 10);
           reloadNav();
@@ -36,7 +36,7 @@ export function DomainFrame(props: DomainFrameProps) {
         }
       );
     else
-      query(`DROP DOMAIN "${props.schema}"."${props.name}"`).then(
+      DB.dropDomain(props.schema, props.name).then(
         () => {
           setTimeout(() => closeTab(props), 10);
           reloadNav();

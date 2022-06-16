@@ -1,12 +1,9 @@
 import assert from 'assert';
 import { useEffect } from 'react';
 import { throwError } from 'util/throwError';
+import { grantError } from 'util/errors';
 import { ConnectionConfiguration, savePasswords } from './db/pgpass';
-import {
-  connect as dbConnect,
-  listFromConfiguration,
-  query,
-} from './db/Connection';
+import { connect as dbConnect, listDatabases } from './db/Connection';
 import state, { currentState } from './state';
 import { DB } from './db/DB';
 import { FrameProps } from './types';
@@ -53,15 +50,10 @@ export const {
 export async function open(c: ConnectionConfiguration) {
   state.setConnection(c);
   try {
-    const res = await listFromConfiguration(
-      c,
-      `SELECT datname as name
-        FROM pg_database
-        WHERE datistemplate = false;`
-    );
+    const res = await listDatabases(c);
     state.setBases(res);
   } catch (err) {
-    state.setConnectionError(err);
+    state.setConnectionError(grantError(err));
   }
 }
 
@@ -71,24 +63,19 @@ export async function newConnection(
 ): Promise<void> {
   removeError();
   try {
-    const res = await listFromConfiguration(
-      conf,
-      `SELECT datname as name
-        FROM pg_database
-        WHERE datistemplate = false;`
-    );
+    const res = await listDatabases(conf);
     state.addConnectionConfiguration(conf, index);
     savePasswords(currentState().passwords);
     state.setConnection(conf);
     state.setBases(res);
   } catch (err) {
-    state.setConnectionError(err);
+    state.setConnectionError(grantError(err));
     throw err;
   }
 }
 
 export function createSchema(name: string) {
-  query(`CREATE SCHEMA "${name}"`).then(
+  DB.createSchema(name).then(
     () => {
       state.createSchema(name);
     },
@@ -99,7 +86,7 @@ export function createSchema(name: string) {
 }
 
 export function dropSchemaCascade(name: string) {
-  query(`DROP SCHEMA "${name}" CASCADE`).then(
+  DB.dropSchema(name, true).then(
     () => {
       state.dropSchemaCascade(name);
     },
@@ -110,7 +97,7 @@ export function dropSchemaCascade(name: string) {
 }
 
 export function dropSchema(name: string) {
-  query(`DROP SCHEMA "${name}"`).then(
+  DB.dropSchema(name).then(
     () => {
       state.dropSchema(name);
     },
@@ -154,10 +141,10 @@ export async function connect(s: string) {
       const schemas = await DB.listAll();
       state.connected(s, schemas);
     } catch (err) {
-      state.setConnectionError(err);
+      state.setConnectionError(grantError(err));
     }
   } catch (err) {
-    state.setConnectionError(err);
+    state.setConnectionError(grantError(err));
     throw err;
   }
 }
@@ -178,9 +165,9 @@ export function closeTabNow(uid: number) {
 
 export function openSchema(name: string) {
   const s = currentState();
-  if (!s.schemas) throw new Error('Schemas não configurados.');
+  assert(s.schemas);
   const schema = s.schemas.find((c) => c.name === name);
-  if (!schema) throw new Error(`Schema não encontrado. (${name})`);
+  assert(schema);
   state.toggleSchema(name);
 }
 

@@ -3,7 +3,6 @@ import { throwError } from 'util/throwError';
 import { KeyboardEvent, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { TableInfoFrameProps } from '../../types';
-import { query } from '../../db/Connection';
 import { reloadNav, closeTab } from '../../actions';
 import { DB } from '../../db/DB';
 
@@ -68,7 +67,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const yesClick = useEvent(() => {
     if (dropState.dropCascadeConfirmation)
-      query(`DROP TABLE "${props.schema}"."${props.table}" CASCADE`).then(
+      DB.dropTable(props.schema, props.table, true).then(
         () => {
           setTimeout(() => closeTab(props), 10);
           reloadNav();
@@ -78,7 +77,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         }
       );
     else
-      query(`DROP TABLE "${props.schema}"."${props.table}"`).then(
+      DB.dropTable(props.schema, props.table).then(
         () => {
           setTimeout(() => closeTab(props), 10);
           reloadNav();

@@ -1,4 +1,4 @@
-import { list, first } from './Connection';
+import { list, first, query } from './Connection';
 import { Type } from '../types';
 
 function label(s: string) {
@@ -261,5 +261,30 @@ export const DB = {
           pid IN (${ids.join(', ')})
     `)) as { has: boolean }
     )?.has;
+  },
+
+  async createSchema(schemaName: string) {
+    await query(`CREATE SCHEMA "${schemaName}"`);
+  },
+  async dropSchema(schemaName: string, cascade = false) {
+    await query(`DROP SCHEMA "${schemaName}" ${cascade ? 'CASCADE' : ''}`);
+  },
+  async dropTable(schema: string, name: string, cascade = false) {
+    await query(`DROP TABLE "${schema}"."${name}" ${cascade ? 'CASCADE' : ''}`);
+  },
+  async dropFunction(schema: string, name: string, cascade = false) {
+    await query(
+      `DROP FUNCTION "${schema}"."${name}" ${cascade ? 'CASCADE' : ''}`
+    );
+  },
+  async dropDomain(schema: string, name: string, cascade = false) {
+    await query(
+      `DROP DOMAIN "${schema}"."${name}" ${cascade ? 'CASCADE' : ''}`
+    );
+  },
+  async dropSequence(schema: string, name: string, cascade = false) {
+    await query(
+      `DROP SEQUENCE "${schema}"."${name}" ${cascade ? 'CASCADE' : ''}`
+    );
   },
 };
