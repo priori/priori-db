@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useEvent } from 'util/useEvent';
+import { DB } from 'db/DB';
+import { throwError } from 'util/throwError';
 import { SchemaInfoFrameProps } from '../../types';
-import { dropSchema, dropSchemaCascade } from '../../actions';
+import { closeTab, reloadNav } from '../../actions';
 
 export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
   const [state, set] = useState({
@@ -23,8 +25,27 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
   });
 
   const yesClick = useEvent(() => {
-    if (state.dropCascadeConfirmation) dropSchemaCascade(props.schema);
-    else dropSchema(props.schema);
+    if (state.dropCascadeConfirmation) {
+      DB.dropSchema(props.schema, true).then(
+        () => {
+          setTimeout(() => closeTab(props), 10);
+          reloadNav();
+        },
+        (err) => {
+          throwError(err);
+        }
+      );
+    } else {
+      DB.dropSchema(props.schema).then(
+        () => {
+          setTimeout(() => closeTab(props), 10);
+          reloadNav();
+        },
+        (err) => {
+          throwError(err);
+        }
+      );
+    }
   });
 
   const noClick = useEvent(() => {

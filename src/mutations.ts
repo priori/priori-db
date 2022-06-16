@@ -325,44 +325,6 @@ export function newSchema(current: AppState) {
   };
 }
 
-function filterTabs(current: AppState, fn: (c: Tab) => boolean) {
-  const tabsOpenOrder = current.tabsOpenOrder.filter((uid) =>
-    fn(current.tabs.find((tab) => tab.props.uid === uid) as Tab)
-  );
-  return {
-    ...current,
-    tabs: current.tabs
-      .filter(fn)
-      .map((tab) =>
-        tabsOpenOrder.length &&
-        tabsOpenOrder[tabsOpenOrder.length - 1] === tab.props.uid
-          ? { ...tab, active: true }
-          : tab
-      ),
-    tabsOpenOrder,
-  };
-}
-
-export function dropSchema(current: AppState, name: string) {
-  const state = {
-    ...current,
-    schemas: (current.schemas as NavSchema[]).filter((sc) => sc.name !== name),
-  };
-  return filterTabs(state, (c: Tab) => {
-    return !(c.props.type === 'schemainfo' && c.props.schema === name);
-  });
-}
-
-export function dropSchemaCascade(current: AppState, name: string) {
-  const state2 = {
-    ...current,
-    schemas: (current.schemas as NavSchema[]).filter((sc) => sc.name !== name),
-  };
-  return filterTabs(state2, (c: Tab) => {
-    return !(c.props.type === 'schemainfo' && c.props.schema === name);
-  });
-}
-
 export function cancelCreateSchema(current: AppState) {
   return {
     ...current,

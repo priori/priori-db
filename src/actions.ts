@@ -85,28 +85,6 @@ export function createSchema(name: string) {
   );
 }
 
-export function dropSchemaCascade(name: string) {
-  DB.dropSchema(name, true).then(
-    () => {
-      state.dropSchemaCascade(name);
-    },
-    (err) => {
-      throwError(err);
-    }
-  );
-}
-
-export function dropSchema(name: string) {
-  DB.dropSchema(name).then(
-    () => {
-      state.dropSchema(name);
-    },
-    (err) => {
-      throwError(err);
-    }
-  );
-}
-
 let askToCloseHandler: ((uid: number) => boolean) | undefined;
 export function useAskToClose(fn: (uid: number) => boolean) {
   useEffect(() => {
