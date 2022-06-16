@@ -300,14 +300,12 @@ export function keepTableInfo(
   }));
 }
 
-export function updateTabText(
-  current: AppState,
-  editing: Tab | null,
-  value: string
-) {
+export function updateTabText(current: AppState, uid: number, value: string) {
   return {
     ...current,
-    tabs: current.tabs.map((t) => (t === editing ? { ...t, title: value } : t)),
+    tabs: current.tabs.map((t) =>
+      t.props.uid === uid ? { ...t, title: value } : t
+    ),
   };
 }
 

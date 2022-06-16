@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { Component, MouseEventHandler } from 'react';
 import {
   activateTab,
@@ -105,7 +106,9 @@ export class Tabs extends Component<TabsProps, TabsState> {
   };
 
   blurInput(input: HTMLInputElement) {
-    updateTabText(this.state.editing, input.value);
+    const { editing } = this.state;
+    assert(editing);
+    updateTabText(editing.props.uid, input.value);
     this.setState((state) => ({
       ...state,
       editing: null,
