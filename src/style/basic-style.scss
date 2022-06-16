@@ -77,6 +77,19 @@ tr:first-of-type > td > div {
   top: 5%;
 }
 
+@keyframes scale-up-center {
+  0% {
+    transform: scale(0.75);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .dialog--close-window {
   position: absolute;
   background: white;
@@ -98,4 +111,8 @@ tr:first-of-type > td > div {
     margin: 5px;
     width: 60px;
   }
+  animation: scale-up-center 0.2s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+}
+.dialog {
+  animation: scale-up-center 0.2s cubic-bezier(0.39, 0.575, 0.565, 1) both;
 }
