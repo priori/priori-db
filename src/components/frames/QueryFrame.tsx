@@ -217,12 +217,18 @@ export function QueryFrame({ uid }: { uid: number }) {
   return (
     <>
       {closeConfirm || closeConfirm2 ? (
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions
         <div
           className="dialog"
           // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={0}
           ref={(el) => {
             if (el) el.focus();
+          }}
+          onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+            if (e.key === 'Escape') {
+              (e.currentTarget as HTMLDivElement).blur();
+            }
           }}
           onBlur={(e) => {
             const dialogEl = e.currentTarget;

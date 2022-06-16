@@ -38,7 +38,27 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
     <div>
       <h1>{props.schema}</h1>
       {state.dropCascadeConfirmation || state.dropConfirmation ? (
-        <div className="dialog">
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+        <div
+          className="dialog"
+          onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+            if (e.key === 'Escape') {
+              e.currentTarget.blur();
+            }
+          }}
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={0}
+          ref={(el) => {
+            if (el) el.focus();
+          }}
+          onBlur={(e) => {
+            const dialogEl = e.currentTarget;
+            setTimeout(() => {
+              if (dialogEl.contains(document.activeElement)) return;
+              noClick();
+            }, 1);
+          }}
+        >
           {state.dropCascadeConfirmation
             ? 'Do you really want to drop cascade this schema?'
             : 'Do you really want to drop this schema?'}

@@ -1,6 +1,6 @@
 import { useService } from 'util/useService';
 import { throwError } from 'util/throwError';
-import { useState } from 'react';
+import { KeyboardEvent, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { TableInfoFrameProps } from '../../types';
 import { query } from '../../db/Connection';
@@ -107,7 +107,27 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         {props.schema}.{props.table}
       </h1>
       {dropState.dropCascadeConfirmation || dropState.dropConfirmation ? (
-        <div className="dialog">
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+        <div
+          className="dialog"
+          onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+            if (e.key === 'Escape') {
+              e.currentTarget.blur();
+            }
+          }}
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={0}
+          ref={(el) => {
+            if (el) el.focus();
+          }}
+          onBlur={(e) => {
+            const dialogEl = e.currentTarget;
+            setTimeout(() => {
+              if (dialogEl.contains(document.activeElement)) return;
+              noClick();
+            }, 1);
+          }}
+        >
           {dropState.dropCascadeConfirmation
             ? 'Do you really want to drop cascade this table?'
             : 'Do you really want to drop this table?'}
