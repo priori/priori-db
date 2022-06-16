@@ -4,7 +4,7 @@ import {
   activateTab,
   updateHeaderTabsDisplayOrder,
   askToCloseTab,
-  newQuery,
+  newQueryInTheEnd,
   keepTabOpen,
   updateTabText,
 } from '../../actions';
@@ -111,7 +111,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
     const el = e.target;
     if (el instanceof HTMLElement) {
       if (el.matches('span.tabs')) {
-        newQuery();
+        newQueryInTheEnd();
       }
     }
   };
@@ -266,7 +266,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
               );
             })}
           </span>
-          <span className="add" onClick={() => newQuery()}>
+          <span className="add" onClick={() => newQueryInTheEnd()}>
             <i className="fa fa-plus" />
           </span>
         </div>
@@ -290,7 +290,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
             </span>
           ))}
         </span>
-        <span className="add" onClick={() => newQuery()}>
+        <span className="add" onClick={() => newQueryInTheEnd()}>
           <i className="fa fa-plus" />
         </span>
       </div>

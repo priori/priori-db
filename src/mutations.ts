@@ -83,16 +83,24 @@ export function keepTabOpen(current: AppState, tab: Tab | number) {
   };
 }
 
-function newFrame(current: AppState, fn: (uid: number) => Tab) {
+function newFrame(
+  current: AppState,
+  fn: (uid: number) => Tab,
+  inTheEnd = false
+) {
   const tabs0 = current.tabs.map((c) => ({ ...c, active: false }));
   const i = current.tabs.findIndex((c) => c.active);
   const uid = current.uidCounter + 1;
   const frame = fn(uid);
-  const tabs = [
-    ...tabs0.filter((f, i2) => (i2 <= i || i === -1) && (frame.keep || f.keep)),
-    frame,
-    ...tabs0.filter((f, i2) => i2 > i && (frame.keep || f.keep)),
-  ];
+  const tabs = inTheEnd
+    ? [...tabs0, frame]
+    : [
+        ...tabs0.filter(
+          (f, i2) => (i2 <= i || i === -1) && (frame.keep || f.keep)
+        ),
+        frame,
+        ...tabs0.filter((f, i2) => i2 > i && (frame.keep || f.keep)),
+      ];
   return {
     ...current,
     uidCounter: current.uidCounter + 1,
@@ -537,6 +545,22 @@ export function setConnection(
   password: ConnectionConfiguration
 ) {
   return { ...current, password };
+}
+
+export function newQueryInTheEnd(current: AppState) {
+  return newFrame(
+    current,
+    (uid) => ({
+      title: 'New Query',
+      keep: true,
+      props: {
+        uid,
+        type: 'query',
+      },
+      active: true,
+    }),
+    true
+  );
 }
 
 export function newQuery(current: AppState) {

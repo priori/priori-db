@@ -37,6 +37,7 @@ export const {
   newSchema,
   updateHeaderTabsDisplayOrder,
   newQuery,
+  newQueryInTheEnd,
   keepTabOpen,
   closeTab,
   keepOpenTable,
