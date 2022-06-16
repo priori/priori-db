@@ -112,31 +112,32 @@ export function QueryFrame({ uid }: { uid: number }) {
     assert(editor);
     const query = editor.getQuery();
     const start = new Date().getTime();
-    setState({ ...state, running: true, resetNotices: true });
+    setState((state2) => ({ ...state2, running: true, resetNotices: true }));
     try {
       const res = await db.query(query, [], true);
       const openTransaction = !db.pid
         ? false
         : await DB.inOpenTransaction(db.pid);
-      setState({
-        ...state,
+      setState((state2) => ({
+        ...state2,
         running: false,
+        clientPid: db.pid || null,
         openTransaction,
         res,
         notices:
-          (res && res.fields && res.fields.length) || state.resetNotices
+          (res && res.fields && res.fields.length) || state2.resetNotices
             ? []
-            : state.notices,
+            : state2.notices,
         resetNotices: false,
         time: new Date().getTime() - start,
         error: null,
-      });
+      }));
     } catch (err: unknown) {
-      setState({
+      setState((state2) => ({
         clientPid: state2.clientPid,
         running: false,
         openTransaction: false,
-        notices: state.resetNotices ? [] : state.notices,
+        notices: state2.resetNotices ? [] : state2.notices,
         resetNotices: false,
         error: err as {
           code: string;
@@ -146,7 +147,7 @@ export function QueryFrame({ uid }: { uid: number }) {
         },
         time: null,
         res: null,
-      });
+      }));
     }
   });
 
