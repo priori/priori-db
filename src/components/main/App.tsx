@@ -121,7 +121,6 @@ export function App() {
         }}
       >
         {state.askToCloseWindow && (
-          // eslint-disable-next-line jsx-a11y/no-static-element-interactions
           <div
             className="dialog--close-window"
             onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -129,7 +128,6 @@ export function App() {
                 e.currentTarget.blur();
               }
             }}
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={0}
             ref={(el) => {
               if (el) el.focus();

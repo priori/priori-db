@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { assert } from 'console';
 import { QueryArrayResult } from 'pg';
 import React, {
@@ -357,12 +356,10 @@ export function GridCore(props: GridCoreProps) {
   }
 
   return (
-    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       style={{ top: 0, left: 0, bottom: 0, right: 0, position: 'absolute' }}
       onClick={clickListener}
-      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-      tabIndex={0}
+      // tabIndex={0}
       // onBlur={() => {
       // this.setState({selected:undefined});
       // }}

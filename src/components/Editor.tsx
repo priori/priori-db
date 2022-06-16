@@ -13,19 +13,6 @@ export class Editor extends Component<EditorProps, never> {
 
   timeout?: ReturnType<typeof setTimeout>;
 
-  // eslint-disable-next-line react/sort-comp
-  show() {
-    setTimeout(() => {
-      this.editor.getInputField().focus();
-      this.editor.refresh();
-    }, 1);
-  }
-
-  hide() {
-    this.focus = this.editor.hasFocus();
-    this.editor.getInputField().blur();
-  }
-
   getQuery() {
     const query = this.editor.getSelection() || this.editor.getValue();
     return query;
@@ -60,6 +47,18 @@ export class Editor extends Component<EditorProps, never> {
     // });
     this.editor.refresh();
     this.editor.getInputField().focus();
+  }
+
+  hide() {
+    this.focus = this.editor.hasFocus();
+    this.editor.getInputField().blur();
+  }
+
+  show() {
+    setTimeout(() => {
+      this.editor.getInputField().focus();
+      this.editor.refresh();
+    }, 1);
   }
 
   render() {

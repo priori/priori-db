@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import {
   connect,
   open,
@@ -27,14 +25,12 @@ export function Home(props: AppState) {
         </div>
         <NewConnection
           connection={undefined}
-          onSave={(e: ConnectionConfiguration) => {
-            saveConnection(e);
-          }}
+          onSave={saveConnection}
           onRemove={undefined}
           onCancel={
             props.passwords.length === 0 ? undefined : () => cancelConnection()
           }
-          onSubmit={(e: ConnectionConfiguration) => newConnection(e)}
+          onSubmit={newConnection}
         />
       </div>
     );

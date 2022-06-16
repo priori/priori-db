@@ -25,6 +25,13 @@ module.exports = {
     'promise/no-nesting': 'off',
     'react/jsx-props-no-spreading': 'off',
     'import/no-cycle': 'off',
+    '@typescript-eslint/no-loop-func': 'off',
+    'jsx-a11y/control-has-associated-label': 'off',
+    'jsx-a11y/no-noninteractive-tabindex': 'off',
+    'jsx-a11y/no-static-element-interactions': 'off',
+    'react/prop-types': 'off',
+    'jsx-a11y/click-events-have-key-events': 'off',
+    'no-await-in-loop': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

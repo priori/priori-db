@@ -218,10 +218,8 @@ export function QueryFrame({ uid }: { uid: number }) {
   return (
     <>
       {closeConfirm || closeConfirm2 ? (
-        // eslint-disable-next-line jsx-a11y/no-static-element-interactions
         <div
           className="dialog"
-          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={0}
           ref={(el) => {
             if (el) el.focus();

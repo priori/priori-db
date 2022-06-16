@@ -13,10 +13,7 @@ function getPasswordsFileName() {
   return null;
 }
 
-export function savePasswords(
-  passwords: ConnectionConfiguration[],
-  callBack: fs.NoParamCallback
-) {
+export function savePasswords(passwords: ConnectionConfiguration[]) {
   const fileName = getPasswordsFileName();
   if (!fileName) return;
   const content = passwords
@@ -34,7 +31,7 @@ export function savePasswords(
       fs.mkdirSync(dir);
     }
   }
-  fs.writeFile(fileName, content, callBack);
+  fs.writeFileSync(fileName, content);
 }
 
 export interface ConnectionConfiguration {

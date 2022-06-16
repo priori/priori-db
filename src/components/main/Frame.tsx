@@ -21,12 +21,12 @@ const framesTypes: FramesTypesMap<FrameType> = {
 };
 
 type FrameContainerProps = {
-  props: AbstractTabProps<FrameType> & AbstractTabProps<FrameType>;
+  props: AbstractTabProps<FrameType> &
+    AbstractTabProps<FrameType> & { type: FrameType };
 };
 
 export const Frame = React.memo(
   ({ props }: FrameContainerProps) => {
-    // eslint-disable-next-line react/prop-types
     const sType = props.type;
     const type = framesTypes[sType];
     assert(type);

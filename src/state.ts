@@ -41,7 +41,6 @@ function mutationsToActions<MC extends MutationsConfig>(
 ): Mutations<MC> {
   const ms = {} as { [k in keyof MC as k]: (v: unknown) => void };
   for (const k in conf) {
-    // eslint-disable-next-line @typescript-eslint/no-loop-func
     ms[k] = (...ev) => {
       current = conf[k](current, ...ev);
       if (!listener) throw new Error('Listener não encontrado.');

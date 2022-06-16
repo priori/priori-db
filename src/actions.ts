@@ -43,45 +43,41 @@ export const {
   pikTable,
 } = state;
 
-export function open(c: ConnectionConfiguration) {
+export async function open(c: ConnectionConfiguration) {
   state.setConnection(c);
-  listFromConfiguration(
-    c,
-    `SELECT datname as name
+  try {
+    const res = await listFromConfiguration(
+      c,
+      `SELECT datname as name
         FROM pg_database
         WHERE datistemplate = false;`
-  ).then(
-    (res) => {
-      state.setBases(res.map((r) => (r as { name: string }).name) as string[]);
-    },
-    (err) => state.setConnectionError(err)
-  );
+    );
+    state.setBases(res);
+  } catch (err) {
+    state.setConnectionError(err);
+  }
 }
 
-export function newConnection(conf: ConnectionConfiguration, index?: number) {
+export async function newConnection(
+  conf: ConnectionConfiguration,
+  index?: number
+): Promise<void> {
   removeError();
-  listFromConfiguration(
-    conf,
-    `SELECT datname as name
+  try {
+    const res = await listFromConfiguration(
+      conf,
+      `SELECT datname as name
         FROM pg_database
         WHERE datistemplate = false;`
-  ).then(
-    (res) => {
-      state.addConnectionConfiguration(conf, index);
-      savePasswords(currentState().passwords, (err) => {
-        if (err) {
-          // eslint-disable-next-line no-console
-          console.error(err);
-        } else {
-          state.setConnection(conf);
-          state.setBases(
-            res.map((r) => (r as { name: string }).name) as string[]
-          );
-        }
-      });
-    },
-    (err: Error) => state.setConnectionError(err)
-  );
+    );
+    state.addConnectionConfiguration(conf, index);
+    savePasswords(currentState().passwords);
+    state.setConnection(conf);
+    state.setBases(res);
+  } catch (err) {
+    state.setConnectionError(err);
+    throw err;
+  }
 }
 
 export function createSchema(name: string) {
@@ -142,24 +138,21 @@ export function askToCloseCurrent() {
   }
 }
 
-export function connect(s: string) {
+export async function connect(s: string) {
   const { password } = currentState();
   assert(password);
-  dbConnect(password, s).then(
-    () => {
-      DB.listAll().then(
-        (schemas) => {
-          state.connected(s, schemas);
-        },
-        (err) => state.setConnectionError(err)
-      );
-    },
-    (err) => {
-      // eslint-disable-next-line no-console
-      console.error(err);
+  try {
+    await dbConnect(password, s);
+    try {
+      const schemas = await DB.listAll();
+      state.connected(s, schemas);
+    } catch (err) {
       state.setConnectionError(err);
     }
-  );
+  } catch (err) {
+    state.setConnectionError(err);
+    throw err;
+  }
 }
 
 export async function reloadNav() {
@@ -186,16 +179,14 @@ export function openSchema(name: string) {
 
 export function saveConnection(con: ConnectionConfiguration, index?: number) {
   state.addConnectionConfiguration(con, index);
-  savePasswords(currentState().passwords, () => {
-    state.connectionSaved();
-  });
+  savePasswords(currentState().passwords);
+  state.connectionSaved();
 }
 
 export function removeConnection(index: number) {
   state.removeConnection(index);
-  savePasswords(currentState().passwords, () => {
-    state.connectionSaved();
-  });
+  savePasswords(currentState().passwords);
+  state.connectionSaved();
 }
 
 export function newTable(schema: string) {

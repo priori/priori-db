@@ -38,7 +38,6 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
     <div>
       <h1>{props.schema}</h1>
       {state.dropCascadeConfirmation || state.dropConfirmation ? (
-        // eslint-disable-next-line jsx-a11y/no-static-element-interactions
         <div
           className="dialog"
           onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -46,7 +45,6 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
               e.currentTarget.blur();
             }
           }}
-          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={0}
           ref={(el) => {
             if (el) el.focus();

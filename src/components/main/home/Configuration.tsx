@@ -144,7 +144,6 @@ export function NewConnection(props: NewConnectionProps) {
       {removeConfirmation ? (
         <div
           className="dialog"
-          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={0}
           ref={(el) => {
             if (el) el.focus();

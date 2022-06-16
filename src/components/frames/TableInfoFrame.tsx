@@ -96,7 +96,6 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     });
   });
 
-  // eslint-disable-next-line class-methods-use-this
   function showQuery(q: string) {
     alert(q);
   }
@@ -107,7 +106,6 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         {props.schema}.{props.table}
       </h1>
       {dropState.dropCascadeConfirmation || dropState.dropConfirmation ? (
-        // eslint-disable-next-line jsx-a11y/no-static-element-interactions
         <div
           className="dialog"
           onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
@@ -115,7 +113,6 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
               e.currentTarget.blur();
             }
           }}
-          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={0}
           ref={(el) => {
             if (el) el.focus();
@@ -208,7 +205,6 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                 <th>Name</th>
                 <th>Method</th>
                 <th>Columns</th>
-                {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
                 <th />
               </tr>
             </thead>

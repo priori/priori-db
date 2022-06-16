@@ -66,6 +66,7 @@ class ExclusiveConnection {
   }
 
   private async openConnection() {
+    const { pending } = this;
     try {
       const db = await openConnection();
       const result = await db.query({
@@ -77,35 +78,35 @@ class ExclusiveConnection {
       this.onCreatePid(this.pid);
       this.db = db;
       this.db.on('notice', this.listener);
-      const { pending } = this;
+    } catch (err) {
+      for (const { reject } of pending) {
+        reject(err);
+      }
+      return;
+    } finally {
       this.pending = [];
-      for (const e of pending) {
-        assert(!!this.db);
-        if (e.arrayRowMode) {
-          try {
-            // eslint-disable-next-line no-await-in-loop
-            const ret = await this.db.query({
-              text: e.query,
-              rowMode: 'array',
-              values: e.args,
-            });
-            e.resolve(ret);
-          } catch (err) {
-            e.reject(err);
-          }
-        } else {
-          try {
-            // eslint-disable-next-line no-await-in-loop
-            const ret = await this.db.query(e.query, e.args);
-            e.resolve(ret);
-          } catch (err) {
-            e.reject(err);
-          }
+    }
+    for (const e of pending) {
+      assert(!!this.db);
+      if (e.arrayRowMode) {
+        try {
+          const ret = await this.db.query({
+            text: e.query,
+            rowMode: 'array',
+            values: e.args,
+          });
+          e.resolve(ret);
+        } catch (err) {
+          e.reject(err);
+        }
+      } else {
+        try {
+          const ret = await this.db.query(e.query, e.args);
+          e.resolve(ret);
+        } catch (err) {
+          e.reject(err);
         }
       }
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e);
     }
   }
 

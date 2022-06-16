@@ -1,4 +1,4 @@
-import pg, { Pool, PoolClient, QueryArrayResult, QueryResult } from 'pg';
+import pg, { PoolClient, QueryArrayResult, QueryResult } from 'pg';
 import assert from 'assert';
 import { ConnectionConfiguration } from './pgpass';
 import { exclusives } from './ExclusiveConnection';
@@ -16,7 +16,7 @@ export function databaseName() {
   return database || null;
 }
 
-export function connect(c: ConnectionConfiguration, db?: string) {
+export async function connect(c: ConnectionConfiguration, db?: string) {
   if (pool) throw new Error('Conexão já inciada!');
   database =
     db ||
@@ -30,35 +30,32 @@ export function connect(c: ConnectionConfiguration, db?: string) {
     port: c.port,
     allowExitOnIdle: false,
   };
-  let success: (pc: Pool) => void;
-  let error: (e: Error) => void;
-  const promise = new Promise<Pool>((resolve, reject) => {
-    success = resolve;
-    error = reject;
-  });
   pool = new pg.Pool(config);
-  pool.connect((err, client) => {
-    if (err) {
-      try {
-        client.release(true);
-        // eslint-disable-next-line no-empty
-      } catch {}
-      if (typeof err === 'string' || typeof err === 'undefined')
-        error(new Error(err));
-      else if (err instanceof Error) error(err);
-      else error(new Error(`${err}`));
-    } else {
-      const title = document.createElement('title');
-      title.innerText = `${c.user}@${c.host}${
-        c.port !== 5432 ? `:${c.port}` : ''
-      }/${database}`;
-      document.head.appendChild(title);
-      client.release(true);
-      assert(pool);
-      success(pool);
+  let client: PoolClient | null = null;
+  try {
+    client = await pool.connect();
+    const title = document.createElement('title');
+    title.innerText = `${c.user}@${c.host}${
+      c.port !== 5432 ? `:${c.port}` : ''
+    }/${database}`;
+    document.head.appendChild(title);
+    client.release(true);
+    assert(pool);
+    return;
+  } catch (err) {
+    try {
+      client?.release(true);
+    } catch (err2) {
+      if (typeof err2 === 'string' || typeof err2 === 'undefined')
+        throw new Error(err2);
+      else if (err2 instanceof Error) throw err2;
+      else throw new Error(`${err2}`);
     }
-  });
-  return promise;
+    if (typeof err === 'string' || typeof err === 'undefined')
+      throw new Error(err);
+    else if (err instanceof Error) throw err;
+    else throw new Error(`${err}`);
+  }
 }
 
 export function openConnection() {
@@ -131,10 +128,12 @@ export async function listFromConfiguration(
           else if (err2 instanceof Error) error(err2);
           else error(new Error(`${err2}`));
         } else {
-          success(result.rows);
           client.end((err3) => {
             if (err3) throw err3;
           });
+          success(
+            result.rows.map((r) => (r as { name: string }).name) as string[]
+          );
         }
       });
     }

@@ -1,7 +1,4 @@
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable jsx-a11y/no-static-element-interactions */
 import { Component, MouseEventHandler } from 'react';
-import { useEvent } from 'util/useEvent';
 import {
   activateTab,
   changeTabsSort,
