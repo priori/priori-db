@@ -26,7 +26,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
 
   const yesClick = useEvent(() => {
     if (state.dropCascadeConfirmation)
-      query(`DROP DOMAIN "${props.schema}"."${props.name}" CASCADE`).then(
+      query(`DROP SEQUENCE "${props.schema}"."${props.name}" CASCADE`).then(
         () => {
           setTimeout(() => closeTab(props), 10);
           reloadNav();
@@ -36,7 +36,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
         }
       );
     else
-      query(`DROP DOMAIN "${props.schema}"."${props.name}"`).then(
+      query(`DROP SEQUENCE "${props.schema}"."${props.name}"`).then(
         () => {
           setTimeout(() => closeTab(props), 10);
           reloadNav();
