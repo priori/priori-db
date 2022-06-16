@@ -13,7 +13,7 @@ let current: AppState = {
   connected: false,
   editConnections: false,
   tabs: [],
-  tabsSort: [],
+  tabsOpenSort: [],
   title: '',
   newConnection: !currentPasswords || !currentPasswords.length || false,
   newSchema: false,

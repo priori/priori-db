@@ -58,8 +58,8 @@ export function activateTab(current: AppState, c: Tab) {
   return {
     ...current,
     tabs,
-    tabsSort: [
-      ...current.tabsSort.filter((uid) => uid !== c.props.uid),
+    tabsOpenOrder: [
+      ...current.tabsOpenOrder.filter((uid) => uid !== c.props.uid),
       c.props.uid,
     ],
   };
@@ -76,7 +76,10 @@ export function keepTabOpen(current: AppState, tab: Tab | number) {
   return {
     ...current,
     tabs,
-    tabsSort: [...current.tabsSort.filter((uid2) => uid2 !== uid), uid],
+    tabsOpenOrder: [
+      ...current.tabsOpenOrder.filter((uid2) => uid2 !== uid),
+      uid,
+    ],
   };
 }
 
@@ -94,9 +97,7 @@ function newFrame(current: AppState, fn: (uid: number) => Tab) {
     ...current,
     uidCounter: current.uidCounter + 1,
     tabs,
-    tabsSort: [...current.tabsSort, uid].filter(
-      (uid2) => !!tabs.find((t2) => t2.props.uid === uid2)
-    ),
+    tabsOpenOrder: [...current.tabsOpenOrder, uid],
   };
 }
 
@@ -317,7 +318,7 @@ export function newSchema(current: AppState) {
 }
 
 function filterTabs(current: AppState, fn: (c: Tab) => boolean) {
-  const tabsSort = current.tabsSort.filter((uid) =>
+  const tabsOpenOrder = current.tabsOpenOrder.filter((uid) =>
     fn(current.tabs.find((tab) => tab.props.uid === uid) as Tab)
   );
   return {
@@ -325,11 +326,12 @@ function filterTabs(current: AppState, fn: (c: Tab) => boolean) {
     tabs: current.tabs
       .filter(fn)
       .map((tab) =>
-        tabsSort.length && tabsSort[tabsSort.length - 1] === tab.props.uid
+        tabsOpenOrder.length &&
+        tabsOpenOrder[tabsOpenOrder.length - 1] === tab.props.uid
           ? { ...tab, active: true }
           : tab
       ),
-    tabsSort,
+    tabsOpenOrder,
   };
 }
 
@@ -382,7 +384,10 @@ export function createSchema(current: AppState, name: string) {
   } as AppState;
 }
 
-export function changeTabsSort(current: AppState, sort: number[]) {
+export function updateHeaderTabsDisplayOrder(
+  current: AppState,
+  sort: number[]
+) {
   const newTabs = [...current.tabs];
   newTabs.sort((a, b) => {
     return sort.indexOf(a.props.uid) - sort.indexOf(b.props.uid);
@@ -390,7 +395,6 @@ export function changeTabsSort(current: AppState, sort: number[]) {
   return {
     ...current,
     tabs: newTabs,
-    tabsSort: sort,
   };
 }
 
@@ -510,17 +514,18 @@ export function updateSchemas(
 
 export function closeTab(current: AppState, f: number | FrameProps) {
   const uid = typeof f === 'number' ? f : f.uid;
-  const tabsSort = current.tabsSort.filter((uid2) => uid2 !== uid);
+  const tabsOpenOrder = current.tabsOpenOrder.filter((uid2) => uid2 !== uid);
   return {
     ...current,
     tabs: current.tabs
       .filter((tab) => uid !== tab.props.uid)
       .map((tab) =>
-        tabsSort.length && tabsSort[tabsSort.length - 1] === tab.props.uid
+        tabsOpenOrder.length &&
+        tabsOpenOrder[tabsOpenOrder.length - 1] === tab.props.uid
           ? { ...tab, active: true }
           : tab
       ),
-    tabsSort,
+    tabsOpenOrder,
   };
 }
 

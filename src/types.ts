@@ -122,6 +122,6 @@ export interface AppState {
   password?: ConnectionConfiguration;
   schemas?: NavSchema[];
   tabs: Tab[];
-  tabsSort: number[];
+  tabsOpenOrder: number[];
   title: string;
 }
