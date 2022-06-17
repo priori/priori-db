@@ -105,7 +105,14 @@ function newFrame(
     ...current,
     uidCounter: current.uidCounter + 1,
     tabs,
-    tabsOpenOrder: [...current.tabsOpenOrder, uid],
+    tabsOpenOrder: [
+      ...(frame.keep
+        ? current.tabsOpenOrder
+        : current.tabsOpenOrder.filter(
+            (uid2) => tabs.find((t2) => t2.props.uid === uid2)?.keep
+          )),
+      uid,
+    ],
   };
 }
 
