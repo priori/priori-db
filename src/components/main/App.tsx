@@ -57,6 +57,7 @@ export function useTab(conf0: UseTabConf) {
         if (
           (!prevTabState || !prevTabState.active) &&
           tabState.active &&
+          conf &&
           conf.onActivate
         ) {
           conf.onActivate();
@@ -64,6 +65,7 @@ export function useTab(conf0: UseTabConf) {
           prevTabState &&
           prevTabState.active &&
           (!tabState || !tabState.active) &&
+          conf &&
           conf.onDeactivate
         ) {
           conf.onDeactivate();
@@ -88,14 +90,14 @@ export function App() {
     const currenTab = state.tabs.find((t) => t.active);
     if (currenTab && confs[currenTab.props.uid]) {
       const conf = confs[currenTab.props.uid];
-      if (conf.f5) conf.f5();
+      if (conf && conf.f5) conf.f5();
     }
   });
 
   useAskToClose((uid) => {
     if (confs && confs[uid]) {
       const conf = confs[uid];
-      if (conf.onClose) {
+      if (conf && conf.onClose) {
         return conf.onClose();
       }
     }
