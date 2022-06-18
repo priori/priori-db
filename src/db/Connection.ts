@@ -1,6 +1,7 @@
 import pg, { PoolClient, QueryArrayResult, QueryResult } from 'pg';
 import assert from 'assert';
 import { grantError } from 'util/errors';
+import hls from 'util/hotLoadSafe';
 import { ConnectionConfiguration } from './pgpass';
 import { exclusives } from './ExclusiveConnection';
 import { DB } from './DB';
@@ -10,16 +11,9 @@ pg.types.setTypeParser(1114, (val) => val);
 pg.types.setTypeParser(1184, (val) => val);
 pg.types.setTypeParser(1186, (val) => val);
 
-let database = undefined as undefined | string;
-let pool = null as null | pg.Pool;
-
-export function databaseName() {
-  return database || null;
-}
-
 export async function connect(c: ConnectionConfiguration, db?: string) {
-  if (pool) throw new Error('Conexão já inciada!');
-  database =
+  if (hls.pool) throw new Error('Conexão já inciada!');
+  const database =
     db ||
     (c.database && c.database !== '*' ? c.database : 'postgres') ||
     undefined;
@@ -31,17 +25,21 @@ export async function connect(c: ConnectionConfiguration, db?: string) {
     port: c.port,
     allowExitOnIdle: false,
   };
-  pool = new pg.Pool(config);
+  const p = new pg.Pool(config);
+  hls.pool = p;
   let client: PoolClient | null = null;
   try {
-    client = await pool.connect();
+    client = await p.connect();
     const title = document.createElement('title');
     title.innerText = `${c.user}@${c.host}${
       c.port !== 5432 ? `:${c.port}` : ''
     }/${database}`;
     document.head.appendChild(title);
     client.release(true);
-    assert(pool);
+    assert(p);
+    // for crazy debug only
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global as any).pool = p;
     return;
   } catch (err) {
     try {
@@ -60,8 +58,9 @@ export function openConnection() {
     success = resolve;
     error = reject;
   });
-  assert(pool);
-  pool.connect((err, client) => {
+  const p = hls.pool;
+  assert(p);
+  p.connect((err, client) => {
     if (err) {
       error(grantError(err));
       client.release(true);
@@ -71,6 +70,7 @@ export function openConnection() {
   });
   return promise;
 }
+
 export async function listFromConfiguration(
   c: ConnectionConfiguration,
   query: string
@@ -122,14 +122,15 @@ export async function query(
   args?: Array<string | null | number | boolean>,
   arrayRowMode?: true
 ): Promise<QueryResult | QueryArrayResult> {
-  assert(pool);
+  const p = hls.pool;
+  assert(p);
   if (arrayRowMode)
-    return pool.query({
+    return p.query({
       text: q,
       rowMode: 'array',
       values: args,
     });
-  return pool.query(q, args);
+  return p.query(q, args);
 }
 
 export async function list(
@@ -149,7 +150,7 @@ export async function first(
 }
 
 export async function hasOpenConnection() {
-  if (!pool || exclusives.length === 0) return false;
+  if (!hls.pool || exclusives.length === 0) return false;
   const pids = exclusives
     .map((ac) => ac.pid)
     .filter((pid) => typeof pid === 'number') as number[];
@@ -166,10 +167,10 @@ export async function closeAll() {
           await ac.db?.release(true);
         })
     );
-    await pool?.end();
+    await hls.pool?.end();
   } catch (err) {
     try {
-      if (pool?.end) await pool?.end();
+      if (hls.pool?.end) await hls.pool?.end();
     } catch (err2) {
       throw new Error(err2 instanceof Error ? err2.message : `${err2}`);
     }

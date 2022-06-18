@@ -3,10 +3,9 @@ import { equals } from 'util/equals';
 import { passwords as currentPasswords } from './db/pgpass';
 import { AppState } from './types';
 import * as mutations from './mutations';
+import hls from './util/hotLoadSafe';
 
-let listener: ((_: AppState) => void) | undefined;
-
-let current: AppState = {
+let current: AppState = hls.current || {
   askToCloseWindow: false,
   uidCounter: 0,
   passwords: currentPasswords,
@@ -37,8 +36,9 @@ function mutationsToActions<MC extends MutationsConfig>(
   for (const k in conf) {
     ms[k] = (...ev) => {
       current = conf[k](current, ...ev);
-      if (!listener) throw new Error('Listener não encontrado.');
-      listener(current);
+      hls.current = current;
+      if (!hls.listener) throw new Error('Listener não encontrado.');
+      hls.listener(current);
     };
   }
   return ms as Mutations<MC>;
@@ -49,7 +49,7 @@ export function useAppState() {
   React.useEffect(() => {
     let mounted = true;
     let prevState = current;
-    listener = (newState) => {
+    hls.listener = (newState) => {
       if (mounted) {
         if (!equals(prevState, newState)) setState(newState);
       }
@@ -57,7 +57,7 @@ export function useAppState() {
     };
     return () => {
       mounted = false;
-      listener = undefined;
+      hls.listener = undefined;
     };
   }, []);
   return hookState;
