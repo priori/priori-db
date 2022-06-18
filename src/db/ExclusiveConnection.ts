@@ -26,11 +26,11 @@ class ExclusiveConnection {
   onError: (err: Error) => void;
 
   constructor(
-    listener: (n: NoticeMessage) => void,
+    onNotice: (n: NoticeMessage) => void,
     onPid: (pid: number | null) => void,
     onError: (e: Error) => void
   ) {
-    this.listener = listener;
+    this.listener = onNotice;
     this.onPid = onPid;
     this.onError = onError;
   }
@@ -132,14 +132,15 @@ class ExclusiveConnection {
 
 export const exclusives = [] as ExclusiveConnection[];
 export function useExclusiveConnection(
-  notice: (a: NoticeMessage) => void,
+  onNotice: (a: NoticeMessage) => void,
   onPid: (pid: number | null) => void,
-  onError: (e: Error) => void
+  onClientError: (e: Error) => void
 ) {
-  const noticeCall = useEvent(notice);
-  const onCreatePidCall = useEvent(onPid);
+  const onNotice2 = useEvent(onNotice);
+  const onPid2 = useEvent(onPid);
+  const onClientError2 = useEvent(onClientError);
   const [client] = useState(
-    () => new ExclusiveConnection(noticeCall, onCreatePidCall, onError)
+    () => new ExclusiveConnection(onNotice2, onPid2, onClientError2)
   );
   useEffect(() => {
     exclusives.push(client);
