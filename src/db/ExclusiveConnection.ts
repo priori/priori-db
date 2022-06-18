@@ -20,14 +20,18 @@ class ExclusiveConnection {
 
   listener: (n: NoticeMessage) => void;
 
-  onCreatePid: (pid: number) => void;
+  onPid: (pid: number | null) => void;
+
+  onError: (err: Error) => void;
 
   constructor(
     listener: (n: NoticeMessage) => void,
-    onCreatePid: (pid: number) => void
+    onPid: (pid: number | null) => void,
+    onError: (e: Error) => void
   ) {
     this.listener = listener;
-    this.onCreatePid = onCreatePid;
+    this.onPid = onPid;
+    this.onError = onError;
   }
 
   async stopRunningQuery(): Promise<void> {
@@ -75,9 +79,13 @@ class ExclusiveConnection {
       });
       const pid = result.rows[0][0];
       this.pid = pid as number;
-      this.onCreatePid(this.pid);
+      this.onPid(this.pid);
       this.db = db;
       this.db.on('notice', this.listener);
+      this.db.on('error', (err) => {
+        this.onPid(null);
+        this.onError(err);
+      });
     } catch (err) {
       for (const { reject } of pending) {
         reject(err);
@@ -124,12 +132,13 @@ class ExclusiveConnection {
 export const exclusives = [] as ExclusiveConnection[];
 export function useExclusiveConnection(
   notice: (a: NoticeMessage) => void,
-  onCreatePid: (pid: number) => void
+  onPid: (pid: number | null) => void,
+  onError: (e: Error) => void
 ) {
   const noticeCall = useEvent(notice);
-  const onCreatePidCall = useEvent(onCreatePid);
+  const onCreatePidCall = useEvent(onPid);
   const [client] = useState(
-    () => new ExclusiveConnection(noticeCall, onCreatePidCall)
+    () => new ExclusiveConnection(noticeCall, onCreatePidCall, onError)
   );
   useEffect(() => {
     exclusives.push(client);

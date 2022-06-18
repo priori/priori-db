@@ -21,6 +21,7 @@ interface QueryFrameState {
   res: QueryArrayResult | null;
   time: null | number;
   clientPid: number | null;
+  clientError: Error | null;
   error: {
     code: string;
     line: number;
@@ -88,6 +89,7 @@ export function QueryFrame({ uid }: { uid: number }) {
     notices: [] as NoticeMessage[],
     resetNotices: false,
     clientPid: null,
+    clientError: null,
     res: null,
     time: null,
     error: null,
@@ -103,7 +105,8 @@ export function QueryFrame({ uid }: { uid: number }) {
     },
     (pid) => {
       setState((state2) => ({ ...state2, clientPid: pid }));
-    }
+    },
+    (clientError) => setState((state2) => ({ ...state2, clientError }))
   );
 
   const execute = useEvent(async () => {
@@ -145,6 +148,7 @@ export function QueryFrame({ uid }: { uid: number }) {
           position: number;
           message: string;
         },
+        clientError: state2.clientError,
         time: null,
         res: null,
       }));
@@ -254,6 +258,9 @@ export function QueryFrame({ uid }: { uid: number }) {
 
       <Editor ref={editorRef} style={{ height: '300px' }} />
 
+      {state.clientError ? (
+        <span className="client-error">{state.clientError.message}</span>
+      ) : null}
       {state.res && state.res.fields && state.res.fields.length ? (
         <span className="mensagem">
           Query returned {state.res.rows.length} row

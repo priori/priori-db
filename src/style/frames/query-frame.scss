@@ -72,6 +72,17 @@
 .query-tab .mensagem.error {
   color: #d22;
 }
+.query-tab .client-error {
+  color: #d22;
+  position: absolute;
+  margin-top: -58px;
+  right: 138px;
+  font-weight: bold;
+  font-size: 13px;
+  background: white;
+  z-index: 2;
+  padding: 5px;
+}
 
 .running span {
   position: absolute;
