@@ -1,5 +1,5 @@
 import React from 'react';
-import { equals } from 'components/util/equals';
+import { equals } from 'util/equals';
 import { passwords as currentPasswords } from './db/pgpass';
 import { AppState } from './types';
 import * as mutations from './mutations';

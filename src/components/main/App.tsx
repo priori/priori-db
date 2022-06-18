@@ -3,7 +3,7 @@ import { NewSchemaForm } from 'components/util/NewSchemaForm';
 import { useF5, useShortcuts } from 'util/shortcuts';
 import { useEffect, useRef, useContext } from 'react';
 import { FrameType, Tab } from 'types';
-import { useWindowCloseConfirm } from 'components/util/useWindowCloseConfirm';
+import { useWindowCloseConfirm } from 'util/useWindowCloseConfirm';
 import { hasOpenConnection } from 'db/Connection';
 import { useEvent } from 'util/useEvent';
 import { currentState, useAppState } from '../../state';

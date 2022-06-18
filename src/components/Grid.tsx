@@ -8,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { equals } from './util/equals';
+import { equals } from 'util/equals';
 import { SizeControlledArea } from './util/SizeControlledArea';
 
 const letterSize = 6;
