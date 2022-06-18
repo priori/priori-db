@@ -18,6 +18,31 @@ export class Editor extends Component<EditorProps, never> {
     return query;
   }
 
+  getEditorState() {
+    const start = this.editor.getCursor(true);
+    const end = this.editor.getCursor(false);
+    return {
+      content: this.editor.getValue(),
+      cursorStart: { line: start.line, ch: start.ch },
+      cursorEnd: { line: end.line, ch: end.ch },
+    };
+  }
+
+  setEditorState({
+    content,
+    cursorStart,
+    cursorEnd,
+  }: {
+    content: string;
+    cursorStart: { line: number; ch: number };
+    cursorEnd: { line: number; ch: number };
+  }) {
+    this.editor.setValue(content);
+    this.editor.setSelection(cursorStart, cursorEnd);
+    this.editor.clearHistory();
+    this.editor.getInputField().focus();
+  }
+
   setEditor(el: HTMLDivElement | null) {
     if (!el) {
       this.timeout = setTimeout(() => {

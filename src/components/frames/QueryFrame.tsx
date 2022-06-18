@@ -5,6 +5,14 @@ import { useEvent } from 'util/useEvent';
 import { QueryArrayResult } from 'pg';
 import { closeTabNow } from 'actions';
 import { DB } from 'db/DB';
+import {
+  saveQuery as insertQuery,
+  updateFailedQuery,
+  updateQuery,
+} from 'util/browserDb';
+import { QuerySelector } from 'components/util/QuerySelector';
+import { currentState } from 'state';
+import { useIsMounted } from 'util/hooks';
 import { useTab } from '../main/App';
 import { Editor } from '../Editor';
 import { Grid } from '../Grid';
@@ -13,6 +21,7 @@ import { useExclusiveConnection } from '../../db/ExclusiveConnection';
 interface QFNoticeMessage extends NoticeMessage {
   fullView?: boolean | undefined;
 }
+
 interface QueryFrameState {
   running: boolean;
   openTransaction: boolean;
@@ -109,6 +118,8 @@ export function QueryFrame({ uid }: { uid: number }) {
     (clientError) => setState((state2) => ({ ...state2, clientError }))
   );
 
+  const isMounted = useIsMounted();
+
   const execute = useEvent(async () => {
     if (state.running) return;
     const editor = editorRef.current;
@@ -116,42 +127,56 @@ export function QueryFrame({ uid }: { uid: number }) {
     const query = editor.getQuery();
     const start = new Date().getTime();
     setState((state2) => ({ ...state2, running: true, resetNotices: true }));
+    const title = currentState().tabs.find((t) => t.props.uid === uid)?.title;
+    const id = await insertQuery(
+      query,
+      uid,
+      editor.getEditorState(),
+      title === 'New Query' ? null : title || null
+    );
     try {
       const res = await db.query(query, [], true);
+      const time = new Date().getTime() - start;
+      const resLength = res?.rows?.length as number | undefined;
+      updateQuery(id, time, typeof resLength === 'number' ? resLength : null);
       const openTransaction = !db.pid
         ? false
         : await DB.inOpenTransaction(db.pid);
-      setState((state2) => ({
-        ...state2,
-        running: false,
-        clientPid: db.pid || null,
-        openTransaction,
-        res,
-        notices:
-          (res && res.fields && res.fields.length) || state2.resetNotices
-            ? []
-            : state2.notices,
-        resetNotices: false,
-        time: new Date().getTime() - start,
-        error: null,
-      }));
+      if (isMounted())
+        setState((state2) => ({
+          ...state2,
+          running: false,
+          clientPid: db.pid || null,
+          openTransaction,
+          res,
+          notices:
+            (res && res.fields && res.fields.length) || state2.resetNotices
+              ? []
+              : state2.notices,
+          resetNotices: false,
+          time,
+          error: null,
+        }));
     } catch (err: unknown) {
-      setState((state2) => ({
-        clientPid: state2.clientPid,
-        running: false,
-        openTransaction: false,
-        notices: state2.resetNotices ? [] : state2.notices,
-        resetNotices: false,
-        error: err as {
-          code: string;
-          line: number;
-          position: number;
-          message: string;
-        },
-        clientError: state2.clientError,
-        time: null,
-        res: null,
-      }));
+      const time = new Date().getTime() - start;
+      updateFailedQuery(id, time);
+      if (isMounted())
+        setState((state2) => ({
+          clientPid: state2.clientPid,
+          running: false,
+          openTransaction: false,
+          notices: state2.resetNotices ? [] : state2.notices,
+          resetNotices: false,
+          error: err as {
+            code: string;
+            line: number;
+            position: number;
+            message: string;
+          },
+          clientError: state2.clientError,
+          time: null,
+          res: null,
+        }));
     }
   });
 
@@ -261,6 +286,7 @@ export function QueryFrame({ uid }: { uid: number }) {
       {state.clientError ? (
         <span className="client-error">{state.clientError.message}</span>
       ) : null}
+
       {state.res && state.res.fields && state.res.fields.length ? (
         <span className="mensagem">
           Query returned {state.res.rows.length} row
@@ -352,7 +378,7 @@ export function QueryFrame({ uid }: { uid: number }) {
             result={state.res}
           />
         )
-      ) : (
+      ) : state.res || state.notices?.length ? (
         <div className="not-grid-result">
           <Notices
             notices={state.notices}
@@ -382,6 +408,12 @@ export function QueryFrame({ uid }: { uid: number }) {
             </div>
           ) : undefined}
         </div>
+      ) : (
+        <QuerySelector
+          onSelect={(editorState) =>
+            editorRef.current?.setEditorState({ ...editorState })
+          }
+        />
       )}
     </>
   );
