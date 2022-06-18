@@ -3,7 +3,8 @@ import { PoolClient, QueryArrayResult, QueryResult } from 'pg';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { useEffect, useState } from 'react';
 import { useEvent } from 'util/useEvent';
-import { query, openConnection } from './Connection';
+import { openConnection } from './Connection';
+import { DB } from './DB';
 
 class ExclusiveConnection {
   db: PoolClient | null = null;
@@ -35,7 +36,7 @@ class ExclusiveConnection {
   }
 
   async stopRunningQuery(): Promise<void> {
-    if (this.pid) await query('SELECT pg_cancel_backend($1)', [this.pid]);
+    if (this.pid) await DB.cancelBackend(this.pid);
   }
 
   async query(

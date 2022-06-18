@@ -263,6 +263,9 @@ export const DB = {
     )?.has;
   },
 
+  async cancelBackend(pid: number) {
+    return query('SELECT pg_cancel_backend($1)', [pid]);
+  },
   async createSchema(schemaName: string) {
     await query(`CREATE SCHEMA "${schemaName}"`);
   },
