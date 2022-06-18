@@ -5,6 +5,7 @@ import { useEffect, useRef, useContext } from 'react';
 import { FrameType, Tab } from 'types';
 import { useWindowCloseConfirm } from 'components/util/useWindowCloseConfirm';
 import { hasOpenConnection } from 'db/Connection';
+import { useEvent } from 'util/useEvent';
 import { currentState, useAppState } from '../../state';
 import { Nav } from './Nav';
 import { Tabs } from './Tabs';
@@ -107,13 +108,20 @@ export function App() {
     return sortedTabs;
   }, [state.tabs]);
 
-  const closeNow = useWindowCloseConfirm(async () => {
+  const [close, setClose] = React.useState<{ func: () => void } | null>(null);
+  useWindowCloseConfirm(async (doit) => {
     await new Promise((resolve) => setTimeout(resolve, 100));
     if (await hasOpenConnection()) {
+      setClose({ func: doit });
       askToCloseWindow();
     } else {
-      closeNow();
+      doit();
     }
+  });
+
+  const onClickNo = useEvent(() => {
+    setClose(null);
+    cancelAskToCloseWindow();
   });
 
   if (state.connected) {
@@ -123,7 +131,7 @@ export function App() {
           for (const f of listeners) f();
         }}
       >
-        {state.askToCloseWindow && (
+        {close && (
           <div
             className="dialog--close-window"
             onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -147,10 +155,10 @@ export function App() {
               There is some running query or idle connection in transacion, are
               you sure you want to close?
             </div>
-            <button onClick={cancelAskToCloseWindow} type="button">
+            <button onClick={onClickNo} type="button">
               No
             </button>{' '}
-            <button onClick={closeNow} type="button">
+            <button onClick={close.func} type="button">
               Yes
             </button>
           </div>
