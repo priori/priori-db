@@ -234,7 +234,9 @@ export function QueryFrame({ uid }: { uid: number }) {
       <Editor ref={editorRef} style={{ height: '300px' }} />
 
       {state.clientError ? (
-        <span className="client-error">{state.clientError.message}</span>
+        <span className="client-error">
+          {state.clientError.message} <i className="fa fa-unlink" />
+        </span>
       ) : null}
 
       {state.res && state.res.fields && state.res.fields.length ? (
