@@ -153,7 +153,7 @@ export function useExclusiveConnection(
         return;
       }
       exclusives.splice(exclusives.indexOf(client), 1);
-      client.db?.release();
+      client.db?.release(true);
     };
   }, [client]);
   return client;
