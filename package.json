@@ -69,7 +69,8 @@
   "jest": {
     "moduleDirectories": [
       "node_modules",
-      "release/app/node_modules"
+      "release/app/node_modules",
+      "src"
     ],
     "moduleFileExtensions": [
       "js",
@@ -90,7 +91,7 @@
       "url": "http://localhost/"
     },
     "testPathIgnorePatterns": [
-      "release/app/dist"
+      "release/app/dist",".*/mock\\.([tj]sx?)"
     ],
     "transform": {
       "\\.(ts|tsx|js|jsx)$": "ts-jest"
