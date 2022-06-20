@@ -466,6 +466,7 @@ export function GridCore(props: GridCoreProps) {
   });
 
   const onMouseDown = useEvent((e: React.MouseEvent<HTMLElement>) => {
+    if (e.button === 1) return;
     const el = elRef.current as HTMLElement;
     const rect = el.getBoundingClientRect();
     let x = e.clientX - rect.left;
