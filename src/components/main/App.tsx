@@ -149,7 +149,7 @@ export function App() {
               const dialogEl = e.currentTarget;
               setTimeout(() => {
                 if (dialogEl.contains(document.activeElement)) return;
-                cancelAskToCloseWindow();
+                onClickNo();
               }, 1);
             }}
           >
