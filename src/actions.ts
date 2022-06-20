@@ -45,6 +45,7 @@ export const {
   keepDomain,
   pikSequence,
   keepSequence,
+  extraTableTab,
 } = state;
 
 export async function open(c: ConnectionConfiguration) {

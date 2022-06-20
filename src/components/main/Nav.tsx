@@ -19,6 +19,7 @@ import {
   openFunctions,
   openDomains,
   openSequences,
+  extraTableTab,
 } from '../../actions';
 import { NavSchema, Tab } from '../../types';
 
@@ -150,6 +151,10 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                         className="table-name"
                         onClick={() => pikTable(schema.name, t)}
                         onDoubleClick={() => {
+                          if (isActive && active.keep) {
+                            extraTableTab(schema.name, t.name);
+                            return;
+                          }
                           keepOpenTable(schema.name, t);
                         }}
                         onKeyDown={(e) => {

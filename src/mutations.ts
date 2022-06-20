@@ -205,12 +205,22 @@ export function keepSchemaInfo(current: AppState, name: string) {
   }));
 }
 
+function findLast<T>(a: T[], f: (i: T) => boolean) {
+  for (let i = a.length - 1; i >= 0; i -= 1) {
+    if (f(a[i])) return a[i];
+  }
+  return null;
+}
+
 export function pikTable(
   current: AppState,
   schema: string,
   t: { name: string; type: string }
 ) {
-  const openTab = current.tabs.find(
+  const openTab = findLast(
+    current.tabsOpenOrder.map(
+      (uid) => current.tabs.find((t2) => t2.props.uid === uid) as Tab
+    ),
     (tab) =>
       tab.props.type === 'table' &&
       tab.props.schema === schema &&
@@ -232,12 +242,29 @@ export function pikTable(
   }));
 }
 
+export function extraTableTab(current: AppState, schema: string, name: string) {
+  return newFrame(current, (uid) => ({
+    title: `${schema}.${name}`,
+    active: true,
+    keep: true,
+    props: {
+      uid,
+      table: name,
+      type: 'table',
+      schema,
+    },
+  }));
+}
+
 export function keepTable(
   current: AppState,
   schema: string,
   t: { name: string; type: string }
 ) {
-  const openTab = current.tabs.find(
+  const openTab = findLast(
+    current.tabsOpenOrder.map(
+      (uid) => current.tabs.find((t2) => t2.props.uid === uid) as Tab
+    ),
     (tab) =>
       tab.props.type === 'table' &&
       tab.props.schema === schema &&

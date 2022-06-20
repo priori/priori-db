@@ -7,6 +7,7 @@ import {
   newQueryInTheEnd,
   keepTabOpen,
   updateTabText,
+  extraTableTab,
 } from '../../actions';
 import { Tab } from '../../types';
 
@@ -102,9 +103,9 @@ export class Tabs extends Component<TabsProps, TabsState> {
         ...state,
         editing: t,
       }));
-    } else {
-      keepTabOpen(t);
-    }
+    } else if (t.active && t.props.type === 'table' && t.active && t.keep) {
+      extraTableTab(t.props.schema, t.props.table);
+    } else keepTabOpen(t);
   }
 
   tabsDoubleClick: MouseEventHandler<HTMLSpanElement> = (e) => {
