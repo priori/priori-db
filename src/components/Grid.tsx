@@ -1,4 +1,4 @@
-import { assert } from 'console';
+import assert from 'assert';
 import { QueryArrayResult } from 'pg';
 import React, {
   CSSProperties,
@@ -9,6 +9,8 @@ import React, {
   useState,
 } from 'react';
 import { equals } from 'util/equals';
+import { useEvent } from 'util/useEvent';
+import { useEventListener } from 'util/useEventListener';
 import { SizeControlledArea } from './util/SizeControlledArea';
 
 const letterSize = 6;
@@ -19,6 +21,7 @@ export interface GridProps {
   // eslint-disable-next-line react/require-default-props
   onScroll?: (() => void) | undefined;
 }
+
 export interface GridCoreProps {
   // style: CSSProperties;
   result: QueryArrayResult;
@@ -30,7 +33,9 @@ export interface GridCoreProps {
 
 export interface GridState {
   slice: [number, number];
-  selected?: { rowIndex: number; colIndex: number };
+  active?: { rowIndex: number; colIndex: number };
+  selection?: { rowIndex: [number, number]; colIndex: [number, number] };
+  mouseDown?: { rowIndex: number; colIndex: number };
 }
 
 function getValString(val: unknown) {
@@ -128,7 +133,46 @@ function buildFinalWidths(initialColsWidths: number[], areaWidth: number) {
   };
 }
 
-function selectPos(
+function cellClassName(
+  colIndex: number,
+  rowIndex: number,
+  selection:
+    | {
+        colIndex: [number, number];
+        rowIndex: [number, number];
+      }
+    | undefined = undefined
+): string | undefined {
+  if (!selection) return undefined;
+  if (
+    selection.colIndex[0] <= colIndex &&
+    colIndex <= selection.colIndex[1] &&
+    selection.rowIndex[0] <= rowIndex &&
+    rowIndex <= selection.rowIndex[1]
+  ) {
+    return `selected${
+      (selection.rowIndex[0] === rowIndex ? ' selection-first-row' : '') +
+      (selection.colIndex[1] === colIndex ? ' selection-last-col' : '')
+    }`;
+  }
+  if (
+    selection.colIndex[0] === colIndex + 1 &&
+    selection.rowIndex[0] <= rowIndex &&
+    rowIndex <= selection.rowIndex[1]
+  ) {
+    return 'selection-left';
+  }
+  if (
+    selection.colIndex[0] <= colIndex &&
+    colIndex <= selection.colIndex[1] &&
+    selection.rowIndex[1] === rowIndex - 1
+  ) {
+    return 'selection-bottom';
+  }
+  return undefined;
+}
+
+function activePos(
   widths: number[],
   colIndex: number,
   rowIndex: number,
@@ -144,8 +188,8 @@ function selectPos(
   }
   fieldLeft += 1;
   const top = headerHeight + rowIndex * rowHeight - scrollTop + 1;
-  const selectedCellLeft = fieldLeft - (scrollLeft < 0 ? 0 : scrollLeft);
-  const left = selectedCellLeft < 0 ? 0 : selectedCellLeft;
+  const activeCellLeft = fieldLeft - (scrollLeft < 0 ? 0 : scrollLeft);
+  const left = activeCellLeft < 0 ? 0 : activeCellLeft;
   const leftCrop = fieldLeft - scrollLeft < 0 ? -(fieldLeft - scrollLeft) : 0;
   const originalWidth = widths[colIndex] - 1 - leftCrop;
   const needToCropRight = originalWidth + left > containerWidth;
@@ -153,15 +197,39 @@ function selectPos(
   return { top, left, leftCrop, width };
 }
 
+function scrollTo(
+  el: HTMLElement,
+  widths: number[],
+  colIndex: number,
+  rowIndex: number
+) {
+  const y = rowIndex * rowHeight;
+  const y2 = (rowIndex + 1) * rowHeight;
+  let fieldLeft = 0;
+  for (const c in widths) {
+    const w = widths[c];
+    if (`${colIndex}` === c) break;
+    fieldLeft += w;
+  }
+  const x = fieldLeft;
+  const x2 = x + widths[colIndex] + 1;
+  let { scrollTop } = el;
+  let { scrollLeft } = el;
+  if (scrollTop < y2 - el.offsetHeight + scrollWidth)
+    scrollTop = y2 - el.offsetHeight + scrollWidth;
+  else if (scrollTop > y) scrollTop = y;
+  if (x < scrollLeft) scrollLeft = x;
+  else if (x2 + scrollWidth > scrollLeft + el.offsetWidth)
+    scrollLeft = x2 - el.offsetWidth + scrollWidth;
+  if (el.scrollTop !== scrollTop || el.scrollLeft !== scrollLeft) {
+    el.scrollTo({ top: scrollTop, left: scrollLeft, behavior: 'auto' });
+  }
+}
+
 export function GridCore(props: GridCoreProps) {
   const [state, setState] = useState({
     slice: [0, rowsByRender],
   } as GridState);
-
-  const baseWidths = useMemo(
-    () => buildBaseWidths(props.result),
-    [props.result]
-  );
 
   const headerElRef = useRef(null as HTMLTableElement | null);
 
@@ -171,32 +239,71 @@ export function GridCore(props: GridCoreProps) {
 
   const elRef = useRef(null as HTMLDivElement | null);
 
-  const selectedElRef = useRef(null as HTMLElement | null);
+  const activeElRef = useRef(null as HTMLElement | null);
 
   const lastScrollTimeRef = useRef(null as Date | null);
+
+  const gridContentRef = useRef<HTMLDivElement | null>(null);
+
+  const baseWidths = useMemo(
+    () => buildBaseWidths(props.result),
+    [props.result]
+  );
 
   useEffect(() => {
     scrollRef.current = { left: 0, top: 0 };
     setState((state2) => ({
       ...state2,
-      selected: undefined,
+      active: undefined,
     }));
   }, [props.result]);
 
   const { widths: finalWidths, width: gridContentTableWidth } = useMemo(
-    () => buildFinalWidths(baseWidths, props.width - 1),
+    () => buildFinalWidths(baseWidths, props.width - scrollWidth - 1),
     [baseWidths, props.width]
   );
+
+  useEffect(() => {
+    if (state.active) {
+      const el = gridContentRef.current;
+      assert(el);
+      scrollTo(el, finalWidths, state.active.colIndex, state.active.rowIndex);
+    }
+  }, [finalWidths, state.active]);
+
+  useEffect(() => {
+    if (state.selection && state.mouseDown) {
+      const el = gridContentRef.current;
+      assert(el);
+      scrollTo(
+        el,
+        finalWidths,
+        state.mouseDown.colIndex === state.selection.colIndex[0]
+          ? state.selection.colIndex[1]
+          : state.selection.colIndex[0],
+        state.mouseDown.rowIndex === state.selection.rowIndex[0]
+          ? state.selection.rowIndex[1]
+          : state.selection.rowIndex[0]
+      );
+    }
+  }, [finalWidths, state.mouseDown, state.selection]);
+
   const gridContentMarginTop = `-${headerHeight}px`;
   assert(props.result.rows instanceof Array);
   const gridContentHeight = `${
     headerHeight + props.result.rows.length * rowHeight
   }px`;
   const gridContentTableTop = `${state.slice[0] * rowHeight}px`;
-  const visibleRows = props.result.rows.filter(
-    (_, i) =>
-      (state.slice as number[])[0] <= i && i <= (state.slice as number[])[1]
+
+  const visibleRows = useMemo(
+    () =>
+      props.result.rows.filter(
+        (_, i) =>
+          (state.slice as number[])[0] <= i && i <= (state.slice as number[])[1]
+      ),
+    [props.result.rows, state.slice]
   );
+
   const visibleStartingInEven = state.slice[0] % 2;
 
   function getColIndex(x: number) {
@@ -210,26 +317,26 @@ export function GridCore(props: GridCoreProps) {
     return finalWidths.length - 1;
   }
 
-  function updateSelectPos() {
-    if (!state.selected || !selectedElRef.current) return;
-    const { top, left, leftCrop, width } = selectPos(
+  function updateActivePos() {
+    if (!state.active || !activeElRef.current) return;
+    const { top, left, leftCrop, width } = activePos(
       finalWidths,
-      state.selected.colIndex,
-      state.selected.rowIndex,
+      state.active.colIndex,
+      state.active.rowIndex,
       scrollRef.current.top,
       scrollRef.current.left,
       props.width
     );
-    const selectedEl = selectedElRef.current;
-    selectedEl.style.top = `${top}px`;
-    selectedEl.style.left = `${left}px`;
-    const wrapper2El = selectedEl.firstChild as HTMLDivElement;
+    const activeEl = activeElRef.current;
+    activeEl.style.top = `${top}px`;
+    activeEl.style.left = `${left}px`;
+    const wrapper2El = activeEl.firstChild as HTMLDivElement;
     wrapper2El.style.marginLeft = `-${leftCrop}px`;
-    selectedEl.style.width = `${width}px`;
-    selectedEl.style.display = top < 0 || width < 0 ? 'none' : '';
+    activeEl.style.width = `${width}px`;
+    activeEl.style.display = top < 0 || width < 0 ? 'none' : '';
   }
 
-  function gridContentScrollListener(e: React.UIEvent<HTMLElement>) {
+  const onScroll = useEvent((e: React.UIEvent<HTMLElement>) => {
     if (props.onScroll) props.onScroll();
     const container = e.target as HTMLElement;
     scrollRef.current = {
@@ -245,10 +352,9 @@ export function GridCore(props: GridCoreProps) {
         headerEl.style.boxShadow = '';
       }
     }
-    updateSelectPos();
+    updateActivePos();
     const fn = () => {
       lastScrollTimeRef.current = null;
-      // relative to top. to render by the center use scrollTop + container.offsetHeight / 2
       const currentIndex = Math.floor(container.scrollTop / rowHeight);
       if (
         (state.slice as number[])[0] - currentIndex < allowedTopDistance ||
@@ -275,48 +381,141 @@ export function GridCore(props: GridCoreProps) {
       if (!lastScrollTimeRef.current) lastScrollTimeRef.current = now;
       timeoutRef.current = setTimeout(fn, 200);
     }
-  }
+  });
 
-  function clickListener(e: React.MouseEvent<HTMLElement>) {
+  useEventListener(window, 'mouseup', (e) => {
+    if (!state.mouseDown) return;
     const el = elRef.current as HTMLElement;
     const rect = el.getBoundingClientRect();
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top - headerHeight;
-    if (x < 0 || y < 0 || x > el.offsetWidth || y > el.offsetHeight) return;
+    x += scrollRef.current.left;
+    y += scrollRef.current.top;
+    const rowIndex = Math.min(
+      Math.max(Math.floor(y / rowHeight), 0),
+      props.result.rows.length - 1
+    );
+    const colIndex = Math.min(
+      Math.max(getColIndex(x), 0),
+      props.result.fields.length - 1
+    );
+    const selection = {
+      rowIndex: [
+        Math.min(rowIndex, state.mouseDown?.rowIndex ?? rowIndex),
+        Math.max(rowIndex, state.mouseDown?.rowIndex ?? -1),
+      ] as [number, number],
+      colIndex: [
+        Math.min(colIndex, state.mouseDown?.colIndex ?? colIndex),
+        Math.max(colIndex, state.mouseDown?.colIndex ?? -1),
+      ] as [number, number],
+    };
+
+    if (
+      document.activeElement === elRef.current &&
+      (rowIndex >= props.result.rows.length ||
+        colIndex >= props.result.fields.length)
+    ) {
+      setState((state2) => ({
+        ...state2,
+        active: undefined,
+        selection,
+        mouseDown: undefined,
+      }));
+      elRef.current?.blur();
+      return;
+    }
+    setState((state2) => ({
+      ...state2,
+      active: { rowIndex, colIndex },
+      selection,
+      mouseDown: undefined,
+    }));
+  });
+
+  useEventListener(window, 'mousemove', (e) => {
+    if (!state.mouseDown) return;
+    const el = elRef.current as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top - headerHeight;
+    x += scrollRef.current.left;
+    y += scrollRef.current.top;
+    const rowIndex = Math.min(
+      Math.max(Math.floor(y / rowHeight), 0),
+      props.result.rows.length - 1
+    );
+    const colIndex = Math.min(
+      Math.max(getColIndex(x), 0),
+      props.result.fields.length - 1
+    );
+    const selection = {
+      rowIndex: [
+        Math.min(rowIndex, state.mouseDown?.rowIndex ?? rowIndex),
+        Math.max(rowIndex, state.mouseDown?.rowIndex ?? -1),
+      ] as [number, number],
+      colIndex: [
+        Math.min(colIndex, state.mouseDown?.colIndex ?? colIndex),
+        Math.max(colIndex, state.mouseDown?.colIndex ?? -1),
+      ] as [number, number],
+    };
+    // if shift is pressed, select a range
+    setState((state2) => ({
+      ...state2,
+      selection,
+    }));
+  });
+
+  const onMouseDown = useEvent((e: React.MouseEvent<HTMLElement>) => {
+    const el = elRef.current as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top - headerHeight;
+    if (
+      x < 0 ||
+      y < 0 ||
+      x > el.offsetWidth - scrollWidth ||
+      y > el.offsetHeight - scrollWidth - headerHeight
+    ) {
+      if (state.active) {
+        setState((state2) => ({ ...state2, active: undefined }));
+      }
+      return;
+    }
     x += scrollRef.current.left;
     y += scrollRef.current.top;
     const rowIndex = Math.floor(y / rowHeight);
-    const colIndex = getColIndex(x);
-    if (
-      rowIndex >= props.result.rows.length ||
-      colIndex >= props.result.fields.length ||
-      (state.selected &&
-        state.selected.rowIndex === rowIndex &&
-        state.selected.colIndex === colIndex)
-    )
+    if (rowIndex >= props.result.rows.length) {
+      if (state.active) {
+        setState((state2) => ({ ...state2, active: undefined }));
+      }
       return;
+    }
+    const colIndex = getColIndex(x);
+    // if shift is pressed, select a range
     setState((state2) => ({
       ...state2,
-      selected: { rowIndex, colIndex },
+      mouseDown: { rowIndex, colIndex },
+      active: undefined,
+      selection: undefined,
     }));
-  }
+  });
 
-  function selectedRender(widths: number[]): JSX.Element {
-    if (!state.selected) return <></>;
-    const row = props.result.rows[state.selected.rowIndex];
-    const val = row[state.selected.colIndex];
+  function activeRender(widths: number[]): JSX.Element {
+    if (!state.active) return <></>;
+    const row = props.result.rows[state.active.rowIndex];
+    const val = row[state.active.colIndex];
     const type = getType(val);
     const valString = getValString(val);
-    const { top, left, leftCrop, width } = selectPos(
+    const { top, left, leftCrop, width } = activePos(
       widths,
-      state.selected.colIndex,
-      state.selected.rowIndex,
+      state.active.colIndex,
+      state.active.rowIndex,
       scrollRef.current.top,
       scrollRef.current.left,
       props.width - scrollWidth
     );
-    const key = `${state.selected.rowIndex}/${state.selected.colIndex}`;
-    const even = state.selected.rowIndex % 2;
+    const key = `${state.active.rowIndex}/${state.active.colIndex}`;
+    const even = state.active.rowIndex % 2;
 
     return (
       <div
@@ -330,22 +529,15 @@ export function GridCore(props: GridCoreProps) {
         }}
         key={key}
         ref={(el: HTMLDivElement) => {
-          selectedElRef.current = el;
-          if (el) {
-            el.classList.remove('active');
-            setTimeout(() => {
-              if (selectedElRef.current)
-                selectedElRef.current.classList.add('active');
-            }, 10);
-          }
+          activeElRef.current = el;
         }}
-        className={`selected-cell-wrapper ${type}${even ? ' even' : ' odd'}`}
+        className={`active active-cell-wrapper ${even ? ' even' : ' odd'}`}
       >
         <div
           style={{ marginLeft: `${-leftCrop}px`, height: `${rowHeight - 1}px` }}
-          className="selected-cell-wrapper2"
+          className={`active-cell-wrapper2 ${type}`}
         >
-          <div className="selected-cell">
+          <div className="active-cell">
             {valString && valString.length > 200
               ? `${valString.substring(0, 200)}...`
               : valString}
@@ -355,14 +547,69 @@ export function GridCore(props: GridCoreProps) {
     );
   }
 
+  const onBlur = useEvent(() => {
+    setState({ ...state, active: undefined, mouseDown: undefined });
+  });
+
+  const onKeyDown = useEvent((e: React.KeyboardEvent) => {
+    if (state.active) {
+      if (e.key === 'Escape') {
+        if (elRef.current) elRef.current.blur();
+      } else if (e.key === 'ArrowDown') {
+        if (state.active.rowIndex < props.result.rows.length - 1) {
+          // if shift is pressed, select a range
+          setState({
+            ...state,
+            active: {
+              rowIndex: state.active.rowIndex + 1,
+              colIndex: state.active.colIndex,
+            },
+          });
+        }
+      } else if (e.key === 'ArrowUp') {
+        if (state.active.rowIndex > 0) {
+          // if shift is pressed, select a range
+          setState({
+            ...state,
+            active: {
+              rowIndex: state.active.rowIndex - 1,
+              colIndex: state.active.colIndex,
+            },
+          });
+        }
+      } else if (e.key === 'ArrowLeft') {
+        if (state.active.colIndex > 0) {
+          // if shift is pressed, select a range
+          setState({
+            ...state,
+            active: {
+              rowIndex: state.active.rowIndex,
+              colIndex: state.active.colIndex - 1,
+            },
+          });
+        }
+      } else if (e.key === 'ArrowRight') {
+        if (state.active.colIndex < props.result.fields.length - 1) {
+          // if shift is pressed, select a range
+          setState({
+            ...state,
+            active: {
+              rowIndex: state.active.rowIndex,
+              colIndex: state.active.colIndex + 1,
+            },
+          });
+        }
+      }
+    }
+  });
+
   return (
     <div
       style={{ top: 0, left: 0, bottom: 0, right: 0, position: 'absolute' }}
-      onClick={clickListener}
-      // tabIndex={0}
-      // onBlur={() => {
-      // this.setState({selected:undefined});
-      // }}
+      tabIndex={0}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+      onMouseDown={onMouseDown}
       ref={elRef}
     >
       <div className="grid-header-wrapper">
@@ -382,8 +629,8 @@ export function GridCore(props: GridCoreProps) {
           </thead>
         </table>
       </div>
-      {selectedRender(finalWidths)}
-      <div className="grid-content" onScroll={gridContentScrollListener}>
+      {activeRender(finalWidths)}
+      <div className="grid-content" onScroll={onScroll} ref={gridContentRef}>
         <div
           style={{
             marginTop: gridContentMarginTop,
@@ -418,8 +665,13 @@ export function GridCore(props: GridCoreProps) {
                     const val = row[index];
                     const type = getType(val);
                     const valString = getValString(val);
+                    const className = cellClassName(
+                      index,
+                      state.slice[0] + rowIndex,
+                      state.selection
+                    );
                     return (
-                      <td key={index}>
+                      <td key={index} className={className}>
                         <div className={type}>
                           <div className="cell">
                             {valString && valString.length > 200

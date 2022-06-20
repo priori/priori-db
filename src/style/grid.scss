@@ -19,6 +19,8 @@
   right: 0;
   bottom: 0;
   overflow: auto;
+  overflow-x: auto;
+  overflow-y: scroll;
 }
 .grid table.content-table thead {
   visibility: hidden;
@@ -169,18 +171,19 @@
   height: 58px;
 }
 
-.selected-cell-wrapper {
+.active-cell-wrapper {
   box-shadow: 0 0 rgba(0, 0, 0, 0.3);
   transition: box-shadow 0.5s, transform 0.5s;
   overflow: hidden;
 }
-.selected-cell-wrapper.active {
+
+.active-cell-wrapper.active {
   box-shadow: 0 1px 17px rgba(0, 0, 0, 0.33);
 }
-.selected-cell-wrapper2 {
+.active-cell-wrapper2 {
   position: relative;
 }
-.selected-cell {
+.active-cell {
   //height: 22px;
   line-height: 22px;
   overflow: hidden;
@@ -189,7 +192,7 @@
   padding-right: 5px;
   white-space: nowrap;
   font-size: 12px;
-  background: white;
+  background: #fbfbfb;
   //position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; border: solid 2px;
 }
 
@@ -212,3 +215,41 @@
   opacity: 0;
   animation: 0.6s 0.2s show forwards;
 }
+
+td.selected {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: #c4c4c4;
+}
+.grid tbody tr:hover td.selected {
+  border-color: #bbb;
+}
+
+$selectionBorder: #bbb;
+td.selection-left {
+  border-right-color: $selectionBorder;
+}
+.grid tbody tr:hover td.selection-left {
+  border-right-color: $selectionBorder;
+}
+td.selection-bottom {
+  border-top-color: $selectionBorder;
+}
+.grid tbody tr:hover td.selection-bottom {
+  border-top-color: $selectionBorder;
+}
+tr:last-child .selected {
+  border-bottom: 1px solid $selectionBorder;
+}
+td.selection-first-row,
+.grid tbody tr:hover + tr td.selected.selection-first-row {
+  border-top: solid 1px $selectionBorder;
+}
+td.selection-last-col {
+  border-right: 1px solid $selectionBorder;
+}
+/*
+td.selected { background: #e0e0e0; border-color: #ccc; }
+tr:nth-child(2n) td.selected{ background: #d2d2d2; }
+tr:hover td.selected { background-color: #c6c6c6;}
+tr:nth-child(2n):hover td.selected { background: #c0c0c0; }
+*/
