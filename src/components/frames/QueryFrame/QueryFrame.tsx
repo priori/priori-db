@@ -55,7 +55,7 @@ export function QueryFrame({ uid }: { uid: number }) {
   } as QueryFrameState);
 
   const db = useExclusiveConnection(
-    (notice: NoticeMessage) => {
+    (notice) => {
       setState((state2) => ({
         ...state2,
         resetNotices: false,
@@ -248,17 +248,12 @@ export function QueryFrame({ uid }: { uid: number }) {
       ) : undefined}
       {/* <span className="mensagem error"></span> */}
       {state.running ? (
-        <button
-          type="button"
-          style={{ opacity: 0.5 }}
-          disabled
-          className="query-tab--execute"
-        >
-          Execute
+        <button type="button" disabled className="query-tab--execute">
+          Execute <i className="fa fa-check" />
         </button>
       ) : (
         <button type="button" onClick={execute} className="query-tab--execute">
-          Execute
+          Execute <i className="fa fa-check" />
         </button>
       )}
 

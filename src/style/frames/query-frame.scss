@@ -53,6 +53,28 @@
   margin-top: -54px;
   z-index: 2;
 }
+.query-tab button.query-tab--execute {
+  box-shadow: 0 0;
+  color: white;
+  letter-spacing: 0.5px;
+  font-weight: 400;
+  padding: 10px 13px 10px 15px !important;
+  background: #31bb4d;
+  transition: 0.5s opacity;
+  &:hover {
+    background: #31ad4a;
+  }
+  &:active {
+    background: #29a943;
+  }
+  &[disabled] {
+    opacity: 0.5;
+  }
+  &[disabled]:hover,
+  &[disabled]:active {
+    background: #31bb4d;
+  }
+}
 .frame.query-tab .dialog {
   margin-top: 20px;
   margin-left: 20px;
