@@ -91,9 +91,9 @@
   z-index: 2;
   padding: 5px;
 }
-.query-tab .mensagem.error {
-  color: #d22;
-}
+// .query-tab .mensagem.error {
+//   color: #d22;
+// }
 .query-tab .client-error {
   color: #d22;
   position: absolute;
@@ -280,4 +280,19 @@
     }
   }
   position: relative;
+}
+
+.query-tab .error {
+  font-size: 20px;
+  padding: 10px 0 0 15px;
+  color: #d11;
+  line-height: 1.5em;
+}
+.query-tab .error button {
+  padding: 3px !important;
+  font-size: 12px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 50%);
+  margin-left: 3px;
+  position: relative;
+  top: -2px;
 }

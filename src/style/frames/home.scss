@@ -190,16 +190,16 @@
   text-align: right;
 }
 
-.error {
+.new-connection .error {
   color: #e00;
 }
-.error input {
+.new-connection .error input {
   border-color: #e00;
 }
 
-
 .new-connection .dialog {
-  position: absolute; font-size: 13px;
+  position: absolute;
+  font-size: 13px;
   background: white;
   left: 50%;
   margin-left: -125px;
@@ -208,6 +208,12 @@
   padding: 15px 10px;
   width: 250px;
   text-align: center;
-  button { margin: 5px; margin-top: 10px; font-size: 14px; padding: 6px 0; width: 50px;
-  text-align: center;}
+  button {
+    margin: 5px;
+    margin-top: 10px;
+    font-size: 14px;
+    padding: 6px 0;
+    width: 50px;
+    text-align: center;
+  }
 }

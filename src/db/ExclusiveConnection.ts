@@ -135,11 +135,11 @@ export function useExclusiveConnection(
   onNotice: (a: NoticeMessage) => void,
   onPid: (pid: number | null) => void,
   onClientError: (e: Error) => void
-) {
+): [ExclusiveConnection, () => void] {
   const onNotice2 = useEvent(onNotice);
   const onPid2 = useEvent(onPid);
   const onClientError2 = useEvent(onClientError);
-  const [client] = useState(
+  const [client, setClient] = useState(
     () => new ExclusiveConnection(onNotice2, onPid2, onClientError2)
   );
   useEffect(() => {
@@ -150,11 +150,19 @@ export function useExclusiveConnection(
           exclusives.splice(exclusives.indexOf(client), 1);
           client.db?.release(true);
         });
+
         return;
       }
       exclusives.splice(exclusives.indexOf(client), 1);
       client.db?.release(true);
     };
   }, [client]);
-  return client;
+  return [
+    client,
+    useEvent(() => {
+      setClient(
+        () => new ExclusiveConnection(onNotice2, onPid2, onClientError2)
+      );
+    }),
+  ];
 }

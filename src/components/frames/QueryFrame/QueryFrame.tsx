@@ -1,4 +1,4 @@
-import { MutableRefObject, useRef, useState } from 'react';
+import React, { MutableRefObject, useRef, useState } from 'react';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import assert from 'assert';
 import { useEvent } from 'util/useEvent';
@@ -38,6 +38,7 @@ interface QueryFrameState {
     position: number;
     message: string;
   } | null;
+  freshTab: boolean;
 }
 
 export function QueryFrame({ uid }: { uid: number }) {
@@ -52,9 +53,10 @@ export function QueryFrame({ uid }: { uid: number }) {
     res: null,
     time: null,
     error: null,
+    freshTab: true,
   } as QueryFrameState);
 
-  const db = useExclusiveConnection(
+  const [db, restart] = useExclusiveConnection(
     (notice) => {
       setState((state2) => ({
         ...state2,
@@ -70,12 +72,67 @@ export function QueryFrame({ uid }: { uid: number }) {
 
   const isMounted = useIsMounted();
 
+  const executeQuery = useEvent(
+    async (query: string, id: number | undefined = undefined) => {
+      const start = new Date().getTime();
+      try {
+        const res = await db.query(query, [], true);
+        const time = new Date().getTime() - start;
+        const resLength = res?.rows?.length as number | undefined;
+        if (id)
+          updateQuery(
+            id,
+            time,
+            typeof resLength === 'number' ? resLength : null
+          );
+        const openTransaction = !db.pid
+          ? false
+          : await DB.inOpenTransaction(db.pid);
+        if (isMounted())
+          setState((state2) => ({
+            ...state2,
+            running: false,
+            clientPid: db.pid || null,
+            openTransaction,
+            res,
+            notices:
+              (res && res.fields && res.fields.length) || state2.resetNotices
+                ? []
+                : state2.notices,
+            resetNotices: false,
+            time,
+            error: null,
+          }));
+      } catch (err: unknown) {
+        const time = new Date().getTime() - start;
+        if (id) updateFailedQuery(id, time);
+        if (isMounted())
+          setState((state2) => ({
+            clientPid: state2.clientPid,
+            running: false,
+            openTransaction: false,
+            notices: state2.resetNotices ? [] : state2.notices,
+            resetNotices: false,
+            error: err as {
+              code: string;
+              line: number;
+              position: number;
+              message: string;
+            },
+            freshTab: false,
+            clientError: state2.clientError,
+            time: null,
+            res: null,
+          }));
+      }
+    }
+  );
+
   const execute = useEvent(async () => {
     if (state.running) return;
     const editor = editorRef.current;
     assert(editor);
     const query = editor.getQuery();
-    const start = new Date().getTime();
     setState((state2) => ({ ...state2, running: true, resetNotices: true }));
     const title = currentState().tabs.find((t) => t.props.uid === uid)?.title;
     const id = await insertQuery(
@@ -84,50 +141,7 @@ export function QueryFrame({ uid }: { uid: number }) {
       editor.getEditorState(),
       title === 'New Query' ? null : title || null
     );
-    try {
-      const res = await db.query(query, [], true);
-      const time = new Date().getTime() - start;
-      const resLength = res?.rows?.length as number | undefined;
-      updateQuery(id, time, typeof resLength === 'number' ? resLength : null);
-      const openTransaction = !db.pid
-        ? false
-        : await DB.inOpenTransaction(db.pid);
-      if (isMounted())
-        setState((state2) => ({
-          ...state2,
-          running: false,
-          clientPid: db.pid || null,
-          openTransaction,
-          res,
-          notices:
-            (res && res.fields && res.fields.length) || state2.resetNotices
-              ? []
-              : state2.notices,
-          resetNotices: false,
-          time,
-          error: null,
-        }));
-    } catch (err: unknown) {
-      const time = new Date().getTime() - start;
-      updateFailedQuery(id, time);
-      if (isMounted())
-        setState((state2) => ({
-          clientPid: state2.clientPid,
-          running: false,
-          openTransaction: false,
-          notices: state2.resetNotices ? [] : state2.notices,
-          resetNotices: false,
-          error: err as {
-            code: string;
-            line: number;
-            position: number;
-            message: string;
-          },
-          clientError: state2.clientError,
-          time: null,
-          res: null,
-        }));
-    }
+    await executeQuery(query, id);
   });
 
   const [closeConfirm, setCloseConfirm] = useState(false);
@@ -183,6 +197,25 @@ export function QueryFrame({ uid }: { uid: number }) {
       ...state2,
       notices: state2.notices.filter((n2) => n2 !== n),
     }));
+  });
+
+  const onOpenNewConnectionClick = useEvent(() => {
+    setState({
+      running: false,
+      notices: [] as NoticeMessage[],
+      resetNotices: false,
+      clientPid: null,
+      clientError: null,
+      res: null,
+      time: null,
+      error: null,
+      freshTab: false,
+    } as QueryFrameState);
+    restart();
+  });
+
+  const onRollbackClick = useEvent(() => {
+    executeQuery('ROLLBACK');
   });
 
   const fullViewNotice = useEvent((n: NoticeMessage) => {
@@ -278,15 +311,17 @@ export function QueryFrame({ uid }: { uid: number }) {
       ) : null}
 
       {state.error ? (
-        <div
-          style={{
-            fontSize: '20px',
-            padding: '10px 0 0 15px',
-            color: '#d11',
-            lineHeight: '1.5em',
-          }}
-        >
-          #{state.error.code} {state.error.message}
+        <div className="error">
+          {state.error.code ? `#${state.error.code}` : ''} {state.error.message}{' '}
+          {state.error.code === '25P02' ? (
+            <button type="button" onClick={onRollbackClick}>
+              Rollback transaction
+            </button>
+          ) : (state.clientError || state.error) && !state.clientPid ? (
+            <button type="button" onClick={onOpenNewConnectionClick}>
+              Open new connection
+            </button>
+          ) : null}
           {typeof state.error.line === 'number' &&
             typeof state.error.position === 'number' && (
               <div>
@@ -355,13 +390,13 @@ export function QueryFrame({ uid }: { uid: number }) {
             </div>
           ) : undefined}
         </div>
-      ) : (
+      ) : state.freshTab ? (
         <QuerySelector
           onSelect={(editorState) =>
             editorRef.current?.setEditorState({ ...editorState })
           }
         />
-      )}
+      ) : null}
     </>
   );
 }
