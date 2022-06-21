@@ -126,6 +126,43 @@ export function App() {
     cancelAskToCloseWindow();
   });
 
+  const activeElements = React.useMemo(() => new WeakMap<HTMLElement>(), []);
+
+  const onBlurCapture = useEvent((e: React.FocusEvent<HTMLDivElement>) => {
+    if (
+      !e.currentTarget.contains(document.activeElement) &&
+      e.currentTarget !== document.activeElement
+    ) {
+      activeElements.set(e.currentTarget, e.target);
+    }
+  });
+
+  const onMouseDown = useEvent((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.target;
+    if (el instanceof HTMLElement) {
+      if (
+        !el.matches('input,select,textarea,[tabIndex]') &&
+        !e.currentTarget.contains(document.activeElement) &&
+        e.currentTarget !== document.activeElement
+      ) {
+        const activeElement = activeElements.get(e.currentTarget);
+        if (activeElement)
+          setTimeout(() => {
+            activeElement.focus();
+          }, 1);
+      }
+    }
+  });
+
+  const onActiveMouseDown = useEvent(() => {
+    const el = activeElements.get(
+      document.querySelector('.frame.active') as HTMLDivElement
+    );
+    if (el) {
+      el.focus();
+    }
+  });
+
   if (state.connected) {
     return (
       <div
@@ -166,7 +203,7 @@ export function App() {
           </div>
         )}
         <div className="header">{state.title}</div>
-        <Tabs tabs={state.tabs} />
+        <Tabs tabs={state.tabs} onActiveTabMouseDown={onActiveMouseDown} />
         {state.schemas ? (
           <Nav schemas={state.schemas} tabs={state.tabs} />
         ) : undefined}
@@ -174,9 +211,33 @@ export function App() {
           {tabs.map((t) => (
             <div
               key={t.props.uid}
-              className={`frame ${classNames[t.props.type]}${
-                t.active ? ' active' : ''
-              }`}
+              className={`frame ${classNames[t.props.type]}`}
+              onBlurCapture={onBlurCapture}
+              onMouseDown={onMouseDown}
+              tabIndex={0}
+              ref={(el) => {
+                if (el) {
+                  if (t.active && !el.classList.contains('active')) {
+                    el.classList.add('active');
+                    if (activeElements.has(el)) {
+                      const activeElement = activeElements.get(el);
+                      if (activeElement)
+                        setTimeout(() => {
+                          activeElement.focus();
+                        }, 1);
+                      activeElements.delete(el);
+                    }
+                  } else if (!t.active && el.classList.contains('active')) {
+                    if (
+                      document.activeElement &&
+                      el.contains(document.activeElement)
+                    ) {
+                      activeElements.set(el, document.activeElement);
+                    }
+                    el.classList.remove('active');
+                  }
+                }
+              }}
             >
               <TabContext.Provider value={t.props.uid}>
                 <Frame {...t.props} />

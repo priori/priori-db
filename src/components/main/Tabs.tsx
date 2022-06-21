@@ -13,6 +13,7 @@ import { Tab } from '../../types';
 
 export interface TabsProps {
   tabs: Tab[];
+  onActiveTabMouseDown: () => void;
 }
 export interface TabWidth extends Tab {
   width: number;
@@ -146,6 +147,10 @@ export class Tabs extends Component<TabsProps, TabsState> {
   }
 
   private mouseDown(e: React.MouseEvent<HTMLSpanElement>, t: Tab) {
+    e.preventDefault();
+    if (t.active) {
+      this.props.onActiveTabMouseDown();
+    }
     activateTab(t);
     this.setState((state) => ({
       ...state,
