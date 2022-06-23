@@ -1,5 +1,6 @@
 import React from 'react';
 import { equals } from 'util/equals';
+import assert from 'assert';
 import { passwords as currentPasswords } from './db/pgpass';
 import { AppState } from './types';
 import * as mutations from './mutations';
@@ -37,7 +38,7 @@ function mutationsToActions<MC extends MutationsConfig>(
     ms[k] = (...ev) => {
       current = conf[k](current, ...ev);
       hls.current = current;
-      if (!hls.listener) throw new Error('Listener não encontrado.');
+      assert(hls.listener);
       hls.listener(current);
     };
   }

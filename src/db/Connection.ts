@@ -1,4 +1,4 @@
-import pg, { PoolClient, QueryArrayResult, QueryResult } from 'pg';
+import pg, { QueryArrayResult, QueryResult } from 'pg';
 import assert from 'assert';
 import { grantError } from 'util/errors';
 import hls from 'util/hotLoadSafe';
@@ -12,7 +12,7 @@ pg.types.setTypeParser(1184, (val) => val);
 pg.types.setTypeParser(1186, (val) => val);
 
 export async function connect(c: ConnectionConfiguration, db?: string) {
-  if (hls.pool) throw new Error('Conexão já inciada!');
+  assert(!hls.pool);
   const database =
     db ||
     (c.database && c.database !== '*' ? c.database : 'postgres') ||
@@ -27,85 +27,57 @@ export async function connect(c: ConnectionConfiguration, db?: string) {
   };
   const p = new pg.Pool(config);
   hls.pool = p;
-  let client: PoolClient | null = null;
   try {
-    client = await p.connect();
-    const title = document.createElement('title');
-    title.innerText = `${c.user}@${c.host}${
-      c.port !== 5432 ? `:${c.port}` : ''
-    }/${database}`;
-    document.head.appendChild(title);
-    client.release(true);
-    assert(p);
-    // for crazy debug only
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (global as any).pool = p;
-    return;
-  } catch (err) {
+    const client = await p.connect();
     try {
-      client?.release(true);
+      const title = document.createElement('title');
+      title.innerText = `${c.user}@${c.host}${
+        c.port !== 5432 ? `:${c.port}` : ''
+      }/${database}`;
+      document.head.appendChild(title);
+      client.release(true);
+      assert(p);
     } catch (err2) {
+      client.release(true);
       throw grantError(err2);
     }
+  } catch (err) {
     throw grantError(err);
   }
 }
 
 export function openConnection() {
-  let success: (pc: PoolClient) => void;
-  let error: (e: Error) => void;
-  const promise = new Promise<PoolClient>((resolve, reject) => {
-    success = resolve;
-    error = reject;
-  });
-  const p = hls.pool;
-  assert(p);
-  p.connect((err, client) => {
-    if (err) {
-      error(grantError(err));
-      client.release(true);
-    } else {
-      success(client);
-    }
-  });
-  return promise;
+  const { pool } = hls;
+  assert(pool);
+  return pool.connect();
 }
 
 export async function listFromConfiguration(
   c: ConnectionConfiguration,
   query: string
 ) {
-  const pg2 = pg;
-  let success: (rows: QueryResult) => void;
-  let error: (e: Error) => void;
-  const promise = new Promise<QueryResult>((resolve, reject) => {
-    success = resolve;
-    error = reject;
-  });
-  const client = new pg2.Client({
+  const client = new pg.Client({
     user: c.user,
     database: c.database && c.database !== '*' ? c.database : 'postgres',
     password: c.password,
     host: c.host,
     port: c.port,
   });
-  client.connect((err) => {
-    if (err) {
-      error(grantError(err));
-    } else {
-      client.query(query, [], (err2, result) => {
-        if (err2) {
-          error(grantError(err2));
-        } else {
-          client.end((err3) => {
-            if (err3) throw err3;
-          });
-          success(result);
-        }
-      });
+  try {
+    await client.connect();
+    try {
+      return await client.query(query, []);
+    } catch (err2) {
+      try {
+        client.end();
+      } catch (err3) {
+        throw grantError(err3);
+      }
+      throw grantError(err2);
     }
-  });
-  return promise;
+  } catch (err) {
+    throw grantError(err);
+  }
 }
 
 export async function query(
@@ -172,9 +144,9 @@ export async function closeAll() {
     try {
       if (hls.pool?.end) await hls.pool?.end();
     } catch (err2) {
-      throw new Error(err2 instanceof Error ? err2.message : `${err2}`);
+      throw grantError(err2);
     }
-    throw new Error(err instanceof Error ? err.message : `${err}`);
+    throw grantError(err);
   }
 }
 

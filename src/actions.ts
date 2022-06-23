@@ -69,8 +69,9 @@ export async function newConnection(
     savePasswords(currentState().passwords);
     state.setConnection(conf);
     state.setBases(res);
-  } catch (err) {
-    state.setConnectionError(grantError(err));
+  } catch (err0) {
+    const err = grantError(err0);
+    state.setConnectionError(err);
     throw err;
   }
 }
@@ -89,7 +90,7 @@ export function createSchema(name: string) {
 let askToCloseHandler: ((uid: number) => boolean) | undefined;
 export function useAskToClose(fn: (uid: number) => boolean) {
   useEffect(() => {
-    if (askToCloseHandler) throw new Error('useAskToCloseListener!');
+    assert(!askToCloseHandler);
     askToCloseHandler = fn;
     return () => {
       askToCloseHandler = undefined;
@@ -122,8 +123,9 @@ export async function connect(s: string) {
     } catch (err) {
       state.setConnectionError(grantError(err));
     }
-  } catch (err) {
-    state.setConnectionError(grantError(err));
+  } catch (err0) {
+    const err = grantError(err0);
+    state.setConnectionError(err);
     throw err;
   }
 }

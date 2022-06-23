@@ -150,7 +150,6 @@ export function useExclusiveConnection(
           exclusives.splice(exclusives.indexOf(client), 1);
           client.db?.release(true);
         });
-
         return;
       }
       exclusives.splice(exclusives.indexOf(client), 1);

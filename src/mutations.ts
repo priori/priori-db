@@ -576,12 +576,10 @@ export function addConnectionConfiguration(
   conf: ConnectionConfiguration,
   index?: number
 ) {
-  let passwords;
-  if (typeof index === 'number') {
-    passwords = current.passwords.map((c, i) => (i === index ? conf : c));
-  } else {
-    passwords = [...current.passwords, conf];
-  }
+  const passwords =
+    typeof index === 'number'
+      ? current.passwords.map((c, i) => (i === index ? conf : c))
+      : [...current.passwords, conf];
   return {
     ...current,
     passwords,
@@ -617,7 +615,7 @@ export function connected(
 }
 
 export function toggleSchema(current: AppState, name: string) {
-  if (!current.schemas) throw new Error('Schemas não econtrado.');
+  assert(current.schemas);
   return {
     ...current,
     schemas: current.schemas.map((s) =>
