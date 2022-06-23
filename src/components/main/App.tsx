@@ -130,31 +130,25 @@ export function App() {
 
   const onBlurCapture = useEvent((e: React.FocusEvent<HTMLDivElement>) => {
     if (
-      !e.currentTarget.contains(document.activeElement) &&
-      e.currentTarget !== document.activeElement
+      !e.currentTarget.contains(e.relatedTarget) &&
+      e.currentTarget !== e.relatedTarget
     ) {
       activeElements.set(e.currentTarget, e.target);
     }
   });
 
-  const onMouseDown = useEvent((e: React.MouseEvent<HTMLDivElement>) => {
+  const onFocus = useEvent((e: React.FocusEvent<HTMLDivElement>) => {
+    if (e.currentTarget !== e.target) return;
     const el = e.target;
-    if (el instanceof HTMLElement) {
-      if (
-        !el.matches('input,select,textarea,[tabIndex]') &&
-        !e.currentTarget.contains(document.activeElement) &&
-        e.currentTarget !== document.activeElement
-      ) {
-        const activeElement = activeElements.get(e.currentTarget);
-        if (activeElement)
-          setTimeout(() => {
-            activeElement.focus();
-          }, 1);
-      }
-    }
+    const activeElement = activeElements.get(el);
+    if (activeElement)
+      setTimeout(() => {
+        activeElements.delete(el);
+        activeElement.focus();
+      }, 1);
   });
 
-  const onActiveMouseDown = useEvent(() => {
+  const onActiveTabMouseDown = useEvent(() => {
     const el = activeElements.get(
       document.querySelector('.frame.active') as HTMLDivElement
     );
@@ -203,7 +197,7 @@ export function App() {
           </div>
         )}
         <div className="header">{state.title}</div>
-        <Tabs tabs={state.tabs} onActiveTabMouseDown={onActiveMouseDown} />
+        <Tabs tabs={state.tabs} onActiveTabMouseDown={onActiveTabMouseDown} />
         {state.schemas ? (
           <Nav schemas={state.schemas} tabs={state.tabs} />
         ) : undefined}
@@ -213,7 +207,7 @@ export function App() {
               key={t.props.uid}
               className={`frame ${classNames[t.props.type]}`}
               onBlurCapture={onBlurCapture}
-              onMouseDown={onMouseDown}
+              onFocus={onFocus}
               tabIndex={0}
               ref={(el) => {
                 if (el) {
