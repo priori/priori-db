@@ -73,7 +73,24 @@ export function QueryFrame({ uid }: { uid: number }) {
   const isMounted = useIsMounted();
 
   const executeQuery = useEvent(
-    async (query: string, id: number | undefined = undefined) => {
+    async (
+      query: string,
+      saveQuery: null | {
+        content: string;
+        cursorStart: { line: number; ch: number };
+        cursorEnd: { line: number; ch: number };
+      } = null
+    ) => {
+      setState((state2) => ({ ...state2, running: true, resetNotices: true }));
+      const title = currentState().tabs.find((t) => t.props.uid === uid)?.title;
+      const id = !saveQuery
+        ? undefined
+        : await insertQuery(
+            query,
+            uid,
+            saveQuery,
+            title === 'New Query' ? null : title || null
+          );
       const start = new Date().getTime();
       try {
         const res = await db.query(query, [], true);
@@ -133,15 +150,7 @@ export function QueryFrame({ uid }: { uid: number }) {
     const editor = editorRef.current;
     assert(editor);
     const query = editor.getQuery();
-    setState((state2) => ({ ...state2, running: true, resetNotices: true }));
-    const title = currentState().tabs.find((t) => t.props.uid === uid)?.title;
-    const id = await insertQuery(
-      query,
-      uid,
-      editor.getEditorState(),
-      title === 'New Query' ? null : title || null
-    );
-    await executeQuery(query, id);
+    await executeQuery(query, editor.getEditorState());
   });
 
   const [closeConfirm, setCloseConfirm] = useState(false);
