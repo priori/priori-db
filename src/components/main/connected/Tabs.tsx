@@ -65,7 +65,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
 
   UNSAFE_componentWillReceiveProps(next: TabsProps) {
     if (this.state.sorting) this.applySort();
-    const tabs = next.tabs.map((t) => {
+    const tabs = next.tabs.map((t, index) => {
       const currentTab = this.state.tabs.find(
         (t2) => t2.props.uid === t.props.uid
       );
@@ -75,6 +75,11 @@ export class Tabs extends Component<TabsProps, TabsState> {
         width:
           currentTab && typeof currentTab.width === 'number'
             ? currentTab.width
+            : !t.keep &&
+              this.state.tabs[index] &&
+              this.state.tabs[index].keep === false &&
+              typeof this.state.tabs[index].width === 'number'
+            ? this.state.tabs[index].width
             : 0,
       };
     });
