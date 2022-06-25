@@ -39,7 +39,7 @@ type ExecutedQueryEntry = {
   tab_uid: number;
   id: number;
   sql: string;
-  created_at: string;
+  created_at: number;
   editor_content: string;
   editor_cursor_start_line: number;
   editor_cursor_end_line: number;

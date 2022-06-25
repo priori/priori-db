@@ -4,36 +4,36 @@ let db: any = null;
 if (!db) db = (window as any).openDatabase('PrioriDB', '1.0', 'Priori DB', 0);
 const query = (
   sqlQuery: string,
-  params: (string | null | number | Date | boolean)[]
+  params: (string | null | number | boolean)[]
 ) => {
-  return new Promise<
-    { [key: string]: number | null | string | Date | boolean }[]
-  >((resolve, reject) => {
-    db.transaction((tx: any) => {
-      tx.executeSql(
-        sqlQuery,
-        params,
-        (_: unknown, results: any) => {
-          resolve([...results.rows] as {
-            [key: string]: number | null | string | Date | boolean;
-          }[]);
-        },
-        (_: unknown, err: any) =>
-          reject(
-            new Error(
-              `${err.message} ${err.code}\n${sqlQuery}\n${JSON.stringify(
-                params
-              )}`
+  return new Promise<{ [key: string]: number | null | string | boolean }[]>(
+    (resolve, reject) => {
+      db.transaction((tx: any) => {
+        tx.executeSql(
+          sqlQuery,
+          params,
+          (_: unknown, results: any) => {
+            resolve([...results.rows] as {
+              [key: string]: number | null | string | boolean;
+            }[]);
+          },
+          (_: unknown, err: any) =>
+            reject(
+              new Error(
+                `${err.message} ${err.code}\n${sqlQuery}\n${JSON.stringify(
+                  params
+                )}`
+              )
             )
-          )
-      );
-    });
-  });
+        );
+      });
+    }
+  );
 };
 
 const insertId = (
   sqlQuery: string,
-  params: (string | null | number | Date | boolean)[]
+  params: (string | null | number | boolean)[]
 ) => {
   return new Promise<number>((resolve, reject) => {
     db.transaction((tx: any) => {
@@ -63,7 +63,7 @@ const executionPromise = (async () => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       execution_id number,
       sql string,
-      created_at date,
+      created_at number,
       tab_uid number,
       editor_content string,
       editor_cursor_start_line number,
@@ -98,12 +98,14 @@ const executionPromise = (async () => {
     `
     CREATE TABLE IF NOT EXISTS execution (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      created_at date
+      created_at number
     );
   `,
     []
   );
-  return insertId(`INSERT INTO execution (date) VALUES (?)`, [new Date()]);
+  return insertId(`INSERT INTO execution (created_at) VALUES (?)`, [
+    new Date().getTime(),
+  ]);
 })();
 
 export const browserDb = {
@@ -138,7 +140,7 @@ export const saveQuery = async (
     [
       execId,
       sql,
-      new Date(),
+      new Date().getTime(),
       uid,
       content,
       cursorStart.line,
