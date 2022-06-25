@@ -543,7 +543,7 @@ export function setConnection(
   return { ...current, password };
 }
 
-export function newQueryInTheEnd(current: AppState) {
+export function newQueryTabInTheEnd(current: AppState) {
   return newFrame(
     current,
     (uid) => ({
@@ -559,7 +559,7 @@ export function newQueryInTheEnd(current: AppState) {
   );
 }
 
-export function newQuery(current: AppState) {
+export function newQueryTab(current: AppState) {
   return newFrame(current, (uid) => ({
     title: 'New Query',
     keep: true,

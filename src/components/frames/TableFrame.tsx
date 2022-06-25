@@ -1,4 +1,4 @@
-import { keepTabOpen } from 'actions';
+import { keepTabOpen } from 'state/actions';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { query } from '../../db/Connection';

@@ -5,11 +5,11 @@ import assert from 'assert';
 import { SequenceFrame } from 'components/frames/SequenceFrame';
 import { DomainFrame } from 'components/frames/DomainFrame';
 import { FunctionFrame } from 'components/frames/FunctionFrame';
-import { QueryFrame } from '../frames/QueryFrame/QueryFrame';
-import { TableFrame } from '../frames/TableFrame';
-import { NewTableFrame } from '../frames/NewTableFrame';
-import { SchemaInfoFrame } from '../frames/SchemaInfoFrame';
-import { TableInfoFrame } from '../frames/TableInfoFrame';
+import { QueryFrame } from '../../frames/QueryFrame/QueryFrame';
+import { TableFrame } from '../../frames/TableFrame';
+import { NewTableFrame } from '../../frames/NewTableFrame';
+import { SchemaInfoFrame } from '../../frames/SchemaInfoFrame';
+import { TableInfoFrame } from '../../frames/TableInfoFrame';
 
 type FramesTypesMap<T> = T extends FrameType
   ? Record<T, (props: FrameProps0<T>) => JSX.Element>

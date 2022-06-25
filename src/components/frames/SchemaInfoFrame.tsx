@@ -3,7 +3,7 @@ import { useEvent } from 'util/useEvent';
 import { DB } from 'db/DB';
 import { throwError } from 'util/throwError';
 import { SchemaInfoFrameProps } from '../../types';
-import { closeTab, reloadNav } from '../../actions';
+import { closeTab, reloadNav } from '../../state/actions';
 
 export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
   const [state, set] = useState({

@@ -3,7 +3,7 @@ import { throwError } from 'util/throwError';
 import { NewTableFrameProps, Type } from '../../types';
 import { ListInput } from '../util/ListInput';
 import { query } from '../../db/Connection';
-import { closeThisAndReloadNav } from '../../actions';
+import { closeThisAndReloadNav } from '../../state/actions';
 
 export interface ColumnNewTable {
   name: string;

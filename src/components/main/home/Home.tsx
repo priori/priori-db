@@ -11,7 +11,7 @@ import {
   newConf,
   editingAll,
   editConnectionSelected,
-} from '../../../actions';
+} from '../../../state/actions';
 import { AppState } from '../../../types';
 import { ConnectionConfiguration } from '../../../db/pgpass';
 import { NewConnection } from './Configuration';

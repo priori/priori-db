@@ -1,4 +1,4 @@
-import { closeTab, reloadNav } from 'actions';
+import { closeTab, reloadNav } from 'state/actions';
 import { DB } from 'db/DB';
 import { useState } from 'react';
 import { DomainFrameProps } from 'types';

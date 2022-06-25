@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { useDeferredValue, useState } from 'react';
 import {
   newSchema,
   newTable,
@@ -20,8 +21,8 @@ import {
   openDomains,
   openSequences,
   extraTableTab,
-} from '../../actions';
-import { NavSchema, Tab } from '../../types';
+} from '../../../state/actions';
+import { NavSchema, Tab } from '../../../types';
 
 function height(schema: NavSchema) {
   if (!schema.open || !schema.tables) return 0;

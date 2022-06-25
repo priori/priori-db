@@ -3,17 +3,17 @@ import { NoticeMessage } from 'pg-protocol/dist/messages';
 import assert from 'assert';
 import { useEvent } from 'util/useEvent';
 import { QueryArrayResult } from 'pg';
-import { closeTabNow } from 'actions';
+import { closeTabNow } from 'state/actions';
 import { DB } from 'db/DB';
 import {
   saveQuery as insertQuery,
   updateFailedQuery,
   updateQuery,
 } from 'util/browserDb';
-import { currentState } from 'state';
+import { currentState } from 'state/state';
 import { useIsMounted } from 'util/hooks';
 import { QuerySelector } from './QuerySelector';
-import { useTab } from '../../main/App';
+import { useTab } from '../../main/connected/ConnectedApp';
 import { Editor } from '../../Editor';
 import { Grid } from '../../Grid';
 import { useExclusiveConnection } from '../../../db/ExclusiveConnection';
@@ -160,16 +160,6 @@ export function QueryFrame({ uid }: { uid: number }) {
   useTab({
     f5() {
       execute();
-    },
-    onActivate() {
-      const editor = editorRef.current;
-      assert(editor);
-      editor.show();
-    },
-    onDeactivate() {
-      const editor = editorRef.current;
-      assert(editor);
-      editor.hide();
     },
     onClose() {
       if (state.running) {

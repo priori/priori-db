@@ -2,11 +2,11 @@ import assert from 'assert';
 import { useEffect } from 'react';
 import { throwError } from 'util/throwError';
 import { grantError } from 'util/errors';
-import { ConnectionConfiguration, savePasswords } from './db/pgpass';
-import { connect as dbConnect, listDatabases } from './db/Connection';
+import { ConnectionConfiguration, savePasswords } from '../db/pgpass';
+import { connect as dbConnect, listDatabases } from '../db/Connection';
 import state, { currentState } from './state';
-import { DB } from './db/DB';
-import { FrameProps } from './types';
+import { DB } from '../db/DB';
+import { FrameProps } from '../types';
 
 export const {
   openFunctions,
@@ -33,8 +33,8 @@ export const {
   cancelSelectedConnection,
   newSchema,
   updateHeaderTabsDisplayOrder,
-  newQuery,
-  newQueryInTheEnd,
+  newQueryTab,
+  newQueryTabInTheEnd,
   keepTabOpen,
   closeTab,
   keepOpenTable,

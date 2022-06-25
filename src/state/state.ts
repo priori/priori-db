@@ -1,10 +1,10 @@
 import React from 'react';
 import { equals } from 'util/equals';
 import assert from 'assert';
-import { passwords as currentPasswords } from './db/pgpass';
-import { AppState } from './types';
+import { passwords as currentPasswords } from '../db/pgpass';
+import { AppState } from '../types';
 import * as mutations from './mutations';
-import hls from './util/hotLoadSafe';
+import hls from '../util/hotLoadSafe';
 
 let current: AppState = hls.current || {
   askToCloseWindow: false,

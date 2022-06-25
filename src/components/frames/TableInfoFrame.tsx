@@ -3,7 +3,7 @@ import { throwError } from 'util/throwError';
 import { KeyboardEvent, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { TableInfoFrameProps } from '../../types';
-import { reloadNav, closeTab } from '../../actions';
+import { reloadNav, closeTab } from '../../state/actions';
 import { DB } from '../../db/DB';
 
 export interface ColTableInfo {
