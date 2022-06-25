@@ -116,7 +116,7 @@ function newFrame(
   };
 }
 
-export function pikSchemaInfo(current: AppState, name: string) {
+export function previewSchemaInfo(current: AppState, name: string) {
   const openTab = current.tabs.find(
     (t) => t.props.type === 'schemainfo' && t.props.schema === name
   );
@@ -167,19 +167,27 @@ function openOrActivateTab(
   }));
 }
 
-export function pikFunction(current: AppState, schema: string, name: string) {
+export function previewFunction(
+  current: AppState,
+  schema: string,
+  name: string
+) {
   return openOrActivateTab(current, 'function', schema, name, false);
 }
 export function keepFunction(current: AppState, schema: string, name: string) {
   return openOrActivateTab(current, 'function', schema, name, true);
 }
-export function pikDomain(current: AppState, schema: string, name: string) {
+export function previewDomain(current: AppState, schema: string, name: string) {
   return openOrActivateTab(current, 'domain', schema, name, false);
 }
 export function keepDomain(current: AppState, schema: string, name: string) {
   return openOrActivateTab(current, 'domain', schema, name, true);
 }
-export function pikSequence(current: AppState, schema: string, name: string) {
+export function previewSequence(
+  current: AppState,
+  schema: string,
+  name: string
+) {
   return openOrActivateTab(current, 'sequence', schema, name, false);
 }
 export function keepSequence(current: AppState, schema: string, name: string) {
@@ -212,7 +220,7 @@ function findLast<T>(a: T[], f: (i: T) => boolean) {
   return null;
 }
 
-export function pikTable(
+export function previewTable(
   current: AppState,
   schema: string,
   t: { name: string; type: string }
@@ -293,7 +301,11 @@ export function removeError(current: AppState) {
   };
 }
 
-export function pikTableInfo(current: AppState, schema: string, table: string) {
+export function previewTableInfo(
+  current: AppState,
+  schema: string,
+  table: string
+) {
   const openTab = current.tabs.find(
     (tab) =>
       tab.props.type === 'tableinfo' &&

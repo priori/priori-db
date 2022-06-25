@@ -1,20 +1,19 @@
 import assert from 'assert';
-import { useDeferredValue, useState } from 'react';
 import {
   newSchema,
   newTable,
   openSchema,
-  pikTable,
-  pikSchemaInfo,
-  pikTableInfo,
+  previewTable,
+  previewSchemaInfo,
+  previewTableInfo,
   keepOpenTable,
   keepTableInfo,
   keepSchemaInfo,
-  pikFunction,
   keepFunction,
-  pikDomain,
+  previewFunction,
+  previewDomain,
   keepDomain,
-  pikSequence,
+  previewSequence,
   keepSequence,
   fullView,
   openFunctions,
@@ -81,7 +80,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                 tabIndex={0}
                 className="schema-info"
                 onClick={(e) => {
-                  pikSchemaInfo(schema.name);
+                  previewSchemaInfo(schema.name);
                   e.stopPropagation();
                 }}
                 onDoubleClick={() => {
@@ -89,7 +88,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                 }}
                 onKeyDown={(e) => {
                   if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') {
-                    pikSchemaInfo(schema.name);
+                    previewSchemaInfo(schema.name);
                     e.stopPropagation();
                   }
                 }}
@@ -150,7 +149,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                         role="button"
                         tabIndex={0}
                         className="table-name"
-                        onClick={() => pikTable(schema.name, t)}
+                        onClick={() => previewTable(schema.name, t)}
                         onDoubleClick={() => {
                           if (isActive && active.keep) {
                             extraTableTab(schema.name, t.name);
@@ -164,7 +163,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                             e.key === 'Enter' ||
                             e.key === 'Space'
                           ) {
-                            pikTable(schema.name, t);
+                            previewTable(schema.name, t);
                           }
                         }}
                       >
@@ -177,7 +176,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                           tabIndex={0}
                           className="table-info"
                           onClick={(e) => {
-                            pikTableInfo(schema.name, t.name);
+                            previewTableInfo(schema.name, t.name);
                             e.stopPropagation();
                           }}
                           onDoubleClick={() => {
@@ -189,7 +188,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                               e.key === 'Enter' ||
                               e.key === 'Space'
                             ) {
-                              pikTableInfo(schema.name, t.name);
+                              previewTableInfo(schema.name, t.name);
                               e.stopPropagation();
                             }
                           }}
@@ -284,7 +283,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                               <div
                                 className="function-name"
                                 onClick={(e) => {
-                                  pikFunction(schema.name, f.name);
+                                  previewFunction(schema.name, f.name);
                                   e.stopPropagation();
                                 }}
                                 onDoubleClick={() => {
@@ -296,7 +295,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                                     e.key === 'Enter' ||
                                     e.key === 'Space'
                                   ) {
-                                    pikFunction(schema.name, f.name);
+                                    previewFunction(schema.name, f.name);
                                     e.stopPropagation();
                                   }
                                 }}
@@ -372,7 +371,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                             <div
                               className="sequence-name"
                               onClick={(e) => {
-                                pikSequence(schema.name, f.name);
+                                previewSequence(schema.name, f.name);
                                 e.stopPropagation();
                               }}
                               onDoubleClick={() => {
@@ -384,7 +383,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                                   e.key === 'Enter' ||
                                   e.key === 'Space'
                                 ) {
-                                  pikSequence(schema.name, f.name);
+                                  previewSequence(schema.name, f.name);
                                   e.stopPropagation();
                                 }
                               }}
@@ -460,7 +459,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                             <div
                               className="domain-name"
                               onClick={(e) => {
-                                pikDomain(schema.name, f.name);
+                                previewDomain(schema.name, f.name);
                                 e.stopPropagation();
                               }}
                               onDoubleClick={() => {
@@ -472,7 +471,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                                   e.key === 'Enter' ||
                                   e.key === 'Space'
                                 ) {
-                                  pikDomain(schema.name, f.name);
+                                  previewDomain(schema.name, f.name);
                                   e.stopPropagation();
                                 }
                               }}
