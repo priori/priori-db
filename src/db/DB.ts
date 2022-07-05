@@ -6,6 +6,36 @@ function label(s: string) {
 }
 
 export const DB = {
+  async pgTable(schema: string, table: string) {
+    return (await first(
+      `
+      SELECT *
+      FROM pg_catalog.pg_tables
+      WHERE
+        schemaname = $1 AND tablename = $2`,
+      [schema, table]
+    )) as {
+      tableowner: string;
+      tablespace: string;
+      hasindexes: boolean;
+      hasrules: boolean;
+      hastriggers: boolean;
+      rowsecurity: boolean;
+      uid: number;
+    };
+  },
+
+  async pgType(schema: string, name: string) {
+    return first(
+      `
+      SELECT pg_type.*
+      FROM pg_type
+      JOIN pg_namespace n ON n.oid = typnamespace
+      WHERE nspname = $1 AND pg_type.typname = $2
+    `,
+      [schema, name]
+    );
+  },
   async types() {
     const types = (await list(`
       SELECT *

@@ -35,17 +35,36 @@ export interface TableInfoFrameState {
       is_primary: boolean;
     }[];
   }[];
+  table: {
+    tableowner: string;
+    tablespace: string;
+    hasindexes: boolean;
+    hasrules: boolean;
+    hastriggers: boolean;
+    rowsecurity: boolean;
+    uid: number;
+  };
+  type: {
+    [k: string]: string | number | null | boolean;
+  };
 }
 export function TableInfoFrame(props: TableInfoFrameProps) {
   const service = useService(async () => {
-    const [cols, indexes] = await Promise.all([
+    const [cols, indexes, table, type] = await Promise.all([
       DB.listCols(props.schema, props.table),
       DB.listIndexes(props.schema, props.table),
+      DB.pgTable(props.schema, props.table),
+      DB.pgType(props.schema, props.table),
       // DB.listTableMetadata(this.props.schema,this.props.table).then(res=>console.log('meta:',res))
     ]);
-    return { cols, indexes } as TableInfoFrameState;
+    return { cols, indexes, table, type } as TableInfoFrameState;
   }, []);
-  const state = service.lastValidData || { indexes: null, cols: null };
+  const state = service.lastValidData || {
+    indexes: null,
+    cols: null,
+    table: null,
+    type: null,
+  };
 
   const [dropState, set] = useState({
     dropCascadeConfirmation: false,
@@ -95,8 +114,11 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     });
   });
 
+  const [state2, setState2] = useState({ query: '' });
   function showQuery(q: string) {
-    alert(q);
+    setState2({
+      query: q,
+    });
   }
 
   return (
@@ -161,40 +183,52 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         <br />
         <br />
       </div>
-      <h2>Columns</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Default Value</th>
-            <th>Not Null</th>
-            <th>Comment</th>
-            <th>Length</th>
-            <th>Scale</th>
-            <th>Primary key</th>
-          </tr>
-        </thead>
-        <tbody>
-          {state.cols &&
-            state.cols.map((col: ColTableInfo, i: number) => (
-              <tr key={i}>
-                <td>{col.column_name}</td>
-                <td>{col.data_type}</td>
-                <td>{col.column_default}</td>
-                <td style={{ textAlign: 'center' }}>
-                  {col.is_nullable === 'YES' ? <strong>yes</strong> : 'no'}
-                </td>
-                <td>{col.comment}</td>
-                <td>{col.length}</td>
-                <td>{col.scale || null}</td>
-                <td style={{ textAlign: 'center' }}>
-                  {col.is_primary ? <strong>yes</strong> : 'no'}
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+      {state.cols ? (
+        <>
+          <h2>Columns</h2>
+          {state.cols.length ? (
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Default Value</th>
+                  <th>Not Null</th>
+                  <th>Comment</th>
+                  <th>Length</th>
+                  <th>Scale</th>
+                  <th>Primary key</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.cols &&
+                  state.cols.map((col: ColTableInfo, i: number) => (
+                    <tr key={i}>
+                      <td>{col.column_name}</td>
+                      <td>{col.data_type}</td>
+                      <td>{col.column_default}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        {col.is_nullable === 'YES' ? (
+                          <strong>yes</strong>
+                        ) : (
+                          'no'
+                        )}
+                      </td>
+                      <td>{col.comment}</td>
+                      <td>{col.length}</td>
+                      <td>{col.scale || null}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        {col.is_primary ? <strong>yes</strong> : 'no'}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="empty">No columns found for table.</div>
+          )}
+        </>
+      ) : null}
       {state.indexes && state.indexes.filter((i) => !i.pk).length ? (
         <div>
           <h2>Indexes</h2>
@@ -204,7 +238,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                 <th>Name</th>
                 <th>Method</th>
                 <th>Columns</th>
-                <th />
+                <th style={{ width: 23 }} />
               </tr>
             </thead>
             <tbody>
@@ -222,6 +256,50 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                       ))}
                     </td>
                     <td>
+                      {index.definition === state2.query ? (
+                        <div
+                          className="dialog"
+                          onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+                            if (e.key === 'Escape') {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          tabIndex={0}
+                          onBlur={(e) => {
+                            const dialogEl = e.currentTarget;
+                            setTimeout(() => {
+                              if (dialogEl.contains(document.activeElement))
+                                return;
+                              setState2({ query: '' });
+                            }, 1);
+                          }}
+                        >
+                          <textarea
+                            value={state2.query}
+                            readOnly
+                            ref={(el) => {
+                              if (
+                                el &&
+                                // eslint-disable-next-line no-underscore-dangle
+                                !(el as { _selected?: boolean })._selected
+                              ) {
+                                // eslint-disable-next-line no-underscore-dangle
+                                (el as { _selected?: boolean })._selected =
+                                  true;
+                                el.select();
+                              }
+                            }}
+                          />
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => setState2({ query: '' })}
+                            >
+                              Ok
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
                       <i
                         className="fa fa-eye"
                         tabIndex={0}
@@ -244,6 +322,75 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           </table>
           <div />
         </div>
+      ) : state.indexes ? (
+        <div>
+          <h2>Indexes</h2>
+          <div className="empty">No indexes found for table.</div>
+        </div>
+      ) : null}
+      {state.table ? (
+        <>
+          <h2>pg_catalog.pg_table</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Owner</th>
+                <th>Table Space</th>
+                <th>Has Indexes</th>
+                <th>Has Rules</th>
+                <th>Has Triggers</th>
+                <th>Row Security</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{state.table.tableowner}</td>
+                <td>{state.table.tablespace || '-'}</td>
+                <td>
+                  <strong>
+                    {typeof state.table.hasindexes === 'string'
+                      ? state.table.hasindexes
+                      : JSON.stringify(state.table.hasindexes)}
+                  </strong>
+                </td>
+                <td>
+                  <strong>
+                    {typeof state.table.hasrules === 'string'
+                      ? state.table.hasrules
+                      : JSON.stringify(state.table.hasrules)}
+                  </strong>
+                </td>
+                <td>
+                  <strong>
+                    {typeof state.table.hastriggers === 'string'
+                      ? state.table.hastriggers
+                      : JSON.stringify(state.table.hastriggers)}
+                  </strong>
+                </td>
+                <td>
+                  <strong>
+                    {typeof state.table.rowsecurity === 'string'
+                      ? state.table.rowsecurity
+                      : JSON.stringify(state.table.rowsecurity)}
+                  </strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </>
+      ) : null}
+      {state.type ? (
+        <>
+          <h2>pg_catalog.pg_type</h2>
+          <div className="fields">
+            {Object.entries(state.type).map(([k, v]) => (
+              <div key={k} className="field">
+                <strong>{k.startsWith('typ') ? k.substring(3) : k}:</strong>{' '}
+                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
+              </div>
+            ))}
+          </div>
+        </>
       ) : null}
       {/*
             <h2>Constraints</h2>
