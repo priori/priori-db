@@ -84,6 +84,14 @@ export interface Type {
   allowPrecision: boolean;
 }
 
+export type EntityType =
+  | 'MATERIALIZED VIEW'
+  | 'VIEW'
+  | 'BASE TABLE'
+  | 'FUNCTION'
+  | 'SEQUENCE'
+  | 'DOMAIN';
+
 export interface NavSchema {
   name: string;
   open: boolean;
@@ -91,10 +99,13 @@ export interface NavSchema {
   sequencesOpen: boolean;
   domainsOpen: boolean;
   functionsOpen: boolean;
-  tables: { name: string; type: string }[];
-  sequences: { name: string; type: string }[];
-  functions: { name: string; type: string }[];
-  domains: { name: string; type: string }[];
+  tables: {
+    name: string;
+    type: EntityType & ('MATERIALIZED VIEW' | 'VIEW' | 'BASE TABLE');
+  }[];
+  sequences: { name: string; type: EntityType & 'SEQUENCE' }[];
+  functions: { name: string; type: EntityType & 'FUNCTION' }[];
+  domains: { name: string; type: EntityType & 'DOMAIN' }[];
 }
 
 export interface Tab0<T extends FrameType> {

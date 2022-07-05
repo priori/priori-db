@@ -1,17 +1,9 @@
 import { list, first, query } from './Connection';
-import { Type } from '../types';
+import { EntityType, Type } from '../types';
 
 function label(s: string) {
   return `"${s.replaceAll('"', '""')}"`;
 }
-
-type EntityType =
-  | 'MATERIALIZED VIEW'
-  | 'VIEW'
-  | 'BASE TABLE'
-  | 'FUNCTION'
-  | 'SEQUENCE'
-  | 'DOMAIN';
 
 export const DB = {
   async types() {
