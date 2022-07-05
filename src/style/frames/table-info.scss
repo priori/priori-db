@@ -20,7 +20,7 @@
 }
 .table-info td,
 .table-info th {
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   padding: 4px;
 }
 .table-info th {
@@ -49,5 +49,69 @@ span.column {
   text-align: center;
   button {
     margin: 5px;
+  }
+}
+
+.frame td .dialog {
+  top: auto;
+  margin-left: -30px;
+  margin-top: -50px;
+  right: 30px;
+}
+.dialog textarea {
+  height: 100px;
+  width: 250px;
+  resize: none;
+  border: 0;
+  outline: none;
+}
+.frame td .fa-eye {
+  opacity: 0.3;
+  cursor: pointer;
+  &:hover {
+    opacity: 1;
+  }
+}
+.frame td .dialog div {
+  text-align: right;
+}
+.frame table,
+.frame .fields,
+.empty {
+  width: 100%;
+  min-width: 600px;
+}
+.frame .empty {
+  background: #f8f8f8;
+  padding: 20px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: bold;
+  color: #777;
+}
+.frame h2 {
+  color: #1976d2;
+  margin-bottom: 3px;
+  font-size: 17px;
+  margin-top: 23px;
+}
+.frame .fields {
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid #ddd;
+  padding: 5px;
+  user-select: text;
+  .field {
+    margin-right: 20px;
+    width: 150px;
+    font-size: 13px;
+  }
+}
+.table-info,
+.frame.function,
+.frame.sequence,
+.frame.schema-info {
+  table {
+    user-select: text;
   }
 }
