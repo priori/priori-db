@@ -4,8 +4,20 @@ import { useState } from 'react';
 import { DomainFrameProps } from 'types';
 import { throwError } from 'util/throwError';
 import { useEvent } from 'util/useEvent';
+import { useService } from 'util/useService';
+
+interface DomainFrameServiceState {
+  type: {
+    [k: string]: string | number | null | boolean;
+  };
+}
 
 export function DomainFrame(props: DomainFrameProps) {
+  const service = useService(async () => {
+    const [type] = await Promise.all([DB.pgType(props.schema, props.name)]);
+    return { type } as DomainFrameServiceState;
+  }, []);
+
   const [state, set] = useState({
     dropCascadeConfirmation: false,
     dropConfirmation: false,
@@ -112,6 +124,19 @@ export function DomainFrame(props: DomainFrameProps) {
       >
         Drop Cascade
       </button>
+      {service.lastValidData && service.lastValidData.type ? (
+        <>
+          <h2>pg_catalog.pg_type</h2>
+          <div className="fields">
+            {Object.entries(service.lastValidData.type).map(([k, v]) => (
+              <div key={k} className="field">
+                <strong>{k.startsWith('typ') ? k.substring(3) : k}:</strong>{' '}
+                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }
