@@ -36,6 +36,26 @@ export const DB = {
       [schema, name]
     );
   },
+
+  async pgClass(schema: string, name: string) {
+    return first(
+      `
+      SELECT pg_class.*
+      FROM pg_class
+      INNER JOIN pg_namespace n ON n.oid = relnamespace AND nspname = $1
+      WHERE relname = $2
+      `,
+      [schema, name]
+    );
+  },
+
+  async lastValue(schema: string, name: string) {
+    const r = await first(
+      `SELECT last_value FROM ${label(schema)}.${label(name)}`
+    );
+    return r.last_value;
+  },
+
   async types() {
     const types = (await list(`
       SELECT *

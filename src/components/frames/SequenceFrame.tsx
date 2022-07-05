@@ -4,8 +4,31 @@ import { useState } from 'react';
 import { SequenceFrameProps } from 'types';
 import { throwError } from 'util/throwError';
 import { useEvent } from 'util/useEvent';
+import { useService } from 'util/useService';
+import { useTab } from 'components/main/connected/ConnectedApp';
+import { refresh } from 'electron-debug';
+
+type SequenceFrameState = {
+  type: {
+    [key: string]: string | number | boolean | null;
+  };
+  lastValue: number | string;
+};
 
 export function SequenceFrame(props: SequenceFrameProps) {
+  const service = useService(async () => {
+    const [type, lastValue] = await Promise.all([
+      DB.pgClass(props.schema, props.name),
+      DB.lastValue(props.schema, props.name),
+    ]);
+    return { type, lastValue } as SequenceFrameState;
+  }, []);
+
+  const serviceState = service.lastValidData || {
+    type: null,
+    lastValue: null,
+  };
+
   const [state, set] = useState({
     dropCascadeConfirmation: false,
     dropConfirmation: false,
@@ -47,6 +70,12 @@ export function SequenceFrame(props: SequenceFrameProps) {
       );
   });
 
+  useTab({
+    f5() {
+      service.reload();
+    },
+  });
+
   const noClick = useEvent(() => {
     set({
       dropCascadeConfirmation: false,
@@ -59,6 +88,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
       <h1>
         {props.schema}.{props.name}
       </h1>
+      <h1 className="last-value">{serviceState.lastValue}</h1>
       {state.dropCascadeConfirmation || state.dropConfirmation ? (
         <div
           className="dialog"
@@ -112,6 +142,19 @@ export function SequenceFrame(props: SequenceFrameProps) {
       >
         Drop Cascade
       </button>
+      {serviceState.type ? (
+        <>
+          <h2>pg_catalog.pg_type</h2>
+          <div className="fields">
+            {Object.entries(serviceState.type).map(([k, v]) => (
+              <div key={k} className="field">
+                <strong>{k.startsWith('rel') ? k.substring(3) : k}:</strong>{' '}
+                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

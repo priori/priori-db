@@ -115,3 +115,16 @@ span.column {
     user-select: text;
   }
 }
+
+.frame.sequence {
+  .last-value {
+    margin: 0;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #1976d2;
+    color: white;
+    border-radius: 17px;
+    max-width: 296px;
+    text-align: center;
+  }
+}
