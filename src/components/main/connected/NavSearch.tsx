@@ -288,7 +288,6 @@ export const NavSearch = React.memo(
       keepTableInfo(e.schema, e.name);
     });
     const onInfoClick = useEvent((e: Entity) => {
-      console.log(e);
       previewTableInfo(e.schema, e.name);
     });
     if (focus && !search) {
