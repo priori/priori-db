@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { useDeferredValue, useState } from 'react';
 import {
   newSchema,
   newTable,
@@ -22,6 +23,7 @@ import {
   extraTableTab,
 } from '../../../state/actions';
 import { NavSchema, Tab } from '../../../types';
+import { NavSearch } from './NavSearch';
 
 function height(schema: NavSchema) {
   if (!schema.open || !schema.tables) return 0;
@@ -37,140 +39,183 @@ function height(schema: NavSchema) {
   }
   return schema.tables.length * 20 + 20;
 }
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+type useDeferredValueFix = (
+  s: string | null,
+  config: { timeoutMs: number }
+) => string | null;
 export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
   const active = props.tabs.find((c) => c.active) || null;
+  const [searchText, setSearchText] = useState('');
+  const search = (useDeferredValue as useDeferredValueFix)(searchText, {
+    timeoutMs: 300,
+  });
+  const [focus, setFocus] = useState(false);
   return (
     <div className="nav">
-      {props.schemas &&
-        props.schemas.map((schema) => (
-          <div className="schema" key={schema.name}>
-            <div
-              role="button"
-              tabIndex={0}
-              className={`schema-name arrow${schema.open ? ' open' : ''}${
-                schema.fullView ? ' full-view' : ''
-              }`}
-              onClick={() => openSchema(schema.name)}
-              onKeyDown={(e) => {
-                if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') {
-                  openSchema(schema.name);
-                }
-              }}
-            >
-              {schema.name}
-              <span
+      <div className={`nav--search ${focus ? 'focus' : ''}`}>
+        <input
+          type="text"
+          onChange={(e) => setSearchText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              (e.target as HTMLInputElement).blur();
+            }
+          }}
+          value={searchText}
+          onFocus={() => setFocus(true)}
+          onBlur={() => setFocus(false)}
+        />
+        {searchText ? (
+          <i className="fa fa-close" onClick={() => setSearchText('')} />
+        ) : (
+          <i className="fa fa-search" />
+        )}
+      </div>
+      <NavSearch focus={focus} search={search} schemas={props.schemas} />
+      <div className="nav-tree">
+        {props.schemas &&
+          props.schemas.map((schema) => (
+            <div className="schema" key={schema.name}>
+              <div
                 role="button"
                 tabIndex={0}
-                className="view-mode"
-                onClick={(e) => {
-                  fullView(schema.name);
-                  e.stopPropagation();
-                }}
+                className={`schema-name arrow${schema.open ? ' open' : ''}${
+                  schema.fullView ? ' full-view' : ''
+                }`}
+                onClick={() => openSchema(schema.name)}
                 onKeyDown={(e) => {
                   if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') {
+                    openSchema(schema.name);
+                  }
+                }}
+              >
+                {schema.name}
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="view-mode"
+                  onClick={(e) => {
                     fullView(schema.name);
                     e.stopPropagation();
-                  }
-                }}
-              >
-                <i className="fa fa-eye" />
-              </span>
-              <span
-                role="button"
-                tabIndex={0}
-                className="schema-info"
-                onClick={(e) => {
-                  previewSchemaInfo(schema.name);
-                  e.stopPropagation();
-                }}
-                onDoubleClick={() => {
-                  keepSchemaInfo(schema.name);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') {
+                  }}
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === ' ' ||
+                      e.key === 'Enter' ||
+                      e.key === 'Space'
+                    ) {
+                      fullView(schema.name);
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  <i className="fa fa-eye" />
+                </span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="schema-info"
+                  onClick={(e) => {
                     previewSchemaInfo(schema.name);
                     e.stopPropagation();
-                  }
-                }}
-              >
-                <i className="fa fa-info-circle" />
-              </span>
-              <span
-                role="button"
-                tabIndex={0}
-                className="new-table"
-                onClick={(e) => {
-                  newTable(schema.name);
-                  e.stopPropagation();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') {
+                  }}
+                  onDoubleClick={() => {
+                    keepSchemaInfo(schema.name);
+                  }}
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === ' ' ||
+                      e.key === 'Enter' ||
+                      e.key === 'Space'
+                    ) {
+                      previewSchemaInfo(schema.name);
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  <i className="fa fa-info-circle" />
+                </span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="new-table"
+                  onClick={(e) => {
                     newTable(schema.name);
                     e.stopPropagation();
-                  }
-                }}
+                  }}
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === ' ' ||
+                      e.key === 'Enter' ||
+                      e.key === 'Space'
+                    ) {
+                      newTable(schema.name);
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  <i className="fa fa-plus" />
+                </span>
+              </div>
+              <div
+                className="tables"
+                style={{ overflow: 'hidden', height: height(schema) }}
               >
-                <i className="fa fa-plus" />
-              </span>
-            </div>
-            <div
-              className="tables"
-              style={{ overflow: 'hidden', height: height(schema) }}
-            >
-              {schema.tables &&
-                schema.tables.map((t) => {
-                  const isActive =
-                    active &&
-                    (active.props.type === 'table' ||
-                      active.props.type === 'tableinfo') &&
-                    active.props.schema === schema.name &&
-                    active.props.table === t.name;
-                  const isOpen = props.tabs.find(
-                    (c) =>
-                      (c.props.type === 'table' ||
-                        c.props.type === 'tableinfo') &&
-                      c.props.schema === schema.name &&
-                      c.props.table === t.name
-                  );
-                  return (
-                    <div
-                      className={`table${isActive ? ' active' : ''}${
-                        isOpen ? ' open' : ''
-                      }${
-                        t.type === 'VIEW'
-                          ? ' view'
-                          : t.type === 'MATERIALIZED VIEW'
-                          ? ' mview'
-                          : ''
-                      }`}
-                      key={t.name}
-                    >
+                {schema.tables &&
+                  schema.tables.map((t) => {
+                    const isActive =
+                      active &&
+                      (active.props.type === 'table' ||
+                        active.props.type === 'tableinfo') &&
+                      active.props.schema === schema.name &&
+                      active.props.table === t.name;
+                    const isOpen = props.tabs.find(
+                      (c) =>
+                        (c.props.type === 'table' ||
+                          c.props.type === 'tableinfo') &&
+                        c.props.schema === schema.name &&
+                        c.props.table === t.name
+                    );
+                    return (
                       <div
-                        role="button"
-                        tabIndex={0}
-                        className="table-name"
-                        onClick={() => previewTable(schema.name, t)}
-                        onDoubleClick={() => {
-                          if (isActive && active.keep) {
-                            extraTableTab(schema.name, t.name);
-                            return;
-                          }
-                          keepOpenTable(schema.name, t);
-                        }}
-                        onKeyDown={(e) => {
-                          if (
-                            e.key === ' ' ||
-                            e.key === 'Enter' ||
-                            e.key === 'Space'
-                          ) {
-                            previewTable(schema.name, t);
-                          }
-                        }}
+                        className={`table${isActive ? ' active' : ''}${
+                          isOpen ? ' open' : ''
+                        }${
+                          t.type === 'VIEW'
+                            ? ' view'
+                            : t.type === 'MATERIALIZED VIEW'
+                            ? ' mview'
+                            : ''
+                        }`}
+                        key={t.name}
                       >
-                        <i className="table-type fa fa-table" />
-                        {t.name}
-                      </div>
-                      {t.type === 'BASE TABLE' ? (
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          className="table-name"
+                          onClick={() => previewTable(schema.name, t)}
+                          onDoubleClick={() => {
+                            if (isActive && active.keep) {
+                              extraTableTab(schema.name, t.name);
+                              return;
+                            }
+                            keepOpenTable(schema.name, t);
+                          }}
+                          onKeyDown={(e) => {
+                            if (
+                              e.key === ' ' ||
+                              e.key === 'Enter' ||
+                              e.key === 'Space'
+                            ) {
+                              previewTable(schema.name, t);
+                            }
+                          }}
+                        >
+                          <i className="table-type fa fa-table" />
+                          {t.name}
+                        </div>
                         <span
                           role="button"
                           tabIndex={0}
@@ -195,99 +240,190 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                         >
                           <i className="fa fa-info-circle" />
                         </span>
-                      ) : undefined}
-                    </div>
-                  );
-                })}
-              {schema.fullView ? null : (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  className="more"
-                  onClick={() => {
-                    fullView(schema.name);
-                  }}
-                  onKeyDown={(e) => {
-                    if (
-                      e.key === ' ' ||
-                      e.key === 'Enter' ||
-                      e.key === 'Space'
-                    ) {
-                      fullView(schema.name);
-                    }
-                  }}
-                >
-                  <i className="fa fa-ellipsis-h" />
-                </div>
-              )}
-              {schema.fullView && schema.functions ? (
-                <div
-                  className={`group${schema.functions.length ? '' : ' empty'}`}
-                >
+                      </div>
+                    );
+                  })}
+                {schema.fullView ? null : (
                   <div
                     role="button"
                     tabIndex={0}
-                    className={`group-name functions arrow${
-                      schema.functionsOpen ? ' open' : ''
-                    }`}
-                    onClick={() =>
-                      schema.functions &&
-                      schema.functions.length &&
-                      openFunctions(schema)
-                    }
+                    className="more"
+                    onClick={() => {
+                      fullView(schema.name);
+                    }}
                     onKeyDown={(e) => {
                       if (
                         e.key === ' ' ||
                         e.key === 'Enter' ||
                         e.key === 'Space'
                       ) {
-                        if (schema.functions && schema.functions.length)
-                          openFunctions(schema);
+                        fullView(schema.name);
                       }
                     }}
                   >
-                    Functions{' '}
-                    <span
-                      style={{
-                        float: 'right',
-                        fontWeight: 'bold',
-                        position: 'absolute',
-                        color: 'rgba(0,0,0,.2)',
-                        right: '10px',
+                    <i className="fa fa-ellipsis-h" />
+                  </div>
+                )}
+                {schema.fullView && schema.functions ? (
+                  <div
+                    className={`group${
+                      schema.functions.length ? '' : ' empty'
+                    }`}
+                  >
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      className={`group-name functions arrow${
+                        schema.functionsOpen ? ' open' : ''
+                      }`}
+                      onClick={() =>
+                        schema.functions &&
+                        schema.functions.length &&
+                        openFunctions(schema)
+                      }
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === ' ' ||
+                          e.key === 'Enter' ||
+                          e.key === 'Space'
+                        ) {
+                          if (schema.functions && schema.functions.length)
+                            openFunctions(schema);
+                        }
                       }}
                     >
-                      {schema.functions.length}
-                    </span>
+                      Functions{' '}
+                      <span
+                        style={{
+                          float: 'right',
+                          fontWeight: 'bold',
+                          position: 'absolute',
+                          color: 'rgba(0,0,0,.2)',
+                          right: '10px',
+                        }}
+                      >
+                        {schema.functions.length}
+                      </span>
+                    </div>
+                    <div className="functions">
+                      {schema.functionsOpen
+                        ? schema.functions.map((f, k) => {
+                            const isActive =
+                              active &&
+                              active.props.type === 'function' &&
+                              active.props.schema === schema.name &&
+                              active.props.name === f.name;
+                            const isOpen = props.tabs.find(
+                              (c) =>
+                                c.props.type === 'function' &&
+                                c.props.schema === schema.name &&
+                                c.props.name === f.name
+                            );
+                            return (
+                              <div
+                                key={k}
+                                className={`function${
+                                  isActive ? ' active' : ''
+                                }${isOpen ? ' open' : ''}`}
+                              >
+                                <div
+                                  className="function-name"
+                                  onClick={(e) => {
+                                    previewFunction(schema.name, f.name);
+                                    e.stopPropagation();
+                                  }}
+                                  onDoubleClick={() => {
+                                    keepFunction(schema.name, f.name);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (
+                                      e.key === ' ' ||
+                                      e.key === 'Enter' ||
+                                      e.key === 'Space'
+                                    ) {
+                                      previewFunction(schema.name, f.name);
+                                      e.stopPropagation();
+                                    }
+                                  }}
+                                >
+                                  {f.name}
+                                </div>
+                              </div>
+                            );
+                          })
+                        : null}
+                    </div>
                   </div>
-                  <div className="functions">
-                    {schema.functionsOpen
-                      ? schema.functions.map((f, k) => {
+                ) : null}
+                {schema.fullView && schema.sequences ? (
+                  <div
+                    className={`group${
+                      schema.sequences.length ? '' : ' empty'
+                    }`}
+                  >
+                    <div
+                      className={`group-name sequences arrow${
+                        schema.sequencesOpen ? ' open' : ''
+                      }`}
+                      onClick={() => {
+                        if (schema.sequences && schema.sequences.length)
+                          openSequences(schema);
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === ' ' ||
+                          e.key === 'Enter' ||
+                          e.key === 'Space'
+                        ) {
+                          if (schema.sequences && schema.sequences.length)
+                            openSequences(schema);
+                        }
+                      }}
+                    >
+                      Sequences
+                      <span
+                        style={{
+                          float: 'right',
+                          fontWeight: 'bold',
+                          position: 'absolute',
+                          color: 'rgba(0,0,0,.2)',
+                          right: '10px',
+                        }}
+                      >
+                        {schema.sequences.length}
+                      </span>
+                    </div>
+                    {schema.sequencesOpen ? (
+                      <div className="sequences">
+                        {schema.sequences.map((f, k) => {
                           const isActive =
                             active &&
-                            active.props.type === 'function' &&
+                            active.props.type === 'sequence' &&
                             active.props.schema === schema.name &&
                             active.props.name === f.name;
                           const isOpen = props.tabs.find(
                             (c) =>
-                              c.props.type === 'function' &&
+                              c.props.type === 'sequence' &&
                               c.props.schema === schema.name &&
                               c.props.name === f.name
                           );
                           return (
                             <div
                               key={k}
-                              className={`function${isActive ? ' active' : ''}${
+                              className={`sequence${isActive ? ' active' : ''}${
                                 isOpen ? ' open' : ''
                               }`}
                             >
                               <div
-                                className="function-name"
+                                className="sequence-name"
                                 onClick={(e) => {
-                                  previewFunction(schema.name, f.name);
+                                  previewSequence(schema.name, f.name);
                                   e.stopPropagation();
                                 }}
                                 onDoubleClick={() => {
-                                  keepFunction(schema.name, f.name);
+                                  keepSequence(schema.name, f.name);
                                 }}
                                 onKeyDown={(e) => {
                                   if (
@@ -295,199 +431,112 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
                                     e.key === 'Enter' ||
                                     e.key === 'Space'
                                   ) {
-                                    previewFunction(schema.name, f.name);
+                                    previewSequence(schema.name, f.name);
                                     e.stopPropagation();
                                   }
                                 }}
                               >
-                                {f.name}
+                                <i className="fa fa-list-ol" /> {f.name}
                               </div>
                             </div>
                           );
-                        })
-                      : null}
+                        })}
+                      </div>
+                    ) : null}
                   </div>
-                </div>
-              ) : null}
-              {schema.fullView && schema.sequences ? (
-                <div
-                  className={`group${schema.sequences.length ? '' : ' empty'}`}
-                >
+                ) : null}
+                {schema.fullView && schema.domains ? (
                   <div
-                    className={`group-name sequences arrow${
-                      schema.sequencesOpen ? ' open' : ''
-                    }`}
-                    onClick={() => {
-                      if (schema.sequences && schema.sequences.length)
-                        openSequences(schema);
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    onKeyDown={(e) => {
-                      if (
-                        e.key === ' ' ||
-                        e.key === 'Enter' ||
-                        e.key === 'Space'
-                      ) {
-                        if (schema.sequences && schema.sequences.length)
-                          openSequences(schema);
-                      }
-                    }}
+                    className={`group${schema.domains.length ? '' : ' empty'}`}
                   >
-                    Sequences
-                    <span
-                      style={{
-                        float: 'right',
-                        fontWeight: 'bold',
-                        position: 'absolute',
-                        color: 'rgba(0,0,0,.2)',
-                        right: '10px',
-                      }}
-                    >
-                      {schema.sequences.length}
-                    </span>
-                  </div>
-                  {schema.sequencesOpen ? (
-                    <div className="sequences">
-                      {schema.sequences.map((f, k) => {
-                        const isActive =
-                          active &&
-                          active.props.type === 'sequence' &&
-                          active.props.schema === schema.name &&
-                          active.props.name === f.name;
-                        const isOpen = props.tabs.find(
-                          (c) =>
-                            c.props.type === 'sequence' &&
-                            c.props.schema === schema.name &&
-                            c.props.name === f.name
-                        );
-                        return (
-                          <div
-                            key={k}
-                            className={`sequence${isActive ? ' active' : ''}${
-                              isOpen ? ' open' : ''
-                            }`}
-                          >
-                            <div
-                              className="sequence-name"
-                              onClick={(e) => {
-                                previewSequence(schema.name, f.name);
-                                e.stopPropagation();
-                              }}
-                              onDoubleClick={() => {
-                                keepSequence(schema.name, f.name);
-                              }}
-                              onKeyDown={(e) => {
-                                if (
-                                  e.key === ' ' ||
-                                  e.key === 'Enter' ||
-                                  e.key === 'Space'
-                                ) {
-                                  previewSequence(schema.name, f.name);
-                                  e.stopPropagation();
-                                }
-                              }}
-                            >
-                              <i className="fa fa-list-ol" /> {f.name}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-              {schema.fullView && schema.domains ? (
-                <div
-                  className={`group${schema.domains.length ? '' : ' empty'}`}
-                >
-                  <div
-                    className={`group-name domains arrow${
-                      schema.domainsOpen ? ' open' : ''
-                    }`}
-                    onClick={() => {
-                      if (schema.domains && schema.domains.length)
-                        openDomains(schema);
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    onKeyDown={(e) => {
-                      if (
-                        e.key === ' ' ||
-                        e.key === 'Enter' ||
-                        e.key === 'Space'
-                      ) {
+                    <div
+                      className={`group-name domains arrow${
+                        schema.domainsOpen ? ' open' : ''
+                      }`}
+                      onClick={() => {
                         if (schema.domains && schema.domains.length)
                           openDomains(schema);
-                      }
-                    }}
-                  >
-                    Domains
-                    <span
-                      style={{
-                        float: 'right',
-                        fontWeight: 'bold',
-                        position: 'absolute',
-                        color: 'rgba(0,0,0,.2)',
-                        right: '10px',
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === ' ' ||
+                          e.key === 'Enter' ||
+                          e.key === 'Space'
+                        ) {
+                          if (schema.domains && schema.domains.length)
+                            openDomains(schema);
+                        }
                       }}
                     >
-                      {schema.domains.length}
-                    </span>
-                  </div>
-                  {schema.domainsOpen ? (
-                    <div className="domains">
-                      {schema.domains.map((f, k) => {
-                        const isActive =
-                          active &&
-                          active.props.type === 'domain' &&
-                          active.props.schema === schema.name &&
-                          active.props.name === f.name;
-                        const isOpen = props.tabs.find(
-                          (c) =>
-                            c.props.type === 'domain' &&
-                            c.props.schema === schema.name &&
-                            c.props.name === f.name
-                        );
-                        return (
-                          <div
-                            key={k}
-                            className={`domain${isActive ? ' active' : ''}${
-                              isOpen ? ' open' : ''
-                            }`}
-                          >
+                      Domains
+                      <span
+                        style={{
+                          float: 'right',
+                          fontWeight: 'bold',
+                          position: 'absolute',
+                          color: 'rgba(0,0,0,.2)',
+                          right: '10px',
+                        }}
+                      >
+                        {schema.domains.length}
+                      </span>
+                    </div>
+                    {schema.domainsOpen ? (
+                      <div className="domains">
+                        {schema.domains.map((f, k) => {
+                          const isActive =
+                            active &&
+                            active.props.type === 'domain' &&
+                            active.props.schema === schema.name &&
+                            active.props.name === f.name;
+                          const isOpen = props.tabs.find(
+                            (c) =>
+                              c.props.type === 'domain' &&
+                              c.props.schema === schema.name &&
+                              c.props.name === f.name
+                          );
+                          return (
                             <div
-                              className="domain-name"
-                              onClick={(e) => {
-                                previewDomain(schema.name, f.name);
-                                e.stopPropagation();
-                              }}
-                              onDoubleClick={() => {
-                                keepDomain(schema.name, f.name);
-                              }}
-                              onKeyDown={(e) => {
-                                if (
-                                  e.key === ' ' ||
-                                  e.key === 'Enter' ||
-                                  e.key === 'Space'
-                                ) {
+                              key={k}
+                              className={`domain${isActive ? ' active' : ''}${
+                                isOpen ? ' open' : ''
+                              }`}
+                            >
+                              <div
+                                className="domain-name"
+                                onClick={(e) => {
                                   previewDomain(schema.name, f.name);
                                   e.stopPropagation();
-                                }
-                              }}
-                            >
-                              <i className="fa fa-list-ul" /> {f.name}
+                                }}
+                                onDoubleClick={() => {
+                                  keepDomain(schema.name, f.name);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (
+                                    e.key === ' ' ||
+                                    e.key === 'Enter' ||
+                                    e.key === 'Space'
+                                  ) {
+                                    previewDomain(schema.name, f.name);
+                                    e.stopPropagation();
+                                  }
+                                }}
+                              >
+                                <i className="fa fa-list-ul" /> {f.name}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+      </div>
       <span
         className="new-schema"
         onClick={() => newSchema()}
