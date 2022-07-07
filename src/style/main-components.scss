@@ -6,6 +6,7 @@
 .frame {
   z-index: 1;
   overflow: hidden;
+  outline: none;
 }
 .frame.active {
   z-index: 2;
