@@ -6,13 +6,12 @@ import { throwError } from 'util/throwError';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
-import { refresh } from 'electron-debug';
 
 type SequenceFrameState = {
   type: {
     [key: string]: string | number | boolean | null;
   };
-  lastValue: number | string;
+  lastValue: number | string | null;
 };
 
 export function SequenceFrame(props: SequenceFrameProps) {
@@ -88,7 +87,10 @@ export function SequenceFrame(props: SequenceFrameProps) {
       <h1>
         {props.schema}.{props.name}
       </h1>
-      <h1 className="last-value">{serviceState.lastValue}</h1>
+      {typeof serviceState.lastValue === 'number' ||
+      typeof serviceState.lastValue === 'string' ? (
+        <h1 className="last-value">{serviceState.lastValue}</h1>
+      ) : null}
       {state.dropCascadeConfirmation || state.dropConfirmation ? (
         <div
           className="dialog"
