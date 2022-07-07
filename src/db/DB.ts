@@ -209,10 +209,11 @@ export const DB = {
 
   async listAll() {
     const sql = `
-      SELECT (
+      SELECT current_schema() "currentSchema", (
         SELECT array_to_json(array_agg(aux.*))
         FROM
-          (select oid schema_id, nspname name FROM pg_catalog.pg_namespace
+          (select oid schema_id, nspname name
+             FROM pg_catalog.pg_namespace
           WHERE
             nspname != 'pg_toast' AND
             nspname NOT LIKE 'pg_temp_%' AND
@@ -244,18 +245,32 @@ export const DB = {
               p.proname || '('||oidvectortypes(proargtypes)||')' "name",
               -- prolang = 12 internal,
               'FUNCTION' "type"
-          FROM pg_proc p) aux) entities
+          FROM pg_proc p
+          ORDER BY "name"
+          ) aux) entities
           `;
-    const { schemas, entities } = (await first(sql)) as {
+    const { schemas, entities, currentSchema } = (await first(sql)) as {
       schemas: { name: string; schema_id: number }[];
       entities: {
         type: EntityType;
         name: string;
         schema_id: number;
       }[];
+      currentSchema: string;
     };
+    schemas.sort((a, b) => {
+      if (a.name === 'pg_catalog') return 1;
+      if (b.name === 'pg_catalog') return -1;
+      if (a.name === 'information_schema') return 1;
+      if (b.name === 'information_schema') return -1;
+      if (a.name === currentSchema) return -1;
+      if (b.name === currentSchema) return 1;
+      return a.name.localeCompare(b.name);
+    });
     return schemas.map((s) => ({
       ...s,
+      internal: s.name === 'pg_catalog' || s.name === 'information_schema',
+      current: s.name === currentSchema,
       tables: entities.filter(
         (e) =>
           e.schema_id === s.schema_id &&

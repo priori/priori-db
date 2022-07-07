@@ -43,6 +43,20 @@ div.nav {
     top: 4px;
     transition: transform 0.25s;
   }
+  .schema--current .schema-name {
+    font-weight: bold;
+    font-weight: 700;
+    line-height: 1.4;
+    position: relative;
+    height: 18px;
+  }
+  .schema--internal .schema-name {
+    color: #aaa;
+    font-style: italic;
+  }
+  .schema--internal .arrow:after {
+    border-left: 6px solid #bbb;
+  }
   .arrow.open:after {
     transform: rotate(90deg);
   }
@@ -104,6 +118,7 @@ div.nav {
     top: 3px;
     color: #888;
     display: none;
+    cursor: pointer;
   }
   .new-table {
     right: 22px;
@@ -118,10 +133,18 @@ div.nav {
     display: block;
   }
 
-  .full-view.open .view-mode {
+  .schema:hover .full-view.open .view-mode {
     display: inline;
-    color: #1155cc;
+    color: #bbb;
   }
+  .schema:hover .full-view.open:hover .view-mode {
+    display: inline;
+    color: #888;
+  }
+  .schema:hover .full-view.open .view-mode :hover {
+    color: #000;
+  }
+
   .new-table:hover,
   .schema-info:hover,
   .table-info:hover,
@@ -383,11 +406,13 @@ div.nav {
   font-size: 12px;
   color: #888;
   display: none;
+  margin-top: 3px;
+  margin-right: 3px;
+  cursor: pointer;
 }
 .nav-search--entity:hover .fa-info-circle {
   display: inline-block;
   &:hover {
     color: #000;
-    cursor: pointer;
   }
 }

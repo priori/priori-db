@@ -93,6 +93,8 @@ export type EntityType =
   | 'DOMAIN';
 
 export interface NavSchema {
+  current: boolean;
+  internal: boolean;
   name: string;
   open: boolean;
   fullView: boolean;

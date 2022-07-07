@@ -77,7 +77,12 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
       <div className="nav-tree">
         {props.schemas &&
           props.schemas.map((schema) => (
-            <div className="schema" key={schema.name}>
+            <div
+              className={`schema${schema.current ? ' schema--current' : ''}${
+                schema.internal ? ' schema--internal' : ''
+              }`}
+              key={schema.name}
+            >
               <div
                 role="button"
                 tabIndex={0}
