@@ -61,7 +61,7 @@ export const DB = {
       SELECT *
       FROM
         (SELECT
-          format_type(t.oid,NULL) AS name,
+          format_type(t.oid,NULL) AS "name",
           CASE
             WHEN typelem > 0
             THEN typelem ELSE t.oid END as elemoid,
@@ -125,7 +125,8 @@ export const DB = {
 
   async listCols(schemaName: string, tableName: string) {
     const regclass = `'${label(schemaName)}.${label(tableName)}'::regclass`;
-    const res = await list(`
+    const res = await list(
+      `
       SELECT
         cols.column_name,
         cols.data_type,
@@ -155,9 +156,11 @@ export const DB = {
         i.indrelid = ${regclass} AND
         a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
       WHERE
-        table_schema = '${schemaName}' AND
-        table_name   = '${tableName}'
-        `);
+        table_schema = $1 AND
+        table_name   = $2
+        `,
+      [schemaName, tableName]
+    );
     return res as {
       column_name: string;
       data_type: string;
@@ -212,12 +215,12 @@ export const DB = {
       SELECT current_schema() "currentSchema", (
         SELECT array_to_json(array_agg(aux.*))
         FROM
-          (select oid schema_id, nspname name
+          (select oid schema_id, nspname "name"
              FROM pg_catalog.pg_namespace
           WHERE
             nspname != 'pg_toast' AND
             nspname NOT LIKE 'pg_temp_%' AND
-            nspname NOT LIKE 'pg_toast_temp_%') as aux) schemas,
+            nspname NOT LIKE 'pg_toast_temp_%') as aux) "schemas",
         (SELECT array_to_json(array_agg(aux.*))
         FROM (
           SELECT
@@ -324,27 +327,33 @@ export const DB = {
     return query('SELECT pg_cancel_backend($1)', [pid]);
   },
   async createSchema(schemaName: string) {
-    await query(`CREATE SCHEMA "${schemaName}"`);
+    await query(`CREATE SCHEMA ${label(schemaName)}`);
   },
   async dropSchema(schemaName: string, cascade = false) {
-    await query(`DROP SCHEMA "${schemaName}" ${cascade ? 'CASCADE' : ''}`);
+    await query(`DROP SCHEMA ${label(schemaName)} ${cascade ? 'CASCADE' : ''}`);
   },
   async dropTable(schema: string, name: string, cascade = false) {
-    await query(`DROP TABLE "${schema}"."${name}" ${cascade ? 'CASCADE' : ''}`);
+    await query(
+      `DROP TABLE ${label(schema)}.${label(name)} ${cascade ? 'CASCADE' : ''}`
+    );
   },
   async dropFunction(schema: string, name: string, cascade = false) {
     await query(
-      `DROP FUNCTION "${schema}"."${name}" ${cascade ? 'CASCADE' : ''}`
+      `DROP FUNCTION ${label(schema)}.${label(name)} ${
+        cascade ? 'CASCADE' : ''
+      }`
     );
   },
   async dropDomain(schema: string, name: string, cascade = false) {
     await query(
-      `DROP DOMAIN "${schema}"."${name}" ${cascade ? 'CASCADE' : ''}`
+      `DROP DOMAIN ${label(schema)}.${label(name)} ${cascade ? 'CASCADE' : ''}`
     );
   },
   async dropSequence(schema: string, name: string, cascade = false) {
     await query(
-      `DROP SEQUENCE "${schema}"."${name}" ${cascade ? 'CASCADE' : ''}`
+      `DROP SEQUENCE ${label(schema)}.${label(name)} ${
+        cascade ? 'CASCADE' : ''
+      }`
     );
   },
 };
