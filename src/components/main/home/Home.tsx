@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   connect,
   open,
@@ -17,6 +18,12 @@ import { ConnectionConfiguration } from '../../../db/pgpass';
 import { NewConnection } from './Configuration';
 
 export function Home(props: AppState) {
+  const [connecting, setConnecting] = useState(false);
+  useEffect(() => {
+    if (props.connectionError && connecting) {
+      setConnecting(false);
+    }
+  }, [props.connectionError, connecting]);
   if (props.newConnection || props.passwords.length === 0) {
     return (
       <div>
@@ -146,10 +153,10 @@ export function Home(props: AppState) {
       {props.bases ? (
         <div
           className="bases-wrapper"
-          onClick={() => cancelSelectedConnection()}
+          onClick={connecting ? undefined : () => cancelSelectedConnection()}
         >
           <button
-            onClick={() => editConnectionSelected()}
+            onClick={connecting ? undefined : () => editConnectionSelected()}
             className="connections--edit-button2"
             type="button"
           >
@@ -163,20 +170,30 @@ export function Home(props: AppState) {
                   key={b}
                   tabIndex={0}
                   role="button"
-                  onKeyDown={(e) => {
-                    if (
-                      e.key === ' ' ||
-                      e.key === 'Enter' ||
-                      e.key === 'Space'
-                    ) {
-                      e.stopPropagation();
-                      connect(b);
-                    }
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    connect(b);
-                  }}
+                  style={connecting ? { color: 'rgba(0,0,0,.3)' } : undefined}
+                  onKeyDown={
+                    connecting
+                      ? undefined
+                      : (e) => {
+                          if (
+                            e.key === ' ' ||
+                            e.key === 'Enter' ||
+                            e.key === 'Space'
+                          ) {
+                            e.stopPropagation();
+                            connect(b);
+                          }
+                        }
+                  }
+                  onClick={
+                    connecting
+                      ? undefined
+                      : (e) => {
+                          setConnecting(true);
+                          e.stopPropagation();
+                          connect(b);
+                        }
+                  }
                 >
                   {b}
                 </div>
