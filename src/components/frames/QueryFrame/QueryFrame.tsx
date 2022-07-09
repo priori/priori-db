@@ -15,7 +15,7 @@ import { useIsMounted } from 'util/hooks';
 import { QuerySelector } from './QuerySelector';
 import { useTab } from '../../main/connected/ConnectedApp';
 import { Editor } from '../../Editor';
-import { Grid } from '../../Grid';
+import { DataGrid } from '../../util/DataGrid/DataGrid';
 import { useExclusiveConnection } from '../../../db/ExclusiveConnection';
 import { Notices } from './Notices';
 
@@ -336,7 +336,7 @@ export function QueryFrame({ uid }: { uid: number }) {
               onFullViewNotice={fullViewNotice}
               onRemoveNotice={removeNotice}
             />
-            <Grid
+            <DataGrid
               style={{
                 position: 'absolute',
                 top: '300px',
@@ -348,7 +348,7 @@ export function QueryFrame({ uid }: { uid: number }) {
             />
           </div>
         ) : (
-          <Grid
+          <DataGrid
             style={{
               position: 'absolute',
               top: '300px',

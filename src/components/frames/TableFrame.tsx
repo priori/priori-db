@@ -2,7 +2,7 @@ import { keepTabOpen } from 'state/actions';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { query } from '../../db/Connection';
-import { Grid } from '../Grid';
+import { DataGrid } from '../util/DataGrid/DataGrid';
 import { TableFrameProps } from '../../types';
 
 function buildWhere() {
@@ -27,7 +27,7 @@ export function TableFrame(props: TableFrameProps) {
   return (
     <>
       {service.lastValidData && (
-        <Grid
+        <DataGrid
           onScroll={onscroll}
           style={{
             position: 'absolute',
