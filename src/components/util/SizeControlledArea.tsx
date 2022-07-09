@@ -34,7 +34,7 @@ export class SizeControlledArea extends Component<
       if (!this.el || !this.el.parentElement) return;
       this.setState({
         width: this.el.offsetWidth,
-        height: this.el.offsetWidth,
+        height: this.el.offsetHeight,
       });
     }, 250);
   }
@@ -44,7 +44,7 @@ export class SizeControlledArea extends Component<
     this.el = el;
     this.setState({
       width: el.offsetWidth,
-      height: el.offsetWidth,
+      height: el.offsetHeight,
     });
   }
 
