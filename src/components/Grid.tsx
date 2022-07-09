@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { QueryArrayResult } from 'pg';
+import { FieldDef, QueryArrayResult } from 'pg';
 import React, {
   CSSProperties,
   memo,
@@ -28,7 +28,7 @@ export interface GridCoreProps {
   width: number;
   // eslint-disable-next-line react/require-default-props
   onScroll?: (() => void) | undefined;
-  // height: number;
+  height: number;
 }
 
 export interface GridState {
@@ -70,10 +70,10 @@ const rowHeight = 23;
 const scrollWidth = 10;
 const headerHeight = 21;
 // medidos em tamanho de linha
-const rowsByRender = 200;
-const topRenderOffset = 50;
+const rowsByRender = 250;
+const topRenderOffset = 100;
 const allowedBottomDistance = 50;
-const allowedTopDistance = 10;
+const allowedTopDistance = 50;
 
 function getType(val: unknown) {
   return val === null
@@ -178,7 +178,10 @@ function activePos(
   rowIndex: number,
   scrollTop: number,
   scrollLeft: number,
-  containerWidth: number
+  containerWidth: number,
+  containerHeight: number,
+  hasBottomScrollbar: boolean,
+  hasRightScrollbar: boolean
 ) {
   let fieldLeft = 0;
   for (const c in widths) {
@@ -192,9 +195,15 @@ function activePos(
   const left = activeCellLeft < 0 ? 0 : activeCellLeft;
   const leftCrop = fieldLeft - scrollLeft < 0 ? -(fieldLeft - scrollLeft) : 0;
   const originalWidth = widths[colIndex] - 1 - leftCrop;
-  const needToCropRight = originalWidth + left > containerWidth;
-  const width = needToCropRight ? containerWidth - left : originalWidth;
-  return { top, left, leftCrop, width };
+  const containerAvailableWidth =
+    containerWidth - (hasRightScrollbar ? scrollWidth : 0);
+  const needToCropRight = originalWidth + left > containerAvailableWidth;
+  const wrapperWidth = needToCropRight
+    ? containerAvailableWidth - left
+    : originalWidth;
+  const wrapperHeight =
+    containerHeight - (hasBottomScrollbar ? scrollWidth : 0) - top + 4;
+  return { top, left, leftCrop, wrapperWidth, wrapperHeight };
 }
 
 function scrollTo(
@@ -226,6 +235,128 @@ function scrollTo(
   }
 }
 
+interface GridTheadProps {
+  fields: FieldDef[];
+  finalWidths: number[];
+}
+
+const GridThead = React.memo(
+  ({ fields, finalWidths }: GridTheadProps) => (
+    <thead>
+      <tr>
+        {fields.map((f, index) => (
+          <th
+            key={index}
+            style={{
+              width: finalWidths[index],
+              ...(f.name === '?column?'
+                ? {
+                    color: 'rgba(256,256,256,.3)',
+                  }
+                : undefined),
+            }}
+          >
+            {f.name}
+          </th>
+        ))}
+      </tr>
+    </thead>
+  ),
+  (prev, next) =>
+    prev.fields === next.fields && prev.finalWidths === next.finalWidths
+);
+
+interface GridTableProps {
+  visibleStartingInEven: boolean;
+  visibleRows: (string | null | number)[][];
+  slice: [number, number];
+  selection:
+    | {
+        colIndex: [number, number];
+        rowIndex: [number, number];
+      }
+    | undefined;
+  gridContentTableTop: string;
+  gridContentTableWidth: number | undefined;
+  fields: FieldDef[];
+  finalWidths: number[];
+}
+
+const GridTable = React.memo(
+  ({
+    visibleStartingInEven,
+    visibleRows,
+    slice,
+    selection,
+    gridContentTableTop,
+    gridContentTableWidth,
+    fields,
+    finalWidths,
+  }: GridTableProps) => {
+    return (
+      <table
+        className="content-table"
+        style={{
+          width: gridContentTableWidth,
+          position: 'relative',
+          top: gridContentTableTop,
+        }}
+      >
+        <thead style={{ visibility: 'hidden' }}>
+          <tr>
+            {fields.map((f, index) => (
+              <th key={index} style={{ width: finalWidths[index] }}>
+                {f.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {visibleStartingInEven ? <tr style={{ display: 'none' }} /> : null}
+          {visibleRows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              {fields.map((_, index) => {
+                const val = row[index];
+                const type = getType(val);
+                const valString = getValString(val);
+                const className = cellClassName(
+                  index,
+                  slice[0] + rowIndex,
+                  selection
+                );
+                return (
+                  <td key={index} className={className}>
+                    <div className={type}>
+                      <div className="cell">
+                        {valString && valString.length > 200
+                          ? `${valString.substring(0, 200)}...`
+                          : valString}
+                      </div>
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  },
+  (prev, next) => {
+    return (
+      prev.visibleStartingInEven === next.visibleStartingInEven &&
+      prev.visibleRows === next.visibleRows &&
+      prev.slice[0] === next.slice[0] &&
+      prev.slice[1] === next.slice[1] &&
+      prev.selection === next.selection &&
+      prev.gridContentTableTop === next.gridContentTableTop &&
+      prev.gridContentTableWidth === next.gridContentTableWidth &&
+      prev.fields === next.fields &&
+      prev.finalWidths === next.finalWidths
+    );
+  }
+);
+
 export function GridCore(props: GridCoreProps) {
   const [state, setState] = useState({
     slice: [0, rowsByRender],
@@ -239,7 +370,7 @@ export function GridCore(props: GridCoreProps) {
 
   const elRef = useRef(null as HTMLDivElement | null);
 
-  const activeElRef = useRef(null as HTMLElement | null);
+  const activeElRef = useRef(null as HTMLDivElement | null);
 
   const lastScrollTimeRef = useRef(null as Date | null);
 
@@ -258,9 +389,21 @@ export function GridCore(props: GridCoreProps) {
     }));
   }, [props.result]);
 
+  const hasRightScrollbar =
+    rowHeight * props.result.rows.length + headerHeight > props.height;
+  const hasBottomScrollbar =
+    baseWidths.reduce((a, b) => a + b, 0) +
+      (hasRightScrollbar ? scrollWidth : 0) +
+      2 >
+    props.width;
+
   const { widths: finalWidths, width: gridContentTableWidth } = useMemo(
-    () => buildFinalWidths(baseWidths, props.width - scrollWidth - 1),
-    [baseWidths, props.width]
+    () =>
+      buildFinalWidths(
+        baseWidths,
+        props.width - (hasRightScrollbar ? scrollWidth : 0) - 1
+      ),
+    [baseWidths, props.width, hasRightScrollbar]
   );
 
   useEffect(() => {
@@ -297,14 +440,13 @@ export function GridCore(props: GridCoreProps) {
 
   const visibleRows = useMemo(
     () =>
-      props.result.rows.filter(
-        (_, i) =>
-          (state.slice as number[])[0] <= i && i <= (state.slice as number[])[1]
+      (props.result.rows as (string | number | null)[][]).filter(
+        (_, i) => state.slice[0] <= i && i <= state.slice[1]
       ),
     [props.result.rows, state.slice]
   );
 
-  const visibleStartingInEven = state.slice[0] % 2;
+  const visibleStartingInEven = !!(state.slice[0] % 2);
 
   function getColIndex(x: number) {
     let left = 0;
@@ -319,21 +461,35 @@ export function GridCore(props: GridCoreProps) {
 
   function updateActivePos() {
     if (!state.active || !activeElRef.current) return;
-    const { top, left, leftCrop, width } = activePos(
+    const { top, left, leftCrop, wrapperWidth, wrapperHeight } = activePos(
       finalWidths,
       state.active.colIndex,
       state.active.rowIndex,
       scrollRef.current.top,
       scrollRef.current.left,
-      props.width
+      props.width,
+      props.height,
+      hasBottomScrollbar,
+      hasRightScrollbar
     );
     const activeEl = activeElRef.current;
     activeEl.style.top = `${top}px`;
     activeEl.style.left = `${left}px`;
     const wrapper2El = activeEl.firstChild as HTMLDivElement;
     wrapper2El.style.marginLeft = `-${leftCrop}px`;
-    activeEl.style.width = `${width}px`;
-    activeEl.style.display = top < 0 || width < 0 ? 'none' : '';
+    activeEl.style.width = `${wrapperWidth + 4}px`;
+    if (wrapperHeight && wrapperHeight < rowHeight + 4) {
+      activeEl.style.height = `${wrapperHeight}px`;
+    } else if (activeEl.style.height) {
+      activeEl.style.height = '';
+    }
+    // activeEl.style.height = `${width + 4}px`;
+    activeEl.style.display =
+      top < 0 ||
+      wrapperWidth < 0 ||
+      top > props.height - (hasBottomScrollbar ? scrollWidth : 0)
+        ? 'none'
+        : '';
   }
 
   const onScroll = useEvent((e: React.UIEvent<HTMLElement>) => {
@@ -346,40 +502,38 @@ export function GridCore(props: GridCoreProps) {
     if (headerElRef.current) {
       const headerEl = headerElRef.current;
       headerEl.style.marginLeft = `-${container.scrollLeft}px`;
-      if (container.scrollTop > 10) {
-        headerEl.style.boxShadow = 'rgba(0, 0, 0, 0.5) -3px 0px 10px';
-      } else {
-        headerEl.style.boxShadow = '';
-      }
     }
     updateActivePos();
     const fn = () => {
       lastScrollTimeRef.current = null;
-      const currentIndex = Math.floor(container.scrollTop / rowHeight);
+      const currentMiddleIndex = Math.floor(
+        container.scrollTop / rowHeight +
+          container.offsetHeight / (rowHeight * 2)
+      );
+      const goodUp = Math.max(currentMiddleIndex - state.slice[0], 0);
+      const goodDown = Math.max(state.slice[1] - currentMiddleIndex, 0);
       if (
-        (state.slice as number[])[0] - currentIndex < allowedTopDistance ||
-        currentIndex - (state.slice as number[])[1] < allowedBottomDistance
+        (state.slice[0] && goodUp < allowedTopDistance) ||
+        goodDown < allowedBottomDistance
       ) {
-        const start =
-          currentIndex > topRenderOffset
-            ? currentIndex - topRenderOffset
-            : currentIndex;
-        setState((state2) => ({
-          ...state2,
-          slice: [start, start + rowsByRender],
-        }));
+        const start = Math.max(currentMiddleIndex - topRenderOffset, 0);
+        if (start !== state.slice[0])
+          setState((state2) => ({
+            ...state2,
+            slice: [start, start + rowsByRender],
+          }));
       }
     };
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     const now = new Date();
     if (
       lastScrollTimeRef.current &&
-      now.getTime() - lastScrollTimeRef.current.getTime() > 200
+      now.getTime() - lastScrollTimeRef.current.getTime() > 160
     ) {
       fn();
     } else {
       if (!lastScrollTimeRef.current) lastScrollTimeRef.current = now;
-      timeoutRef.current = setTimeout(fn, 200);
+      timeoutRef.current = setTimeout(fn, 160);
     }
   });
 
@@ -417,7 +571,7 @@ export function GridCore(props: GridCoreProps) {
     ) {
       setState((state2) => ({
         ...state2,
-        active: undefined,
+        // active: undefined,
         selection,
         mouseDown: undefined,
       }));
@@ -466,7 +620,7 @@ export function GridCore(props: GridCoreProps) {
   });
 
   const onMouseDown = useEvent((e: React.MouseEvent<HTMLElement>) => {
-    if (e.button === 1) return;
+    if (e.button === 1 || e.button === 3) return;
     const el = elRef.current as HTMLElement;
     const rect = el.getBoundingClientRect();
     let x = e.clientX - rect.left;
@@ -501,19 +655,21 @@ export function GridCore(props: GridCoreProps) {
     }));
   });
 
-  function activeRender(widths: number[]): JSX.Element {
+  function activeRender(): JSX.Element {
     if (!state.active) return <></>;
-    const row = props.result.rows[state.active.rowIndex];
-    const val = row[state.active.colIndex];
+    const val = props.result.rows[state.active.rowIndex][state.active.colIndex];
     const type = getType(val);
     const valString = getValString(val);
-    const { top, left, leftCrop, width } = activePos(
-      widths,
+    const { top, left, leftCrop, wrapperWidth } = activePos(
+      finalWidths,
       state.active.colIndex,
       state.active.rowIndex,
       scrollRef.current.top,
       scrollRef.current.left,
-      props.width - scrollWidth
+      props.width,
+      props.height,
+      hasBottomScrollbar,
+      hasRightScrollbar
     );
     const key = `${state.active.rowIndex}/${state.active.colIndex}`;
     const even = state.active.rowIndex % 2;
@@ -523,15 +679,12 @@ export function GridCore(props: GridCoreProps) {
         style={{
           position: 'absolute',
           top,
-          zIndex: 2,
           left,
-          width,
-          display: top < 0 || width < 0 ? 'none' : '',
+          width: wrapperWidth + 4,
+          display: top < 0 || wrapperWidth < 0 ? 'none' : '',
         }}
         key={key}
-        ref={(el: HTMLDivElement) => {
-          activeElRef.current = el;
-        }}
+        ref={activeElRef}
         className={`active active-cell-wrapper ${even ? ' even' : ' odd'}`}
       >
         <div
@@ -549,7 +702,11 @@ export function GridCore(props: GridCoreProps) {
   }
 
   const onBlur = useEvent(() => {
-    setState({ ...state, active: undefined, mouseDown: undefined });
+    setState({
+      ...state,
+      // active: undefined,
+      mouseDown: undefined,
+    });
   });
 
   const onKeyDown = useEvent((e: React.KeyboardEvent) => {
@@ -616,22 +773,25 @@ export function GridCore(props: GridCoreProps) {
       <div className="grid-header-wrapper">
         <table
           className="grid-header"
-          style={{ width: gridContentTableWidth, zIndex: 3 }}
+          style={{
+            width: gridContentTableWidth,
+            zIndex: 3,
+          }}
           ref={headerElRef}
         >
-          <thead>
-            <tr>
-              {props.result.fields.map((f, index) => (
-                <th key={index} style={{ width: finalWidths[index] }}>
-                  {f.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <GridThead fields={props.result.fields} finalWidths={finalWidths} />
         </table>
       </div>
-      {activeRender(finalWidths)}
-      <div className="grid-content" onScroll={onScroll} ref={gridContentRef}>
+      {activeRender()}
+      <div
+        className="grid-content"
+        onScroll={onScroll}
+        ref={gridContentRef}
+        style={{
+          overflowX: hasBottomScrollbar ? 'scroll' : 'hidden',
+          overflowY: hasRightScrollbar ? 'scroll' : 'hidden',
+        }}
+      >
         <div
           style={{
             marginTop: gridContentMarginTop,
@@ -639,54 +799,16 @@ export function GridCore(props: GridCoreProps) {
             borderBottom: '1px solid #ddd',
           }}
         >
-          <table
-            className="content-table"
-            style={{
-              width: gridContentTableWidth,
-              position: 'relative',
-              top: gridContentTableTop,
-            }}
-          >
-            <thead style={{ visibility: 'hidden' }}>
-              <tr>
-                {props.result.fields.map((f, index) => (
-                  <th key={index} style={{ width: finalWidths[index] }}>
-                    {f.name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {visibleStartingInEven ? (
-                <tr style={{ display: 'none' }} />
-              ) : null}
-              {visibleRows.map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  {props.result.fields.map((_, index) => {
-                    const val = row[index];
-                    const type = getType(val);
-                    const valString = getValString(val);
-                    const className = cellClassName(
-                      index,
-                      state.slice[0] + rowIndex,
-                      state.selection
-                    );
-                    return (
-                      <td key={index} className={className}>
-                        <div className={type}>
-                          <div className="cell">
-                            {valString && valString.length > 200
-                              ? `${valString.substring(0, 200)}...`
-                              : valString}
-                          </div>
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <GridTable
+            visibleStartingInEven={visibleStartingInEven}
+            visibleRows={visibleRows}
+            slice={state.slice}
+            selection={state.selection}
+            gridContentTableTop={gridContentTableTop}
+            gridContentTableWidth={gridContentTableWidth}
+            fields={props.result.fields}
+            finalWidths={finalWidths}
+          />
         </div>
       </div>
     </div>
@@ -701,8 +823,13 @@ export const Grid = memo(
         <SizeControlledArea
           style={props.style}
           className="grid"
-          render={(width: number) => (
-            <GridCore result={res} width={width} onScroll={props.onScroll} />
+          render={(width: number, height: number) => (
+            <GridCore
+              result={res}
+              width={width}
+              onScroll={props.onScroll}
+              height={height}
+            />
           )}
         />
       );

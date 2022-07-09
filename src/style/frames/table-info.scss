@@ -75,7 +75,11 @@ span.column {
 .frame td .dialog div {
   text-align: right;
 }
-.frame table,
+.frame.table-info table,
+.frame.schema-info table,
+.frame.sequence table,
+.frame.domain table,
+.frame.function table,
 .frame .fields,
 .empty {
   width: 100%;
