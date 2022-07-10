@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { stat } from 'fs';
 import { QueryArrayResult } from 'pg';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useEvent } from 'util/useEvent';
@@ -70,14 +71,20 @@ export function DataGridCore(props: DataGridCoreProps) {
     }));
   }, [props.result]);
 
-  const hasRightScrollbar =
-    rowHeight * props.result.rows.length + headerHeight > props.height;
+  const hasRightScrollbar0 =
+    rowHeight * props.result.rows.length + headerHeight + 1 > props.height;
   const hasBottomScrollbar =
     baseWidths.reduce((a, b) => a + b, 0) +
-      (hasRightScrollbar ? scrollWidth : 0) +
+      (hasRightScrollbar0 ? scrollWidth : 0) +
       2 >
     props.width;
-
+  const hasRightScrollbar =
+    hasRightScrollbar0 ||
+    rowHeight * props.result.rows.length +
+      headerHeight +
+      1 +
+      (hasBottomScrollbar ? scrollWidth : 0) >
+      props.height;
   const { widths: finalWidths, width: gridContentTableWidth } = useMemo(
     () =>
       buildFinalWidths(
@@ -91,9 +98,16 @@ export function DataGridCore(props: DataGridCoreProps) {
     if (state.active) {
       const el = gridContentRef.current;
       assert(el);
-      scrollTo(el, finalWidths, state.active.colIndex, state.active.rowIndex);
+      scrollTo(
+        el,
+        finalWidths,
+        state.active.colIndex,
+        state.active.rowIndex,
+        hasRightScrollbar,
+        hasBottomScrollbar
+      );
     }
-  }, [finalWidths, state.active]);
+  }, [finalWidths, state.active, hasRightScrollbar, hasBottomScrollbar]);
 
   useEffect(() => {
     if (state.selection && state.mouseDown) {
@@ -107,10 +121,18 @@ export function DataGridCore(props: DataGridCoreProps) {
           : state.selection.colIndex[0],
         state.mouseDown.rowIndex === state.selection.rowIndex[0]
           ? state.selection.rowIndex[1]
-          : state.selection.rowIndex[0]
+          : state.selection.rowIndex[0],
+        hasRightScrollbar,
+        hasBottomScrollbar
       );
     }
-  }, [finalWidths, state.mouseDown, state.selection]);
+  }, [
+    finalWidths,
+    state.mouseDown,
+    state.selection,
+    hasRightScrollbar,
+    hasBottomScrollbar,
+  ]);
 
   const gridContentMarginTop = `-${headerHeight}px`;
   assert(props.result.rows instanceof Array);
@@ -251,7 +273,6 @@ export function DataGridCore(props: DataGridCoreProps) {
     ) {
       setState((state2) => ({
         ...state2,
-        // active: undefined,
         selection,
         mouseDown: undefined,
       }));
@@ -296,6 +317,7 @@ export function DataGridCore(props: DataGridCoreProps) {
     setState((state2) => ({
       ...state2,
       selection,
+      active: { rowIndex, colIndex },
     }));
   });
 
@@ -308,21 +330,16 @@ export function DataGridCore(props: DataGridCoreProps) {
     if (
       x < 0 ||
       y < 0 ||
-      x > el.offsetWidth - scrollWidth ||
-      y > el.offsetHeight - scrollWidth - headerHeight
+      x > el.offsetWidth - (hasRightScrollbar ? scrollWidth : 0) ||
+      y >
+        el.offsetHeight - (hasBottomScrollbar ? scrollWidth : 0) - headerHeight
     ) {
-      if (state.active) {
-        setState((state2) => ({ ...state2, active: undefined }));
-      }
       return;
     }
     x += scrollRef.current.left;
     y += scrollRef.current.top;
     const rowIndex = Math.floor(y / rowHeight);
     if (rowIndex >= props.result.rows.length) {
-      if (state.active) {
-        setState((state2) => ({ ...state2, active: undefined }));
-      }
       return;
     }
     const colIndex = getColIndex(x);
@@ -330,7 +347,7 @@ export function DataGridCore(props: DataGridCoreProps) {
     setState((state2) => ({
       ...state2,
       mouseDown: { rowIndex, colIndex },
-      active: undefined,
+      active: { rowIndex, colIndex },
       selection: undefined,
     }));
   });
@@ -338,59 +355,144 @@ export function DataGridCore(props: DataGridCoreProps) {
   const onBlur = useEvent(() => {
     setState({
       ...state,
-      // active: undefined,
       mouseDown: undefined,
     });
   });
 
+  function moveBy(x0: number, y0: number, selection: boolean) {
+    if (!state.active) return;
+    let x = x0;
+    let y = y0;
+    if (state.active.colIndex + x < 0) {
+      x = -state.active.colIndex;
+    } else if (state.active.colIndex + x >= props.result.fields.length) {
+      x = props.result.fields.length - state.active.colIndex - 1;
+    }
+    if (state.active.rowIndex + y < 0) {
+      y = -state.active.rowIndex;
+    } else if (state.active.rowIndex + y >= props.result.rows.length) {
+      y = props.result.rows.length - state.active.rowIndex - 1;
+    }
+    if (x === 0 && y === 0) return;
+    setState({
+      ...state,
+      selection: !selection
+        ? undefined
+        : !state.selection
+        ? {
+            colIndex: [
+              Math.min(state.active.colIndex + x, state.active.colIndex),
+              Math.max(state.active.colIndex + x, state.active.colIndex),
+            ],
+            rowIndex: [
+              Math.min(state.active.rowIndex + y, state.active.rowIndex),
+              Math.max(state.active.rowIndex + y, state.active.rowIndex),
+            ],
+          }
+        : {
+            colIndex: [
+              Math.min(
+                state.active.colIndex + x,
+                state.selection.colIndex[0] === state.active.colIndex
+                  ? state.selection.colIndex[1]
+                  : state.selection.colIndex[0]
+              ),
+              Math.max(
+                state.active.colIndex + x,
+                state.selection.colIndex[0] === state.active.colIndex
+                  ? state.selection.colIndex[1]
+                  : state.selection.colIndex[0]
+              ),
+            ],
+            rowIndex: [
+              Math.min(
+                state.active.rowIndex + y,
+                state.selection.rowIndex[0] === state.active.rowIndex
+                  ? state.selection.rowIndex[1]
+                  : state.selection.rowIndex[0]
+              ),
+              Math.max(
+                state.active.rowIndex + y,
+                state.selection.rowIndex[0] === state.active.rowIndex
+                  ? state.selection.rowIndex[1]
+                  : state.selection.rowIndex[0]
+              ),
+            ],
+          },
+      active: {
+        colIndex: state.active.colIndex + x,
+        rowIndex: state.active.rowIndex + y,
+      },
+    });
+  }
+
   const onKeyDown = useEvent((e: React.KeyboardEvent) => {
-    if (state.active) {
+    if (e.key === 'PageUp') {
+      if (e.shiftKey) {
+        const pageRows = Math.round((props.height - headerHeight) / rowHeight);
+        moveBy(0, -pageRows, true);
+        return;
+      }
+      assert(gridContentRef.current);
+      gridContentRef.current.scrollTo({
+        left: gridContentRef.current.scrollLeft,
+        top: Math.max(
+          gridContentRef.current.scrollTop -
+            gridContentRef.current.offsetHeight,
+          0
+        ),
+        behavior: 'smooth',
+      });
+    } else if (e.key === 'PageDown') {
+      if (e.shiftKey) {
+        const pageRows = Math.round((props.height - headerHeight) / rowHeight);
+        moveBy(0, pageRows, true);
+        return;
+      }
+      assert(gridContentRef.current);
+      gridContentRef.current.scrollTo({
+        left: gridContentRef.current.scrollLeft,
+        top:
+          gridContentRef.current.scrollTop +
+          gridContentRef.current.offsetHeight,
+        behavior: 'smooth',
+      });
+    } else if (e.key === 'Home') {
+      if (e.shiftKey) {
+        moveBy(0, -Infinity, true);
+        return;
+      }
+      assert(gridContentRef.current);
+      gridContentRef.current.scrollTo({
+        left: gridContentRef.current.scrollLeft,
+        top: 0,
+        behavior: 'smooth',
+      });
+    } else if (e.key === 'End') {
+      if (e.shiftKey) {
+        moveBy(0, Infinity, true);
+        return;
+      }
+      assert(gridContentRef.current);
+      gridContentRef.current.scrollTo({
+        left: gridContentRef.current.scrollLeft,
+        top:
+          gridContentRef.current.scrollHeight -
+          gridContentRef.current.offsetHeight +
+          scrollWidth,
+        behavior: 'smooth',
+      });
+    } else if (state.active) {
       if (e.key === 'Escape') {
         if (elRef.current) elRef.current.blur();
       } else if (e.key === 'ArrowDown') {
-        if (state.active.rowIndex < props.result.rows.length - 1) {
-          // if shift is pressed, select a range
-          setState({
-            ...state,
-            active: {
-              rowIndex: state.active.rowIndex + 1,
-              colIndex: state.active.colIndex,
-            },
-          });
-        }
+        moveBy(0, 1, e.shiftKey);
       } else if (e.key === 'ArrowUp') {
-        if (state.active.rowIndex > 0) {
-          // if shift is pressed, select a range
-          setState({
-            ...state,
-            active: {
-              rowIndex: state.active.rowIndex - 1,
-              colIndex: state.active.colIndex,
-            },
-          });
-        }
+        moveBy(0, -1, e.shiftKey);
       } else if (e.key === 'ArrowLeft') {
-        if (state.active.colIndex > 0) {
-          // if shift is pressed, select a range
-          setState({
-            ...state,
-            active: {
-              rowIndex: state.active.rowIndex,
-              colIndex: state.active.colIndex - 1,
-            },
-          });
-        }
+        moveBy(-1, 0, e.shiftKey);
       } else if (e.key === 'ArrowRight') {
-        if (state.active.colIndex < props.result.fields.length - 1) {
-          // if shift is pressed, select a range
-          setState({
-            ...state,
-            active: {
-              rowIndex: state.active.rowIndex,
-              colIndex: state.active.colIndex + 1,
-            },
-          });
-        }
+        moveBy(1, 0, e.shiftKey);
       }
     }
   });

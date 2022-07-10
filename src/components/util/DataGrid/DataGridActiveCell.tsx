@@ -30,29 +30,36 @@ export function update({
   hasBottomScrollbar,
   hasRightScrollbar,
 }: UpdateActivePos) {
-  const { top, left, leftCrop, wrapperWidth, wrapperHeight } = activePos(
-    finalWidths,
-    active.colIndex,
-    active.rowIndex,
-    scrollTop,
-    scrollLeft,
-    containerWidth,
-    containerHeight,
-    hasBottomScrollbar,
-    hasRightScrollbar
-  );
+  const { top, left, leftCrop, topCrop, wrapperWidth, wrapperHeight } =
+    activePos(
+      finalWidths,
+      active.colIndex,
+      active.rowIndex,
+      scrollTop,
+      scrollLeft,
+      containerWidth,
+      containerHeight,
+      hasBottomScrollbar,
+      hasRightScrollbar
+    );
   activeEl.style.top = `${top}px`;
   activeEl.style.left = `${left}px`;
   const wrapper2El = activeEl.firstChild as HTMLDivElement;
   wrapper2El.style.marginLeft = `-${leftCrop}px`;
   activeEl.style.width = `${wrapperWidth + 4}px`;
-  if (wrapperHeight && wrapperHeight < rowHeight + 4) {
+  if (topCrop) {
+    wrapper2El.style.marginTop = `-${topCrop}px`;
+  } else if (wrapper2El.style.marginTop) {
+    wrapper2El.style.marginTop = '';
+  }
+  if (wrapperHeight) {
     activeEl.style.height = `${wrapperHeight}px`;
   } else if (activeEl.style.height) {
     activeEl.style.height = '';
   }
   // activeEl.style.height = `${width + 4}px`;
   activeEl.style.display =
+    wrapperHeight === 0 ||
     top < 0 ||
     wrapperWidth < 0 ||
     top > containerHeight - (hasBottomScrollbar ? scrollWidth : 0)

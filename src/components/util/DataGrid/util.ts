@@ -156,7 +156,7 @@ export function activePos(
     fieldLeft += w;
   }
   fieldLeft += 1;
-  const top = headerHeight + rowIndex * rowHeight - scrollTop + 1;
+  const top0 = headerHeight + rowIndex * rowHeight - scrollTop + 1;
   const activeCellLeft = fieldLeft - (scrollLeft < 0 ? 0 : scrollLeft);
   const left = activeCellLeft < 0 ? 0 : activeCellLeft;
   const leftCrop = fieldLeft - scrollLeft < 0 ? -(fieldLeft - scrollLeft) : 0;
@@ -167,16 +167,25 @@ export function activePos(
   const wrapperWidth = needToCropRight
     ? containerAvailableWidth - left
     : originalWidth;
-  const wrapperHeight =
-    containerHeight - (hasBottomScrollbar ? scrollWidth : 0) - top + 4;
-  return { top, left, leftCrop, wrapperWidth, wrapperHeight };
+  const top = top0 < headerHeight ? headerHeight : top0;
+  const topCrop = top0 < headerHeight ? headerHeight - top0 : 0;
+  const wrapperHeight = Math.max(
+    Math.min(
+      containerHeight - (hasBottomScrollbar ? scrollWidth : 0) - top0 + 3,
+      rowHeight + 3 - topCrop
+    ),
+    0
+  );
+  return { top, left, leftCrop, topCrop, wrapperWidth, wrapperHeight };
 }
 
 export function scrollTo(
   el: HTMLElement,
   widths: number[],
   colIndex: number,
-  rowIndex: number
+  rowIndex: number,
+  hasRightScrollbar: boolean,
+  hasBottomScrollbar: boolean
 ) {
   const y = rowIndex * rowHeight;
   const y2 = (rowIndex + 1) * rowHeight;
@@ -190,12 +199,15 @@ export function scrollTo(
   const x2 = x + widths[colIndex] + 1;
   let { scrollTop } = el;
   let { scrollLeft } = el;
-  if (scrollTop < y2 - el.offsetHeight + scrollWidth)
-    scrollTop = y2 - el.offsetHeight + scrollWidth;
+  if (scrollTop < y2 - el.offsetHeight + (hasBottomScrollbar ? scrollWidth : 0))
+    scrollTop = y2 - el.offsetHeight + (hasBottomScrollbar ? scrollWidth : 0);
   else if (scrollTop > y) scrollTop = y;
   if (x < scrollLeft) scrollLeft = x;
-  else if (x2 + scrollWidth > scrollLeft + el.offsetWidth)
-    scrollLeft = x2 - el.offsetWidth + scrollWidth;
+  else if (
+    x2 + (hasRightScrollbar ? scrollWidth : 0) >
+    scrollLeft + el.offsetWidth
+  )
+    scrollLeft = x2 - el.offsetWidth + (hasRightScrollbar ? scrollWidth : 0);
   if (el.scrollTop !== scrollTop || el.scrollLeft !== scrollLeft) {
     el.scrollTo({ top: scrollTop, left: scrollLeft, behavior: 'auto' });
   }
