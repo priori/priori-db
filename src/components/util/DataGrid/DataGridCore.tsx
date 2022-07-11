@@ -1,5 +1,4 @@
 import assert from 'assert';
-import { stat } from 'fs';
 import { QueryArrayResult } from 'pg';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useEvent } from 'util/useEvent';
@@ -65,9 +64,11 @@ export function DataGridCore(props: DataGridCoreProps) {
 
   useEffect(() => {
     scrollRef.current = { left: 0, top: 0 };
+    gridContentRef.current?.scrollTo(0, 0);
     setState((state2) => ({
       ...state2,
       active: undefined,
+      selection: undefined,
     }));
   }, [props.result]);
 
@@ -322,7 +323,7 @@ export function DataGridCore(props: DataGridCoreProps) {
   });
 
   const onMouseDown = useEvent((e: React.MouseEvent<HTMLElement>) => {
-    if (e.button === 1 || e.button === 3) return;
+    if (e.button === 1 || e.button === 2) return;
     const el = elRef.current as HTMLElement;
     const rect = el.getBoundingClientRect();
     let x = e.clientX - rect.left;

@@ -221,7 +221,7 @@ tr:nth-child(2n):hover td.selected { background: #c0c0c0; }
   margin-left: -2px;
   z-index: 3;
   border: 2px solid #999;
-  // pointer-events: none;
+  pointer-events: none;
 }
 .grid div:focus .active {
   border: 2px solid #06c;
