@@ -28,6 +28,7 @@ export interface DataGridCoreProps {
   width: number;
   onScroll?: (() => void) | undefined;
   height: number;
+  emptyTable?: string | undefined;
 }
 
 export interface DataGridState {
@@ -565,6 +566,11 @@ export function DataGridCore(props: DataGridCoreProps) {
           />
         </div>
       </div>
+      {props.result.rows.length === 0 && props.emptyTable ? (
+        <div className="empty-table">
+          <div>{props.emptyTable}</div>
+        </div>
+      ) : null}
     </div>
   );
 }

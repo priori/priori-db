@@ -8,6 +8,7 @@ export interface GridProps {
   style: CSSProperties;
   result: QueryArrayResult | undefined;
   onScroll?: (() => void) | undefined;
+  emptyTable?: string | undefined;
 }
 
 export const DataGrid = memo(
@@ -24,6 +25,7 @@ export const DataGrid = memo(
               width={width}
               onScroll={props.onScroll}
               height={height}
+              emptyTable={props.emptyTable}
             />
           )}
         />
