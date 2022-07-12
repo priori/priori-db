@@ -14,12 +14,17 @@ import {
   allowedTopDistance,
   buildBaseWidths,
   buildFinalWidths,
+  getSelectionData,
   headerHeight,
   rowHeight,
   rowsByRender,
   scrollTo,
   scrollWidth,
+  toCsv,
+  toHtml,
   topRenderOffset,
+  toText,
+  toTsv,
 } from './util';
 
 export interface DataGridCoreProps {
@@ -425,6 +430,24 @@ export function DataGridCore(props: DataGridCoreProps) {
       },
     });
   }
+
+  useEventListener(document, 'copy', (e: ClipboardEvent) => {
+    if (
+      document.activeElement === elRef.current &&
+      e.clipboardData &&
+      state.selection
+    ) {
+      e.preventDefault();
+      e.stopPropagation();
+      const d = e.clipboardData;
+      const sels = getSelectionData(props.result, state.selection);
+      d.setData('text/plain', toText(sels).join(''));
+      d.setData('text/csv', toCsv(sels).join(''));
+      d.setData('text/tab-separated-values', toTsv(sels).join(''));
+      d.setData('text/html', toHtml(sels));
+      d.setData('application/json', JSON.stringify(sels));
+    }
+  });
 
   const onKeyDown = useEvent((e: React.KeyboardEvent) => {
     if (e.key === 'a' && e.ctrlKey) {

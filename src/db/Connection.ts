@@ -80,6 +80,13 @@ export async function listFromConfiguration(
   }
 }
 
+export type SimpleValue =
+  | number
+  | string
+  | boolean
+  | null
+  | { [key: string]: SimpleValue };
+
 export async function query(
   q: string,
   args?: (number | string | boolean | null)[]
@@ -88,12 +95,12 @@ export async function query(
   q: string,
   args: (number | string | boolean | null)[] | undefined,
   arrayRowMode: true
-): Promise<QueryArrayResult>;
+): Promise<QueryArrayResult<SimpleValue[]>>;
 export async function query(
   q: string,
   args?: Array<string | null | number | boolean>,
   arrayRowMode?: true
-): Promise<QueryResult | QueryArrayResult> {
+): Promise<QueryResult | QueryArrayResult<SimpleValue[]>> {
   const p = hls.pool;
   assert(p);
   if (arrayRowMode)

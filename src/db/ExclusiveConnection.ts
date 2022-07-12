@@ -3,7 +3,7 @@ import { PoolClient, QueryArrayResult, QueryResult } from 'pg';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { useEffect, useState } from 'react';
 import { useEvent } from 'util/useEvent';
-import { openConnection } from './Connection';
+import { openConnection, SimpleValue } from './Connection';
 import { DB } from './DB';
 
 class ExclusiveConnection {
@@ -12,7 +12,7 @@ class ExclusiveConnection {
   public pid: number | undefined;
 
   pending: {
-    resolve: (r: QueryArrayResult) => void;
+    resolve: (r: QueryArrayResult<SimpleValue[]>) => void;
     reject: (e: unknown) => void;
     query: string;
     arrayRowMode: boolean;
@@ -47,7 +47,7 @@ class ExclusiveConnection {
     q: string,
     args: (number | string | boolean | null)[] | undefined,
     arrayRowMode: true
-  ): Promise<QueryArrayResult>;
+  ): Promise<QueryArrayResult<SimpleValue[]>>;
   async query(
     q: string,
     args?: (number | string | boolean | null)[],

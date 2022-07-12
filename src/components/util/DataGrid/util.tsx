@@ -1,4 +1,6 @@
+import { SimpleValue } from 'db/Connection';
 import { QueryArrayResult } from 'pg';
+import { renderToString } from 'react-dom/server';
 
 const letterSize = 6;
 export function getValString(val: unknown) {
@@ -211,4 +213,115 @@ export function scrollTo(
   if (el.scrollTop !== scrollTop || el.scrollLeft !== scrollLeft) {
     el.scrollTo({ top: scrollTop, left: scrollLeft, behavior: 'auto' });
   }
+}
+
+export function getSelectionData(
+  result: QueryArrayResult<SimpleValue[]>,
+  selection: { rowIndex: [number, number]; colIndex: [number, number] }
+) {
+  return result.rows
+    .filter(
+      (_, i) =>
+        Math.min(...selection.rowIndex) <= i &&
+        i <= Math.max(...selection.rowIndex)
+    )
+    .map((row) =>
+      row.filter(
+        (_, i) =>
+          Math.min(...selection.colIndex) <= i &&
+          i <= Math.max(...selection.colIndex)
+      )
+    );
+}
+
+function toStringCellValue(cell: SimpleValue): string {
+  if (typeof cell === 'string') return cell;
+  if (typeof cell === 'number') return cell.toString();
+  if (typeof cell === 'boolean') return cell.toString();
+  if (cell === null) return '';
+  if (cell === undefined) return '';
+  return JSON.stringify(cell);
+}
+
+function toTsvCellValue(cell: SimpleValue): string {
+  const str = toStringCellValue(cell);
+  if (
+    str.indexOf('\r') !== -1 ||
+    str.indexOf('\t') !== -1 ||
+    str.indexOf('\\') !== -1 ||
+    str.indexOf('\n') !== -1
+  ) {
+    return str
+      .replace(/\\/g, '\\\\')
+      .replace(/\r/g, '\\r')
+      .replace(/\t/g, '\\t')
+      .replace(/\n/g, '\\n');
+  }
+  return str;
+}
+
+function toCsvCellValue(cell: SimpleValue): string {
+  const str = toStringCellValue(cell);
+  if (
+    str.indexOf('"') !== -1 ||
+    str.indexOf('\n') !== -1 ||
+    str.indexOf(';') !== -1
+  ) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+export function toCsv(data: ReturnType<typeof getSelectionData>): string[] {
+  return data.flatMap((row, i0) =>
+    i0
+      ? [
+          '\n',
+          ...row.flatMap((cell, i) =>
+            i ? [';', toCsvCellValue(cell)] : [toCsvCellValue(cell)]
+          ),
+        ]
+      : [
+          ...row.flatMap((cell, i) =>
+            i ? [';', toCsvCellValue(cell)] : [toCsvCellValue(cell)]
+          ),
+        ]
+  );
+}
+
+export function toTsv(data: ReturnType<typeof getSelectionData>): string[] {
+  return data.flatMap((row, i0) =>
+    i0
+      ? [
+          '\n',
+          ...row.flatMap((cell, i) =>
+            i ? ['\t', toTsvCellValue(cell)] : [toTsvCellValue(cell)]
+          ),
+        ]
+      : [
+          ...row.flatMap((cell, i) =>
+            i ? ['\t', toTsvCellValue(cell)] : [toTsvCellValue(cell)]
+          ),
+        ]
+  );
+}
+
+export function toHtml(data: ReturnType<typeof getSelectionData>): string {
+  return renderToString(
+    <table>
+      <tbody>
+        {data.map((row, i0) => (
+          <tr key={i0}>
+            {row.map((cell, i) => (
+              <td key={i}>{toStringCellValue(cell)}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+export function toText(data: ReturnType<typeof getSelectionData>): string[] {
+  return toTsv(data);
 }
