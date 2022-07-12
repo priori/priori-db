@@ -1,6 +1,7 @@
 import { keepTabOpen } from 'state/actions';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
+import { useTab } from 'components/main/connected/ConnectedApp';
 import { query } from '../../db/Connection';
 import { DataGrid } from '../util/DataGrid/DataGrid';
 import { TableFrameProps } from '../../types';
@@ -22,6 +23,12 @@ export function TableFrame(props: TableFrameProps) {
 
   const onscroll = useEvent(() => {
     keepTabOpen(props.uid);
+  });
+
+  useTab({
+    f5() {
+      service.reload();
+    },
   });
 
   return (
