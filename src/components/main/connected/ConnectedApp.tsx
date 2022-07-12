@@ -105,7 +105,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
     f5() {
       if (active) {
         const activeConf = tabsConfigurations[active];
-        if (activeConf.f5) activeConf.f5();
+        if (activeConf && activeConf.f5) activeConf.f5();
       }
     },
   });
