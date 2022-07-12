@@ -23,7 +23,6 @@ import {
 } from './util';
 
 export interface DataGridCoreProps {
-  // style: CSSProperties;
   result: QueryArrayResult;
   width: number;
   onScroll?: (() => void) | undefined;
@@ -428,10 +427,18 @@ export function DataGridCore(props: DataGridCoreProps) {
   }
 
   const onKeyDown = useEvent((e: React.KeyboardEvent) => {
-    if (e.key === 'PageUp') {
-      if (e.shiftKey) {
+    if (e.key === 'a' && e.ctrlKey) {
+      setState({
+        ...state,
+        selection: {
+          colIndex: [0, props.result.fields.length - 1],
+          rowIndex: [0, props.result.rows.length - 1],
+        },
+      });
+    } else if (e.key === 'PageUp') {
+      if (e.shiftKey || state.active) {
         const pageRows = Math.round((props.height - headerHeight) / rowHeight);
-        moveBy(0, -pageRows, true);
+        moveBy(0, -pageRows, e.shiftKey);
         return;
       }
       assert(gridContentRef.current);
@@ -445,9 +452,9 @@ export function DataGridCore(props: DataGridCoreProps) {
         behavior: 'smooth',
       });
     } else if (e.key === 'PageDown') {
-      if (e.shiftKey) {
+      if (e.shiftKey || state.active) {
         const pageRows = Math.round((props.height - headerHeight) / rowHeight);
-        moveBy(0, pageRows, true);
+        moveBy(0, pageRows, e.shiftKey);
         return;
       }
       assert(gridContentRef.current);
@@ -459,8 +466,8 @@ export function DataGridCore(props: DataGridCoreProps) {
         behavior: 'smooth',
       });
     } else if (e.key === 'Home') {
-      if (e.shiftKey) {
-        moveBy(0, -Infinity, true);
+      if (e.shiftKey || state.active) {
+        moveBy(0, -Infinity, e.shiftKey);
         return;
       }
       assert(gridContentRef.current);
@@ -470,8 +477,8 @@ export function DataGridCore(props: DataGridCoreProps) {
         behavior: 'smooth',
       });
     } else if (e.key === 'End') {
-      if (e.shiftKey) {
-        moveBy(0, Infinity, true);
+      if (e.shiftKey || state.active) {
+        moveBy(0, Infinity, e.shiftKey);
         return;
       }
       assert(gridContentRef.current);
