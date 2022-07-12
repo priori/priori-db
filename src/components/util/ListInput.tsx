@@ -14,17 +14,11 @@ export interface ListInputProps<Entry> {
     remove: null | (() => void)
   ): JSX.Element | null;
   entries: Entry[];
-  // eslint-disable-next-line react/require-default-props
   type?: 'div' | 'span' | 'tr' | undefined;
-  // eslint-disable-next-line react/require-default-props
   itemType?: 'div' | 'span' | 'tr' | undefined;
-  // eslint-disable-next-line react/require-default-props
-  itemStyle?: any | undefined;
-  // eslint-disable-next-line react/require-default-props
+  itemStyle?: CSSProperties | undefined;
   className?: string | undefined;
-  // eslint-disable-next-line react/require-default-props
   itemClass?: string | undefined;
-  // eslint-disable-next-line react/require-default-props
   style?: any;
 }
 export class ListInput<Entry extends object> extends Component<

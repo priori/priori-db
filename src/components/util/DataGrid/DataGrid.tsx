@@ -7,7 +7,6 @@ import { DataGridCore } from './DataGridCore';
 export interface GridProps {
   style: CSSProperties;
   result: QueryArrayResult | undefined;
-  // eslint-disable-next-line react/require-default-props
   onScroll?: (() => void) | undefined;
 }
 

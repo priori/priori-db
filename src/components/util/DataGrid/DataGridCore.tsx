@@ -26,7 +26,6 @@ export interface DataGridCoreProps {
   // style: CSSProperties;
   result: QueryArrayResult;
   width: number;
-  // eslint-disable-next-line react/require-default-props
   onScroll?: (() => void) | undefined;
   height: number;
 }
