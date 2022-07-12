@@ -1,13 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import assert from 'assert';
-import { Component } from 'react';
-
-const wm = new WeakMap<any>();
-let count = 0;
+import { Component, CSSProperties } from 'react';
 
 export interface ListInputProps<Entry> {
   newEntry(): Entry;
-  onChange(val: any): void;
+  onChange(val: Entry[]): void;
   entryRender(
     e: Entry,
     set: (e2: Entry) => void,
@@ -19,12 +15,16 @@ export interface ListInputProps<Entry> {
   itemStyle?: CSSProperties | undefined;
   className?: string | undefined;
   itemClass?: string | undefined;
-  style?: any;
+  style?: CSSProperties;
 }
 export class ListInput<Entry extends object> extends Component<
   ListInputProps<Entry>,
   never
 > {
+  wm = new WeakMap<Entry, number>();
+
+  count = 0;
+
   cache = new WeakMap<Entry>();
 
   newEntry: Entry | undefined;
@@ -35,9 +35,9 @@ export class ListInput<Entry extends object> extends Component<
 
   el: HTMLElement | null = null;
 
-  firstMousePos: any;
+  firstMousePos: { x: number; y: number } | undefined = undefined;
 
-  firstPos: any;
+  firstPos: { x: number; y: number } | undefined = undefined;
 
   positions:
     | {
@@ -50,7 +50,7 @@ export class ListInput<Entry extends object> extends Component<
       }[]
     | null = null;
 
-  rowEl: any;
+  rowEl: HTMLElement | null = null;
 
   lock: HTMLElement | null = null;
 
@@ -82,6 +82,8 @@ export class ListInput<Entry extends object> extends Component<
     if (started) {
       assert(!!this.positions);
       assert(!!this.clone);
+      assert(!!this.firstMousePos);
+      assert(!!this.firstPos);
       const yMove = e.pageY - this.firstMousePos.y;
       const center = this.firstPos.y + yMove + this.clone.offsetHeight / 2;
       const pos = [...this.positions];
@@ -98,7 +100,7 @@ export class ListInput<Entry extends object> extends Component<
       let index = -1;
       const { el } = this;
       assert(!!el);
-      const els = [...(el.children as any as any[])];
+      const els = [...(el.children as unknown as HTMLElement[])];
       for (const i in els) {
         if (els[i] === this.rowEl) {
           index = parseInt(i, 10);
@@ -114,9 +116,10 @@ export class ListInput<Entry extends object> extends Component<
       this.clone.parentNode.removeChild(this.clone);
     }
     if (this.lock) (this.lock.parentNode as HTMLElement).removeChild(this.lock);
+    assert(this.rowEl);
     this.rowEl.style.display =
-      (this.props.itemStyle && this.props.itemStyle.display) || null;
-    this.rowEl.style.opacity = null;
+      (this.props.itemStyle && `${this.props.itemStyle.display}`) || '';
+    this.rowEl.style.opacity = '';
     this.clone = null;
     this.lock = null;
     this.rowEl = null;
@@ -128,9 +131,9 @@ export class ListInput<Entry extends object> extends Component<
       assert(!!this.positions);
       this.positions.forEach((pos) => {
         pos.el.style.marginTop =
-          (this.props.itemStyle && this.props.itemStyle.marginTop) || null;
+          (this.props.itemStyle && `${this.props.itemStyle.marginTop}`) || '';
         if (this.props.itemStyle && this.props.itemStyle.margin)
-          pos.el.style.margin = this.props.itemStyle.margin;
+          pos.el.style.margin = `${this.props.itemStyle.margin}`;
         pos.el.style.width = '';
         pos.el.style.top = '';
         pos.el.style.position = '';
@@ -143,9 +146,11 @@ export class ListInput<Entry extends object> extends Component<
   onMouseMove(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    assert(!!this.firstMousePos);
     const xMove = e.pageX - this.firstMousePos.x;
     const yMove = e.pageY - this.firstMousePos.y;
     assert(!!this.clone);
+    assert(!!this.firstPos);
     const center = this.firstPos.y + yMove + this.clone.offsetHeight / 2;
     this.clone.style.top = `${
       this.firstPos.y +
@@ -171,12 +176,17 @@ export class ListInput<Entry extends object> extends Component<
     });
   }
 
-  onMouseDown(e: React.MouseEvent) {
+  onMouseDown(e: React.MouseEvent<HTMLElement>) {
     if (
-      !e.target ||
-      (e.target as HTMLElement).closest(
+      e.target instanceof HTMLElement &&
+      (e.target.matches(
         'input,textarea,select,button,a,[tabindex],[tabIndex]'
-      )
+      ) ||
+        e.currentTarget.contains(
+          e.target.closest(
+            'input,textarea,select,button,a,[tabindex],[tabIndex]'
+          )
+        ))
     ) {
       return;
     }
@@ -210,19 +220,20 @@ export class ListInput<Entry extends object> extends Component<
     if (typeof newEntry !== 'object' || !newEntry) {
       throw new Error('Novo registro inválido. Registros devem ser objetos.');
     }
-    if (wm.has(newEntry)) {
+    if (this.wm.has(newEntry)) {
       throw new Error('Novo registro inválido. Objeto já utilizado.');
     }
-    wm.set(newEntry, count);
-    count += 1;
+    this.wm.set(newEntry, this.count);
+    this.count += 1;
     this.newEntry = newEntry;
   }
 
   start() {
     assert(!!this.el);
+    assert(this.rowEl);
     this.el.style.position = 'relative';
     this.el.style.height = `${this.el.offsetHeight}px`;
-    const els = [...(this.el.children as any as any[])];
+    const els = [...(this.el.children as unknown as HTMLElement[])];
     // els.splice(els.length-1,1)
     const currentDisplay = this.rowEl.style.display;
     this.rowEl.style.display = 'none';
@@ -255,15 +266,16 @@ export class ListInput<Entry extends object> extends Component<
     this.positions = positions.map((pos) => {
       return { ...pos, top: pos.top - rect2.top };
     });
-    const clone = this.rowEl.cloneNode(true);
+    const clone = this.rowEl.cloneNode(true) as HTMLElement;
     clone.style.width = `${this.rowEl.offsetWidth}px`;
     clone.style.position = 'fixed';
+    assert(!!this.firstPos);
     clone.style.top = `${this.firstPos.y}px`;
     clone.style.left = `${this.firstPos.x}px`;
     const lock = document.createElement('div');
     lock.style.background = 'white';
-    // eslint-disable-next-line no-multi-assign
-    clone.style.zIndex = lock.style.zIndex = '999999';
+    clone.style.zIndex = '999999';
+    lock.style.zIndex = '999999';
     lock.style.opacity = '0';
     lock.style.position = 'fixed';
     lock.style.top = '0';
@@ -288,9 +300,9 @@ export class ListInput<Entry extends object> extends Component<
         let index = this.props.entries.indexOf(e);
         if (index === -1) index = this.props.entries.length;
         const { props } = this;
-        if (wm.has(newValue) && wm.get(newValue) !== wm.get(e))
+        if (this.wm.has(newValue) && this.wm.get(newValue) !== this.wm.get(e))
           throw new Error('Valor inválido.');
-        wm.set(newValue, wm.get(e));
+        this.wm.set(newValue, this.wm.get(e) as number);
         const newState = [
           ...props.entries.filter((_, i2) => i2 < index),
           newValue,
@@ -327,9 +339,9 @@ export class ListInput<Entry extends object> extends Component<
       if (!e || typeof e !== 'object')
         throw new Error('Registro inválido. Registros devem ser objetos.');
     props.entries.forEach((e) => {
-      if (!wm.has(e)) {
-        wm.set(e, count);
-        count += 1;
+      if (!this.wm.has(e)) {
+        this.wm.set(e, this.count);
+        this.count += 1;
       }
     });
     const types = {
@@ -349,7 +361,7 @@ export class ListInput<Entry extends object> extends Component<
         {[...props.entries, this.newEntry].map((e) => (
           <types.item
             style={this.props.itemStyle}
-            key={wm.get(e)}
+            key={e ? this.wm.get(e) : -1}
             onMouseDown={this.newEntry === e ? undefined : this.onMouseDown}
             className={`list-input-item${
               this.props.itemClass ? ` ${this.props.itemClass}` : ''
