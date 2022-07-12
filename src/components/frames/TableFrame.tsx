@@ -37,6 +37,7 @@ export function TableFrame(props: TableFrameProps) {
             right: 0,
           }}
           result={service.lastValidData}
+          emptyTable="Empty Table"
         />
       )}
     </>
