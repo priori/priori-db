@@ -1,5 +1,6 @@
 import assert from 'assert';
 import { useDeferredValue, useState } from 'react';
+import { useEvent } from 'util/useEvent';
 import {
   newSchema,
   newTable,
@@ -21,6 +22,7 @@ import {
   openDomains,
   openSequences,
   extraTableTab,
+  reloadNav,
 } from '../../../state/actions';
 import { NavSchema, Tab } from '../../../types';
 import { NavSearch } from './NavSearch';
@@ -52,8 +54,15 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
     timeoutMs: 300,
   });
   const [focus, setFocus] = useState(false);
+  const onKeyDown = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'F5') {
+      e.preventDefault();
+      e.stopPropagation();
+      reloadNav();
+    }
+  });
   return (
-    <div className="nav">
+    <div className="nav" tabIndex={0} onKeyDown={onKeyDown}>
       <div className={`nav--search ${focus ? 'focus' : ''}`}>
         <input
           type="text"
