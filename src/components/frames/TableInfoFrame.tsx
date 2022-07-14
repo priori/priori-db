@@ -2,6 +2,7 @@ import { useService } from 'util/useService';
 import { throwError } from 'util/throwError';
 import { KeyboardEvent, useState } from 'react';
 import { useEvent } from 'util/useEvent';
+import { useTab } from 'components/main/connected/ConnectedApp';
 import { TableInfoFrameProps } from '../../types';
 import { reloadNav, closeTab } from '../../state/actions';
 import { DB } from '../../db/DB';
@@ -59,6 +60,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     ]);
     return { cols, indexes, table, type } as TableInfoFrameState;
   }, []);
+
+  useTab({
+    f5() {
+      service.reload();
+    },
+  });
   const state = service.lastValidData || {
     indexes: null,
     cols: null,
