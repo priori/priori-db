@@ -9,7 +9,7 @@ import { useEvent } from 'util/useEvent';
 import assert from 'assert';
 import { fullScreen } from 'util/fullScreen';
 import { useShortcuts } from 'util/shortcuts';
-import { Nav } from './Nav';
+import { Nav } from './Nav/Nav';
 import { Tabs } from './Tabs';
 import {
   askToCloseWindow,
