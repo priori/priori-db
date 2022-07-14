@@ -57,8 +57,8 @@
 .grid tbody tr:hover {
   background: #ddd;
 }
-.grid tbody tr:last-of-type {
-  border-bottom: 1px solid #ddd;
+.grid tbody tr:nth-child(2n):last-of-type {
+  border-bottom: 1px solid #d8d8d8;
 }
 .grid tbody tr:hover td {
   border-color: #ccc;
