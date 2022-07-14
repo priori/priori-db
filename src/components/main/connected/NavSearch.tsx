@@ -14,7 +14,8 @@ import {
   previewTable,
   previewTableInfo,
 } from 'state/actions';
-import { NavSchema } from 'types';
+import { NavSchema, Tab } from 'types';
+import { equals } from 'util/equals';
 import { useEvent } from 'util/useEvent';
 
 type Entity = {
@@ -216,10 +217,114 @@ const icons = {
   SCHEMA: 'fa fa-database',
   FUNCTION: 'function-icon',
 };
-const colors = {
-  VIEW: 'rgb(17, 136, 17)',
-  'BASE TABLE': 'rgb(0, 0, 119)',
-  SCHEMA: 'rgba(0,0,0,.5)',
+
+const NavItem = ({
+  entity,
+  children,
+  tabs,
+}: {
+  entity: Entity;
+  children: React.ReactNode;
+  tabs: Tab[];
+}) => {
+  const active = tabs.find((c) => c.active) || null;
+  const isActive =
+    active &&
+    ((entity.type === 'SCHEMA' &&
+      active.props.type === 'schemainfo' &&
+      entity.name === active.props.schema) ||
+      ((active.props.type === 'table' || active.props.type === 'tableinfo') &&
+        active.props.schema === entity.schema &&
+        active.props.table === entity.name) ||
+      (active.props.type === 'function' &&
+        active.props.schema === entity.schema &&
+        active.props.name === entity.name) ||
+      (active.props.type === 'domain' &&
+        active.props.schema === entity.schema &&
+        active.props.name === entity.name) ||
+      (active.props.type === 'sequence' &&
+        active.props.schema === entity.schema &&
+        active.props.name === entity.name));
+  const isOpen = tabs.find(
+    (c) =>
+      (entity.type === 'SCHEMA' &&
+        c.props.type === 'schemainfo' &&
+        entity.name === c.props.schema) ||
+      ((c.props.type === 'table' || c.props.type === 'tableinfo') &&
+        c.props.schema === entity.schema &&
+        c.props.table === entity.name) ||
+      (c.props.type === 'function' &&
+        c.props.schema === entity.schema &&
+        c.props.name === entity.name) ||
+      (c.props.type === 'domain' &&
+        c.props.schema === entity.schema &&
+        c.props.name === entity.name) ||
+      (c.props.type === 'sequence' &&
+        c.props.schema === entity.schema &&
+        c.props.name === entity.name)
+  );
+  const onClick = useEvent(() => {
+    const e = entity;
+    if (e.type === 'SCHEMA') previewSchemaInfo(e.name);
+    else if (
+      e.type === 'BASE TABLE' ||
+      e.type === 'MATERIALIZED VIEW' ||
+      e.type === 'VIEW'
+    )
+      previewTable(e.schema, { type: e.type, name: e.name });
+    else if (e.type === 'DOMAIN') previewDomain(e.schema, e.name);
+    else if (e.type === 'FUNCTION') previewFunction(e.schema, e.name);
+    else if (e.type === 'SEQUENCE') previewSequence(e.schema, e.name);
+  });
+  const onDoubleClick = useEvent(() => {
+    const e = entity;
+    if (e.type === 'SCHEMA') keepSchemaInfo(e.name);
+    else if (
+      e.type === 'BASE TABLE' ||
+      e.type === 'MATERIALIZED VIEW' ||
+      e.type === 'VIEW'
+    )
+      keepOpenTable(e.schema, { type: e.type, name: e.name });
+    else if (e.type === 'DOMAIN') keepDomain(e.schema, e.name);
+    else if (e.type === 'FUNCTION') keepFunction(e.schema, e.name);
+    else if (e.type === 'SEQUENCE') keepSequence(e.schema, e.name);
+  });
+  const onInfoDoubleClick = useEvent((ev: React.MouseEvent<HTMLElement>) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const e = entity;
+    keepTableInfo(e.schema, e.name);
+  });
+  const onInfoClick = useEvent((ev: React.MouseEvent<HTMLElement>) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const e = entity;
+    previewTableInfo(e.schema, e.name);
+  });
+  return (
+    <div
+      className={`nav-search--entity${isActive ? ' active' : ''}${
+        isOpen ? ' open' : ''
+      }${entity.type === 'VIEW' ? ' view' : ''}`}
+      onClick={onClick}
+      onDoubleClick={onDoubleClick}
+    >
+      {entity.type && icons[entity.type] ? (
+        <i className={icons[entity.type]} />
+      ) : null}
+      <span>{children}</span>
+      {entity.type === 'BASE TABLE' ||
+      entity.type === 'MATERIALIZED VIEW' ||
+      entity.type === 'VIEW' ? (
+        <i
+          className="fa fa-info-circle"
+          title={`${entity.type} INFO`}
+          onClick={onInfoClick}
+          onDoubleClick={onInfoDoubleClick}
+        />
+      ) : null}
+    </div>
+  );
 };
 
 export const NavSearch = React.memo(
@@ -227,10 +332,12 @@ export const NavSearch = React.memo(
     search,
     schemas,
     focus,
+    tabs,
   }: {
     focus: boolean;
     search: string | null;
     schemas: NavSchema[];
+    tabs: Tab[];
   }) => {
     const [scroll, setScroll] = useState(0);
     const [showAll, setShowAll] = useState(false);
@@ -260,36 +367,6 @@ export const NavSearch = React.memo(
     const onScroll = useEvent((e: React.UIEvent<HTMLDivElement>) => {
       setScroll((e.target as HTMLDivElement).scrollTop);
     });
-    const onClick = useEvent((e: Entity) => {
-      if (e.type === 'SCHEMA') previewSchemaInfo(e.name);
-      else if (
-        e.type === 'BASE TABLE' ||
-        e.type === 'MATERIALIZED VIEW' ||
-        e.type === 'VIEW'
-      )
-        previewTable(e.schema, { type: e.type, name: e.name });
-      else if (e.type === 'DOMAIN') previewDomain(e.schema, e.name);
-      else if (e.type === 'FUNCTION') previewFunction(e.schema, e.name);
-      else if (e.type === 'SEQUENCE') previewSequence(e.schema, e.name);
-    });
-    const onDoubleClick = useEvent((e: Entity) => {
-      if (e.type === 'SCHEMA') keepSchemaInfo(e.name);
-      else if (
-        e.type === 'BASE TABLE' ||
-        e.type === 'MATERIALIZED VIEW' ||
-        e.type === 'VIEW'
-      )
-        keepOpenTable(e.schema, { type: e.type, name: e.name });
-      else if (e.type === 'DOMAIN') keepDomain(e.schema, e.name);
-      else if (e.type === 'FUNCTION') keepFunction(e.schema, e.name);
-      else if (e.type === 'SEQUENCE') keepSequence(e.schema, e.name);
-    });
-    const onInfoDoubleClick = useEvent((e: Entity) => {
-      keepTableInfo(e.schema, e.name);
-    });
-    const onInfoClick = useEvent((e: Entity) => {
-      previewTableInfo(e.schema, e.name);
-    });
     if (focus && !search) {
       return (
         <div className="nav-search">
@@ -314,53 +391,23 @@ export const NavSearch = React.memo(
                 <i className="fa fa-ellipsis-h" />
               </div>
             ) : (
-              <div
-                className="nav-search--entity"
+              <NavItem
                 key={`${m.entity.type}\n${m.entity.schema || ''}\n${
                   m.entity.name || ''
                 }`}
-                onClick={() => {
-                  onClick(m.entity);
-                }}
-                onDoubleClick={() => {
-                  onDoubleClick(m.entity);
-                }}
+                entity={m.entity}
+                tabs={tabs}
               >
-                {m.entity.type && icons[m.entity.type] ? (
-                  <i
-                    className={icons[m.entity.type]}
-                    style={
-                      colors[m.entity.type]
-                        ? { color: colors[m.entity.type] }
-                        : undefined
-                    }
-                  />
-                ) : null}
-                <span>{m.node}</span>
-                {m.entity.type === 'BASE TABLE' ||
-                m.entity.type === 'MATERIALIZED VIEW' ||
-                m.entity.type === 'VIEW' ? (
-                  <i
-                    className="fa fa-info-circle"
-                    title={`${m.entity.type} INFO`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onInfoClick(m.entity);
-                    }}
-                    onDoubleClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onInfoDoubleClick(m.entity);
-                    }}
-                  />
-                ) : null}
-              </div>
+                {m.node}
+              </NavItem>
             )
           )}
       </div>
     );
   },
   (a, b) =>
-    a.schemas === b.schemas && a.search === b.search && a.focus === b.focus
+    a.schemas === b.schemas &&
+    a.search === b.search &&
+    a.focus === b.focus &&
+    equals(a.tabs, b.tabs)
 );

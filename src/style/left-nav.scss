@@ -55,7 +55,7 @@ div.nav {
     color: #aaa;
     font-style: italic;
   }
-  .schema--internal .arrow:after {
+  .schema--internal > .arrow:after {
     border-left: 6px solid #bbb;
   }
   .arrow.open:after {
@@ -207,7 +207,8 @@ div.nav {
   .table,
   .sequence,
   .domain,
-  .function {
+  .function,
+  .nav-search--entity {
     &:hover {
       background: #dfdfdf;
     }
@@ -241,7 +242,11 @@ div.nav {
     color: #007;
   }
 
-  .table.active {
+  .table.active,
+  .nav-search--entity.active {
+    .fa-database {
+      color: rgba(256, 256, 256, 0.85);
+    }
     .fa.fa-table {
       color: #fff;
     }
@@ -331,6 +336,10 @@ div.nav {
   min-height: 304px;
   overflow-y: auto;
   overflow-x: hidden;
+  .fa-database {
+    color: rgba(0, 0, 0, 0.5);
+    margin-top: 2px;
+  }
   .nav-search--entity {
     padding-left: 20px;
     padding-right: 0px;
@@ -339,12 +348,13 @@ div.nav {
     &:hover {
       background: #dfdfdf;
     }
-    height: 19px;
+    height: 20px;
+    line-height: 19px;
   }
   i {
     display: inline-block;
     margin-right: 5px;
-    margin-top: 1px;
+    margin-top: 3px;
     position: relative;
     top: 1px;
     font-size: 14px;
@@ -377,8 +387,9 @@ div.nav {
     background: #fe0;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     border-radius: 3px;
-    padding: 1px;
+    padding: 1px 1px 0 1px;
     margin: 0 -1px;
+    text-shadow: none;
   }
 }
 

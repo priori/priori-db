@@ -43,15 +43,15 @@ function height(schema: NavSchema) {
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-type useDeferredValueFix = (
-  s: string | null,
-  config: { timeoutMs: number }
-) => string | null;
+type useDeferredValueFix<T> = (s: T, config: { timeoutMs: number }) => T;
 export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
   const active = props.tabs.find((c) => c.active) || null;
   const [searchText, setSearchText] = useState('');
-  const search = (useDeferredValue as useDeferredValueFix)(searchText, {
+  const search = (useDeferredValue as useDeferredValueFix<string>)(searchText, {
     timeoutMs: 300,
+  });
+  const tabs = (useDeferredValue as useDeferredValueFix<Tab[]>)(props.tabs, {
+    timeoutMs: 150,
   });
   const [focus, setFocus] = useState(false);
   const onKeyDown = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -82,7 +82,12 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
           <i className="fa fa-search" />
         )}
       </div>
-      <NavSearch focus={focus} search={search} schemas={props.schemas} />
+      <NavSearch
+        focus={focus}
+        search={search}
+        schemas={props.schemas}
+        tabs={tabs}
+      />
       <div className="nav-tree">
         {props.schemas &&
           props.schemas.map((schema) => (
