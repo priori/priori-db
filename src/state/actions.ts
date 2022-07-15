@@ -76,10 +76,15 @@ export async function newConnection(
   }
 }
 
+export async function reloadNav() {
+  const newSchemas = await DB.listAll();
+  state.updateSchemas(newSchemas);
+}
+
 export function createSchema(name: string) {
   DB.createSchema(name).then(
     () => {
-      state.createSchema(name);
+      reloadNav();
     },
     (err) => {
       throwError(err);
@@ -128,11 +133,6 @@ export async function connect(s: string) {
     state.setConnectionError(err);
     throw err;
   }
-}
-
-export async function reloadNav() {
-  const newSchemas = await DB.listAll();
-  state.updateSchemas(newSchemas);
 }
 
 export function closeThisAndReloadNav(uid: number) {

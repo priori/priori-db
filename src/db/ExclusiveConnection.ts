@@ -42,7 +42,7 @@ class ExclusiveConnection {
   async query(
     q: string,
     args?: (number | string | boolean | null)[]
-  ): Promise<QueryResult>;
+  ): Promise<QueryResult<{ [key: string]: SimpleValue }>>;
   async query(
     q: string,
     args: (number | string | boolean | null)[] | undefined,

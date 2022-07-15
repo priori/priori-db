@@ -14,6 +14,7 @@ import {
   previewTableInfo,
 } from 'state/actions';
 import { useEvent } from 'util/useEvent';
+import assert from 'assert';
 import { Entity } from './Nav';
 
 const icons = {
@@ -100,12 +101,14 @@ export const NavItem = ({
     ev.preventDefault();
     ev.stopPropagation();
     const e = entity;
+    assert(e.schema);
     keepTableInfo(e.schema, e.name);
   });
   const onInfoClick = useEvent((ev: React.MouseEvent<HTMLElement>) => {
     ev.preventDefault();
     ev.stopPropagation();
     const e = entity;
+    assert(e.schema);
     previewTableInfo(e.schema, e.name);
   });
   return (

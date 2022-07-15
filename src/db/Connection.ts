@@ -85,12 +85,13 @@ export type SimpleValue =
   | string
   | boolean
   | null
-  | { [key: string]: SimpleValue };
+  | { [key: string]: SimpleValue }
+  | SimpleValue[];
 
 export async function query(
   q: string,
   args?: (number | string | boolean | null)[]
-): Promise<QueryResult>;
+): Promise<QueryResult<{ [key: string]: SimpleValue }>>;
 export async function query(
   q: string,
   args: (number | string | boolean | null)[] | undefined,
@@ -100,7 +101,9 @@ export async function query(
   q: string,
   args?: Array<string | null | number | boolean>,
   arrayRowMode?: true
-): Promise<QueryResult | QueryArrayResult<SimpleValue[]>> {
+): Promise<
+  QueryResult<{ [key: string]: SimpleValue }> | QueryArrayResult<SimpleValue[]>
+> {
   const p = hls.pool;
   assert(p);
   if (arrayRowMode)
@@ -109,7 +112,7 @@ export async function query(
       rowMode: 'array',
       values: args,
     });
-  return p.query(q, args);
+  return p.query<{ [key: string]: SimpleValue }>(q, args);
 }
 
 export async function list(

@@ -19,7 +19,7 @@ export type Entity = {
     | 'SEQUENCE'
     | 'SCHEMA';
   schema?: string;
-};
+} & ({ schema: string } | { type: 'SCHEMA' });
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type useDeferredValueFix<T> = (s: T, config: { timeoutMs: number }) => T;

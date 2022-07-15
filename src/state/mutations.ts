@@ -378,28 +378,6 @@ export function cancelCreateSchema(current: AppState) {
   };
 }
 
-export function createSchema(current: AppState, name: string) {
-  return {
-    ...current,
-    schemas: [
-      ...(current.schemas as NavSchema[]),
-      {
-        name,
-        open: false,
-        fullView: false,
-        sequencesOpen: false,
-        functionsOpen: false,
-        domainsOpen: false,
-        tables: [],
-        domains: [],
-        sequences: [],
-        functions: [],
-      } as NavSchema,
-    ],
-    newSchema: false,
-  } as AppState;
-}
-
 export function updateHeaderTabsDisplayOrder(
   current: AppState,
   sort: number[]
@@ -454,52 +432,25 @@ export function keepOpenTable(
 export function updateSchemas(
   current: AppState,
   schemas: {
+    internal: boolean;
+    current: boolean;
     tables: {
-      type:
-        | 'MATERIALIZED VIEW'
-        | 'VIEW'
-        | 'BASE TABLE'
-        | 'FUNCTION'
-        | 'SEQUENCE'
-        | 'DOMAIN';
+      type: 'MATERIALIZED VIEW' | 'VIEW' | 'BASE TABLE';
       name: string;
-      schema_id: number;
     }[];
     functions: {
-      type:
-        | 'MATERIALIZED VIEW'
-        | 'VIEW'
-        | 'BASE TABLE'
-        | 'FUNCTION'
-        | 'SEQUENCE'
-        | 'DOMAIN';
+      type: 'FUNCTION';
       name: string;
-      schema_id: number;
     }[];
     sequences: {
-      type:
-        | 'MATERIALIZED VIEW'
-        | 'VIEW'
-        | 'BASE TABLE'
-        | 'FUNCTION'
-        | 'SEQUENCE'
-        | 'DOMAIN';
+      type: 'SEQUENCE';
       name: string;
-      schema_id: number;
     }[];
     domains: {
-      type:
-        | 'MATERIALIZED VIEW'
-        | 'VIEW'
-        | 'BASE TABLE'
-        | 'FUNCTION'
-        | 'SEQUENCE'
-        | 'DOMAIN';
+      type: 'DOMAIN';
       name: string;
-      schema_id: number;
     }[];
     name: string;
-    schema_id: number;
   }[]
 ) {
   const cSchemas = current.schemas;
@@ -521,7 +472,7 @@ export function updateSchemas(
         functionsOpen: false,
       };
     }),
-  };
+  } as AppState;
 }
 
 export function closeTab(current: AppState, f: number | FrameProps) {

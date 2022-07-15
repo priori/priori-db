@@ -271,25 +271,39 @@ export const DB = {
       return a.name.localeCompare(b.name);
     });
     return schemas.map((s) => ({
-      ...s,
+      name: s.name,
       internal: s.name === 'pg_catalog' || s.name === 'information_schema',
       current: s.name === currentSchema,
-      tables: entities.filter(
-        (e) =>
-          e.schema_id === s.schema_id &&
-          (e.type === 'MATERIALIZED VIEW' ||
-            e.type === 'VIEW' ||
-            e.type === 'BASE TABLE')
-      ),
-      functions: entities.filter(
-        (e) => e.schema_id === s.schema_id && e.type === 'FUNCTION'
-      ),
-      sequences: entities.filter(
-        (e) => e.schema_id === s.schema_id && e.type === 'SEQUENCE'
-      ),
-      domains: entities.filter(
-        (e) => e.schema_id === s.schema_id && e.type === 'DOMAIN'
-      ),
+      tables: entities
+        .filter(
+          (e) =>
+            e.schema_id === s.schema_id &&
+            (e.type === 'MATERIALIZED VIEW' ||
+              e.type === 'VIEW' ||
+              e.type === 'BASE TABLE')
+        )
+        .map((v) => ({ name: v.name, type: v.type })) as {
+        type: EntityType & ('MATERIALIZED VIEW' | 'VIEW' | 'BASE TABLE');
+        name: string;
+      }[],
+      functions: entities
+        .filter((e) => e.schema_id === s.schema_id && e.type === 'FUNCTION')
+        .map((v) => ({ name: v.name, type: v.type })) as {
+        type: EntityType & 'FUNCTION';
+        name: string;
+      }[],
+      sequences: entities
+        .filter((e) => e.schema_id === s.schema_id && e.type === 'SEQUENCE')
+        .map((v) => ({ name: v.name, type: v.type })) as {
+        type: EntityType & 'SEQUENCE';
+        name: string;
+      }[],
+      domains: entities
+        .filter((e) => e.schema_id === s.schema_id && e.type === 'DOMAIN')
+        .map((v) => ({ name: v.name, type: v.type })) as {
+        type: EntityType & 'DOMAIN';
+        name: string;
+      }[],
     }));
   },
 
