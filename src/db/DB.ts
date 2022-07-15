@@ -129,7 +129,7 @@ export const DB = {
       `
       SELECT
         cols.column_name,
-        cols.data_type,
+        format_type(a.atttypid, null) data_type,
         cols.column_default,
         i.indisprimary IS NOT NULL is_primary,
         CASE
