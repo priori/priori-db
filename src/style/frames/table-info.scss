@@ -176,14 +176,17 @@ span.column {
     background: #1976d2;
     color: white;
     border-radius: 17px;
-    max-width: 296px;
     text-align: center;
     height: 77px;
     transition: 0.25s ease-in-out all;
-    width: 296px;
+    min-width: 296px;
     margin-right: 10px;
-    font-size: 32px;
+    font-size: 52px;
     font-weight: bold;
+    font-family: monospace;
+    line-height: 40px;
+    color: #fe4;
+    text-shadow: 0 1px 2px black;
     &.loading {
       opacity: 0.87;
     }
@@ -241,4 +244,32 @@ div.comment {
 }
 button[disabled] {
   opacity: 0.33;
+}
+
+.dialog-error {
+  font-size: 15px;
+  line-height: 1.3em;
+  position: absolute;
+  padding: 10px 5px 0 5px;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  color: #e10;
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+.dialog-error--message {
+  user-select: text;
+  padding: 0 10px;
+}
+.dialog-error--buttons {
+  text-align: right;
+}
+.dialog-error--main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  overflow: auto;
 }

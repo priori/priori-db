@@ -27,6 +27,14 @@ export const DB = {
     return DB.updateEntity('SEQUENCE', schema, table, update);
   },
 
+  async updateSequenceValue(schema: string, name: string, value: string) {
+    if (!value || !value.match(/^(\d+|\.)+$/))
+      throw new Error(`Invalid sequence value (${value})`);
+    await query(
+      `ALTER SEQUENCE ${label(schema)}.${label(name)} RESTART WITH ${value}`
+    );
+  },
+
   async updateTable(
     schema: string,
     table: string,

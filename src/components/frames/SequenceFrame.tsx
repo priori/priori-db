@@ -8,7 +8,7 @@ import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Dialog } from 'components/util/Dialog';
 import { first } from 'db/Connection';
-import { Comment, Rename } from './TableInfoFrame';
+import { Comment, InputDialog, Rename } from './TableInfoFrame';
 
 type SequenceFrameState = {
   type: {
@@ -46,6 +46,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
     dropConfirmation: false,
     editComment: false,
     rename: false,
+    updateValue: false,
   });
 
   const dropCascade = useEvent(() => {
@@ -114,6 +115,13 @@ export function SequenceFrame(props: SequenceFrameProps) {
     set({ ...state, rename: false });
   });
 
+  const onUpdateCurrentValue = useEvent(async (value: string) => {
+    await DB.updateSequenceValue(props.schema, props.name, value);
+    await service.reload();
+    reloadNav();
+    set({ ...state, updateValue: false });
+  });
+
   return (
     <div>
       <h1>
@@ -127,10 +135,23 @@ export function SequenceFrame(props: SequenceFrameProps) {
           {serviceState.lastValue}
         </div>
         <div>
-          <button type="button">
+          <button
+            type="button"
+            onClick={() => set({ ...state, updateValue: true })}
+          >
             Update Current Value <i className="fa fa-retweet" />
           </button>{' '}
         </div>
+        {state.updateValue ? (
+          <InputDialog
+            updateText="Update"
+            onUpdate={onUpdateCurrentValue}
+            onCancel={() => set({ ...state, updateValue: false })}
+            type="number"
+            relativeTo="previousSibling"
+            value={`${serviceState.lastValue || ''}`}
+          />
+        ) : null}
       </div>
       <div className="table-info-frame__actions">
         <button
@@ -150,6 +171,13 @@ export function SequenceFrame(props: SequenceFrameProps) {
             onUpdate={onRename}
           />
         ) : null}
+        <button type="button">
+          Update Schema{' '}
+          <i
+            className="fa fa-arrow-right"
+            style={{ transform: 'rotate(-45deg)' }}
+          />
+        </button>{' '}
         <button
           type="button"
           onClick={

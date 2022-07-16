@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Dialog } from 'components/util/Dialog';
+import { grantError } from 'util/errors';
 import { TableInfoFrameProps } from '../../types';
 import { reloadNav, closeTab, renameEntity } from '../../state/actions';
 import { DB } from '../../db/DB';
@@ -76,6 +77,93 @@ export function Comment({
   );
 }
 
+export function InputDialog({
+  value,
+  onUpdate,
+  onCancel,
+  relativeTo,
+  updateText,
+  type,
+  options,
+}: {
+  value: string;
+  onUpdate: (v: string) => Promise<void>;
+  onCancel: () => void;
+  updateText: string;
+  type?: 'text' | 'number';
+  options?: string[];
+  relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
+}) {
+  const [state, setState] = useState(value);
+  const [error, setError] = useState<Error | null>(null);
+  const focusRef = useEvent((el: HTMLInputElement | null) => {
+    if (el) {
+      setTimeout(() => {
+        el.focus();
+        if (type !== 'number')
+          el.setSelectionRange(el.value.length, el.value.length);
+      }, 10);
+    }
+  });
+  return (
+    <Dialog relativeTo={relativeTo} onBlur={onCancel}>
+      {error ? (
+        <div className="dialog-error">
+          <div className="dialog-error--main">
+            <div className="dialog-error--message">{error.message}</div>
+          </div>
+          <div className="dialog-error--buttons">
+            <button
+              onClick={() => setError(null)}
+              type="button"
+              style={{
+                padding: '6px 14px !important',
+                boxShadow: 'none',
+              }}
+            >
+              Ok
+            </button>
+          </div>
+        </div>
+      ) : null}
+      {options ? (
+        <select>{options.map((o) => null)}</select>
+      ) : (
+        <input
+          type={type || 'text'}
+          ref={focusRef}
+          value={state}
+          onChange={(e) => setState(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              onCancel();
+            } else if (e.key === 'Enter') {
+              if (state === value) onCancel();
+              else onUpdate(state).catch((err) => setError(grantError(err)));
+            }
+          }}
+        />
+      )}
+      <button style={{ fontWeight: 'normal' }} type="button" onClick={onCancel}>
+        Cancel
+      </button>{' '}
+      <button
+        type="button"
+        disabled={state === value}
+        onClick={
+          state === value
+            ? undefined
+            : () => {
+                onUpdate(state).catch((e) => setError(grantError(e)));
+              }
+        }
+      >
+        {updateText} <i className="fa fa-check" />
+      </button>
+    </Dialog>
+  );
+}
+
 export function Rename({
   value,
   onUpdate,
@@ -87,42 +175,14 @@ export function Rename({
   onCancel: () => void;
   relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
 }) {
-  const [state, setState] = useState(value);
-  const focusRef = useEvent((el: HTMLInputElement | null) => {
-    if (el) {
-      setTimeout(() => {
-        el.focus();
-        el.setSelectionRange(el.value.length, el.value.length);
-      }, 10);
-    }
-  });
   return (
-    <Dialog relativeTo={relativeTo} onBlur={onCancel}>
-      <input
-        type="text"
-        ref={focusRef}
-        value={state}
-        onChange={(e) => setState(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') {
-            onCancel();
-          } else if (e.key === 'Enter') {
-            if (state === value) onCancel();
-            else onUpdate(state);
-          }
-        }}
-      />
-      <button style={{ fontWeight: 'normal' }} type="button" onClick={onCancel}>
-        Cancel
-      </button>{' '}
-      <button
-        type="button"
-        disabled={state === value}
-        onClick={state === value ? undefined : () => onUpdate(state)}
-      >
-        Rename <i className="fa fa-check" />
-      </button>
-    </Dialog>
+    <InputDialog
+      value={value}
+      onUpdate={onUpdate}
+      onCancel={onCancel}
+      relativeTo={relativeTo}
+      updateText="Rename"
+    />
   );
 }
 
