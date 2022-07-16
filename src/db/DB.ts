@@ -1,11 +1,213 @@
-import { list, first, query } from './Connection';
+import { list, first, query, openConnection } from './Connection';
 import { EntityType, Type } from '../types';
 
 function label(s: string) {
   return `"${s.replaceAll('"', '""')}"`;
 }
 
+function str(s: string) {
+  return `'${s.replace(/'/g, "''").replace(/\\/g, '\\\\')}'`;
+}
+
 export const DB = {
+  async tableComment(schema: string, table: string) {
+    const res = await first(
+      `SELECT obj_description('${label(schema)}.${label(
+        table
+      )}'::regclass) "comment"`
+    );
+    return res.comment as string | null;
+  },
+
+  async updateSequence(
+    schema: string,
+    table: string,
+    update: { comment?: string | null; name?: string; schema?: string }
+  ) {
+    return DB.updateEntity('SEQUENCE', schema, table, update);
+  },
+
+  async updateTable(
+    schema: string,
+    table: string,
+    update: { comment?: string | null; name?: string; schema?: string }
+  ) {
+    return DB.updateEntity('TABLE', schema, table, update);
+  },
+
+  async updateView(
+    schema: string,
+    table: string,
+    update: { comment?: string | null; name?: string; schema?: string }
+  ) {
+    return DB.updateEntity('VIEW', schema, table, update);
+  },
+
+  async updateDomain(
+    schema: string,
+    table: string,
+    update: { comment?: string | null; name?: string; schema?: string }
+  ) {
+    return DB.updateEntity('DOMAIN', schema, table, update);
+  },
+
+  async updateMView(
+    schema: string,
+    table: string,
+    update: { comment?: string | null; name?: string; schema?: string }
+  ) {
+    return DB.updateEntity('MATERIALIZED VIEW', schema, table, update);
+  },
+
+  async updateFunction(
+    schema: string,
+    name: string,
+    update: { comment?: string | null; name?: string; schema?: string }
+  ) {
+    return DB.updateEntity('FUNCTION', schema, name, update);
+  },
+
+  async updateEntity(
+    entityType:
+      | 'TABLE'
+      | 'VIEW'
+      | 'MATERIALIZED VIEW'
+      | 'FUNCTION'
+      | 'SEQUENCE'
+      | 'DOMAIN',
+    schema: string,
+    table: string,
+    update: { comment?: string | null; name?: string; schema?: string }
+  ) {
+    const c = await openConnection();
+    try {
+      await c.query('BEGIN');
+      if (update.comment) {
+        await c.query(
+          `COMMENT ON ${entityType} ${label(schema)}.${label(table)} IS ${str(
+            update.comment
+          )}`
+        );
+      } else if (update.comment !== undefined) {
+        await c.query(
+          `COMMENT ON ${entityType} ${label(schema)}.${label(table)} IS NULL`
+        );
+      }
+      if (update.name) {
+        await c.query(
+          `ALTER ${entityType} ${label(schema)}.${label(
+            table
+          )} RENAME TO ${label(update.name)}`
+        );
+      }
+      if (update.schema) {
+        await c.query(
+          `ALTER ${entityType} ${label(schema)}.${label(
+            table
+          )} SET SCHEMA ${label(update.schema)}`
+        );
+      }
+      await c.query('COMMIT');
+    } catch (err) {
+      await c.query('ROLLBACK');
+      throw err;
+    } finally {
+      c.release(true);
+    }
+  },
+
+  async removeCol(schema: string, table: string, col: string) {
+    await query(
+      `ALTER TABLE ${label(schema)}.${label(table)} DROP COLUMN ${label(col)}`
+    );
+  },
+
+  async updateCol(
+    schema: string,
+    tabela: string,
+    column: string,
+    update: {
+      comment?: string;
+      name?: string;
+      type?: string;
+      scale?: number;
+      length?: number;
+      notNull?: boolean;
+    } & (
+      | {
+          comment?: string;
+          name?: string;
+          notNull?: boolean;
+        }
+      | {
+          comment?: string | null;
+          name?: string;
+          type: string;
+          scale?: number;
+          length?: number;
+          notNull?: boolean;
+        }
+    )
+  ) {
+    const c = await openConnection();
+    try {
+      await c.query('BEGIN');
+      if (update.comment) {
+        await c.query(
+          `COMMENT ON COLUMN ${label(schema)}.${label(tabela)}.${label(
+            column
+          )} IS $1;`,
+          [update.comment]
+        );
+      } else if (update.comment !== undefined) {
+        await c.query(
+          `COMMENT ON COLUMN ${label(schema)}.${label(tabela)}.${label(
+            column
+          )} IS NULL`
+        );
+      }
+      if (update.name) {
+        await c.query(
+          `ALTER TABLE ${label(schema)}.${label(tabela)} RENAME COLUMN ${label(
+            column
+          )} TO ${label(update.name)}`
+        );
+      }
+      if (update.type) {
+        await c.query(
+          `ALTER TABLE ${label(schema)}.${label(tabela)} ALTER COLUMN ${label(
+            column
+          )} TYPE ${update.type}${
+            update.length
+              ? `(${update.length}${update.scale ? `, ${update.scale}` : ''})`
+              : ''
+          }`
+        );
+      }
+      if (update.notNull !== undefined) {
+        if (update.notNull) {
+          await c.query(
+            `ALTER TABLE ${label(schema)}.${label(tabela)} ALTER COLUMN ${label(
+              column
+            )} SET NOT NULL`
+          );
+        } else {
+          await c.query(
+            `ALTER TABLE ${label(schema)}.${label(tabela)} ALTER COLUMN ${label(
+              column
+            )} DROP NOT NULL`
+          );
+        }
+      }
+      await c.query('COMMIT');
+    } catch (e) {
+      await c.query('ROLLBACK');
+      throw e;
+    } finally {
+      c.release(true);
+    }
+  },
+
   async pgTable(schema: string, table: string) {
     return (await first(
       `
@@ -14,15 +216,52 @@ export const DB = {
       WHERE
         schemaname = $1 AND tablename = $2`,
       [schema, table]
-    )) as {
-      tableowner: string;
-      tablespace: string;
-      hasindexes: boolean;
-      hasrules: boolean;
-      hastriggers: boolean;
-      rowsecurity: boolean;
-      uid: number;
-    };
+    )) as
+      | {
+          tableowner: string;
+          tablespace: string;
+          hasindexes: boolean;
+          hasrules: boolean;
+          hastriggers: boolean;
+          rowsecurity: boolean;
+          uid: number;
+        }
+      | string;
+  },
+
+  async pgView(schema: string, table: string) {
+    return (await first(
+      `
+      SELECT *
+      FROM pg_catalog.pg_views
+      WHERE
+        schemaname = $1 AND viewname = $2`,
+      [schema, table]
+    )) as
+      | {
+          viewowner: string;
+          definition: string;
+        }
+      | string;
+  },
+
+  async pgMView(schema: string, table: string) {
+    return (await first(
+      `
+      SELECT *
+      FROM pg_catalog.pg_matviews
+      WHERE
+        schemaname = $1 AND matviewname = $2`,
+      [schema, table]
+    )) as
+      | {
+          matviewowner: string;
+          tablespace: string;
+          hasindexes: boolean;
+          ispopulated: boolean;
+          definition: string;
+        }
+      | string;
   },
 
   async pgType(schema: string, name: string) {

@@ -1,6 +1,6 @@
 import { useService } from 'util/useService';
 import { throwError } from 'util/throwError';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Dialog } from 'components/util/Dialog';
@@ -19,7 +19,65 @@ export interface ColTableInfo {
   is_primary: boolean;
 }
 
+export function Comment({
+  value,
+  edit,
+  onUpdate,
+  onCancel,
+}: {
+  value: string;
+  edit: boolean;
+  onUpdate: (v: string) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [state, setState] = useState(value);
+  useEffect(() => {
+    setState(value);
+  }, [value, setState, edit]);
+  const focusRef = useEvent((el: HTMLTextAreaElement | null) => {
+    if (el) {
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    }
+  });
+  if (!value && !edit) return null;
+  if (edit)
+    return (
+      <div className="comment--form">
+        <textarea
+          className="comment"
+          value={state}
+          onChange={(e) => setState(e.target.value)}
+          ref={focusRef}
+        />
+        <button type="button" onClick={() => onUpdate(state)}>
+          Save <i className="fa fa-check" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onCancel()}
+          style={{ fontWeight: 'normal' }}
+        >
+          Discard Changes <i className="fa fa-undo" />
+        </button>
+      </div>
+    );
+  return (
+    <div
+      className="comment"
+      style={
+        value && value.length < 35 && value.indexOf('\n') === -1
+          ? { fontSize: '45px' }
+          : undefined
+      }
+    >
+      {value}
+    </div>
+  );
+}
+
 export interface TableInfoFrameState {
+  comment: string | null;
   cols?: ColTableInfo[];
   indexes?: {
     name: string;
@@ -33,6 +91,7 @@ export interface TableInfoFrameState {
       is_nullable: boolean | string;
       comment: string;
       length: number;
+      view_definition: string | null;
       scale: number;
       is_primary: boolean;
     }[];
@@ -45,21 +104,45 @@ export interface TableInfoFrameState {
     hastriggers: boolean;
     rowsecurity: boolean;
     uid: number;
-  };
+    view_definition: string | null;
+  } | null;
+  view: {
+    viewowner: string;
+    definition: string;
+  } | null;
+  mView: {
+    viewowner: string;
+    matviewowner: string;
+    tablespace: string;
+    hasindexes: boolean;
+    ispopulated: boolean;
+    definition: string;
+  } | null;
   type: {
     [k: string]: string | number | null | boolean;
   };
 }
 export function TableInfoFrame(props: TableInfoFrameProps) {
   const service = useService(async () => {
-    const [cols, indexes, table, type] = await Promise.all([
-      DB.listCols(props.schema, props.table),
-      DB.listIndexes(props.schema, props.table),
-      DB.pgTable(props.schema, props.table),
-      DB.pgType(props.schema, props.table),
-      // DB.listTableMetadata(this.props.schema,this.props.table).then(res=>console.log('meta:',res))
-    ]);
-    return { cols, indexes, table, type } as TableInfoFrameState;
+    const [comment, cols, indexes, table, view, mView, type] =
+      await Promise.all([
+        DB.tableComment(props.schema, props.table),
+        DB.listCols(props.schema, props.table),
+        DB.listIndexes(props.schema, props.table),
+        DB.pgTable(props.schema, props.table),
+        DB.pgView(props.schema, props.table),
+        DB.pgMView(props.schema, props.table),
+        DB.pgType(props.schema, props.table),
+      ]);
+    return {
+      comment,
+      cols,
+      indexes,
+      table,
+      view,
+      type,
+      mView,
+    } as TableInfoFrameState;
   }, []);
 
   useTab({
@@ -67,19 +150,37 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       service.reload();
     },
   });
+
   const state = service.lastValidData || {
     indexes: null,
     cols: null,
     table: null,
     type: null,
+    comment: null,
+    view: null,
+    mView: null,
   };
 
-  const [dropState, set] = useState({
+  const [edit, set] = useState({
     dropCascadeConfirmation: false,
     dropConfirmation: false,
+    editComment: false,
   });
+
+  const onUpdateComment = useEvent(async (text: string) => {
+    if (state.table)
+      await DB.updateTable(props.schema, props.table, { comment: text });
+    else if (state.mView)
+      await DB.updateMView(props.schema, props.table, { comment: text });
+    else if (state.view)
+      await DB.updateView(props.schema, props.table, { comment: text });
+    await service.reload();
+    set({ ...edit, editComment: false });
+  });
+
   const dropCascade = useEvent(() => {
     set({
+      ...edit,
       dropCascadeConfirmation: true,
       dropConfirmation: false,
     });
@@ -87,13 +188,14 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const drop = useEvent(() => {
     set({
+      ...edit,
       dropCascadeConfirmation: false,
       dropConfirmation: true,
     });
   });
 
   const yesClick = useEvent(() => {
-    if (dropState.dropCascadeConfirmation)
+    if (edit.dropCascadeConfirmation)
       DB.dropTable(props.schema, props.table, true).then(
         () => {
           setTimeout(() => closeTab(props), 10);
@@ -117,6 +219,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const noClick = useEvent(() => {
     set({
+      ...edit,
       dropCascadeConfirmation: false,
       dropConfirmation: false,
     });
@@ -139,24 +242,29 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       <div className="table-info-frame__actions">
         <button
           type="button"
+          onClick={() => set({ ...edit, editComment: true })}
+        >
+          Comment <i className="fa fa-file-text-o" />
+        </button>{' '}
+        <button
+          type="button"
           onClick={
-            dropState.dropCascadeConfirmation || dropState.dropConfirmation
+            edit.dropCascadeConfirmation || edit.dropConfirmation
               ? undefined
               : drop
           }
         >
-          Drop Table
+          Drop {state.view ? 'View' : state.table ? 'Table' : ''}{' '}
+          <i className="fa fa-close" />
         </button>{' '}
-        {dropState.dropCascadeConfirmation || dropState.dropConfirmation ? (
+        {edit.dropCascadeConfirmation || edit.dropConfirmation ? (
           <Dialog
             onBlur={noClick}
             relativeTo={
-              dropState.dropCascadeConfirmation
-                ? 'nextSibling'
-                : 'previousSibling'
+              edit.dropCascadeConfirmation ? 'nextSibling' : 'previousSibling'
             }
           >
-            {dropState.dropCascadeConfirmation
+            {edit.dropCascadeConfirmation
               ? 'Do you really want to drop cascade this table?'
               : 'Do you really want to drop this table?'}
             <div>
@@ -172,14 +280,22 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         <button
           type="button"
           onClick={
-            dropState.dropCascadeConfirmation || dropState.dropConfirmation
+            edit.dropCascadeConfirmation || edit.dropConfirmation
               ? undefined
               : dropCascade
           }
         >
-          Drop Cascade
+          Drop Cascade <i className="fa fa-warning" />
         </button>
       </div>
+      {state.comment || edit.editComment ? (
+        <Comment
+          value={state.comment || ''}
+          edit={edit.editComment}
+          onCancel={() => set({ ...edit, editComment: false })}
+          onUpdate={onUpdateComment}
+        />
+      ) : null}
       {state.cols ? (
         <>
           <h2>Columns</h2>

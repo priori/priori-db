@@ -7,34 +7,49 @@ import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Dialog } from 'components/util/Dialog';
+import { first } from 'db/Connection';
+import { Comment } from './TableInfoFrame';
 
 type SequenceFrameState = {
   type: {
     [key: string]: string | number | boolean | null;
   };
   lastValue: number | string | null;
+  comment: string | null;
 };
 
 export function SequenceFrame(props: SequenceFrameProps) {
   const service = useService(async () => {
-    const [type, lastValue] = await Promise.all([
+    const [type, lastValue, comment] = await Promise.all([
       DB.pgClass(props.schema, props.name),
       DB.lastValue(props.schema, props.name),
+      (
+        first(
+          `SELECT obj_description(oid) comment
+          FROM pg_class
+          WHERE relname = $1 AND relnamespace = $2::regnamespace`,
+          [props.name, props.schema]
+        ) as Promise<{ comment: string | null }>
+      ).then((res: { comment: string | null }) => res.comment),
     ]);
-    return { type, lastValue } as SequenceFrameState;
+    return { type, lastValue, comment } as SequenceFrameState;
   }, []);
 
   const serviceState = service.lastValidData || {
     type: null,
     lastValue: null,
+    comment: null,
   };
 
   const [state, set] = useState({
     dropCascadeConfirmation: false,
     dropConfirmation: false,
+    editComment: false,
   });
+
   const dropCascade = useEvent(() => {
     set({
+      ...state,
       dropCascadeConfirmation: true,
       dropConfirmation: false,
     });
@@ -42,6 +57,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
 
   const drop = useEvent(() => {
     set({
+      ...state,
       dropCascadeConfirmation: false,
       dropConfirmation: true,
     });
@@ -78,9 +94,16 @@ export function SequenceFrame(props: SequenceFrameProps) {
 
   const noClick = useEvent(() => {
     set({
+      ...state,
       dropCascadeConfirmation: false,
       dropConfirmation: false,
     });
+  });
+
+  const onUpdateComment = useEvent(async (text: string) => {
+    await DB.updateSequence(props.schema, props.name, { comment: text });
+    await service.reload();
+    set({ ...state, editComment: false });
   });
 
   return (
@@ -88,50 +111,75 @@ export function SequenceFrame(props: SequenceFrameProps) {
       <h1>
         {props.schema}.{props.name}
       </h1>
-      {typeof serviceState.lastValue === 'number' ||
-      typeof serviceState.lastValue === 'string' ? (
-        <h1 className="last-value">{serviceState.lastValue}</h1>
-      ) : null}
-      <button
-        type="button"
-        onClick={
-          state.dropCascadeConfirmation || state.dropConfirmation
-            ? undefined
-            : drop
-        }
+      <div
+        style={{}}
+        className={`sequence-value${!serviceState.lastValue ? ' loading' : ''}`}
       >
-        Drop Sequence
-      </button>{' '}
-      {state.dropCascadeConfirmation || state.dropConfirmation ? (
-        <Dialog
-          onBlur={noClick}
-          relativeTo={
-            state.dropCascadeConfirmation ? 'nextSibling' : 'previousSibling'
+        <div className="sequence-value--current-value">
+          {serviceState.lastValue}
+        </div>
+        <div>
+          <button type="button">
+            Update Current Value <i className="fa fa-retweet" />
+          </button>{' '}
+        </div>
+      </div>
+      <div className="table-info-frame__actions">
+        <button
+          type="button"
+          onClick={() => set({ ...state, editComment: true })}
+        >
+          Comment <i className="fa fa-file-text-o" />
+        </button>{' '}
+        <button
+          type="button"
+          onClick={
+            state.dropCascadeConfirmation || state.dropConfirmation
+              ? undefined
+              : drop
           }
         >
-          {state.dropCascadeConfirmation
-            ? 'Do you really want to drop cascade this sequence?'
-            : 'Do you really want to drop this sequence?'}
-          <div>
-            <button type="button" onClick={yesClick}>
-              Yes
-            </button>{' '}
-            <button type="button" onClick={noClick}>
-              No
-            </button>
-          </div>
-        </Dialog>
+          Drop Sequence <i className="fa fa-close" />
+        </button>{' '}
+        {state.dropCascadeConfirmation || state.dropConfirmation ? (
+          <Dialog
+            onBlur={noClick}
+            relativeTo={
+              state.dropCascadeConfirmation ? 'nextSibling' : 'previousSibling'
+            }
+          >
+            {state.dropCascadeConfirmation
+              ? 'Do you really want to drop cascade this sequence?'
+              : 'Do you really want to drop this sequence?'}
+            <div>
+              <button type="button" onClick={yesClick}>
+                Yes
+              </button>{' '}
+              <button type="button" onClick={noClick}>
+                No
+              </button>
+            </div>
+          </Dialog>
+        ) : null}
+        <button
+          type="button"
+          onClick={
+            state.dropCascadeConfirmation || state.dropConfirmation
+              ? undefined
+              : dropCascade
+          }
+        >
+          Drop Cascade <i className="fa fa-warning" />
+        </button>
+      </div>{' '}
+      {service?.lastValidData?.comment || state.editComment ? (
+        <Comment
+          value={service?.lastValidData?.comment || ''}
+          edit={state.editComment}
+          onUpdate={onUpdateComment}
+          onCancel={() => set({ ...state, editComment: false })}
+        />
       ) : null}
-      <button
-        type="button"
-        onClick={
-          state.dropCascadeConfirmation || state.dropConfirmation
-            ? undefined
-            : dropCascade
-        }
-      >
-        Drop Cascade
-      </button>
       {serviceState.type ? (
         <>
           <h2>pg_catalog.pg_type</h2>

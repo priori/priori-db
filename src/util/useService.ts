@@ -6,33 +6,37 @@ type ServiceState<T> =
       lastValidData: null;
       error: null;
       status: 'starting';
-      reload: () => void;
+      reload: () => Promise<void>;
     }
   | {
       lastValidData: T;
       error: null;
       status: 'success';
-      reload: () => void;
+      reload: () => Promise<void>;
     }
   | {
       lastValidData: T | null;
       error: Error;
       status: 'error';
-      reload: () => void;
+      reload: () => Promise<void>;
     }
   | {
       lastValidData: T | null;
       error: Error | null;
       status: 'reloading';
-      reload: () => void;
+      reload: () => Promise<void>;
     };
 export function useService<T>(
   func0: () => Promise<T>,
   deps: DependencyList
 ): ServiceState<T> {
   const [count, setCount] = useState(0);
+  const pendingPromises = useRef<(() => void)[]>([]);
   const reload = useEvent(() => {
     setCount(count + 1);
+    return new Promise((resolve) =>
+      pendingPromises.current.push(resolve as () => void)
+    );
   });
   const [state, setState] = useState({
     lastValidData: null as T | null,
@@ -62,6 +66,10 @@ export function useService<T>(
             error: null,
             status: 'success',
           }));
+          for (const resolve of pendingPromises.current) {
+            resolve();
+          }
+          pendingPromises.current = [];
         }
       },
       (err) => {
@@ -71,6 +79,10 @@ export function useService<T>(
             error: err instanceof Error ? err : new Error(`${err}`),
             status: 'error',
           }));
+          for (const resolve of pendingPromises.current) {
+            resolve();
+          }
+          pendingPromises.current = [];
         }
       }
     );
