@@ -38,25 +38,27 @@ function positionRelativeTo(
   const containerRect = container.getBoundingClientRect();
   const top0 = rect.top + rect.height / 2 - h / 2;
   const left0 = rect.left + rect.width / 2 - w / 2;
+  const containerWidth = container.clientWidth;
+  const containerRight = containerRect.left + containerWidth;
+  const containerHeight = container.clientHeight;
+  const containerBottom = containerRect.top + containerHeight;
   const top =
     top0 < containerRect.top + safeMargin &&
-    h + 2 * safeMargin <= containerRect.height
+    h + 2 * safeMargin <= containerHeight
       ? containerRect.top + safeMargin
-      : top0 + h > containerRect.bottom - safeMargin &&
-        h + 2 * safeMargin <= containerRect.height
-      ? containerRect.bottom - h - safeMargin
+      : top0 + h > containerBottom - safeMargin &&
+        h + 2 * safeMargin <= containerHeight
+      ? containerBottom - h - safeMargin
       : top0;
   const left =
-    w + 2 * safeMargin > containerRect.width
-      ? w < containerRect.width
-        ? containerRect.left + containerRect.width / 2 - w / 2
+    w + 2 * safeMargin > containerWidth
+      ? w < containerWidth
+        ? containerRect.left + containerWidth / 2 - w / 2
         : document.documentElement.offsetWidth / 2 - w / 2
-      : left0 < containerRect.left + safeMargin &&
-        w + 2 * safeMargin <= containerRect.width
+      : left0 < containerRect.left + safeMargin
       ? containerRect.left + safeMargin
-      : left0 + w > containerRect.right - safeMargin &&
-        w + 2 * safeMargin <= containerRect.width
-      ? containerRect.right - w - safeMargin
+      : left0 + w > containerRight - safeMargin
+      ? containerRight - w - safeMargin
       : left0;
   el.style.top = `${top}px`;
   el.style.left = `${left}px`;
