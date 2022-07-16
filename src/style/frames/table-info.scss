@@ -133,3 +133,12 @@ span.column {
     text-align: center;
   }
 }
+.dialog input {
+  padding: 10px;
+  display: block;
+  width: 100%;
+  margin-bottom: 17px;
+}
+button[disabled] {
+  opacity: 0.33;
+}

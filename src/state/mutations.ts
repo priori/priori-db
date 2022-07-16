@@ -721,3 +721,43 @@ export function openFullView(current: AppState, name: string) {
     ),
   };
 }
+
+export function renameEntity(curret: AppState, uid: number, name: string) {
+  const tab = curret.tabs.find((t) => t.props.uid === uid);
+  if (!tab) return curret;
+  return {
+    ...curret,
+    tabs: curret.tabs.map((t) =>
+      (t.props.type === 'table' || t.props.type === 'tableinfo') &&
+      (tab.props.type === 'table' || tab.props.type === 'tableinfo') &&
+      t.props.schema === tab.props.schema &&
+      t.props.table === tab.props.table
+        ? {
+            ...t,
+            title: `${t.props.schema}.${name}${
+              t.props.type === 'tableinfo' ? ' info' : ''
+            }`,
+            props: { ...t.props, table: name },
+          }
+        : tab.props.uid === uid && t.props.type === 'function'
+        ? {
+            ...t,
+            title: `${name}${t.props.name.substring(
+              t.props.name.lastIndexOf('('),
+              t.props.name.length
+            )}`,
+            props: {
+              ...t.props,
+              name: `${name}${t.props.name.substring(
+                t.props.name.lastIndexOf('('),
+                t.props.name.length
+              )}`,
+            },
+          }
+        : tab.props.uid === uid &&
+          (t.props.type === 'sequence' || t.props.type === 'domain')
+        ? { ...t, props: { ...t.props, name } }
+        : t
+    ),
+  };
+}

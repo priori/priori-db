@@ -5,7 +5,7 @@ import { useEvent } from 'util/useEvent';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Dialog } from 'components/util/Dialog';
 import { TableInfoFrameProps } from '../../types';
-import { reloadNav, closeTab } from '../../state/actions';
+import { reloadNav, closeTab, renameEntity } from '../../state/actions';
 import { DB } from '../../db/DB';
 
 export interface ColTableInfo {
@@ -73,6 +73,56 @@ export function Comment({
     >
       {value}
     </div>
+  );
+}
+
+export function Rename({
+  value,
+  onUpdate,
+  onCancel,
+  relativeTo,
+}: {
+  value: string;
+  onUpdate: (v: string) => Promise<void>;
+  onCancel: () => void;
+  relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
+}) {
+  const [state, setState] = useState(value);
+  const focusRef = useEvent((el: HTMLInputElement | null) => {
+    if (el) {
+      setTimeout(() => {
+        el.focus();
+        el.setSelectionRange(el.value.length, el.value.length);
+      }, 10);
+    }
+  });
+  return (
+    <Dialog relativeTo={relativeTo} onBlur={onCancel}>
+      <input
+        type="text"
+        ref={focusRef}
+        value={state}
+        onChange={(e) => setState(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            onCancel();
+          } else if (e.key === 'Enter') {
+            if (state === value) onCancel();
+            else onUpdate(state);
+          }
+        }}
+      />
+      <button style={{ fontWeight: 'normal' }} type="button" onClick={onCancel}>
+        Cancel
+      </button>{' '}
+      <button
+        type="button"
+        disabled={state === value}
+        onClick={state === value ? undefined : () => onUpdate(state)}
+      >
+        Rename <i className="fa fa-check" />
+      </button>
+    </Dialog>
   );
 }
 
@@ -165,6 +215,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     dropCascadeConfirmation: false,
     dropConfirmation: false,
     editComment: false,
+    rename: false,
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
@@ -228,6 +279,18 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   const [state2, setState2] = useState({ indexDefinition: null } as {
     indexDefinition: string | null;
   });
+
+  const onRename = useEvent(async (name: string) => {
+    if (state.table) await DB.updateTable(props.schema, props.table, { name });
+    else if (state.mView)
+      await DB.updateMView(props.schema, props.table, { name });
+    else if (state.view)
+      await DB.updateView(props.schema, props.table, { name });
+    renameEntity(props.uid, name);
+    reloadNav();
+    set({ ...edit, rename: false });
+  });
+
   function showQuery(q: string) {
     setState2({
       indexDefinition: q,
@@ -246,6 +309,22 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         >
           Comment <i className="fa fa-file-text-o" />
         </button>{' '}
+        <button
+          type="button"
+          onClick={() => {
+            set({ ...edit, rename: true });
+          }}
+        >
+          Rename <i className="fa fa-pencil" />
+        </button>{' '}
+        {edit.rename ? (
+          <Rename
+            relativeTo="previousSibling"
+            value={props.table}
+            onCancel={() => set({ ...edit, rename: false })}
+            onUpdate={onRename}
+          />
+        ) : null}
         <button
           type="button"
           onClick={

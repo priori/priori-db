@@ -1,4 +1,4 @@
-import { closeTab, reloadNav } from 'state/actions';
+import { closeTab, reloadNav, renameEntity } from 'state/actions';
 import { DB } from 'db/DB';
 import { useState } from 'react';
 import { SequenceFrameProps } from 'types';
@@ -8,7 +8,7 @@ import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Dialog } from 'components/util/Dialog';
 import { first } from 'db/Connection';
-import { Comment } from './TableInfoFrame';
+import { Comment, Rename } from './TableInfoFrame';
 
 type SequenceFrameState = {
   type: {
@@ -33,7 +33,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
       ).then((res: { comment: string | null }) => res.comment),
     ]);
     return { type, lastValue, comment } as SequenceFrameState;
-  }, []);
+  }, [props.schema, props.name]);
 
   const serviceState = service.lastValidData || {
     type: null,
@@ -45,6 +45,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
     dropCascadeConfirmation: false,
     dropConfirmation: false,
     editComment: false,
+    rename: false,
   });
 
   const dropCascade = useEvent(() => {
@@ -106,6 +107,13 @@ export function SequenceFrame(props: SequenceFrameProps) {
     set({ ...state, editComment: false });
   });
 
+  const onRename = useEvent(async (name: string) => {
+    await DB.updateSequence(props.schema, props.name, { name });
+    renameEntity(props.uid, name);
+    reloadNav();
+    set({ ...state, rename: false });
+  });
+
   return (
     <div>
       <h1>
@@ -131,6 +139,17 @@ export function SequenceFrame(props: SequenceFrameProps) {
         >
           Comment <i className="fa fa-file-text-o" />
         </button>{' '}
+        <button type="button" onClick={() => set({ ...state, rename: true })}>
+          Rename <i className="fa fa-pencil" />
+        </button>{' '}
+        {state.rename ? (
+          <Rename
+            relativeTo="previousSibling"
+            value={props.name}
+            onCancel={() => set({ ...state, rename: false })}
+            onUpdate={onRename}
+          />
+        ) : null}
         <button
           type="button"
           onClick={

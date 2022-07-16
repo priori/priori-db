@@ -1,4 +1,4 @@
-import { closeTab, reloadNav } from 'state/actions';
+import { closeTab, reloadNav, renameEntity } from 'state/actions';
 import { DB } from 'db/DB';
 import { useState } from 'react';
 import { FunctionFrameProps } from 'types';
@@ -7,7 +7,7 @@ import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { first } from 'db/Connection';
 import { Dialog } from 'components/util/Dialog';
-import { Comment } from './TableInfoFrame';
+import { Comment, Rename } from './TableInfoFrame';
 
 export function FunctionFrame(props: FunctionFrameProps) {
   const name =
@@ -36,6 +36,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
     dropCascadeConfirmation: false,
     dropConfirmation: false,
     editComment: false,
+    rename: false,
   });
 
   const dropCascade = useEvent(() => {
@@ -91,6 +92,13 @@ export function FunctionFrame(props: FunctionFrameProps) {
     });
   });
 
+  const onRename = useEvent(async (newName: string) => {
+    await DB.updateFunction(props.schema, name, { name: newName });
+    renameEntity(props.uid, newName);
+    reloadNav();
+    set({ ...state, rename: false });
+  });
+
   return (
     <div>
       <h1>
@@ -103,6 +111,17 @@ export function FunctionFrame(props: FunctionFrameProps) {
         >
           Comment <i className="fa fa-file-text-o" />
         </button>{' '}
+        <button type="button" onClick={() => set({ ...state, rename: true })}>
+          Rename <i className="fa fa-pencil" />
+        </button>{' '}
+        {state.rename ? (
+          <Rename
+            relativeTo="previousSibling"
+            value={name}
+            onCancel={() => set({ ...state, rename: false })}
+            onUpdate={onRename}
+          />
+        ) : null}
         <button
           type="button"
           onClick={

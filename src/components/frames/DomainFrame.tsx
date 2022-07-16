@@ -1,4 +1,4 @@
-import { closeTab, reloadNav } from 'state/actions';
+import { closeTab, reloadNav, renameEntity } from 'state/actions';
 import { DB } from 'db/DB';
 import { useState } from 'react';
 import { DomainFrameProps } from 'types';
@@ -7,7 +7,7 @@ import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { Dialog } from 'components/util/Dialog';
 import { first } from 'db/Connection';
-import { Comment } from './TableInfoFrame';
+import { Comment, Rename } from './TableInfoFrame';
 
 interface DomainFrameServiceState {
   type: {
@@ -31,12 +31,13 @@ export function DomainFrame(props: DomainFrameProps) {
       ).then((res: { comment: string | null }) => res.comment),
     ]);
     return { type, comment } as DomainFrameServiceState;
-  }, []);
+  }, [props.schema, props.name]);
 
   const [state, set] = useState({
     dropCascadeConfirmation: false,
     dropConfirmation: false,
     editComment: false,
+    rename: false,
   });
 
   const dropCascade = useEvent(() => {
@@ -91,6 +92,14 @@ export function DomainFrame(props: DomainFrameProps) {
     await service.reload();
     set({ ...state, editComment: false });
   });
+
+  const onRename = useEvent(async (name: string) => {
+    await DB.updateDomain(props.schema, props.name, { name });
+    renameEntity(props.uid, name);
+    reloadNav();
+    set({ ...state, rename: false });
+  });
+
   return (
     <div>
       <h1>
@@ -103,6 +112,17 @@ export function DomainFrame(props: DomainFrameProps) {
         >
           Comment <i className="fa fa-file-text-o" />
         </button>{' '}
+        <button type="button" onClick={() => set({ ...state, rename: true })}>
+          Rename <i className="fa fa-pencil" />
+        </button>{' '}
+        {state.rename ? (
+          <Rename
+            relativeTo="previousSibling"
+            value={props.name}
+            onCancel={() => set({ ...state, rename: false })}
+            onUpdate={onRename}
+          />
+        ) : null}
         <button
           type="button"
           onClick={

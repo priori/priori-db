@@ -46,6 +46,7 @@ export const {
   previewSequence,
   keepSequence,
   extraTableTab,
+  renameEntity,
 } = state;
 
 export async function open(c: ConnectionConfiguration) {
