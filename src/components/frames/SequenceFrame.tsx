@@ -6,6 +6,7 @@ import { throwError } from 'util/throwError';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
+import { Dialog } from 'components/util/Dialog';
 
 type SequenceFrameState = {
   type: {
@@ -91,25 +92,22 @@ export function SequenceFrame(props: SequenceFrameProps) {
       typeof serviceState.lastValue === 'string' ? (
         <h1 className="last-value">{serviceState.lastValue}</h1>
       ) : null}
+      <button
+        type="button"
+        onClick={
+          state.dropCascadeConfirmation || state.dropConfirmation
+            ? undefined
+            : drop
+        }
+      >
+        Drop Sequence
+      </button>{' '}
       {state.dropCascadeConfirmation || state.dropConfirmation ? (
-        <div
-          className="dialog"
-          onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-            if (e.key === 'Escape') {
-              e.currentTarget.blur();
-            }
-          }}
-          tabIndex={0}
-          ref={(el) => {
-            if (el) el.focus();
-          }}
-          onBlur={(e) => {
-            const dialogEl = e.currentTarget;
-            setTimeout(() => {
-              if (dialogEl.contains(document.activeElement)) return;
-              noClick();
-            }, 1);
-          }}
+        <Dialog
+          onBlur={noClick}
+          relativeTo={
+            state.dropCascadeConfirmation ? 'nextSibling' : 'previousSibling'
+          }
         >
           {state.dropCascadeConfirmation
             ? 'Do you really want to drop cascade this sequence?'
@@ -122,18 +120,8 @@ export function SequenceFrame(props: SequenceFrameProps) {
               No
             </button>
           </div>
-        </div>
+        </Dialog>
       ) : null}
-      <button
-        type="button"
-        onClick={
-          state.dropCascadeConfirmation || state.dropConfirmation
-            ? undefined
-            : drop
-        }
-      >
-        Drop Sequence
-      </button>{' '}
       <button
         type="button"
         onClick={

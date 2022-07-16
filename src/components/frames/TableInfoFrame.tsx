@@ -1,8 +1,9 @@
 import { useService } from 'util/useService';
 import { throwError } from 'util/throwError';
-import { KeyboardEvent, useState } from 'react';
+import { useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { useTab } from 'components/main/connected/ConnectedApp';
+import { Dialog } from 'components/util/Dialog';
 import { TableInfoFrameProps } from '../../types';
 import { reloadNav, closeTab } from '../../state/actions';
 import { DB } from '../../db/DB';
@@ -121,10 +122,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     });
   });
 
-  const [state2, setState2] = useState({ query: '' });
+  const [state2, setState2] = useState({ indexDefinition: null } as {
+    indexDefinition: string | null;
+  });
   function showQuery(q: string) {
     setState2({
-      query: q,
+      indexDefinition: q,
     });
   }
 
@@ -133,40 +136,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       <h1>
         {props.schema}.{props.table}
       </h1>
-      {dropState.dropCascadeConfirmation || dropState.dropConfirmation ? (
-        <div
-          className="dialog"
-          onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-            if (e.key === 'Escape') {
-              e.currentTarget.blur();
-            }
-          }}
-          tabIndex={0}
-          ref={(el) => {
-            if (el) el.focus();
-          }}
-          onBlur={(e) => {
-            const dialogEl = e.currentTarget;
-            setTimeout(() => {
-              if (dialogEl.contains(document.activeElement)) return;
-              noClick();
-            }, 1);
-          }}
-        >
-          {dropState.dropCascadeConfirmation
-            ? 'Do you really want to drop cascade this table?'
-            : 'Do you really want to drop this table?'}
-          <div>
-            <button type="button" onClick={yesClick}>
-              Yes
-            </button>{' '}
-            <button type="button" onClick={noClick}>
-              No
-            </button>
-          </div>
-        </div>
-      ) : null}
-      <div>
+      <div className="table-info-frame__actions">
         <button
           type="button"
           onClick={
@@ -177,6 +147,28 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         >
           Drop Table
         </button>{' '}
+        {dropState.dropCascadeConfirmation || dropState.dropConfirmation ? (
+          <Dialog
+            onBlur={noClick}
+            relativeTo={
+              dropState.dropCascadeConfirmation
+                ? 'nextSibling'
+                : 'previousSibling'
+            }
+          >
+            {dropState.dropCascadeConfirmation
+              ? 'Do you really want to drop cascade this table?'
+              : 'Do you really want to drop this table?'}
+            <div>
+              <button type="button" onClick={yesClick}>
+                Yes
+              </button>{' '}
+              <button type="button" onClick={noClick}>
+                No
+              </button>
+            </div>
+          </Dialog>
+        ) : null}
         <button
           type="button"
           onClick={
@@ -187,8 +179,6 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         >
           Drop Cascade
         </button>
-        <br />
-        <br />
       </div>
       {state.cols ? (
         <>
@@ -263,49 +253,42 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                       ))}
                     </td>
                     <td>
-                      {index.definition === state2.query ? (
-                        <div
-                          className="dialog"
-                          onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-                            if (e.key === 'Escape') {
-                              e.currentTarget.blur();
-                            }
+                      {index.name === state2.indexDefinition ? (
+                        <Dialog
+                          onBlur={() => {
+                            setState2({ indexDefinition: null });
                           }}
-                          tabIndex={0}
-                          onBlur={(e) => {
-                            const dialogEl = e.currentTarget;
-                            setTimeout(() => {
-                              if (dialogEl.contains(document.activeElement))
-                                return;
-                              setState2({ query: '' });
-                            }, 1);
-                          }}
+                          relativeTo="nextSibling"
                         >
                           <textarea
-                            value={state2.query}
+                            value={index.definition}
                             readOnly
                             ref={(el) => {
-                              if (
-                                el &&
-                                // eslint-disable-next-line no-underscore-dangle
-                                !(el as { _selected?: boolean })._selected
-                              ) {
-                                // eslint-disable-next-line no-underscore-dangle
-                                (el as { _selected?: boolean })._selected =
-                                  true;
-                                el.select();
-                              }
+                              setTimeout(() => {
+                                if (
+                                  el &&
+                                  // eslint-disable-next-line no-underscore-dangle
+                                  !(el as { _selected?: boolean })._selected
+                                ) {
+                                  // eslint-disable-next-line no-underscore-dangle
+                                  (el as { _selected?: boolean })._selected =
+                                    true;
+                                  el.select();
+                                }
+                              }, 10);
                             }}
                           />
                           <div>
                             <button
                               type="button"
-                              onClick={() => setState2({ query: '' })}
+                              onClick={() =>
+                                setState2({ indexDefinition: null })
+                              }
                             >
                               Ok
                             </button>
                           </div>
-                        </div>
+                        </Dialog>
                       ) : null}
                       <i
                         className="fa fa-eye"
@@ -318,9 +301,9 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                             e.key === 'Enter' ||
                             e.key === 'Space'
                           )
-                            showQuery(index.definition);
+                            showQuery(index.name);
                         }}
-                        onClick={() => showQuery(index.definition)}
+                        onClick={() => showQuery(index.name)}
                       />
                     </td>
                   </tr>

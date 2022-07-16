@@ -1,5 +1,7 @@
 import assert from 'assert';
+import { Dialog } from 'components/util/Dialog';
 import { useState } from 'react';
+import { useEvent } from 'util/useEvent';
 import { ConnectionConfiguration } from '../../../db/pgpass';
 
 export interface NewConectionState {
@@ -37,9 +39,9 @@ export function NewConnection(props: NewConnectionProps) {
     assert(!!props.onRemove);
     props.onRemove();
   }
-  function noClick() {
+  const noClick = useEvent(() => {
     setRemoveConfirmation(false);
-  }
+  });
 
   function cancel() {
     assert(props.onCancel);
@@ -141,32 +143,6 @@ export function NewConnection(props: NewConnectionProps) {
           type="password"
         />
       </span>
-      {removeConfirmation ? (
-        <div
-          className="dialog"
-          tabIndex={0}
-          ref={(el) => {
-            if (el) el.focus();
-          }}
-          onBlur={(e) => {
-            const dialogEl = e.currentTarget;
-            setTimeout(() => {
-              if (dialogEl.contains(document.activeElement)) return;
-              noClick();
-            }, 1);
-          }}
-        >
-          Do you really want to remove this connection configuration?
-          <div>
-            <button type="button" onClick={yesClick}>
-              Yes
-            </button>{' '}
-            <button type="button" onClick={noClick}>
-              No
-            </button>
-          </div>
-        </div>
-      ) : null}
       <br />
       <div style={{ marginTop: '4px', marginBottom: '4px' }}>
         <button onClick={() => submit()} type="button">
@@ -181,6 +157,19 @@ export function NewConnection(props: NewConnectionProps) {
       <button onClick={() => save()} type="button">
         <i className="fa fa-save" /> Just Save
       </button>{' '}
+      {removeConfirmation ? (
+        <Dialog onBlur={noClick} relativeTo="nextSibling">
+          Do you really want to remove this connection configuration?
+          <div>
+            <button type="button" onClick={yesClick}>
+              Yes
+            </button>{' '}
+            <button type="button" onClick={noClick}>
+              No
+            </button>
+          </div>
+        </Dialog>
+      ) : null}
       {props.onRemove ? (
         <button
           style={{ color: '#e00' }}

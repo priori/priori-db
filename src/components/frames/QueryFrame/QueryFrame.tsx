@@ -12,6 +12,7 @@ import {
 } from 'util/browserDb';
 import { currentState } from 'state/state';
 import { useIsMounted } from 'util/hooks';
+import { Dialog } from 'components/util/Dialog';
 import { QuerySelector } from './QuerySelector';
 import { useTab } from '../../main/connected/ConnectedApp';
 import { Editor } from '../../Editor';
@@ -229,25 +230,7 @@ export function QueryFrame({ uid }: { uid: number }) {
   return (
     <>
       {closeConfirm || closeConfirm2 ? (
-        <div
-          className="dialog"
-          tabIndex={0}
-          ref={(el) => {
-            if (el) el.focus();
-          }}
-          onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-            if (e.key === 'Escape') {
-              (e.currentTarget as HTMLDivElement).blur();
-            }
-          }}
-          onBlur={(e) => {
-            const dialogEl = e.currentTarget;
-            setTimeout(() => {
-              if (dialogEl.contains(document.activeElement)) return;
-              noClick();
-            }, 1);
-          }}
-        >
+        <Dialog relativeTo="nextSibling" onBlur={noClick}>
           {closeConfirm2
             ? 'Idle connection in transacion.'
             : 'A query is running.'}{' '}
@@ -260,7 +243,7 @@ export function QueryFrame({ uid }: { uid: number }) {
               No
             </button>
           </div>
-        </div>
+        </Dialog>
       ) : null}
 
       <Editor ref={editorRef} style={{ height: '300px' }} />

@@ -98,3 +98,7 @@ button.cancel:focus {
 ::-webkit-scrollbar-thumb:hover {
   background-color: #aaa;
 }
+.dialog {
+  outline: none;
+  z-index: 4;
+}

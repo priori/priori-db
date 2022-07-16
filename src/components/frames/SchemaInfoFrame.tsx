@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { DB } from 'db/DB';
 import { throwError } from 'util/throwError';
+import { Dialog } from 'components/util/Dialog';
 import { SchemaInfoFrameProps } from '../../types';
 import { closeTab, reloadNav } from '../../state/actions';
 
@@ -58,25 +59,22 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
   return (
     <div>
       <h1>{props.schema}</h1>
+      <button
+        type="button"
+        onClick={
+          state.dropCascadeConfirmation || state.dropConfirmation
+            ? undefined
+            : drop
+        }
+      >
+        Drop Schema
+      </button>{' '}
       {state.dropCascadeConfirmation || state.dropConfirmation ? (
-        <div
-          className="dialog"
-          onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-            if (e.key === 'Escape') {
-              e.currentTarget.blur();
-            }
-          }}
-          tabIndex={0}
-          ref={(el) => {
-            if (el) el.focus();
-          }}
-          onBlur={(e) => {
-            const dialogEl = e.currentTarget;
-            setTimeout(() => {
-              if (dialogEl.contains(document.activeElement)) return;
-              noClick();
-            }, 1);
-          }}
+        <Dialog
+          onBlur={noClick}
+          relativeTo={
+            state.dropCascadeConfirmation ? 'nextSibling' : 'previousSibling'
+          }
         >
           {state.dropCascadeConfirmation
             ? 'Do you really want to drop cascade this schema?'
@@ -89,18 +87,8 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
               No
             </button>
           </div>
-        </div>
+        </Dialog>
       ) : null}
-      <button
-        type="button"
-        onClick={
-          state.dropCascadeConfirmation || state.dropConfirmation
-            ? undefined
-            : drop
-        }
-      >
-        Drop Schema
-      </button>{' '}
       <button
         type="button"
         onClick={

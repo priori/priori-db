@@ -11,6 +11,17 @@
   bottom: 0;
   padding: 20px;
   background: white;
+
+  .dialog {
+    margin-top: -5px;
+  }
+}
+.table-info-frame__actions {
+  button {
+    margin-right: 3px;
+  }
+  line-height: 45px;
+  margin-bottom: 22px;
 }
 .table-info tbody td {
   font-size: 13px;
@@ -38,11 +49,7 @@ span.column {
 }
 
 .frame .dialog {
-  position: absolute;
   background: white;
-  margin-left: -10px;
-  margin-top: -10px;
-  z-index: 2;
   box-shadow: 0 1px 11px rgb(0 0 0 / 18%);
   padding: 20px;
   line-height: 3em;
@@ -52,12 +59,6 @@ span.column {
   }
 }
 
-.frame td .dialog {
-  top: auto;
-  margin-left: -30px;
-  margin-top: -50px;
-  right: 30px;
-}
 .dialog textarea {
   height: 100px;
   width: 250px;
