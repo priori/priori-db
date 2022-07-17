@@ -408,6 +408,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     updateSchema: false,
     removeColumn: null as string | null,
     removeIndex: null as string | null,
+    renameIndex: null as string | null,
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
@@ -499,6 +500,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     await DB.removeCol(props.schema, props.table, col);
     await service.reload();
     set({ ...edit, removeColumn: null });
+  });
+
+  const renameIndex = useEvent(async (index: string, newName: string) => {
+    await DB.renameIndex(props.schema, props.table, index, newName);
+    await service.reload();
+    set({ ...edit, renameIndex: null });
   });
 
   const removeIndex = useEvent(async (name: string) => {
@@ -702,7 +709,37 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                 .filter((i) => !i.pk)
                 .map((index, k) => (
                   <tr key={k}>
-                    <td>{index.name}</td>
+                    <td
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderTop: 0,
+                        borderRight: 0,
+                        marginLeft: -1,
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>{index.name} </div>
+                      <div>
+                        <button
+                          type="button"
+                          className="simple-button"
+                          style={{ float: 'right' }}
+                          onClick={() =>
+                            set({ ...edit, renameIndex: index.name })
+                          }
+                        >
+                          Rename <i className="fa fa-pencil" />
+                        </button>
+                        {index.name === edit.renameIndex ? (
+                          <Rename
+                            value={index.name}
+                            relativeTo="previousSibling"
+                            onCancel={() => set({ ...edit, renameIndex: null })}
+                            onUpdate={(name) => renameIndex(index.name, name)}
+                          />
+                        ) : null}
+                      </div>
+                    </td>
                     <td>{index.type}</td>
                     <td>
                       {index.cols.map((c: ColTableInfo, k2: number) => (

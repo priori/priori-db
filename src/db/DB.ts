@@ -134,6 +134,12 @@ export const DB = {
     await query(`DROP INDEX ${label(schema)}.${label(index)}`);
   },
 
+  async renameIndex(schema: string, _: string, index: string, newName: string) {
+    await query(
+      `ALTER INDEX ${label(schema)}.${label(index)} RENAME TO ${label(newName)}`
+    );
+  },
+
   async updateCol(
     schema: string,
     tabela: string,
