@@ -68,10 +68,12 @@ export function Dialog({
   onBlur,
   children,
   relativeTo,
+  className,
 }: {
   onBlur: () => void;
   children: React.ReactNode;
   relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
+  className?: string;
 }) {
   const elRef = React.useRef<HTMLElement | null>(null);
   const fit = useEvent(() => {
@@ -121,7 +123,7 @@ export function Dialog({
   });
   return (
     <div
-      className="dialog"
+      className={`dialog${className ? ` ${className}` : ''}`}
       onKeyDown={onKeyDown}
       tabIndex={0}
       ref={ref}
