@@ -386,6 +386,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     editComment: false,
     rename: false,
     updateSchema: false,
+    removeColumn: null as string | null,
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
@@ -471,6 +472,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     renameEntity(props.uid, name);
     reloadNav();
     set({ ...edit, rename: false });
+  });
+
+  const removeColumn = useEvent(async (col: string) => {
+    await DB.removeCol(props.schema, props.table, col);
+    await service.reload();
+    set({ ...edit, removeColumn: null });
   });
 
   function showQuery(q: string) {
@@ -612,6 +619,27 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                       <td style={{ textAlign: 'center' }}>
                         {col.is_primary ? <strong>yes</strong> : 'no'}
                       </td>
+                      {state.table ? (
+                        <td className="actions">
+                          <button
+                            type="button"
+                            className="simple-button"
+                            onClick={() =>
+                              set({ ...edit, removeColumn: col.column_name })
+                            }
+                          >
+                            Remove <i className="fa fa-close" />
+                          </button>
+                          {col.column_name === edit.removeColumn ? (
+                            <YesNoDialog
+                              relativeTo="previousSibling"
+                              question="Do you really want to remove this column?"
+                              onYes={() => removeColumn(col.column_name)}
+                              onNo={() => set({ ...edit, removeColumn: null })}
+                            />
+                          ) : null}
+                        </td>
+                      ) : null}
                     </tr>
                   ))}
               </tbody>
