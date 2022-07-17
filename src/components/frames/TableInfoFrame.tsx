@@ -116,6 +116,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     removeIndex: null as string | null,
     renameIndex: null as string | null,
     renameColumn: null as string | null,
+    commentIndex: null as string | null,
     commentColumn: null as string | null,
   });
 
@@ -226,6 +227,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     await DB.removeIndex(props.schema, props.table, name);
     await service.reload();
     set({ ...edit, removeIndex: null });
+  });
+
+  const commentIndex = useEvent(async (index: string, comment: string) => {
+    await DB.commentIndex(props.schema, props.table, index, comment);
+    await service.reload();
+    set({ ...edit, commentIndex: null });
   });
 
   const commentColumn = useEvent(async (column: string, comment: string) => {
@@ -555,7 +562,50 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         </span>
                       ))}
                     </td>
-                    <td>{index.comment}</td>
+                    <td
+                      style={
+                        !index.comment ? { textAlign: 'center' } : undefined
+                      }
+                    >
+                      {index.comment}
+                      {index.comment ? (
+                        <>
+                          {' '}
+                          <button
+                            type="button"
+                            className="simple-button"
+                            onClick={() =>
+                              set({ ...edit, commentIndex: index.name })
+                            }
+                            style={{ float: 'right' }}
+                          >
+                            <i className="fa fa-pencil" />
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="simple-button"
+                          onClick={() =>
+                            set({ ...edit, commentIndex: index.name })
+                          }
+                        >
+                          Create Comment <i className="fa fa-pencil" />
+                        </button>
+                      )}
+                      {index.name === edit.commentIndex ? (
+                        <InputDialog
+                          type="textarea"
+                          relativeTo="previousSibling"
+                          value={index.comment}
+                          updateText="Update"
+                          onCancel={() => set({ ...edit, commentIndex: null })}
+                          onUpdate={(comment) =>
+                            commentIndex(index.name, comment)
+                          }
+                        />
+                      ) : null}
+                    </td>
                     <td>
                       {index.name === state2.indexDefinition ? (
                         <Dialog

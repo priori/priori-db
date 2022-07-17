@@ -134,6 +134,19 @@ export const DB = {
     await query(`DROP INDEX ${label(schema)}.${label(index)}`);
   },
 
+  async commentIndex(
+    schema: string,
+    _: string,
+    index: string,
+    comment: string
+  ) {
+    await query(
+      `COMMENT ON INDEX ${label(schema)}.${label(index)} IS ${
+        comment ? str(comment) : 'NULL'
+      }`
+    );
+  },
+
   async commentColumn(
     schema: string,
     table: string,
