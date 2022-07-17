@@ -47,6 +47,7 @@ export const {
   keepSequence,
   extraTableTab,
   renameEntity,
+  changeSchema,
 } = state;
 
 export async function open(c: ConnectionConfiguration) {

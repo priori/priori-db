@@ -1,4 +1,4 @@
-import { closeTab, reloadNav, renameEntity } from 'state/actions';
+import { closeTab, reloadNav, renameEntity, changeSchema } from 'state/actions';
 import { DB } from 'db/DB';
 import { useState } from 'react';
 import { DomainFrameProps } from 'types';
@@ -7,7 +7,7 @@ import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { Dialog } from 'components/util/Dialog';
 import { first } from 'db/Connection';
-import { Comment, Rename } from './TableInfoFrame';
+import { Comment, Rename, ChangeSchema } from './TableInfoFrame';
 
 interface DomainFrameServiceState {
   type: {
@@ -38,6 +38,7 @@ export function DomainFrame(props: DomainFrameProps) {
     dropConfirmation: false,
     editComment: false,
     rename: false,
+    changeSchema: false,
   });
 
   const dropCascade = useEvent(() => {
@@ -100,6 +101,13 @@ export function DomainFrame(props: DomainFrameProps) {
     set({ ...state, rename: false });
   });
 
+  const onChangeSchema = useEvent(async (schema: string) => {
+    await DB.updateDomain(props.schema, props.name, { schema });
+    changeSchema(props.uid, schema);
+    reloadNav();
+    set({ ...state, changeSchema: false });
+  });
+
   return (
     <div>
       <h1>
@@ -121,6 +129,24 @@ export function DomainFrame(props: DomainFrameProps) {
             value={props.name}
             onCancel={() => set({ ...state, rename: false })}
             onUpdate={onRename}
+          />
+        ) : null}
+        <button
+          type="button"
+          onClick={() => set({ ...state, changeSchema: true })}
+        >
+          Change Schema{' '}
+          <i
+            className="fa fa-arrow-right"
+            style={{ transform: 'rotate(-45deg)' }}
+          />
+        </button>{' '}
+        {state.changeSchema ? (
+          <ChangeSchema
+            relativeTo="previousSibling"
+            value={props.schema}
+            onCancel={() => set({ ...state, changeSchema: false })}
+            onUpdate={onChangeSchema}
           />
         ) : null}
         <button

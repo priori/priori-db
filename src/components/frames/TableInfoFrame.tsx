@@ -5,8 +5,15 @@ import { useEvent } from 'util/useEvent';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Dialog } from 'components/util/Dialog';
 import { grantError } from 'util/errors';
+import assert from 'assert';
+import { currentState } from 'state/state';
 import { TableInfoFrameProps } from '../../types';
-import { reloadNav, closeTab, renameEntity } from '../../state/actions';
+import {
+  reloadNav,
+  closeTab,
+  renameEntity,
+  changeSchema,
+} from '../../state/actions';
 import { DB } from '../../db/DB';
 
 export interface ColTableInfo {
@@ -127,7 +134,11 @@ export function InputDialog({
         </div>
       ) : null}
       {options ? (
-        <select>{options.map((o) => null)}</select>
+        <select value={state} onChange={(e) => setState(e.target.value)}>
+          {options.map((o) => (
+            <option key={o}>{o}</option>
+          ))}
+        </select>
       ) : (
         <input
           type={type || 'text'}
@@ -182,6 +193,32 @@ export function Rename({
       onCancel={onCancel}
       relativeTo={relativeTo}
       updateText="Rename"
+    />
+  );
+}
+
+export function ChangeSchema({
+  value,
+  onUpdate,
+  onCancel,
+  relativeTo,
+}: {
+  value: string;
+  onUpdate: (v: string) => Promise<void>;
+  onCancel: () => void;
+  relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
+}) {
+  const appState = currentState();
+  assert(appState.schemas);
+  const schemas = appState.schemas.map((s) => s.name);
+  return (
+    <InputDialog
+      value={value}
+      onUpdate={onUpdate}
+      onCancel={onCancel}
+      options={schemas}
+      relativeTo={relativeTo}
+      updateText="Update"
     />
   );
 }
@@ -276,6 +313,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     dropConfirmation: false,
     editComment: false,
     rename: false,
+    updateSchema: false,
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
@@ -287,6 +325,18 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       await DB.updateView(props.schema, props.table, { comment: text });
     await service.reload();
     set({ ...edit, editComment: false });
+  });
+
+  const onChangeSchema = useEvent(async (schema: string) => {
+    if (state.table)
+      await DB.updateTable(props.schema, props.table, { schema });
+    else if (state.mView)
+      await DB.updateMView(props.schema, props.table, { schema });
+    else if (state.view)
+      await DB.updateView(props.schema, props.table, { schema });
+    changeSchema(props.uid, schema);
+    reloadNav();
+    set({ ...edit, updateSchema: false });
   });
 
   const dropCascade = useEvent(() => {
@@ -383,6 +433,24 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             value={props.table}
             onCancel={() => set({ ...edit, rename: false })}
             onUpdate={onRename}
+          />
+        ) : null}
+        <button
+          type="button"
+          onClick={() => set({ ...edit, updateSchema: true })}
+        >
+          Change Schema{' '}
+          <i
+            className="fa fa-arrow-right"
+            style={{ transform: 'rotate(-45deg)' }}
+          />
+        </button>{' '}
+        {edit.updateSchema ? (
+          <ChangeSchema
+            relativeTo="previousSibling"
+            value={props.schema}
+            onCancel={() => set({ ...edit, updateSchema: false })}
+            onUpdate={onChangeSchema}
           />
         ) : null}
         <button

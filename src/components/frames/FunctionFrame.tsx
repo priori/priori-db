@@ -1,4 +1,4 @@
-import { closeTab, reloadNav, renameEntity } from 'state/actions';
+import { closeTab, reloadNav, renameEntity, changeSchema } from 'state/actions';
 import { DB } from 'db/DB';
 import { useState } from 'react';
 import { FunctionFrameProps } from 'types';
@@ -7,7 +7,7 @@ import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { first } from 'db/Connection';
 import { Dialog } from 'components/util/Dialog';
-import { Comment, Rename } from './TableInfoFrame';
+import { Comment, Rename, ChangeSchema } from './TableInfoFrame';
 
 export function FunctionFrame(props: FunctionFrameProps) {
   const name =
@@ -37,6 +37,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
     dropConfirmation: false,
     editComment: false,
     rename: false,
+    changeSchema: false,
   });
 
   const dropCascade = useEvent(() => {
@@ -99,6 +100,13 @@ export function FunctionFrame(props: FunctionFrameProps) {
     set({ ...state, rename: false });
   });
 
+  const onChangeSchema = useEvent(async (schema: string) => {
+    await DB.updateFunction(props.schema, name, { schema });
+    changeSchema(props.uid, schema);
+    reloadNav();
+    set({ ...state, changeSchema: false });
+  });
+
   return (
     <div>
       <h1>
@@ -120,6 +128,24 @@ export function FunctionFrame(props: FunctionFrameProps) {
             value={name}
             onCancel={() => set({ ...state, rename: false })}
             onUpdate={onRename}
+          />
+        ) : null}
+        <button
+          type="button"
+          onClick={() => set({ ...state, changeSchema: true })}
+        >
+          Change Schema{' '}
+          <i
+            className="fa fa-arrow-right"
+            style={{ transform: 'rotate(-45deg)' }}
+          />
+        </button>{' '}
+        {state.changeSchema ? (
+          <ChangeSchema
+            relativeTo="previousSibling"
+            value={props.schema}
+            onCancel={() => set({ ...state, changeSchema: false })}
+            onUpdate={onChangeSchema}
           />
         ) : null}
         <button

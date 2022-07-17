@@ -1,4 +1,4 @@
-import { closeTab, reloadNav, renameEntity } from 'state/actions';
+import { closeTab, reloadNav, renameEntity, changeSchema } from 'state/actions';
 import { DB } from 'db/DB';
 import { useState } from 'react';
 import { SequenceFrameProps } from 'types';
@@ -8,7 +8,7 @@ import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Dialog } from 'components/util/Dialog';
 import { first } from 'db/Connection';
-import { Comment, InputDialog, Rename } from './TableInfoFrame';
+import { Comment, InputDialog, Rename, ChangeSchema } from './TableInfoFrame';
 
 type SequenceFrameState = {
   type: {
@@ -47,6 +47,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
     editComment: false,
     rename: false,
     updateValue: false,
+    changeSchema: false,
   });
 
   const dropCascade = useEvent(() => {
@@ -122,6 +123,13 @@ export function SequenceFrame(props: SequenceFrameProps) {
     set({ ...state, updateValue: false });
   });
 
+  const onChangeSchema = useEvent(async (schema: string) => {
+    await DB.updateSequence(props.schema, props.name, { schema });
+    changeSchema(props.uid, schema);
+    reloadNav();
+    set({ ...state, changeSchema: false });
+  });
+
   return (
     <div>
       <h1>
@@ -171,13 +179,24 @@ export function SequenceFrame(props: SequenceFrameProps) {
             onUpdate={onRename}
           />
         ) : null}
-        <button type="button">
-          Update Schema{' '}
+        <button
+          type="button"
+          onClick={() => set({ ...state, changeSchema: true })}
+        >
+          Change Schema{' '}
           <i
             className="fa fa-arrow-right"
             style={{ transform: 'rotate(-45deg)' }}
           />
         </button>{' '}
+        {state.changeSchema ? (
+          <ChangeSchema
+            relativeTo="previousSibling"
+            value={props.schema}
+            onCancel={() => set({ ...state, changeSchema: false })}
+            onUpdate={onChangeSchema}
+          />
+        ) : null}
         <button
           type="button"
           onClick={

@@ -722,6 +722,37 @@ export function openFullView(current: AppState, name: string) {
   };
 }
 
+export function changeSchema(current: AppState, uid: number, schema: string) {
+  const tab = current.tabs.find((t) => t.props.uid === uid);
+  if (!tab) return current;
+  return {
+    ...current,
+    tabs: current.tabs.map((t) =>
+      (t.props.type === 'table' || t.props.type === 'tableinfo') &&
+      (tab.props.type === 'table' || tab.props.type === 'tableinfo') &&
+      t.props.schema === tab.props.schema &&
+      t.props.table === tab.props.table
+        ? {
+            ...t,
+            title: `${schema}.${t.props.table}${
+              t.props.type === 'tableinfo' ? ' info' : ''
+            }`,
+            props: { ...t.props, schema },
+          }
+        : tab.props.uid === uid &&
+          (t.props.type === 'sequence' ||
+            t.props.type === 'domain' ||
+            t.props.type === 'function')
+        ? {
+            ...t,
+            title: `${schema}.${t.props.name}`,
+            props: { ...t.props, schema },
+          }
+        : t
+    ),
+  };
+}
+
 export function renameEntity(curret: AppState, uid: number, name: string) {
   const tab = curret.tabs.find((t) => t.props.uid === uid);
   if (!tab) return curret;
