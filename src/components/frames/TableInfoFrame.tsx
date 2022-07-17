@@ -769,6 +769,23 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           <div className="empty">No indexes found for table.</div>
         </div>
       ) : null}
+      {state.view ? (
+        <>
+          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_views</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Owner</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{state.view.viewowner}</td>
+              </tr>
+            </tbody>
+          </table>
+        </>
+      ) : null}
       {state.mView ? (
         <>
           <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_matviews</h2>
