@@ -819,7 +819,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       ) : null}
       {state.table ? (
         <>
-          <h2>pg_catalog.pg_table</h2>
+          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_tables</h2>
           <table>
             <thead>
               <tr>
@@ -870,7 +870,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       ) : null}
       {state.type ? (
         <>
-          <h2>pg_catalog.pg_type</h2>
+          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_type</h2>
           <div className="fields">
             {Object.entries(state.type).map(([k, v]) => (
               <div key={k} className="field">
