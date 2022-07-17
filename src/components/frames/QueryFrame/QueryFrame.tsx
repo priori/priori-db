@@ -12,7 +12,7 @@ import {
 } from 'util/browserDb';
 import { currentState } from 'state/state';
 import { useIsMounted } from 'util/hooks';
-import { Dialog } from 'components/util/Dialog';
+import { Dialog } from 'components/util/Dialog/Dialog';
 import { QuerySelector } from './QuerySelector';
 import { useTab } from '../../main/connected/ConnectedApp';
 import { Editor } from '../../Editor';

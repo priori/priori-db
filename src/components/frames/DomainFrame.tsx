@@ -5,9 +5,11 @@ import { DomainFrameProps } from 'types';
 import { throwError } from 'util/throwError';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
-import { Dialog } from 'components/util/Dialog';
+import { Dialog } from 'components/util/Dialog/Dialog';
 import { first } from 'db/Connection';
-import { Comment, Rename, ChangeSchema } from './TableInfoFrame';
+import { RenameDialog } from 'components/util/Dialog/RenameDialog';
+import { Comment } from 'components/util/Comment';
+import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 
 interface DomainFrameServiceState {
   type: {
@@ -124,7 +126,7 @@ export function DomainFrame(props: DomainFrameProps) {
           Rename <i className="fa fa-pencil" />
         </button>{' '}
         {state.rename ? (
-          <Rename
+          <RenameDialog
             relativeTo="previousSibling"
             value={props.name}
             onCancel={() => set({ ...state, rename: false })}
@@ -142,7 +144,7 @@ export function DomainFrame(props: DomainFrameProps) {
           />
         </button>{' '}
         {state.changeSchema ? (
-          <ChangeSchema
+          <ChangeSchemaDialog
             relativeTo="previousSibling"
             value={props.schema}
             onCancel={() => set({ ...state, changeSchema: false })}

@@ -6,8 +6,10 @@ import { throwError } from 'util/throwError';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { first } from 'db/Connection';
-import { Dialog } from 'components/util/Dialog';
-import { Comment, Rename, ChangeSchema } from './TableInfoFrame';
+import { Dialog } from 'components/util/Dialog/Dialog';
+import { RenameDialog } from 'components/util/Dialog/RenameDialog';
+import { Comment } from 'components/util/Comment';
+import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 
 export function FunctionFrame(props: FunctionFrameProps) {
   const name =
@@ -123,7 +125,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
           Rename <i className="fa fa-pencil" />
         </button>{' '}
         {state.rename ? (
-          <Rename
+          <RenameDialog
             relativeTo="previousSibling"
             value={name}
             onCancel={() => set({ ...state, rename: false })}
@@ -141,7 +143,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
           />
         </button>{' '}
         {state.changeSchema ? (
-          <ChangeSchema
+          <ChangeSchemaDialog
             relativeTo="previousSibling"
             value={props.schema}
             onCancel={() => set({ ...state, changeSchema: false })}

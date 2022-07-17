@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { DB } from 'db/DB';
 import { throwError } from 'util/throwError';
-import { Dialog } from 'components/util/Dialog';
+import { Dialog } from 'components/util/Dialog/Dialog';
 import { SchemaInfoFrameProps } from '../../types';
 import { closeTab, reloadNav } from '../../state/actions';
 

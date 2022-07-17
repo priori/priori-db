@@ -1,12 +1,12 @@
 import { useService } from 'util/useService';
 import { throwError } from 'util/throwError';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { useTab } from 'components/main/connected/ConnectedApp';
-import { Dialog } from 'components/util/Dialog';
-import { grantError } from 'util/errors';
-import assert from 'assert';
-import { currentState } from 'state/state';
+import { Dialog } from 'components/util/Dialog/Dialog';
+import { YesNoDialog } from 'components/util/Dialog/YesNoDialog';
+import { RenameDialog } from 'components/util/Dialog/RenameDialog';
+import { Comment } from 'components/util/Comment';
 import { TableInfoFrameProps } from '../../types';
 import {
   reloadNav,
@@ -15,6 +15,7 @@ import {
   changeSchema,
 } from '../../state/actions';
 import { DB } from '../../db/DB';
+import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 
 export interface ColTableInfo {
   column_name: string;
@@ -27,241 +28,6 @@ export interface ColTableInfo {
   is_primary: boolean;
 }
 
-export function Comment({
-  value,
-  edit,
-  onUpdate,
-  onCancel,
-}: {
-  value: string;
-  edit: boolean;
-  onUpdate: (v: string) => Promise<void>;
-  onCancel: () => void;
-}) {
-  const [state, setState] = useState(value);
-  useEffect(() => {
-    setState(value);
-  }, [value, setState, edit]);
-  const focusRef = useEvent((el: HTMLTextAreaElement | null) => {
-    if (el) {
-      el.focus();
-      el.setSelectionRange(el.value.length, el.value.length);
-    }
-  });
-  if (!value && !edit) return null;
-  if (edit)
-    return (
-      <div className="comment--form">
-        <textarea
-          className="comment"
-          value={state}
-          onChange={(e) => setState(e.target.value)}
-          ref={focusRef}
-        />
-        <button type="button" onClick={() => onUpdate(state)}>
-          Save <i className="fa fa-check" />
-        </button>
-        <button
-          type="button"
-          onClick={() => onCancel()}
-          style={{ fontWeight: 'normal' }}
-        >
-          Discard Changes <i className="fa fa-undo" />
-        </button>
-      </div>
-    );
-  return (
-    <div
-      className="comment"
-      style={
-        value && value.length < 35 && value.indexOf('\n') === -1
-          ? { fontSize: '45px' }
-          : undefined
-      }
-    >
-      {value}
-    </div>
-  );
-}
-
-export function InputDialog({
-  value,
-  onUpdate,
-  onCancel,
-  relativeTo,
-  updateText,
-  type,
-  options,
-}: {
-  value: string;
-  onUpdate: (v: string) => Promise<void>;
-  onCancel: () => void;
-  updateText: string;
-  type?: 'text' | 'number' | 'textarea';
-  options?: string[];
-  relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
-}) {
-  const [state, setState] = useState(value);
-  const [error, setError] = useState<Error | null>(null);
-  const [executing, setExecuting] = useState(false);
-  const onBlur = useEvent(() => {
-    if (executing) return;
-    onCancel();
-  });
-  const onSave = useEvent(async () => {
-    try {
-      setExecuting(true);
-      await onUpdate(state);
-    } catch (e) {
-      setError(grantError(e));
-    } finally {
-      setExecuting(false);
-    }
-  });
-  const focusRef = useEvent(
-    (el: HTMLInputElement | HTMLTextAreaElement | null) => {
-      if (el) {
-        setTimeout(() => {
-          el.focus();
-          if (type !== 'number')
-            el.setSelectionRange(el.value.length, el.value.length);
-        }, 10);
-      }
-    }
-  );
-  return (
-    <Dialog relativeTo={relativeTo} onBlur={onBlur}>
-      {error ? (
-        <div className="dialog-error">
-          <div className="dialog-error--main">
-            <div className="dialog-error--message">{error.message}</div>
-          </div>
-          <div className="dialog-error--buttons">
-            <button
-              onClick={() => setError(null)}
-              type="button"
-              style={{
-                padding: '6px 14px !important',
-                boxShadow: 'none',
-              }}
-            >
-              Ok
-            </button>
-          </div>
-        </div>
-      ) : null}
-      {options ? (
-        <select
-          value={state}
-          onChange={(e) => setState(e.target.value)}
-          disabled={!!error || executing}
-        >
-          {options.map((o) => (
-            <option key={o}>{o}</option>
-          ))}
-        </select>
-      ) : type === 'textarea' ? (
-        <textarea
-          disabled={!!error || executing}
-          ref={focusRef}
-          value={state}
-          onChange={(e) => setState(e.target.value)}
-          onKeyDown={(e) => {
-            if (executing) return;
-            if (e.key === 'Escape') {
-              onCancel();
-            } else if (e.key === 'Enter') {
-              if (state === value) onCancel();
-              else onSave();
-            }
-          }}
-        />
-      ) : (
-        <input
-          disabled={!!error || executing}
-          type={
-            type === 'number' ? 'number' : type === 'text' ? 'text' : 'text'
-          }
-          ref={focusRef}
-          value={state}
-          onChange={(e) => setState(e.target.value)}
-          onKeyDown={(e) => {
-            if (executing) return;
-            if (e.key === 'Escape') {
-              onCancel();
-            } else if (e.key === 'Enter') {
-              if (state === value) onCancel();
-              else onSave();
-            }
-          }}
-        />
-      )}
-      <button
-        disabled={!!error || executing}
-        style={{ fontWeight: 'normal' }}
-        type="button"
-        onClick={onCancel}
-      >
-        Cancel
-      </button>{' '}
-      <button
-        disabled={!!error || executing || state === value}
-        type="button"
-        onClick={state === value ? undefined : onSave}
-      >
-        {updateText} <i className="fa fa-check" />
-      </button>
-    </Dialog>
-  );
-}
-
-export function Rename({
-  value,
-  onUpdate,
-  onCancel,
-  relativeTo,
-}: {
-  value: string;
-  onUpdate: (v: string) => Promise<void>;
-  onCancel: () => void;
-  relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
-}) {
-  return (
-    <InputDialog
-      value={value}
-      onUpdate={onUpdate}
-      onCancel={onCancel}
-      relativeTo={relativeTo}
-      updateText="Rename"
-    />
-  );
-}
-
-export function ChangeSchema({
-  value,
-  onUpdate,
-  onCancel,
-  relativeTo,
-}: {
-  value: string;
-  onUpdate: (v: string) => Promise<void>;
-  onCancel: () => void;
-  relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
-}) {
-  const appState = currentState();
-  assert(appState.schemas);
-  const schemas = appState.schemas.map((s) => s.name);
-  return (
-    <InputDialog
-      value={value}
-      onUpdate={onUpdate}
-      onCancel={onCancel}
-      options={schemas}
-      relativeTo={relativeTo}
-      updateText="Update"
-    />
-  );
-}
 export interface TableInfoFrameState {
   comment: string | null;
   cols?: ColTableInfo[];
@@ -298,78 +64,6 @@ export interface TableInfoFrameState {
   type: {
     [k: string]: string | number | null | boolean;
   };
-}
-
-export function YesNoDialog({
-  relativeTo,
-  onYes,
-  onNo,
-  question,
-}: {
-  relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
-  onYes: () => Promise<void>;
-  onNo: () => void;
-  question: string;
-}) {
-  const [state, setState] = useState({
-    executing: false,
-    error: null as Error | null,
-  });
-  const onYesClick = useEvent(async () => {
-    setState({ executing: true, error: null });
-    try {
-      await onYes();
-    } catch (e) {
-      setState({
-        executing: false,
-        error: grantError(e),
-      });
-    }
-  });
-  return (
-    <Dialog
-      onBlur={onNo}
-      relativeTo={relativeTo}
-      className={state.executing ? 'executing' : ''}
-    >
-      {state.error ? (
-        <div className="dialog-error">
-          <div className="dialog-error--main">
-            <div className="dialog-error--message">{state.error.message}</div>
-          </div>
-          <div className="dialog-error--buttons">
-            <button
-              onClick={() => setState({ error: null, executing: false })}
-              type="button"
-              style={{
-                padding: '6px 14px !important',
-                boxShadow: 'none',
-              }}
-            >
-              Ok
-            </button>
-          </div>
-        </div>
-      ) : null}
-      {question}
-      <div>
-        <button
-          type="button"
-          onClick={onYesClick}
-          disabled={state.executing || !!state.error}
-        >
-          Yes
-        </button>{' '}
-        <button
-          type="button"
-          onClick={onNo}
-          disabled={state.executing || !!state.error}
-        >
-          No
-        </button>
-      </div>
-    </Dialog>
-  );
 }
 
 export function TableInfoFrame(props: TableInfoFrameProps) {
@@ -552,7 +246,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           Rename <i className="fa fa-pencil" />
         </button>{' '}
         {edit.rename ? (
-          <Rename
+          <RenameDialog
             relativeTo="previousSibling"
             value={props.table}
             onCancel={() => set({ ...edit, rename: false })}
@@ -570,7 +264,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           />
         </button>{' '}
         {edit.updateSchema ? (
-          <ChangeSchema
+          <ChangeSchemaDialog
             relativeTo="previousSibling"
             value={props.schema}
             onCancel={() => set({ ...edit, updateSchema: false })}
@@ -741,7 +435,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                             Rename <i className="fa fa-pencil" />
                           </button>
                           {index.name === edit.renameIndex ? (
-                            <Rename
+                            <RenameDialog
                               value={index.name}
                               relativeTo="previousSibling"
                               onCancel={() =>

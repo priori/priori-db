@@ -6,9 +6,12 @@ import { throwError } from 'util/throwError';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
-import { Dialog } from 'components/util/Dialog';
+import { Dialog } from 'components/util/Dialog/Dialog';
 import { first } from 'db/Connection';
-import { Comment, InputDialog, Rename, ChangeSchema } from './TableInfoFrame';
+import { InputDialog } from 'components/util/Dialog/InputDialog';
+import { RenameDialog } from 'components/util/Dialog/RenameDialog';
+import { Comment } from 'components/util/Comment';
+import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 
 type SequenceFrameState = {
   type: {
@@ -172,7 +175,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
           Rename <i className="fa fa-pencil" />
         </button>{' '}
         {state.rename ? (
-          <Rename
+          <RenameDialog
             relativeTo="previousSibling"
             value={props.name}
             onCancel={() => set({ ...state, rename: false })}
@@ -190,7 +193,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
           />
         </button>{' '}
         {state.changeSchema ? (
-          <ChangeSchema
+          <ChangeSchemaDialog
             relativeTo="previousSibling"
             value={props.schema}
             onCancel={() => set({ ...state, changeSchema: false })}

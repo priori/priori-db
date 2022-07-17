@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { Dialog } from 'components/util/Dialog';
+import { Dialog } from 'components/util/Dialog/Dialog';
 import { useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { ConnectionConfiguration } from '../../../db/pgpass';
