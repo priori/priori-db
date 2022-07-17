@@ -268,19 +268,10 @@ export interface TableInfoFrameState {
   indexes?: {
     name: string;
     definition: string;
+    comment: string;
     type: string;
     pk: boolean;
-    cols: {
-      column_name: string;
-      data_type: string;
-      column_default: string;
-      is_nullable: boolean | string;
-      comment: string;
-      length: number;
-      view_definition: string | null;
-      scale: number;
-      is_primary: boolean;
-    }[];
+    cols: string[];
   }[];
   table: {
     tableowner: string;
@@ -720,6 +711,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                 <th>Name</th>
                 <th>Method</th>
                 <th>Columns</th>
+                <th>Comment</th>
                 <th style={{ width: 23 }} />
                 <th />
               </tr>
@@ -729,45 +721,48 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                 .filter((i) => !i.pk)
                 .map((index, k) => (
                   <tr key={k}>
-                    <td
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        borderTop: 0,
-                        borderRight: 0,
-                        marginLeft: -1,
-                      }}
-                    >
-                      <div style={{ flex: 1 }}>{index.name} </div>
-                      <div>
-                        <button
-                          type="button"
-                          className="simple-button"
-                          style={{ float: 'right' }}
-                          onClick={() =>
-                            set({ ...edit, renameIndex: index.name })
-                          }
-                        >
-                          Rename <i className="fa fa-pencil" />
-                        </button>
-                        {index.name === edit.renameIndex ? (
-                          <Rename
-                            value={index.name}
-                            relativeTo="previousSibling"
-                            onCancel={() => set({ ...edit, renameIndex: null })}
-                            onUpdate={(name) => renameIndex(index.name, name)}
-                          />
-                        ) : null}
+                    <td>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>{index.name} </div>
+                        <div>
+                          <button
+                            type="button"
+                            className="simple-button"
+                            style={{ float: 'right' }}
+                            onClick={() =>
+                              set({ ...edit, renameIndex: index.name })
+                            }
+                          >
+                            Rename <i className="fa fa-pencil" />
+                          </button>
+                          {index.name === edit.renameIndex ? (
+                            <Rename
+                              value={index.name}
+                              relativeTo="previousSibling"
+                              onCancel={() =>
+                                set({ ...edit, renameIndex: null })
+                              }
+                              onUpdate={(name) => renameIndex(index.name, name)}
+                            />
+                          ) : null}
+                        </div>
                       </div>
                     </td>
+
                     <td>{index.type}</td>
                     <td>
-                      {index.cols.map((c: ColTableInfo, k2: number) => (
+                      {index.cols.map((c: string, k2: number) => (
                         <span className="column" key={k2}>
-                          {JSON.stringify(c)}
+                          {c}
                         </span>
                       ))}
                     </td>
+                    <td>{index.comment}</td>
                     <td>
                       {index.name === state2.indexDefinition ? (
                         <Dialog
@@ -780,6 +775,10 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                             className="code"
                             value={index.definition}
                             readOnly
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape')
+                                setState2({ indexDefinition: null });
+                            }}
                             ref={(el) => {
                               setTimeout(() => {
                                 if (

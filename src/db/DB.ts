@@ -438,8 +438,8 @@ export const DB = {
         pg_get_indexdef(c.oid) "definition",
         (select amname FROM pg_am WHERE pg_am.oid = c.relam) "type",
         i.indisprimary pk,
-        ARRAY ( SELECT pg_get_indexdef(c.oid,1,true) ) cols
-        -- (SELECT description FROM pg_description d WHERE d.objoid = c.oid) "description",
+        ARRAY ( SELECT pg_get_indexdef(c.oid,1,true) ) cols,
+        (SELECT description FROM pg_description d WHERE d.objoid = c.oid) "comment"
       FROM pg_class c
       INNER JOIN pg_index i ON i.indexrelid = c.oid
       WHERE c.relkind = 'i' AND
@@ -451,19 +451,10 @@ export const DB = {
     );
     return res as {
       name: string;
-      definition: string;
+      comment: string;
       type: string;
       pk: boolean;
-      cols: {
-        column_name: string;
-        data_type: string;
-        column_default: string;
-        is_nullable: boolean | string;
-        comment: string;
-        length: number;
-        scale: number;
-        is_primary: boolean;
-      }[];
+      cols: string[];
     }[];
   },
 
