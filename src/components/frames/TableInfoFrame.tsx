@@ -769,6 +769,37 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           <div className="empty">No indexes found for table.</div>
         </div>
       ) : null}
+      {state.mView ? (
+        <>
+          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_matviews</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Owner</th>
+                <th>Table Space</th>
+                <th>Has Indexes</th>
+                <th>Is Populated</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{state.mView.matviewowner}</td>
+                <td>{state.mView.tablespace || '-'}</td>
+                <td>
+                  {typeof state.mView.hasindexes === 'string'
+                    ? state.mView.hasindexes
+                    : JSON.stringify(state.mView.hasindexes)}
+                </td>
+                <td>
+                  {typeof state.mView.ispopulated === 'string'
+                    ? state.mView.ispopulated
+                    : JSON.stringify(state.mView.ispopulated)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </>
+      ) : null}
       {state.table ? (
         <>
           <h2>pg_catalog.pg_table</h2>
