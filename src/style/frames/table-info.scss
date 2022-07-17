@@ -11,8 +11,10 @@
   bottom: 0;
   padding: 20px;
   background: white;
+  overflow: auto;
   .dialog {
     margin-top: 20px;
+    font-size: 16px;
   }
   div.comment {
     white-space: break-spaces;
@@ -63,6 +65,77 @@
     width: 100%;
     font-size: 13px;
   }
+  tbody td {
+    font-size: 13px;
+  }
+  table {
+    border-collapse: collapse;
+  }
+  td,
+  th {
+    border: 1px solid #ddd;
+    padding: 4px;
+  }
+  th {
+    font-size: 12px;
+  }
+  table,
+  .fields,
+  .empty {
+    width: 100%;
+    min-width: 600px;
+  }
+  .empty {
+    background: #f8f8f8;
+    padding: 20px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    color: #777;
+  }
+  .dialog {
+    background: white;
+    box-shadow: 0 1px 11px rgb(0 0 0 / 18%);
+    padding: 20px;
+    line-height: 3em;
+    text-align: center;
+    button {
+      margin: 5px;
+    }
+  }
+
+  textarea {
+    height: 100px;
+    width: 250px;
+    resize: none;
+    border: 0;
+    outline: none;
+  }
+  td .fa-eye {
+    opacity: 0.3;
+    cursor: pointer;
+    &:hover {
+      opacity: 1;
+    }
+  }
+  h2 {
+    color: #1976d2;
+    margin-bottom: 3px;
+    font-size: 17px;
+    margin-top: 23px;
+  }
+  .fields {
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid #ddd;
+    padding: 5px;
+    user-select: text;
+    .field {
+      margin-right: 20px;
+      width: 175px;
+      font-size: 13px;
+    }
+  }
 }
 .table-info-frame__actions {
   button {
@@ -70,23 +143,6 @@
   }
   line-height: 45px;
   margin-bottom: 22px;
-}
-.table-info tbody td {
-  font-size: 13px;
-}
-.table-info table {
-  border-collapse: collapse;
-}
-.table-info td,
-.table-info th {
-  border: 1px solid #ddd;
-  padding: 4px;
-}
-.table-info th {
-  font-size: 12px;
-}
-.frame.table-info {
-  overflow: auto;
 }
 
 span.column {
@@ -96,70 +152,6 @@ span.column {
   white-space: nowrap;
 }
 
-.frame .dialog {
-  background: white;
-  box-shadow: 0 1px 11px rgb(0 0 0 / 18%);
-  padding: 20px;
-  line-height: 3em;
-  text-align: center;
-  button {
-    margin: 5px;
-  }
-}
-
-.dialog textarea {
-  height: 100px;
-  width: 250px;
-  resize: none;
-  border: 0;
-  outline: none;
-}
-.frame td .fa-eye {
-  opacity: 0.3;
-  cursor: pointer;
-  &:hover {
-    opacity: 1;
-  }
-}
-.frame td .dialog div {
-  text-align: right;
-}
-.frame.table-info table,
-.frame.schema-info table,
-.frame.sequence table,
-.frame.domain table,
-.frame.function table,
-.frame .fields,
-.empty {
-  width: 100%;
-  min-width: 600px;
-}
-.frame .empty {
-  background: #f8f8f8;
-  padding: 20px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: bold;
-  color: #777;
-}
-.frame h2 {
-  color: #1976d2;
-  margin-bottom: 3px;
-  font-size: 17px;
-  margin-top: 23px;
-}
-.frame .fields {
-  display: flex;
-  flex-wrap: wrap;
-  border: 1px solid #ddd;
-  padding: 5px;
-  user-select: text;
-  .field {
-    margin-right: 20px;
-    width: 175px;
-    font-size: 13px;
-  }
-}
 .table-info,
 .frame.function,
 .frame.sequence,
@@ -217,9 +209,10 @@ div.frame.function {
     box-shadow: none;
   }
   table td.actions {
-    width: 150px;
     text-align: right;
     user-select: none;
+    padding: 2px 4px;
+    line-height: 27px;
   }
 }
 .comment--form {
@@ -260,6 +253,7 @@ button[disabled] {
   background: white;
   display: flex;
   flex-direction: column;
+  z-index: 1;
 }
 .dialog-error--message {
   user-select: text;
