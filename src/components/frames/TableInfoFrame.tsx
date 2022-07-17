@@ -589,6 +589,13 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           onUpdate={onUpdateComment}
         />
       ) : null}
+      {(state.view && state.view.definition) ||
+      (state.mView && state.mView.definition) ? (
+        <div className="view">
+          {(state.view && state.view.definition) ||
+            (state.mView && state.mView.definition)}
+        </div>
+      ) : null}
       {state.cols ? (
         <>
           <h2>Columns</h2>
