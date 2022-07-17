@@ -7,6 +7,7 @@ import { Dialog } from 'components/util/Dialog/Dialog';
 import { YesNoDialog } from 'components/util/Dialog/YesNoDialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
+import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { TableInfoFrameProps } from '../../types';
 import {
   reloadNav,
@@ -115,6 +116,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     removeIndex: null as string | null,
     renameIndex: null as string | null,
     renameColumn: null as string | null,
+    commentColumn: null as string | null,
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
@@ -224,6 +226,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     await DB.removeIndex(props.schema, props.table, name);
     await service.reload();
     set({ ...edit, removeIndex: null });
+  });
+
+  const commentColumn = useEvent(async (column: string, comment: string) => {
+    await DB.commentColumn(props.schema, props.table, column, comment);
+    await service.reload();
+    set({ ...edit, commentColumn: null });
   });
 
   function showQuery(q: string) {
@@ -403,7 +411,55 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           'no'
                         )}
                       </td>
-                      <td>{col.comment}</td>
+                      <td
+                        style={{
+                          wordBreak: 'break-word',
+                          ...(!col.comment
+                            ? { textAlign: 'center' }
+                            : undefined),
+                        }}
+                      >
+                        {col.comment}
+                        {col.comment ? (
+                          <>
+                            {' '}
+                            <button
+                              type="button"
+                              className="simple-button"
+                              onClick={() =>
+                                set({ ...edit, commentColumn: col.column_name })
+                              }
+                              style={{ float: 'right' }}
+                            >
+                              <i className="fa fa-pencil" />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            className="simple-button"
+                            onClick={() =>
+                              set({ ...edit, commentColumn: col.column_name })
+                            }
+                          >
+                            Create Comment <i className="fa fa-pencil" />
+                          </button>
+                        )}
+                        {col.column_name === edit.commentColumn ? (
+                          <InputDialog
+                            type="textarea"
+                            relativeTo="previousSibling"
+                            value={col.comment}
+                            updateText="Update"
+                            onCancel={() =>
+                              set({ ...edit, commentColumn: null })
+                            }
+                            onUpdate={(comment) =>
+                              commentColumn(col.column_name, comment)
+                            }
+                          />
+                        ) : null}
+                      </td>
                       <td>{col.length}</td>
                       <td>{col.scale || null}</td>
                       <td style={{ textAlign: 'center' }}>
