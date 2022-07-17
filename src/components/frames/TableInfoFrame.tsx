@@ -387,6 +387,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     rename: false,
     updateSchema: false,
     removeColumn: null as string | null,
+    removeIndex: null as string | null,
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
@@ -478,6 +479,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     await DB.removeCol(props.schema, props.table, col);
     await service.reload();
     set({ ...edit, removeColumn: null });
+  });
+
+  const removeIndex = useEvent(async (name: string) => {
+    await DB.removeIndex(props.schema, props.table, name);
+    await service.reload();
+    set({ ...edit, removeIndex: null });
   });
 
   function showQuery(q: string) {
@@ -597,6 +604,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                   <th>Length</th>
                   <th>Scale</th>
                   <th>Primary key</th>
+                  {state.table ? <th /> : null}
                 </tr>
               </thead>
               <tbody>
@@ -659,6 +667,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                 <th>Method</th>
                 <th>Columns</th>
                 <th style={{ width: 23 }} />
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -728,6 +737,25 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         }}
                         onClick={() => showQuery(index.name)}
                       />
+                    </td>
+                    <td className="actions">
+                      <button
+                        type="button"
+                        className="simple-button"
+                        onClick={() =>
+                          set({ ...edit, removeIndex: index.name })
+                        }
+                      >
+                        Remove <i className="fa fa-close" />
+                      </button>
+                      {index.name === edit.removeIndex ? (
+                        <YesNoDialog
+                          relativeTo="previousSibling"
+                          question="Do you really want to remove this index?"
+                          onYes={() => removeIndex(index.name)}
+                          onNo={() => set({ ...edit, removeIndex: null })}
+                        />
+                      ) : null}
                     </td>
                   </tr>
                 ))}

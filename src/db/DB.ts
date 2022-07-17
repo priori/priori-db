@@ -130,6 +130,10 @@ export const DB = {
     );
   },
 
+  async removeIndex(schema: string, _: string, index: string) {
+    await query(`DROP INDEX ${label(schema)}.${label(index)}`);
+  },
+
   async updateCol(
     schema: string,
     tabela: string,
