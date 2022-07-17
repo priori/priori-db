@@ -140,6 +140,19 @@ export const DB = {
     );
   },
 
+  async renameColumn(
+    schema: string,
+    table: string,
+    col: string,
+    newName: string
+  ) {
+    await query(
+      `ALTER TABLE ${label(schema)}.${label(table)} RENAME COLUMN ${label(
+        col
+      )} TO ${label(newName)}`
+    );
+  },
+
   async updateCol(
     schema: string,
     tabela: string,

@@ -114,6 +114,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     removeColumn: null as string | null,
     removeIndex: null as string | null,
     renameIndex: null as string | null,
+    renameColumn: null as string | null,
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
@@ -205,6 +206,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     await DB.removeCol(props.schema, props.table, col);
     await service.reload();
     set({ ...edit, removeColumn: null });
+  });
+
+  const renameColumn = useEvent(async (col: string, newName: string) => {
+    await DB.renameColumn(props.schema, props.table, col, newName);
+    await service.reload();
+    set({ ...edit, renameIndex: null });
   });
 
   const renameIndex = useEvent(async (index: string, newName: string) => {
@@ -350,7 +357,43 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                 {state.cols &&
                   state.cols.map((col: ColTableInfo, i: number) => (
                     <tr key={i}>
-                      <td>{col.column_name}</td>
+                      <td>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <div style={{ flex: 1, marginRight: 10 }}>
+                            {col.column_name}{' '}
+                          </div>
+                          <div>
+                            <button
+                              type="button"
+                              className="simple-button"
+                              style={{ float: 'right' }}
+                              onClick={() =>
+                                set({ ...edit, renameColumn: col.column_name })
+                              }
+                            >
+                              Rename <i className="fa fa-pencil" />
+                            </button>
+                            {col.column_name === edit.renameColumn ? (
+                              <RenameDialog
+                                value={col.column_name}
+                                relativeTo="previousSibling"
+                                onCancel={() =>
+                                  set({ ...edit, renameColumn: null })
+                                }
+                                onUpdate={(name) =>
+                                  renameColumn(col.column_name, name)
+                                }
+                              />
+                            ) : null}
+                          </div>
+                        </div>
+                      </td>
                       <td>{col.data_type}</td>
                       <td>{col.column_default}</td>
                       <td style={{ textAlign: 'center' }}>
