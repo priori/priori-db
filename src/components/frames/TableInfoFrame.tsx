@@ -103,6 +103,21 @@ export function InputDialog({
 }) {
   const [state, setState] = useState(value);
   const [error, setError] = useState<Error | null>(null);
+  const [executing, setExecuting] = useState(false);
+  const onBlur = useEvent(() => {
+    if (executing) return;
+    onCancel();
+  });
+  const onSave = useEvent(async () => {
+    try {
+      setExecuting(true);
+      await onUpdate(state);
+    } catch (e) {
+      setError(grantError(e));
+    } finally {
+      setExecuting(false);
+    }
+  });
   const focusRef = useEvent((el: HTMLInputElement | null) => {
     if (el) {
       setTimeout(() => {
@@ -113,7 +128,7 @@ export function InputDialog({
     }
   });
   return (
-    <Dialog relativeTo={relativeTo} onBlur={onCancel}>
+    <Dialog relativeTo={relativeTo} onBlur={onBlur}>
       {error ? (
         <div className="dialog-error">
           <div className="dialog-error--main">
@@ -134,40 +149,45 @@ export function InputDialog({
         </div>
       ) : null}
       {options ? (
-        <select value={state} onChange={(e) => setState(e.target.value)}>
+        <select
+          value={state}
+          onChange={(e) => setState(e.target.value)}
+          disabled={!!error || executing}
+        >
           {options.map((o) => (
             <option key={o}>{o}</option>
           ))}
         </select>
       ) : (
         <input
+          disabled={!!error || executing}
           type={type || 'text'}
           ref={focusRef}
           value={state}
           onChange={(e) => setState(e.target.value)}
           onKeyDown={(e) => {
+            if (executing) return;
             if (e.key === 'Escape') {
               onCancel();
             } else if (e.key === 'Enter') {
               if (state === value) onCancel();
-              else onUpdate(state).catch((err) => setError(grantError(err)));
+              else onSave();
             }
           }}
         />
       )}
-      <button style={{ fontWeight: 'normal' }} type="button" onClick={onCancel}>
+      <button
+        disabled={!!error || executing}
+        style={{ fontWeight: 'normal' }}
+        type="button"
+        onClick={onCancel}
+      >
         Cancel
       </button>{' '}
       <button
+        disabled={!!error || executing || state === value}
         type="button"
-        disabled={state === value}
-        onClick={
-          state === value
-            ? undefined
-            : () => {
-                onUpdate(state).catch((e) => setError(grantError(e)));
-              }
-        }
+        onClick={state === value ? undefined : onSave}
       >
         {updateText} <i className="fa fa-check" />
       </button>
