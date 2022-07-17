@@ -438,7 +438,19 @@ export const DB = {
         pg_get_indexdef(c.oid) "definition",
         (select amname FROM pg_am WHERE pg_am.oid = c.relam) "type",
         i.indisprimary pk,
-        ARRAY ( SELECT pg_get_indexdef(c.oid,1,true) ) cols,
+        ARRAY (
+          ${
+            '' /*
+          SELECT a.attname || ''
+          FROM pg_attribute a
+          WHERE
+          	a.attrelid = c.oid and
+            a.attnum = ANY(i.indkey) */
+          }
+          SELECT name FROM (
+          	SELECT pg_get_indexdef(c.oid,generate_series(1,20),true) name ) as aux
+          WHERE aux.name != '' AND aux.name IS NOT NULL
+        ) cols,
         (SELECT description FROM pg_description d WHERE d.objoid = c.oid) "comment"
       FROM pg_class c
       INNER JOIN pg_index i ON i.indexrelid = c.oid
