@@ -114,6 +114,14 @@
     border: 0;
     outline: none;
   }
+  .dialog textarea {
+    display: block;
+    margin-bottom: 20px;
+    font-family: inherit;
+  }
+  textarea.code {
+    font-family: monospace;
+  }
   td .fa-eye {
     opacity: 0.3;
     cursor: pointer;

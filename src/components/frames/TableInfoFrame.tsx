@@ -97,7 +97,7 @@ export function InputDialog({
   onUpdate: (v: string) => Promise<void>;
   onCancel: () => void;
   updateText: string;
-  type?: 'text' | 'number';
+  type?: 'text' | 'number' | 'textarea';
   options?: string[];
   relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
 }) {
@@ -118,15 +118,17 @@ export function InputDialog({
       setExecuting(false);
     }
   });
-  const focusRef = useEvent((el: HTMLInputElement | null) => {
-    if (el) {
-      setTimeout(() => {
-        el.focus();
-        if (type !== 'number')
-          el.setSelectionRange(el.value.length, el.value.length);
-      }, 10);
+  const focusRef = useEvent(
+    (el: HTMLInputElement | HTMLTextAreaElement | null) => {
+      if (el) {
+        setTimeout(() => {
+          el.focus();
+          if (type !== 'number')
+            el.setSelectionRange(el.value.length, el.value.length);
+        }, 10);
+      }
     }
-  });
+  );
   return (
     <Dialog relativeTo={relativeTo} onBlur={onBlur}>
       {error ? (
@@ -158,10 +160,28 @@ export function InputDialog({
             <option key={o}>{o}</option>
           ))}
         </select>
+      ) : type === 'textarea' ? (
+        <textarea
+          disabled={!!error || executing}
+          ref={focusRef}
+          value={state}
+          onChange={(e) => setState(e.target.value)}
+          onKeyDown={(e) => {
+            if (executing) return;
+            if (e.key === 'Escape') {
+              onCancel();
+            } else if (e.key === 'Enter') {
+              if (state === value) onCancel();
+              else onSave();
+            }
+          }}
+        />
       ) : (
         <input
           disabled={!!error || executing}
-          type={type || 'text'}
+          type={
+            type === 'number' ? 'number' : type === 'text' ? 'text' : 'text'
+          }
           ref={focusRef}
           value={state}
           onChange={(e) => setState(e.target.value)}
@@ -757,6 +777,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           relativeTo="nextSibling"
                         >
                           <textarea
+                            className="code"
                             value={index.definition}
                             readOnly
                             ref={(el) => {
