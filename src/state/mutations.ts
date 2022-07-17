@@ -742,7 +742,7 @@ export function renameEntity(curret: AppState, uid: number, name: string) {
         : tab.props.uid === uid && t.props.type === 'function'
         ? {
             ...t,
-            title: `${name}${t.props.name.substring(
+            title: `${t.props.schema}.${name}${t.props.name.substring(
               t.props.name.lastIndexOf('('),
               t.props.name.length
             )}`,
@@ -756,7 +756,11 @@ export function renameEntity(curret: AppState, uid: number, name: string) {
           }
         : tab.props.uid === uid &&
           (t.props.type === 'sequence' || t.props.type === 'domain')
-        ? { ...t, props: { ...t.props, name } }
+        ? {
+            ...t,
+            title: `${t.props.schema}.${name}`,
+            props: { ...t.props, name },
+          }
         : t
     ),
   };
