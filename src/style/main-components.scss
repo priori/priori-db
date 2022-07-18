@@ -86,3 +86,50 @@
 .app-content button:active:not([disabled]) {
   background: #c4c4c4;
 }
+.errors {
+  position: fixed;
+  z-index: 99999;
+  word-break: break-word;
+  user-select: text;
+  top: 50px;
+  right: 20px;
+  background: #fff;
+  width: 350px;
+  box-shadow: 0 1px 7px rgba(0, 0, 0, 0.18);
+  animation: scale-up-center 0.2s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+  .fa-close {
+    position: absolute;
+    right: 5px;
+    top: 3px;
+    opacity: 0.2;
+    cursor: pointer;
+    color: #000;
+    &:hover {
+      opacity: 1;
+    }
+  }
+  .error {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+    color: #d10;
+    overflow: hidden;
+    &:last-child {
+      border-bottom: 0;
+    }
+    &::before {
+      content: '';
+      display: block;
+      width: 14px;
+      height: 14px;
+      float: right;
+    }
+  }
+  .fa-exclamation-circle {
+    font-size: 34px;
+    float: left;
+    margin-right: 15px;
+    margin-left: 9px;
+    color: #c21;
+  }
+}

@@ -1,8 +1,13 @@
-import { closeTab, reloadNav, renameEntity, changeSchema } from 'state/actions';
+import {
+  closeTab,
+  reloadNav,
+  renameEntity,
+  changeSchema,
+  showError,
+} from 'state/actions';
 import { DB } from 'db/DB';
 import { useState } from 'react';
 import { FunctionFrameProps } from 'types';
-import { throwError } from 'util/throwError';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { first } from 'db/Connection';
@@ -66,7 +71,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
           reloadNav();
         },
         (err) => {
-          throwError(err);
+          showError(err);
         }
       );
     else
@@ -76,7 +81,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
           reloadNav();
         },
         (err) => {
-          throwError(err);
+          showError(err);
         }
       );
   });

@@ -17,6 +17,7 @@ let current: AppState = hls.current || {
   title: '',
   newConnection: !currentPasswords || !currentPasswords.length || false,
   newSchema: false,
+  errors: [],
 };
 
 type MutationsConfig = {

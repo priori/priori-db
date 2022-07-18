@@ -1,6 +1,5 @@
 import assert from 'assert';
 import { useEffect } from 'react';
-import { throwError } from 'util/throwError';
 import { grantError } from 'util/errors';
 import { ConnectionConfiguration, savePasswords } from '../db/pgpass';
 import { connect as dbConnect, listDatabases } from '../db/Connection';
@@ -48,6 +47,8 @@ export const {
   extraTableTab,
   renameEntity,
   changeSchema,
+  showError,
+  closeError,
 } = state;
 
 export async function open(c: ConnectionConfiguration) {
@@ -89,7 +90,7 @@ export function createSchema(name: string) {
       reloadNav();
     },
     (err) => {
-      throwError(err);
+      showError(err);
     }
   );
 }

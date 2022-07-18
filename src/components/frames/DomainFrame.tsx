@@ -1,8 +1,13 @@
-import { closeTab, reloadNav, renameEntity, changeSchema } from 'state/actions';
+import {
+  showError,
+  closeTab,
+  reloadNav,
+  renameEntity,
+  changeSchema,
+} from 'state/actions';
 import { DB } from 'db/DB';
 import { useState } from 'react';
 import { DomainFrameProps } from 'types';
-import { throwError } from 'util/throwError';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { Dialog } from 'components/util/Dialog/Dialog';
@@ -67,7 +72,7 @@ export function DomainFrame(props: DomainFrameProps) {
           reloadNav();
         },
         (err) => {
-          throwError(err);
+          showError(err);
         }
       );
     else
@@ -77,7 +82,7 @@ export function DomainFrame(props: DomainFrameProps) {
           reloadNav();
         },
         (err) => {
-          throwError(err);
+          showError(err);
         }
       );
   });

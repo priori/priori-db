@@ -796,3 +796,17 @@ export function renameEntity(curret: AppState, uid: number, name: string) {
     ),
   };
 }
+
+export function showError(current: AppState, error: Error) {
+  return {
+    ...current,
+    errors: [...current.errors, error],
+  };
+}
+
+export function closeError(current: AppState, error: Error) {
+  return {
+    ...current,
+    errors: current.errors.filter((e) => e !== error),
+  };
+}

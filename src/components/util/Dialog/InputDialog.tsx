@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { showError } from 'state/actions';
 import { grantError } from 'util/errors';
+import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { Dialog } from './Dialog';
 
@@ -27,14 +29,16 @@ export function InputDialog({
     if (executing) return;
     onCancel();
   });
+  const isMounted = useIsMounted();
   const onSave = useEvent(async () => {
     try {
       setExecuting(true);
       await onUpdate(state);
     } catch (e) {
-      setError(grantError(e));
+      if (isMounted()) setError(grantError(e));
+      else showError(grantError(e));
     } finally {
-      setExecuting(false);
+      if (isMounted()) setExecuting(false);
     }
   });
   const focusRef = useEvent(

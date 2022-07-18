@@ -137,4 +137,5 @@ export interface AppState {
   tabs: Tab[];
   tabsOpenOrder: number[];
   title: string;
+  errors: Error[];
 }

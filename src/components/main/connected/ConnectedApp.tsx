@@ -24,6 +24,7 @@ import {
 } from '../../../state/actions';
 import { Frame } from './Frame';
 import { CloseConfirmation } from './CloseConfirmation';
+import { Errors } from '../Errors';
 
 const classNames: Record<FrameType, string> = {
   query: 'query-tab',
@@ -201,6 +202,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
 
   return (
     <div>
+      <Errors errors={state.errors} />
       {close && (
         <CloseConfirmation onConfirm={close.func} onDecline={onDecline} />
       )}

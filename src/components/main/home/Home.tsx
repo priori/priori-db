@@ -16,6 +16,7 @@ import {
 import { AppState } from '../../../types';
 import { ConnectionConfiguration } from '../../../db/pgpass';
 import { NewConnection } from './Configuration';
+import { Errors } from '../Errors';
 
 export function Home(props: AppState) {
   const [connecting, setConnecting] = useState(false);
@@ -27,6 +28,7 @@ export function Home(props: AppState) {
   if (props.newConnection || props.passwords.length === 0) {
     return (
       <div>
+        <Errors errors={props.errors} />
         <div className="connection-error">
           {props.connectionError && props.connectionError.message}
         </div>
@@ -46,6 +48,7 @@ export function Home(props: AppState) {
     const { index } = props.editConnection;
     return (
       <div>
+        <Errors errors={props.errors} />
         <div className="connection-error">
           {props.connectionError && props.connectionError.message}
         </div>
@@ -65,6 +68,7 @@ export function Home(props: AppState) {
   }
   return (
     <div>
+      <Errors errors={props.errors} />
       {props.connectionError ? (
         <div
           style={{

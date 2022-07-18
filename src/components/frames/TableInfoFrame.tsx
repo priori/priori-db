@@ -1,5 +1,4 @@
 import { useService } from 'util/useService';
-import { throwError } from 'util/throwError';
 import { useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { useTab } from 'components/main/connected/ConnectedApp';
@@ -14,6 +13,7 @@ import {
   closeTab,
   renameEntity,
   changeSchema,
+  showError,
 } from '../../state/actions';
 import { DB } from '../../db/DB';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
@@ -167,7 +167,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           reloadNav();
         },
         (err) => {
-          throwError(err);
+          showError(err);
         }
       );
     else
@@ -177,7 +177,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           reloadNav();
         },
         (err) => {
-          throwError(err);
+          showError(err);
         }
       );
   });
