@@ -22,7 +22,7 @@ export interface ColTableInfo {
   column_name: string;
   data_type: string;
   column_default: string;
-  is_nullable: boolean | string;
+  not_null: boolean | string;
   comment: string;
   length: number;
   scale: number;
@@ -412,10 +412,10 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                       <td>{col.data_type}</td>
                       <td>{col.column_default}</td>
                       <td style={{ textAlign: 'center' }}>
-                        {col.is_nullable === 'YES' ? (
+                        {col.not_null ? (
                           <strong>yes</strong>
                         ) : (
-                          'no'
+                          <span className="no">no</span>
                         )}
                       </td>
                       <td
@@ -470,7 +470,11 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                       <td>{col.length}</td>
                       <td>{col.scale || null}</td>
                       <td style={{ textAlign: 'center' }}>
-                        {col.is_primary ? <strong>yes</strong> : 'no'}
+                        {col.is_primary ? (
+                          <strong>yes</strong>
+                        ) : (
+                          <span className="no">no</span>
+                        )}
                       </td>
                       {state.table ? (
                         <td className="actions">

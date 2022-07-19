@@ -424,36 +424,53 @@ export const DB = {
     const res = await list(
       `
       SELECT
-        cols.column_name,
-        format_type(a.atttypid, null) data_type,
-        cols.column_default,
+        a.attname column_name,
+        a.attnotnull OR ((t.typtype = 'd'::"char") AND t.typnotnull) not_null,
+        pg_catalog.format_type(a.atttypid, null) data_type,
+        (
+          CASE
+              WHEN (a.attgenerated = ''::"char")
+              THEN pg_get_expr(ad.adbin, ad.adrelid)
+              ELSE NULL::text
+          END
+        )::information_schema.character_data column_default,
         i.indisprimary IS NOT NULL is_primary,
         CASE
-          WHEN character_maximum_length IS NULL AND data_type = 'numeric'
-          THEN numeric_precision
-          ELSE character_maximum_length END length,
-        numeric_scale scale,
+          WHEN
+            cols.character_maximum_length IS NULL AND
+            pg_catalog.format_type(a.atttypid, null) = 'numeric'
+          THEN cols.numeric_precision
+          ELSE cols.character_maximum_length
+          END length,
+        cols.numeric_scale scale,
         (
           SELECT
-            pg_catalog.col_description(c.oid, cols.ordinal_position::int)
+            pg_catalog.col_description (c.oid, a.attnum::int)
           FROM
             pg_catalog.pg_class c
           WHERE
-            c.oid = ${regclass}::oid
-            AND c.relname = cols.table_name
+            c.oid = ${regclass}::oid AND
+            c.relname = $2
         ) AS comment
-      FROM information_schema.columns cols
-      LEFT JOIN pg_attribute a
-      ON a.attrelid = ${regclass} AND a.attname = column_name
-
+      FROM pg_attribute a
+      LEFT JOIN pg_type t
+      ON t.oid = a.atttypid
+      LEFT JOIN pg_attrdef ad
+      ON a.attrelid = ad.adrelid AND a.attnum = ad.adnum
+      LEFT JOIN information_schema.columns cols
+      ON
+        a.attname = cols.column_name AND
+        cols.table_schema = $1 AND
+        cols.table_name   = $2
       LEFT JOIN pg_index i
       ON
         i.indisprimary AND
         i.indrelid = ${regclass} AND
         a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
       WHERE
-        table_schema = $1 AND
-        table_name   = $2
+        a.attrelid = ${regclass} AND
+        a.attnum > 0 AND
+        NOT a.attisdropped
         `,
       [schemaName, tableName]
     );
@@ -461,7 +478,7 @@ export const DB = {
       column_name: string;
       data_type: string;
       column_default: string;
-      is_nullable: boolean | string;
+      not_null: boolean | string;
       comment: string;
       length: number;
       scale: number;
