@@ -52,6 +52,7 @@
   right: 20px;
   margin-top: -54px;
   z-index: 2;
+  cursor: pointer;
 }
 .query-tab button.query-tab--execute {
   box-shadow: 0 0;
@@ -69,6 +70,7 @@
   }
   &[disabled] {
     opacity: 0.5;
+    cursor: default;
   }
   &[disabled]:hover,
   &[disabled]:active {

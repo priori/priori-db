@@ -102,3 +102,6 @@ button.cancel:focus {
   outline: none;
   z-index: 4;
 }
+button {
+  white-space: nowrap;
+}
