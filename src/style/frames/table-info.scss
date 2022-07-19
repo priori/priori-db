@@ -291,3 +291,61 @@ button[disabled] {
   align-items: center;
   overflow: auto;
 }
+
+body div.frame.table-info div.dialog-form {
+  select,
+  textarea {
+    border: solid 1px rgba(0, 0, 0, 0.2);
+    outline: none;
+  }
+  select {
+    padding-left: 7px;
+  }
+  textarea {
+    padding: 5px;
+    margin-bottom: 0;
+  }
+  div[tabindex] {
+    outline: none;
+    font-size: 13px;
+    &:focus {
+      color: #029;
+    }
+  }
+  input[type='number'] {
+    padding: 7px;
+  }
+  input[type='number']::placeholder {
+    font-size: 11px;
+  }
+  select:focus,
+  textarea:focus {
+    border: 1px solid #029;
+  }
+  .fa-check-square-o,
+  .fa-square-o {
+    width: 14px;
+    display: inline-block;
+    text-align: left;
+  }
+}
+.dialog-form--error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: white;
+  z-index: 2;
+  color: #d10;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 20px;
+  line-height: 1.3em;
+  justify-content: space-evenly;
+  // .dialog-form--error-message { flex: 1 }
+  .dialog-form--error-buttons {
+    text-align: right;
+  }
+  overflow: auto;
+}

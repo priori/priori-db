@@ -1,5 +1,5 @@
 import { useService } from 'util/useService';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Dialog } from 'components/util/Dialog/Dialog';
@@ -8,6 +8,8 @@ import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { useIsMounted } from 'util/hooks';
+import { grantError } from 'util/errors';
+import assert from 'assert';
 import { TableInfoFrameProps } from '../../types';
 import {
   reloadNav,
@@ -18,6 +20,229 @@ import {
 } from '../../state/actions';
 import { DB } from '../../db/DB';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
+
+interface ColumnForm {
+  name: string;
+  type: string;
+  length?: number;
+  scale?: number;
+  comment: string | null;
+  notNull: boolean;
+  default?: string;
+}
+function ColumnFormDialog({
+  onCancel,
+  onUpdate,
+  relativeTo,
+  column,
+}: {
+  onCancel: () => void;
+  onUpdate: (v: ColumnForm) => Promise<void>;
+  relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
+  column?: ColumnForm;
+}) {
+  const [form, setForm] = useState<ColumnForm>(
+    column
+      ? { ...column }
+      : { name: '', type: '', notNull: false, comment: null }
+  );
+  const [error, setError] = useState<Error | null>(null);
+  const { lastValidData } = useService(() => DB.types(), []);
+  const [executing, setExecuting] = useState(false);
+  const onBlur = useEvent(() => {
+    if (executing) return;
+    onCancel();
+  });
+  const isMounted = useIsMounted();
+  const onSave = useEvent(async () => {
+    try {
+      setExecuting(true);
+      await onUpdate(form);
+    } catch (e) {
+      if (isMounted()) setError(grantError(e));
+      else showError(grantError(e));
+    } finally {
+      if (isMounted()) setExecuting(false);
+    }
+  });
+  const updateDisabled =
+    !!error ||
+    executing ||
+    !Object.keys(form).length ||
+    !form.name ||
+    !form.type ||
+    (column &&
+      column.name === form.name &&
+      (column.comment || null) === (form.comment || null) &&
+      column.notNull === form.notNull &&
+      column.type === form.type &&
+      column.scale === form.scale &&
+      column.length === form.length &&
+      (column.default || undefined) === (form.default || undefined));
+  const fieldsDisabled = executing || !!error;
+  const type =
+    (lastValidData && lastValidData.find((t) => t.name === form.type)) || null;
+  return (
+    <Dialog relativeTo={relativeTo} onBlur={onBlur}>
+      {error ? (
+        <div className="dialog-form--error">
+          <div className="dialog-form--error-message">{error.message}</div>
+          <div className="dialog-form--error-buttons">
+            <button type="button" onClick={() => setError(null)}>
+              Ok
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <div className="dialog-form">
+        <input
+          disabled={fieldsDisabled}
+          type="text"
+          placeholder="Name"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        />
+        <div style={{ display: 'flex', width: 250 }}>
+          <select
+            placeholder="Type"
+            disabled={fieldsDisabled}
+            value={form.type}
+            onChange={(e) => {
+              const newType = lastValidData?.find(
+                (t) => t.name === e.target.value
+              );
+              if (newType) {
+                setForm({
+                  ...form,
+                  type: e.target.value,
+                  length:
+                    e.target.value === column?.type
+                      ? column?.length
+                      : undefined,
+                  scale:
+                    e.target.value === column?.type
+                      ? column?.length
+                      : undefined,
+                });
+              }
+            }}
+            style={!form.type ? { color: '#777' } : undefined}
+          >
+            <option value="" style={{ color: '#ccc' }}>
+              Type
+            </option>
+            {lastValidData?.map((t) => (
+              <option key={t.name} value={t.name}>
+                {t.name}
+              </option>
+            )) ||
+              (form.type && <option value={form.type}>{form.type}</option>)}
+          </select>
+          {type?.allowLength ? (
+            <input
+              disabled={fieldsDisabled}
+              type="number"
+              placeholder="LEN"
+              value={form.length ? `${form.length}` || '' : ''}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  length:
+                    e.target.value &&
+                    !Number.isNaN(parseInt(e.target.value, 10)) &&
+                    parseInt(e.target.value, 10) > 0
+                      ? parseInt(e.target.value, 10)
+                      : undefined,
+                })
+              }
+              min={1}
+              style={{ marginLeft: 5, width: 70 }}
+            />
+          ) : null}
+          {type?.allowPrecision ? (
+            <input
+              disabled={fieldsDisabled}
+              type="number"
+              placeholder="SCALE"
+              min={0}
+              value={typeof form.scale === 'number' ? `${form.scale}` : ''}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  scale:
+                    e.target.value &&
+                    !Number.isNaN(parseInt(e.target.value, 10)) &&
+                    parseInt(e.target.value, 10) >= 0
+                      ? parseInt(e.target.value, 10)
+                      : undefined,
+                })
+              }
+              style={{ marginLeft: 5, width: 70 }}
+            />
+          ) : null}
+        </div>
+        <textarea
+          disabled={fieldsDisabled}
+          placeholder="Comment"
+          value={form.comment || ''}
+          onChange={(e) =>
+            setForm({ ...form, comment: e.target.value || null })
+          }
+        />
+        <div
+          tabIndex={0}
+          onKeyDown={
+            executing || !!error
+              ? undefined
+              : (e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    setForm({ ...form, notNull: !form.notNull });
+                  }
+                }
+          }
+          onClick={
+            executing || !!error
+              ? undefined
+              : () => setForm({ ...form, notNull: !form.notNull })
+          }
+        >
+          {form.notNull ? (
+            <i className="fa fa-check-square-o" />
+          ) : (
+            <i className="fa fa-square-o" />
+          )}{' '}
+          NOT NULL
+        </div>
+        <input
+          disabled={fieldsDisabled}
+          type="text"
+          placeholder="Default"
+          value={form.default || ''}
+          onChange={(e) =>
+            setForm({ ...form, default: e.target.value || undefined })
+          }
+        />
+        <div>
+          <button
+            disabled={fieldsDisabled}
+            style={{ fontWeight: 'normal' }}
+            type="button"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>{' '}
+          <button
+            disabled={updateDisabled}
+            type="button"
+            onClick={updateDisabled ? undefined : onSave}
+          >
+            Save <i className="fa fa-check" />
+          </button>
+        </div>
+      </div>
+    </Dialog>
+  );
+}
 
 export interface ColTableInfo {
   column_name: string;
@@ -119,6 +344,8 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     renameColumn: null as string | null,
     commentIndex: null as string | null,
     commentColumn: null as string | null,
+    updateColumn: null as string | null,
+    newColumn: false,
     openIndexComment: null as string | null,
   });
 
@@ -255,6 +482,61 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     set({ ...edit, commentColumn: null });
   });
 
+  const newColumn = useEvent(async (form: ColumnForm) => {
+    await DB.newColumn(props.schema, props.table, form);
+    if (!isMounted()) return;
+    await service.reload();
+    if (!isMounted()) return;
+    set({ ...edit, newColumn: false });
+  });
+
+  const updateColumn = useMemo(() => {
+    const col = state.cols?.find((c) => c.column_name === edit.updateColumn);
+    if (col)
+      return {
+        name: col.column_name,
+        default: col.column_default,
+        type: col.data_type,
+        comment: col.comment,
+        notNull: col.not_null,
+        length: col.length,
+        scale: col.scale,
+      } as ColumnForm;
+
+    return null;
+  }, [state.cols, edit.updateColumn]);
+
+  const onUpdateColumn = useEvent(async (form: ColumnForm) => {
+    assert(updateColumn);
+    const typeChanged =
+      form.type !== updateColumn.type ||
+      form.length !== updateColumn.length ||
+      form.scale !== updateColumn.scale;
+    const update = {
+      name:
+        form.name && form.name !== updateColumn.name ? form.name : undefined,
+      default:
+        (form.default || undefined) !== (updateColumn.default || undefined)
+          ? form.default || null
+          : undefined,
+      type: typeChanged ? form.type : undefined,
+      scale: typeChanged ? form.scale : undefined,
+      length: typeChanged ? form.length : undefined,
+      notNull:
+        (form.notNull || undefined) !== (updateColumn.notNull || undefined)
+          ? form.notNull
+          : undefined,
+      comment:
+        (form.comment || undefined) !== (updateColumn.comment || undefined)
+          ? form.comment || null
+          : undefined,
+    };
+    await DB.updateColumn(props.schema, props.table, updateColumn.name, update);
+    if (!isMounted()) return;
+    await service.reload();
+    if (!isMounted()) return;
+    set({ ...edit, updateColumn: null });
+  });
   return (
     <>
       <h1>
@@ -492,6 +774,26 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                             type="button"
                             className="simple-button"
                             onClick={() =>
+                              set({ ...edit, updateColumn: col.column_name })
+                            }
+                          >
+                            Edit <i className="fa fa-pencil" />
+                          </button>{' '}
+                          {col.column_name === edit.updateColumn &&
+                          updateColumn ? (
+                            <ColumnFormDialog
+                              column={updateColumn}
+                              relativeTo="previousSibling"
+                              onUpdate={onUpdateColumn}
+                              onCancel={() =>
+                                set({ ...edit, updateColumn: null })
+                              }
+                            />
+                          ) : null}
+                          <button
+                            type="button"
+                            className="simple-button"
+                            onClick={() =>
                               set({ ...edit, removeColumn: col.column_name })
                             }
                           >
@@ -512,9 +814,43 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
               </tbody>
             </table>
           ) : (
-            <div className="empty">No columns found for table.</div>
+            <div className="empty">
+              No columns found for table.{' '}
+              <button
+                type="button"
+                className="simple-button"
+                onClick={() => set({ ...edit, newColumn: true })}
+              >
+                Create new column <i className="fa fa-plus" />
+              </button>
+              {edit.newColumn ? (
+                <ColumnFormDialog
+                  relativeTo="previousSibling"
+                  onCancel={() => set({ ...edit, newColumn: false })}
+                  onUpdate={(form) => newColumn(form)}
+                />
+              ) : null}
+            </div>
           )}
         </>
+      ) : null}
+      {state.cols?.length && state.table ? (
+        <div className="actions">
+          <button
+            type="button"
+            className="simple-button"
+            onClick={() => set({ ...edit, newColumn: true })}
+          >
+            New <i className="fa fa-plus" />
+          </button>
+          {edit.newColumn ? (
+            <ColumnFormDialog
+              relativeTo="previousSibling"
+              onCancel={() => set({ ...edit, newColumn: false })}
+              onUpdate={(form) => newColumn(form)}
+            />
+          ) : null}
+        </div>
       ) : null}
       {state.indexes && state.indexes.filter((i) => !i.pk).length ? (
         <div>

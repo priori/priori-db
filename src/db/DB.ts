@@ -1,3 +1,4 @@
+import { grantError } from 'util/errors';
 import { list, first, query, openConnection } from './Connection';
 import { EntityType, Type } from '../types';
 
@@ -17,6 +18,94 @@ export const DB = {
       )}'::regclass) "comment"`
     );
     return res.comment as string | null;
+  },
+
+  async updateColumn(
+    schema: string,
+    table: string,
+    column: string,
+    update: {
+      name?: string;
+      comment?: string | null;
+      type?: string;
+      length?: number;
+      scale?: number;
+      notNull?: boolean;
+      default?: string | null;
+    }
+  ) {
+    const c = await openConnection();
+    try {
+      await c.query('BEGIN');
+      if (update.name && update.name !== column)
+        await c.query(
+          `ALTER TABLE ${label(schema)}.${label(table)} RENAME COLUMN ${label(
+            column
+          )} TO ${label(update.name)}`
+        );
+      if (update.comment !== undefined) {
+        if (update.comment) {
+          await c.query(
+            `COMMENT ON COLUMN ${label(schema)}.${label(table)}.${label(
+              update.name || column
+            )} IS ${str(update.comment)}`
+          );
+        } else {
+          await c.query(
+            `COMMENT ON COLUMN ${label(schema)}.${label(table)}.${label(
+              update.name || column
+            )} IS NULL`
+          );
+        }
+      }
+      if (update.type !== undefined) {
+        await c.query(
+          `ALTER TABLE ${label(schema)}.${label(table)} ALTER COLUMN ${label(
+            update.name || column
+          )} TYPE ${update.type}${
+            update.length
+              ? `(${update.length}${update.scale ? `, ${update.scale}` : ''})`
+              : ''
+          }`
+        );
+      }
+      if (update.notNull !== undefined) {
+        if (update.notNull) {
+          await c.query(
+            `ALTER TABLE ${label(schema)}.${label(table)} ALTER COLUMN ${label(
+              update.name || column
+            )} SET NOT NULL`
+          );
+        } else {
+          await c.query(
+            `ALTER TABLE ${label(schema)}.${label(table)} ALTER COLUMN ${label(
+              update.name || column
+            )} DROP NOT NULL`
+          );
+        }
+      }
+      if (update.default !== undefined) {
+        if (update.default) {
+          await c.query(
+            `ALTER TABLE ${label(schema)}.${label(table)} ALTER COLUMN ${label(
+              update.name || column
+            )} SET DEFAULT ${update.default}`
+          );
+        } else {
+          await c.query(
+            `ALTER TABLE ${label(schema)}.${label(table)} ALTER COLUMN ${label(
+              update.name || column
+            )} DROP DEFAULT`
+          );
+        }
+      }
+      await c.query('COMMIT');
+    } catch (e) {
+      await c.query('ROLLBACK');
+      throw grantError(e);
+    } finally {
+      c.release(true);
+    }
   },
 
   async updateSequence(
@@ -651,6 +740,46 @@ export const DB = {
           pid IN (${ids.join(', ')})
     `)) as { has: boolean }
     )?.has;
+  },
+
+  async newColumn(
+    schema: string,
+    table: string,
+    col: {
+      name: string;
+      type: string;
+      length?: number;
+      scale?: number;
+      comment: string | null;
+      notNull?: boolean;
+      default?: string;
+    }
+  ) {
+    const c = await openConnection();
+    try {
+      await c.query('BEGIN');
+      await query(
+        `ALTER TABLE ${label(schema)}.${label(table)} ADD COLUMN ${label(
+          col.name
+        )} ${col.type}${
+          col.length ? `(${col.length}${col.scale ? `,${col.scale}` : ''})` : ''
+        }${col.notNull ? ' NOT NULL' : ''}${
+          col.default ? ` DEFAULT ${col.default}` : ''
+        }`
+      );
+      if (col.comment)
+        await c.query(
+          `COMMENT ON COLUMN ${label(schema)}.${label(table)}.${label(
+            col.name
+          )} IS ${str(col.comment)}`
+        );
+      await c.query('COMMIT');
+    } catch (err) {
+      await c.query('ROLLBACK');
+      throw err;
+    } finally {
+      c.release(true);
+    }
   },
 
   async cancelBackend(pid: number) {
