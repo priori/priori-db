@@ -230,6 +230,10 @@ div.frame.function {
     text-align: right;
     user-select: none;
     padding: 2px 4px;
+    table button,
+    table .dialog {
+      user-select: none;
+    }
     line-height: 27px;
   }
 }
@@ -274,6 +278,7 @@ button[disabled] {
   z-index: 1;
 }
 .dialog-error--message {
+  white-space: normal;
   user-select: text;
   padding: 0 10px;
 }

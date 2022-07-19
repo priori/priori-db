@@ -7,6 +7,7 @@ import { YesNoDialog } from 'components/util/Dialog/YesNoDialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
+import { useIsMounted } from 'util/hooks';
 import { TableInfoFrameProps } from '../../types';
 import {
   reloadNav,
@@ -118,7 +119,10 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     renameColumn: null as string | null,
     commentIndex: null as string | null,
     commentColumn: null as string | null,
+    openIndexComment: null as string | null,
   });
+
+  const isMounted = useIsMounted();
 
   const onUpdateComment = useEvent(async (text: string) => {
     if (state.table)
@@ -128,7 +132,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     else if (state.view)
       await DB.updateView(props.schema, props.table, { comment: text });
     await service.reload();
-    set({ ...edit, editComment: false });
+    if (isMounted()) set({ ...edit, editComment: false });
   });
 
   const onChangeSchema = useEvent(async (schema: string) => {
@@ -140,7 +144,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       await DB.updateView(props.schema, props.table, { schema });
     changeSchema(props.uid, schema);
     reloadNav();
-    set({ ...edit, updateSchema: false });
+    if (isMounted()) set({ ...edit, updateSchema: false });
   });
 
   const dropCascade = useEvent(() => {
@@ -190,10 +194,6 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     });
   });
 
-  const [state2, setState2] = useState({ indexDefinition: null } as {
-    indexDefinition: string | null;
-  });
-
   const onRename = useEvent(async (name: string) => {
     if (state.table) await DB.updateTable(props.schema, props.table, { name });
     else if (state.mView)
@@ -201,51 +201,59 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     else if (state.view)
       await DB.updateView(props.schema, props.table, { name });
     renameEntity(props.uid, name);
-    reloadNav();
+    if (!isMounted()) return;
+    await reloadNav();
+    if (!isMounted()) return;
     set({ ...edit, rename: false });
   });
 
   const removeColumn = useEvent(async (col: string) => {
     await DB.removeCol(props.schema, props.table, col);
+    if (!isMounted()) return;
     await service.reload();
+    if (!isMounted()) return;
     set({ ...edit, removeColumn: null });
   });
 
   const renameColumn = useEvent(async (col: string, newName: string) => {
     await DB.renameColumn(props.schema, props.table, col, newName);
+    if (!isMounted()) return;
     await service.reload();
+    if (!isMounted()) return;
     set({ ...edit, renameIndex: null });
   });
 
   const renameIndex = useEvent(async (index: string, newName: string) => {
     await DB.renameIndex(props.schema, props.table, index, newName);
+    if (!isMounted()) return;
     await service.reload();
+    if (!isMounted()) return;
     set({ ...edit, renameIndex: null });
   });
 
   const removeIndex = useEvent(async (name: string) => {
     await DB.removeIndex(props.schema, props.table, name);
+    if (!isMounted()) return;
     await service.reload();
+    if (!isMounted()) return;
     set({ ...edit, removeIndex: null });
   });
 
   const commentIndex = useEvent(async (index: string, comment: string) => {
     await DB.commentIndex(props.schema, props.table, index, comment);
+    if (!isMounted()) return;
     await service.reload();
+    if (!isMounted()) return;
     set({ ...edit, commentIndex: null });
   });
 
   const commentColumn = useEvent(async (column: string, comment: string) => {
     await DB.commentColumn(props.schema, props.table, column, comment);
+    if (!isMounted()) return;
     await service.reload();
+    if (!isMounted()) return;
     set({ ...edit, commentColumn: null });
   });
-
-  function showQuery(q: string) {
-    setState2({
-      indexDefinition: q,
-    });
-  }
 
   return (
     <>
@@ -410,7 +418,9 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         </div>
                       </td>
                       <td>{col.data_type}</td>
-                      <td>{col.column_default}</td>
+                      <td style={{ wordBreak: 'break-word' }}>
+                        {col.column_default}
+                      </td>
                       <td style={{ textAlign: 'center' }}>
                         {col.not_null ? (
                           <strong>yes</strong>
@@ -561,7 +571,13 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                     <td>{index.type}</td>
                     <td>
                       {index.cols.map((c: string, k2: number) => (
-                        <span className="column" key={k2}>
+                        <span
+                          className="column"
+                          key={k2}
+                          style={{
+                            marginRight: 4,
+                          }}
+                        >
                           {c}
                         </span>
                       ))}
@@ -611,10 +627,10 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                       ) : null}
                     </td>
                     <td>
-                      {index.name === state2.indexDefinition ? (
+                      {index.name === edit.openIndexComment ? (
                         <Dialog
                           onBlur={() => {
-                            setState2({ indexDefinition: null });
+                            set({ ...edit, openIndexComment: null });
                           }}
                           relativeTo="nextSibling"
                         >
@@ -624,7 +640,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                             readOnly
                             onKeyDown={(e) => {
                               if (e.key === 'Escape')
-                                setState2({ indexDefinition: null });
+                                set({ ...edit, openIndexComment: null });
                             }}
                             ref={(el) => {
                               setTimeout(() => {
@@ -645,7 +661,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                             <button
                               type="button"
                               onClick={() =>
-                                setState2({ indexDefinition: null })
+                                set({ ...edit, openIndexComment: null })
                               }
                             >
                               Ok
@@ -664,9 +680,14 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                             e.key === 'Enter' ||
                             e.key === 'Space'
                           )
-                            showQuery(index.name);
+                            set({ ...edit, openIndexComment: index.name });
                         }}
-                        onClick={() => showQuery(index.name)}
+                        onClick={() =>
+                          set({
+                            ...edit,
+                            openIndexComment: index.name,
+                          })
+                        }
                       />
                     </td>
                     <td className="actions">
