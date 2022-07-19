@@ -93,6 +93,10 @@ button.cancel:focus {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  -webkit-background-clip: content-box;
+  background-clip: content-box;
+  border-radius: 5px;
   background-color: #bbb;
 }
 ::-webkit-scrollbar-thumb:hover {
