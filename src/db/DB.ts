@@ -479,7 +479,7 @@ export const DB = {
       data_type: string;
       column_default: string;
       not_null: boolean | string;
-      comment: string;
+      comment: string | null;
       length: number;
       scale: number;
       is_primary: boolean;
@@ -519,7 +519,7 @@ export const DB = {
     );
     return res as {
       name: string;
-      comment: string;
+      comment: string | null;
       type: string;
       pk: boolean;
       cols: string[];

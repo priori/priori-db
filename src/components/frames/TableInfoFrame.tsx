@@ -23,7 +23,7 @@ export interface ColTableInfo {
   data_type: string;
   column_default: string;
   not_null: boolean | string;
-  comment: string;
+  comment: string | null;
   length: number;
   scale: number;
   is_primary: boolean;
@@ -35,7 +35,7 @@ export interface TableInfoFrameState {
   indexes?: {
     name: string;
     definition: string;
-    comment: string;
+    comment: string | null;
     type: string;
     pk: boolean;
     cols: string[];
@@ -456,7 +456,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           <InputDialog
                             type="textarea"
                             relativeTo="previousSibling"
-                            value={col.comment}
+                            value={col.comment || ''}
                             updateText="Update"
                             onCancel={() =>
                               set({ ...edit, commentColumn: null })
@@ -601,7 +601,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         <InputDialog
                           type="textarea"
                           relativeTo="previousSibling"
-                          value={index.comment}
+                          value={index.comment || ''}
                           updateText="Update"
                           onCancel={() => set({ ...edit, commentIndex: null })}
                           onUpdate={(comment) =>
