@@ -9,7 +9,7 @@ import { QueryFrame } from '../../frames/QueryFrame/QueryFrame';
 import { TableFrame } from '../../frames/TableFrame';
 import { NewTableFrame } from '../../frames/NewTableFrame';
 import { SchemaInfoFrame } from '../../frames/SchemaInfoFrame';
-import { TableInfoFrame } from '../../frames/TableInfoFrame';
+import { TableInfoFrame } from '../../frames/TableInfoFrame/TableInfoFrame';
 
 type FramesTypesMap<T> = T extends FrameType
   ? Record<T, (props: FrameProps0<T>) => JSX.Element>
