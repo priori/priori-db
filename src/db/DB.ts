@@ -609,6 +609,7 @@ export const DB = {
     return res as {
       name: string;
       comment: string | null;
+      definition: string | null;
       type: string;
       pk: boolean;
       cols: string[];
