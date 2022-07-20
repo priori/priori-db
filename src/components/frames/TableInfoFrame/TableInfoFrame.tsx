@@ -65,6 +65,14 @@ export interface TableInfoFrameState {
     ispopulated: boolean;
     definition: string;
   } | null;
+  constraints:
+    | {
+        name: string;
+        type: string;
+        definition: string;
+        comment: string | null;
+      }[]
+    | null;
   type: {
     [k: string]: string | number | null | boolean;
   };
@@ -72,7 +80,7 @@ export interface TableInfoFrameState {
 
 export function TableInfoFrame(props: TableInfoFrameProps) {
   const service = useService(async () => {
-    const [comment, cols, indexes, table, view, mView, type] =
+    const [comment, cols, indexes, table, view, mView, type, constraints] =
       await Promise.all([
         DB.tableComment(props.schema, props.table),
         DB.listCols(props.schema, props.table),
@@ -81,6 +89,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         DB.pgView(props.schema, props.table),
         DB.pgMView(props.schema, props.table),
         DB.pgType(props.schema, props.table),
+        DB.listConstrants(props.schema, props.table),
       ]);
     return {
       comment,
@@ -90,6 +99,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       view,
       type,
       mView,
+      constraints,
     } as TableInfoFrameState;
   }, []);
 
@@ -107,6 +117,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     comment: null,
     view: null,
     mView: null,
+    constraints: null,
   };
 
   const [edit, set] = useState({
@@ -878,6 +889,35 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                     : JSON.stringify(state.mView.ispopulated)}
                 </td>
               </tr>
+            </tbody>
+          </table>
+        </>
+      ) : null}
+      {state.constraints?.length ? (
+        <>
+          <h2>Constraints</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Comment</th>
+                <th>Type</th>
+                <th>Definition</th>
+              </tr>
+            </thead>
+            <tbody>
+              {state.constraints.map((c) => (
+                <tr key={c.name}>
+                  <td>{c.name}</td>
+                  <td>{c.comment}</td>
+                  <td>{c.type}</td>
+                  <td>
+                    {c.definition && c.definition.startsWith(c.type)
+                      ? c.definition.substring(c.type.length)
+                      : c.definition}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </>

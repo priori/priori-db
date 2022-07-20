@@ -616,6 +616,38 @@ export const DB = {
     }[];
   },
 
+  async listConstrants(schema: string, table: string) {
+    return list(
+      `
+      SELECT conname name,
+        CASE
+          WHEN contype = 'c' THEN 'CHECK'
+          WHEN contype = 'f' THEN 'FOREIGN KEY'
+          WHEN contype = 'p' THEN 'PRIMARY KEY'
+          WHEN contype = 'u' THEN 'UNIQUE'
+          WHEN contype = 't' THEN 'TRIGGER'
+          WHEN contype = 'x' THEN 'EXCLUSION'
+        END type,
+        pg_get_constraintdef(con.oid) definition,
+        obj_description(con.oid) as comment
+      FROM pg_catalog.pg_constraint con
+      INNER JOIN pg_catalog.pg_class rel
+      ON rel.oid = con.conrelid
+      INNER JOIN pg_catalog.pg_namespace nsp
+      ON nsp.oid = connamespace
+      WHERE nsp.nspname = $1 AND  rel.relname = $2
+        `,
+      [schema, table]
+    ) as Promise<
+      {
+        name: string;
+        type: string;
+        definition: string;
+        comment: string | null;
+      }[]
+    >;
+  },
+
   async listAll() {
     const sql = `
       SELECT current_schema() "currentSchema", (
