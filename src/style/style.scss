@@ -1,6 +1,6 @@
 @font-face {
-    font-family: 'Inconsolata';
-    src: url('./Inconsolata-Regular.ttf');
+  font-family: 'Inconsolata';
+  src: url('./Inconsolata-Regular.ttf');
 }
 
 @import 'basic-style';
@@ -13,4 +13,5 @@
 @import 'frames/home';
 @import 'frames/new-table-frame';
 @import 'frames/query-frame';
+@import 'frames/query-selector';
 @import 'frames/table-info';

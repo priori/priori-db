@@ -1,0 +1,93 @@
+.query-selector {
+  position: absolute;
+  top: 301px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
+  display: flex;
+  align-content: flex-start;
+  align-items: stretch;
+  flex-wrap: wrap;
+  padding-left: 1px;
+  column-gap: 1px;
+  row-gap: 1px;
+}
+
+.query-selector--query {
+  height: 140px;
+  padding: 6px;
+  background: #fff;
+  flex: 1;
+  min-width: 160px;
+  .fa.fa-close {
+    float: right;
+    color: #d00;
+    margin-left: 6px;
+  }
+
+  font-size: 12px;
+  cursor: pointer;
+  h1 {
+    margin: 0;
+    font-size: 15px;
+    margin-bottom: 4px;
+    color: #46b;
+    text-align: right;
+    div {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+  .query-selector--sql {
+    font-family: Consola, monospace;
+    color: #444;
+    word-break: break-word;
+  }
+  &:hover,
+  &:hover .query-selector--pagination {
+    background: #f6f6f6;
+  }
+  .query-selector--pagination {
+    position: absolute;
+    bottom: 2px;
+    background: white;
+    color: #ccc;
+    font-weight: bold;
+    right: 0;
+    padding: 5px;
+    padding-right: 9px;
+    cursor: default;
+    font-size: 14px;
+    line-height: 18px;
+    vertical-align: top;
+    .fa-chevron-right,
+    .fa-chevron-left {
+      font-size: 18px;
+      cursor: pointer;
+      &:hover {
+        color: #000;
+      }
+      &.disabled {
+        opacity: 0.3;
+        cursor: default;
+        &:hover {
+          color: inherit;
+        }
+      }
+      position: relative;
+      bottom: -2px;
+    }
+  }
+  position: relative;
+}
+.query-selector--header {
+  width: 100%;
+  display: flex;
+  input {
+    flex: 1;
+    padding: 6px;
+    margin-top: -1px;
+  }
+}
