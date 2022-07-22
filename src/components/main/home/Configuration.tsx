@@ -5,7 +5,6 @@ import { useEvent } from 'util/useEvent';
 import { ConnectionConfiguration } from '../../../db/pgpass';
 
 export interface NewConectionState {
-  passwordNeeded?: boolean;
   port?: string;
   database?: string;
   user?: string;
@@ -23,7 +22,6 @@ export function NewConnection(props: NewConnectionProps) {
   const { connection } = props;
 
   const [state, setState] = useState({
-    passwordNeeded: false,
     port: connection ? `${connection.port}` : '',
     host: connection ? connection.host : '',
     database: connection ? connection.database : '',
@@ -50,33 +48,23 @@ export function NewConnection(props: NewConnectionProps) {
 
   function save() {
     const { database, host, port, user, password } = state;
-    if (!password) {
-      setState((state2) => ({ ...state2, passwordNeeded: true }));
-      return;
-    }
-    setState((state2) => ({ ...state2, passwordNeeded: false }));
     props.onSave({
       database: database || 'postgres',
       host: host || 'localhost',
       port: (port && parseInt(port, 10)) || 5432,
       user: user || 'postgres',
-      password,
+      password: password || '',
     } as ConnectionConfiguration);
   }
 
   function submit() {
     const { database, host, port, user, password } = state;
-    if (!password) {
-      setState((state2) => ({ ...state2, passwordNeeded: true }));
-      return;
-    }
-    setState((state2) => ({ ...state2, passwordNeeded: false }));
     props.onSubmit({
       database: database || 'postgres',
       host: host || 'localhost',
       port: (port && parseInt(port, 10)) || 5432,
       user: user || 'postgres',
-      password,
+      password: password || '',
     } as ConnectionConfiguration);
   }
 
@@ -130,7 +118,7 @@ export function NewConnection(props: NewConnectionProps) {
         }
       />
       <br />
-      <span className={state.passwordNeeded ? 'error' : undefined}>
+      <span>
         Password:{' '}
         <input
           defaultValue={connection ? connection.password : ''}
