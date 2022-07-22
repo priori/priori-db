@@ -1,6 +1,8 @@
 import assert from 'assert';
 import { Dialog } from 'components/util/Dialog/Dialog';
+import { listDatabases } from 'db/Connection';
 import { useState } from 'react';
+import { grantError } from 'util/errors';
 import { useEvent } from 'util/useEvent';
 import { ConnectionConfiguration } from '../../../db/pgpass';
 
@@ -30,6 +32,9 @@ export function NewConnection(props: NewConnectionProps) {
   } as NewConectionState);
 
   const [removeConfirmation, setRemoveConfirmation] = useState(false);
+  const [testResult, setTestResult] = useState(
+    null as null | Error | true | 'pending'
+  );
   function remove() {
     setRemoveConfirmation(true);
   }
@@ -66,6 +71,22 @@ export function NewConnection(props: NewConnectionProps) {
       user: user || 'postgres',
       password: password || '',
     } as ConnectionConfiguration);
+  }
+
+  function onTestClick() {
+    const { database, host, port, user, password } = state;
+    setTestResult('pending');
+    listDatabases({
+      database: database || 'postgres',
+      host: host || 'localhost',
+      port: (port && parseInt(port, 10)) || 5432,
+      user: user || 'postgres',
+      password: password || '',
+    })
+      .then(() => {
+        setTestResult(true);
+      })
+      .catch((e) => setTestResult(grantError(e)));
   }
 
   return (
@@ -132,6 +153,22 @@ export function NewConnection(props: NewConnectionProps) {
         />
       </span>
       <br />
+      <div style={{ display: 'flex', paddingBottom: 5 }}>
+        <div style={{ marginRight: 10 }}>
+          <button type="button" onClick={onTestClick}>
+            Test...
+          </button>{' '}
+        </div>
+        {testResult === true ? (
+          <strong className="connection-test-success">
+            OK <i className="fa fa-check" />
+          </strong>
+        ) : testResult instanceof Error ? (
+          <span className="connection-test-error">{testResult.message}</span>
+        ) : testResult ? (
+          <span className="connection-test-pending" />
+        ) : null}
+      </div>
       <div style={{ marginTop: '4px', marginBottom: '4px' }}>
         <button onClick={() => submit()} type="button">
           <i className="fa fa-chain" /> Save &amp; Connect
