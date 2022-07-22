@@ -52,18 +52,6 @@
   text-align: center;
 }
 
-.frame::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-// .frame::-webkit-scrollbar-track {}
-.frame::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-}
-.frame::-webkit-scrollbar-thumb:hover {
-  background-color: #bbb;
-}
-
 .app-content > .frame {
   position: absolute;
   left: 0;

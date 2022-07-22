@@ -94,13 +94,12 @@ button.cancel:focus {
 }
 ::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
-  -webkit-background-clip: content-box;
   background-clip: content-box;
   border-radius: 5px;
-  background-color: #bbb;
+  background-color: rgba(0, 0, 0, 0.12);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #aaa;
+  background-color: rgba(0, 0, 0, 0.3);
 }
 .dialog {
   outline: none;
