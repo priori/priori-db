@@ -540,7 +540,7 @@ export const DB = {
           WHERE
             c.oid = ${regclass}::oid AND
             c.relname = $2
-        ) AS comment
+        ) AS "comment"
       FROM pg_attribute a
       LEFT JOIN pg_type t
       ON t.oid = a.atttypid
@@ -592,8 +592,8 @@ export const DB = {
           	a.attrelid = c.oid and
             a.attnum = ANY(i.indkey) */
           }
-          SELECT name FROM (
-          	SELECT pg_get_indexdef(c.oid,generate_series(1,20),true) name ) as aux
+          SELECT "name" FROM (
+          	SELECT pg_get_indexdef(c.oid,generate_series(1,20),true) "name" ) as aux
           WHERE aux.name != '' AND aux.name IS NOT NULL
         ) cols,
         (SELECT description FROM pg_description d WHERE d.objoid = c.oid) "comment"
@@ -619,7 +619,7 @@ export const DB = {
   async listConstrants(schema: string, table: string) {
     return list(
       `
-      SELECT conname name,
+      SELECT conname "name",
         CASE
           WHEN contype = 'c' THEN 'CHECK'
           WHEN contype = 'f' THEN 'FOREIGN KEY'
@@ -627,9 +627,9 @@ export const DB = {
           WHEN contype = 'u' THEN 'UNIQUE'
           WHEN contype = 't' THEN 'TRIGGER'
           WHEN contype = 'x' THEN 'EXCLUSION'
-        END type,
+        END "type",
         pg_get_constraintdef(con.oid) definition,
-        obj_description(con.oid) as comment
+        obj_description(con.oid) as "comment"
       FROM pg_catalog.pg_constraint con
       INNER JOIN pg_catalog.pg_class rel
       ON rel.oid = con.conrelid
@@ -669,7 +669,7 @@ export const DB = {
               WHEN relkind IN ('m') THEN 'MATERIALIZED VIEW'
               WHEN relkind IN ('r') THEN 'BASE TABLE'
               when relkind in ('S') then 'SEQUENCE'
-              ELSE relkind||'' END as type
+              ELSE relkind||'' END as "type"
           FROM pg_class t
           WHERE
             relkind IN ('m','v','r','S')

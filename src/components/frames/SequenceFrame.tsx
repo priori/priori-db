@@ -33,7 +33,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
       DB.lastValue(props.schema, props.name),
       (
         first(
-          `SELECT obj_description(oid) comment
+          `SELECT obj_description(oid) "comment"
           FROM pg_class
           WHERE relname = $1 AND relnamespace = $2::regnamespace`,
           [props.name, props.schema]

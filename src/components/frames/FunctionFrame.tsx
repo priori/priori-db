@@ -26,7 +26,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
       `
       SELECT
         pg_get_functiondef(oid) definition,
-        obj_description(oid) comment
+        obj_description(oid) "comment"
       FROM pg_proc
       WHERE
         proname = $2 AND
