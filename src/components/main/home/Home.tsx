@@ -170,7 +170,9 @@ export function Home(props: AppState) {
             <div className="bases-inner-wrapper">
               {props.bases.map((b) => (
                 <div
-                  className="base"
+                  className={`base${
+                    b === props.password?.database ? ' base--default' : ''
+                  }`}
                   key={b}
                   tabIndex={0}
                   role="button"

@@ -148,6 +148,19 @@
   background: #fcfcfc;
   color: #888;
 }
+.base.base--default {
+  color: #000;
+  font-weight: bold;
+  &::after {
+    content: '\f00c';
+    font-family: 'FontAwesome';
+    float: right;
+    color: #159;
+    font-size: 25px;
+    margin-top: -3px;
+    margin-right: -5px;
+  }
+}
 .base:last-of-type {
   border-bottom: 0;
 }

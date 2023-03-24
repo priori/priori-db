@@ -1,6 +1,7 @@
 import assert from 'assert';
 import { useEffect } from 'react';
 import { grantError } from 'util/errors';
+import { sortBy } from 'util/sort';
 import { ConnectionConfiguration, savePasswords } from '../db/pgpass';
 import { connect as dbConnect, listDatabases } from '../db/Connection';
 import state, { currentState } from './state';
@@ -55,7 +56,7 @@ export async function open(c: ConnectionConfiguration) {
   state.setConnection(c);
   try {
     const res = await listDatabases(c);
-    state.setBases(res);
+    state.setBases(sortBy(res, (a) => (a === c.database ? null : a)));
   } catch (err) {
     state.setConnectionError(grantError(err));
   }
@@ -71,7 +72,7 @@ export async function newConnection(
     state.addConnectionConfiguration(conf, index);
     savePasswords(currentState().passwords);
     state.setConnection(conf);
-    state.setBases(res);
+    state.setBases(sortBy(res, (a) => (a === conf.database ? null : a)));
   } catch (err0) {
     const err = grantError(err0);
     state.setConnectionError(err);
