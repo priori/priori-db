@@ -20,6 +20,7 @@ import {
 import { DB } from '../../../db/DB';
 import { ChangeSchemaDialog } from '../../util/Dialog/ChangeSchemaDialog';
 import { ColumnForm, ColumnFormDialog } from './ColumnFormDialog';
+import { IndexForm, IndexDialog } from './IndexDialog';
 
 export interface ColTableInfo {
   column_name: string;
@@ -134,6 +135,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     commentColumn: null as string | null,
     updateColumn: null as string | null,
     newColumn: false,
+    newIndex: false,
     openIndexComment: null as string | null,
   });
 
@@ -276,6 +278,20 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     await service.reload();
     if (!isMounted()) return;
     set({ ...edit, newColumn: false });
+  });
+
+  const newIndex = useEvent(async (form: IndexForm) => {
+    await DB.newIndex(
+      props.schema,
+      props.table,
+      form.cols,
+      form.method,
+      form.unique
+    );
+    if (!isMounted()) return;
+    await service.reload();
+    if (!isMounted()) return;
+    set({ ...edit, newIndex: false });
   });
 
   const updateColumn = useMemo(() => {
@@ -837,12 +853,45 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                 ))}
             </tbody>
           </table>
-          <div />
+          <div className="actions">
+            <button
+              type="button"
+              className="simple-button"
+              onClick={() => set({ ...edit, newIndex: true })}
+            >
+              New <i className="fa fa-plus" />
+            </button>
+            {state.cols && edit.newIndex ? (
+              <IndexDialog
+                relativeTo="previousSibling"
+                onCancel={() => set({ ...edit, newIndex: false })}
+                onUpdate={(form) => newIndex(form)}
+                cols={state.cols.map((c) => c.column_name)}
+              />
+            ) : null}
+          </div>
         </div>
-      ) : state.indexes ? (
+      ) : state.indexes && !state.view ? (
         <div>
           <h2>Indexes</h2>
-          <div className="empty">No indexes found for table.</div>
+          <div className="empty">
+            No indexes found for table.{' '}
+            <button
+              type="button"
+              className="simple-button"
+              onClick={() => set({ ...edit, newIndex: true })}
+            >
+              Create new index <i className="fa fa-plus" />
+            </button>
+            {state.cols && edit.newIndex ? (
+              <IndexDialog
+                relativeTo="previousSibling"
+                onCancel={() => set({ ...edit, newIndex: false })}
+                onUpdate={(form) => newIndex(form)}
+                cols={state.cols.map((c) => c.column_name)}
+              />
+            ) : null}
+          </div>
         </div>
       ) : null}
       {state.view ? (

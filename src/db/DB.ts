@@ -775,6 +775,32 @@ export const DB = {
     )?.has;
   },
 
+  async newIndex(
+    schema: string,
+    table: string,
+    cols: {
+      name: string;
+      sort?: 'asc' | 'desc' | undefined;
+      nulls?: 'last' | 'first' | undefined;
+    }[],
+    method?: string | undefined,
+    unique?: boolean | undefined
+  ) {
+    const q = `CREATE${unique ? ' UNIQUE' : ''} INDEX ON ${label(
+      schema
+    )}.${label(table)}${method ? ` USING ${method} ` : ''}(${cols
+      .map(
+        (c) =>
+          `${label(c.name)}${
+            c.sort === 'asc' ? ' ASC' : c.sort ? ' DESC' : ''
+          }${
+            c.nulls === 'first' ? ' NULLS FIRST' : c.nulls ? ' NULLS LAST' : ''
+          }`
+      )
+      .join(', ')})`;
+    await query(q);
+  },
+
   async newColumn(
     schema: string,
     table: string,
