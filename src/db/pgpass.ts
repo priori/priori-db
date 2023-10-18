@@ -25,11 +25,6 @@ export function savePasswords(passwords: ConnectionConfiguration[]) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir);
     }
-  } else if (global.process.env.HOME) {
-    const dir = path.join(global.process.env.HOME, '.pgpass');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir);
-    }
   }
   fs.writeFileSync(fileName, content);
 }
