@@ -669,7 +669,7 @@ export const DB = {
               WHEN relkind IN ('m') THEN 'MATERIALIZED VIEW'
               WHEN relkind IN ('r') THEN 'BASE TABLE'
               when relkind in ('S') then 'SEQUENCE'
-              ELSE relkind||'' END as type
+              ELSE relkind::text END as type
           FROM pg_class t
           WHERE
             relkind IN ('m','v','r','S')
