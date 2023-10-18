@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { listDatabases } from 'db/Connection';
 import { useState } from 'react';

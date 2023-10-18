@@ -8,7 +8,7 @@ import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { useIsMounted } from 'util/hooks';
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { TableInfoFrameProps } from '../../../types';
 import {
   reloadNav,

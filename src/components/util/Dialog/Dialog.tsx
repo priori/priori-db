@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { assert } from 'util/assert';
 import React from 'react';
 import { useEvent } from 'util/useEvent';
 import { useEventListener } from 'util/useEventListener';

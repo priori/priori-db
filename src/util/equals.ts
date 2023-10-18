@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { assert } from './assert';
 
 export function keys(
   a: Record<string, unknown>,
