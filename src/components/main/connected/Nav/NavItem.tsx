@@ -14,7 +14,7 @@ import {
   previewTableInfo,
 } from 'state/actions';
 import { useEvent } from 'util/useEvent';
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { Entity } from './Nav';
 
 const icons = {

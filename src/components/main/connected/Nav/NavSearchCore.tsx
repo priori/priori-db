@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { assert } from 'util/assert';
 import React, { useEffect, useMemo, useState } from 'react';
 import { NavSchema, Tab } from 'types';
 import { equals } from 'util/equals';

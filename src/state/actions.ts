@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { useEffect } from 'react';
 import { grantError } from 'util/errors';
 import { sortBy } from 'util/sort';

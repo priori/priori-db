@@ -1,5 +1,5 @@
 import pg, { QueryArrayResult, QueryResult } from 'pg';
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { grantError } from 'util/errors';
 import hls from 'util/hotLoadSafe';
 import { ConnectionConfiguration } from './pgpass';
