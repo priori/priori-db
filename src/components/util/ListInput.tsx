@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { Component, CSSProperties } from 'react';
 
 export interface ListInputProps<Entry> {

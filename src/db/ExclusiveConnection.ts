@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { PoolClient, QueryArrayResult, QueryResult } from 'pg';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { useEffect, useState } from 'react';

@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { currentState } from 'state/state';
 

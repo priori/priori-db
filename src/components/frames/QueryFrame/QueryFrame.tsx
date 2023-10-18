@@ -1,6 +1,6 @@
 import React, { MutableRefObject, useRef, useState } from 'react';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { useEvent } from 'util/useEvent';
 import { QueryArrayResult } from 'pg';
 import { closeTabNow } from 'state/actions';

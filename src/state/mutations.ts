@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { ConnectionConfiguration } from 'db/pgpass';
 import { AppState, FrameProps, NavSchema, Tab, Type } from 'types';
 

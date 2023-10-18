@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { QueryArrayResult } from 'pg';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useEvent } from 'util/useEvent';

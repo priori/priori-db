@@ -6,7 +6,7 @@ import { AppState, FrameType } from 'types';
 import { useWindowCloseConfirm } from 'util/useWindowCloseConfirm';
 import { hasOpenConnection } from 'db/Connection';
 import { useEvent } from 'util/useEvent';
-import assert from 'assert';
+import { assert } from 'util/assert';
 import { fullScreen } from 'util/fullScreen';
 import { useShortcuts } from 'util/shortcuts';
 import { Nav } from './Nav/Nav';
