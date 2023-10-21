@@ -77,7 +77,7 @@ export function IndexDialog({
   const onColRemove = useEvent((i: number) => {
     setForm({
       ...form,
-      cols: [...form.cols.filter((c, i2) => i2 !== i)],
+      cols: [...form.cols.filter((_, i2) => i2 !== i)],
     });
   });
   const onChangeColSort = useEvent((val: string, index: number) => {

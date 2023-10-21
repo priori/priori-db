@@ -11,9 +11,12 @@ import baseConfig from './webpack.config.base';
 import webpackPaths from './webpack.paths';
 import checkNodeEnv from '../scripts/check-node-env';
 
-export function assert(condition: unknown, message?: string): asserts condition {
+export function assert(
+  condition: unknown,
+  message?: string
+): asserts condition {
   if (!condition) {
-    throw new Error(message ?? "Assertion failed");
+    throw new Error(message ?? 'Assertion failed');
   }
 }
 
@@ -135,7 +138,7 @@ const configuration: webpack.Configuration = {
       debug: true,
     }),
 
-    new ReactRefreshWebpackPlugin(),
+    new ReactRefreshWebpackPlugin({ overlay: false }),
 
     new HtmlWebpackPlugin({
       filename: path.join('index.html'),

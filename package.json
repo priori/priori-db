@@ -91,7 +91,8 @@
       "url": "http://localhost/"
     },
     "testPathIgnorePatterns": [
-      "release/app/dist",".*/mock\\.([tj]sx?)"
+      "release/app/dist",
+      ".*/mock\\.([tj]sx?)"
     ],
     "transform": {
       "\\.(ts|tsx|js|jsx)$": "ts-jest"

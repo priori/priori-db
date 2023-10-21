@@ -184,7 +184,11 @@ export function NewConnection(props: NewConnectionProps) {
       </button>{' '}
       {removeConfirmation ? (
         <Dialog onBlur={noClick} relativeTo="nextSibling">
-          Do you really want to remove this connection configuration?
+          <div style={{ lineHeight: '1.3em' }}>
+            Do you really want to remove this
+            <br />
+            connection configuration?
+          </div>
           <div>
             <button type="button" onClick={yesClick}>
               Yes

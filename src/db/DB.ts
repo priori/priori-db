@@ -748,12 +748,12 @@ export const DB = {
   async inOpenTransaction(id: number) {
     return (
       (await first(`
-        select
+        SELECT
           count(*) > 0 open
-        from pg_stat_activity
-        where
-          state IN ('idle in transaction') and
-          xact_start is not null and
+        FROM pg_stat_activity
+        WHERE
+          state IN ('idle in transaction') AND
+          xact_start IS NOT NULL AND
           pid = ${id}
     `)) as { open: boolean }
     )?.open;
@@ -763,13 +763,13 @@ export const DB = {
     if (ids.length === 0) return false;
     return (
       (await first(`
-        select
+        SELECT
           count(*) > 0 has
           -- xact_start <- data
-        from pg_stat_activity
-        where
+        FROM pg_stat_activity
+        WHERE
           state IN ('idle in transaction','active') and
-          xact_start is not null and
+          xact_start IS NOT NULL AND
           pid IN (${ids.join(', ')})
     `)) as { has: boolean }
     )?.has;

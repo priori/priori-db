@@ -4,5 +4,4 @@ import AppWrapper from './AppWrapper';
 
 const container = document.getElementById('root');
 assert(container !== null);
-const root = createRoot(container);
-root.render(<AppWrapper />);
+createRoot(container).render(<AppWrapper />);
