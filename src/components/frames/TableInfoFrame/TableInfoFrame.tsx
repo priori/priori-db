@@ -504,7 +504,13 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         </div>
                       </td>
                       <td>{col.data_type}</td>
-                      <td style={{ wordBreak: 'break-word' }}>
+                      <td
+                        style={{
+                          wordBreak: 'break-word',
+                          fontFamily: 'Inconsolata, monospace',
+                          letterSpacing: '-0.5px',
+                        }}
+                      >
                         {col.column_default}
                       </td>
                       <td style={{ textAlign: 'center' }}>

@@ -49,6 +49,10 @@
 .grid table th {
   border-color: #15c;
   font-weight: normal;
+  &.pk {
+    color: #fe0;
+    text-shadow: 0 1px 1px rgba(0 0 0 / 75%);
+  }
 }
 .grid tr:nth-child(2n) {
   background: #f0f0f0;
@@ -181,6 +185,12 @@
 td.selected {
   background: rgba(0, 0, 0, 0.12);
   border-color: #c4c4c4;
+}
+td.changed {
+  background: rgba(256, 240, 0, 0.2);
+}
+td.selected.changed {
+  background: rgba(120, 110, 0, 0.25);
 }
 .grid tbody tr:hover td.selected {
   border-color: #bbb;

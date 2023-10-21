@@ -20,6 +20,7 @@
   background: #fff;
   flex: 1;
   min-width: 160px;
+  overflow: hidden;
   .fa.fa-close {
     float: right;
     color: #d00;
@@ -41,7 +42,9 @@
     }
   }
   .query-selector--sql {
-    font-family: Consola, monospace;
+    font-family: 'Inconsolata', monospace;
+    font-size: 13px;
+    line-height: 14px;
     color: #444;
     word-break: break-word;
   }
