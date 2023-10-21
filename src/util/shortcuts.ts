@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useEvent } from './useEvent';
 
+const isIOS = process?.platform === 'darwin';
+
 export function useShortcuts({
   nextTab,
   prevTab,
@@ -26,20 +28,28 @@ export function useShortcuts({
       e.preventDefault();
       e.stopPropagation();
     } else if (
-      (e.ctrlKey && (e.key === 'w' || e.key === 'W')) ||
-      (e.ctrlKey && e.key === 'F4')
+      ((e.ctrlKey || (isIOS && e.metaKey)) &&
+        (e.key === 'w' || e.key === 'W')) ||
+      ((e.ctrlKey || (isIOS && e.metaKey)) && e.key === 'F4')
     ) {
       if (closeTab) closeTab();
       e.preventDefault();
       e.stopPropagation();
     } else if (
-      (e.ctrlKey && (e.key === 'r' || e.key === 'R' || e.key === 'Enter')) ||
+      ((e.ctrlKey || (isIOS && e.metaKey)) &&
+        (e.key === 'r' || e.key === 'R' || e.key === 'Enter')) ||
       e.key === 'F5'
     ) {
       if (f5) f5();
-    } else if (e.ctrlKey && (e.key === 't' || e.key === 'T')) {
+    } else if (
+      (e.ctrlKey || (isIOS && e.metaKey)) &&
+      (e.key === 't' || e.key === 'T')
+    ) {
       if (newTab) newTab();
-    } else if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) {
+    } else if (
+      (e.ctrlKey || (isIOS && e.metaKey)) &&
+      (e.key === 'n' || e.key === 'N')
+    ) {
       if (newWindow) newWindow();
       // electron.ipcRenderer.send('newWindow')
     } else if (e.key === 'F11') {
