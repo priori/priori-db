@@ -86,6 +86,7 @@ export async function reloadNav() {
 }
 
 export function createSchema(name: string) {
+  cancelCreateSchema();
   DB.createSchema(name).then(
     () => {
       reloadNav();
