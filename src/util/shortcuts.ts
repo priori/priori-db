@@ -41,6 +41,8 @@ export function useShortcuts({
       e.key === 'F5'
     ) {
       if (f5) f5();
+      e.preventDefault();
+      e.stopPropagation();
     } else if (
       (e.ctrlKey || (isIOS && e.metaKey)) &&
       (e.key === 't' || e.key === 'T')
