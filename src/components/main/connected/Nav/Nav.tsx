@@ -24,13 +24,19 @@ export type Entity = {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type useDeferredValueFix<T> = (s: T, config: { timeoutMs: number }) => T;
 
+const isIOS = process?.platform === 'darwin';
+
 export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
   const tabs = (useDeferredValue as useDeferredValueFix<Tab[]>)(props.tabs, {
     timeoutMs: 150,
   });
 
   const onKeyDown = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'F5') {
+    if (
+      ((e.ctrlKey || (isIOS && e.metaKey)) &&
+        (e.key === 'r' || e.key === 'R' || e.key === 'Enter')) ||
+      e.key === 'F5'
+    ) {
       e.preventDefault();
       e.stopPropagation();
       reloadNav();
