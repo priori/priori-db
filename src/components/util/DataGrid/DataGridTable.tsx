@@ -1,6 +1,7 @@
 import { FieldDef } from 'pg';
 import React from 'react';
 import { cellClassName, getType, getValString } from './util';
+import { equals } from 'util/equals';
 
 interface DataGridTableProps {
   visibleStartingInEven: boolean;
@@ -16,6 +17,7 @@ interface DataGridTableProps {
   gridContentTableWidth: number | undefined;
   fields: FieldDef[];
   finalWidths: number[];
+  update: { [k: number]: { [k: number]: string } };
 }
 
 export const DataGridTable = React.memo(
@@ -28,6 +30,7 @@ export const DataGridTable = React.memo(
     gridContentTableWidth,
     fields,
     finalWidths,
+    update,
   }: DataGridTableProps) => {
     return (
       <table
@@ -52,13 +55,16 @@ export const DataGridTable = React.memo(
           {visibleRows.map((row, rowIndex) => (
             <tr key={rowIndex}>
               {fields.map((_, index) => {
-                const val = row[index];
+                const hasChange =
+                  typeof update?.[rowIndex]?.[index] !== 'undefined';
+                const val = hasChange ? update[rowIndex][index] : row[index];
                 const type = getType(val);
                 const valString = getValString(val);
                 const className = cellClassName(
                   index,
                   slice[0] + rowIndex,
-                  selection
+                  selection,
+                  hasChange
                 );
                 return (
                   <td key={index} className={className}>
@@ -88,7 +94,8 @@ export const DataGridTable = React.memo(
       prev.gridContentTableTop === next.gridContentTableTop &&
       prev.gridContentTableWidth === next.gridContentTableWidth &&
       prev.fields === next.fields &&
-      prev.finalWidths === next.finalWidths
+      prev.finalWidths === next.finalWidths &&
+      equals(prev.update, next.update)
     );
   }
 );

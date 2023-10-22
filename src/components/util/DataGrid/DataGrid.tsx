@@ -9,6 +9,13 @@ export interface GridProps {
   result: QueryArrayResult | undefined;
   onScroll?: (() => void) | undefined;
   emptyTable?: string | undefined;
+  onUpdate?: (
+    update: {
+      where: { [fieldName: string]: string | number | null };
+      values: { [fieldName: string]: string };
+    }[]
+  ) => Promise<boolean>;
+  pks?: string[];
 }
 
 export const DataGrid = memo(
@@ -25,7 +32,9 @@ export const DataGrid = memo(
               width={width}
               onScroll={props.onScroll}
               height={height}
+              pks={props.pks}
               emptyTable={props.emptyTable}
+              onUpdate={props.onUpdate}
             />
           )}
         />
@@ -36,5 +45,7 @@ export const DataGrid = memo(
   (a, b) =>
     a.result === b.result &&
     equals(a.style, b.style) &&
+    equals(a.pks, b.pks) &&
+    a.onUpdate === b.onUpdate &&
     a.onScroll === b.onScroll
 );

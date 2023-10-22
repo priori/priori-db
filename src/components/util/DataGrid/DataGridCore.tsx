@@ -33,6 +33,13 @@ export interface DataGridCoreProps {
   onScroll?: (() => void) | undefined;
   height: number;
   emptyTable?: string | undefined;
+  onUpdate?: (
+    update: {
+      where: { [fieldName: string]: string | number | null };
+      values: { [fieldName: string]: string };
+    }[]
+  ) => Promise<boolean>;
+  pks?: string[];
 }
 
 export interface DataGridState {
@@ -46,6 +53,8 @@ export function DataGridCore(props: DataGridCoreProps) {
   const [state, setState] = useState({
     slice: [0, rowsByRender],
   } as DataGridState);
+
+  const [editing, setEditing] = useState(false as boolean | 2);
 
   const headerElRef = useRef(null as HTMLTableElement | null);
 
@@ -357,11 +366,51 @@ export function DataGridCore(props: DataGridCoreProps) {
     }));
   });
 
+  const onDoubleClick = useEvent((e: React.MouseEvent<HTMLElement>) => {
+    if (
+      e.button === 1 ||
+      e.button === 2 ||
+      !props.onUpdate ||
+      !props.pks?.length
+    )
+      return;
+    const el = elRef.current as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top - headerHeight;
+    if (
+      x < 0 ||
+      y < 0 ||
+      x > el.offsetWidth - (hasRightScrollbar ? scrollWidth : 0) ||
+      y >
+        el.offsetHeight - (hasBottomScrollbar ? scrollWidth : 0) - headerHeight
+    ) {
+      return;
+    }
+    x += scrollRef.current.left;
+    y += scrollRef.current.top;
+    const rowIndex = Math.floor(y / rowHeight);
+    if (rowIndex >= props.result.rows.length) {
+      return;
+    }
+    const colIndex = getColIndex(x);
+    if (
+      colIndex === state.active?.colIndex &&
+      rowIndex === state.active?.rowIndex
+    ) {
+      setEditing(true);
+    }
+  });
+
   const onBlur = useEvent(() => {
     setState({
       ...state,
       mouseDown: undefined,
     });
+  });
+
+  const onEditBlur = useEvent(() => {
+    setEditing(false);
   });
 
   function moveBy(x0: number, y0: number, selection: boolean) {
@@ -450,7 +499,17 @@ export function DataGridCore(props: DataGridCoreProps) {
   });
 
   const onKeyDown = useEvent((e: React.KeyboardEvent) => {
-    if (e.key === 'a' && e.ctrlKey) {
+    if (e.target instanceof HTMLTextAreaElement) return;
+    if (
+      props.onUpdate &&
+      props.pks?.length &&
+      (e.key === 'F2' || e.key === 'Enter')
+    ) {
+      setEditing(true);
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    } else if (e.key === 'a' && e.ctrlKey) {
       setState({
         ...state,
         selection: {
@@ -524,83 +583,203 @@ export function DataGridCore(props: DataGridCoreProps) {
         moveBy(-1, 0, e.shiftKey);
       } else if (e.key === 'ArrowRight') {
         moveBy(1, 0, e.shiftKey);
+      } else if (
+        props.onUpdate &&
+        props.pks?.length &&
+        e.key &&
+        e.key.length === 1 &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.metaKey
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        setUpdate({
+          ...update,
+          [state.active.rowIndex]: {
+            ...update?.[state.active.rowIndex],
+            [state.active.colIndex]: e.key,
+          },
+        });
+        setEditing(2);
+        return;
       }
     }
   });
+  const onChange = useEvent((value: string) => {
+    if (!state.active) return;
+    if (update?.[state.active.rowIndex]?.[state.active.colIndex] === value)
+      return;
+    setUpdate({
+      ...update,
+      [state.active.rowIndex]: {
+        ...update?.[state.active.rowIndex],
+        [state.active.colIndex]: value,
+      },
+    });
+  });
+
+  const applyClick = useEvent(async () => {
+    const pks = props.pks;
+    if (!pks || pks.length === 0 || !props.onUpdate) return;
+    const update2 = Object.keys(update).map((rowIndex) => {
+      const values: { [name: string]: string } = {};
+      for (const colIndex in update[rowIndex]) {
+        const fieldName = props.result.fields[colIndex].name;
+        const val = update[rowIndex][colIndex];
+        assert(typeof fieldName === 'string');
+        assert(typeof val === 'string');
+        values[fieldName] = val;
+      }
+      const where: { [n: string]: string | number | null } = {};
+      for (const name of pks) {
+        const val =
+          props.result.rows?.[rowIndex]?.[
+            props.result.fields.findIndex((f) => f.name === name)
+          ];
+        assert(
+          typeof val === 'string' || typeof val === 'number' || val === null
+        );
+        where[name] = val;
+      }
+      return {
+        where,
+        values,
+      };
+    });
+    await props.onUpdate(update2);
+    setUpdate({});
+  });
+
+  const [update, setUpdate] = useState(
+    {} as { [rowIndex: number]: { [colIndex: number]: string } }
+  );
+  const pendingRowsUpdate = Object.keys(update).length;
+  const totalChanges = Object.keys(update).reduce(
+    (a, b) => a + Object.keys(update[b]).length,
+    0
+  );
 
   return (
-    <div
-      style={{ top: 0, left: 0, bottom: 0, right: 0, position: 'absolute' }}
-      tabIndex={0}
-      onBlur={onBlur}
-      onKeyDown={onKeyDown}
-      onMouseDown={onMouseDown}
-      ref={elRef}
-    >
-      <div className="grid-header-wrapper">
-        <table
-          className="grid-header"
-          style={{
-            width: gridContentTableWidth,
-            zIndex: 3,
-          }}
-          ref={headerElRef}
-        >
-          <DataGridThead
-            fields={props.result.fields}
-            finalWidths={finalWidths}
-          />
-        </table>
-      </div>
-      {state.active ? (
-        <DataGridActiveCell
-          scrollLeft={scrollRef.current.top}
-          scrollTop={scrollRef.current.left}
-          containerHeight={props.height}
-          containerWidth={props.width}
-          finalWidths={finalWidths}
-          active={state.active}
-          hasBottomScrollbar={hasBottomScrollbar}
-          hasRightScrollbar={hasRightScrollbar}
-          value={
-            props.result.rows[state.active.rowIndex][state.active.colIndex]
-          }
-          elRef={activeElRef}
-        />
-      ) : null}
+    <>
       <div
-        className="grid-content"
-        onScroll={onScroll}
-        ref={gridContentRef}
-        style={{
-          overflowX: hasBottomScrollbar ? 'scroll' : 'hidden',
-          overflowY: hasRightScrollbar ? 'scroll' : 'hidden',
-        }}
+        style={{ top: 0, left: 0, bottom: 0, right: 0, position: 'absolute' }}
+        tabIndex={0}
+        className={editing ? 'editing' : undefined}
+        onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        onMouseDown={onMouseDown}
+        onDoubleClick={onDoubleClick}
+        ref={elRef}
       >
+        <div className="grid-header-wrapper">
+          <table
+            className="grid-header"
+            style={{
+              width: gridContentTableWidth,
+              zIndex: 3,
+            }}
+            ref={headerElRef}
+          >
+            <DataGridThead
+              fields={props.result.fields}
+              pks={props.pks}
+              finalWidths={finalWidths}
+            />
+          </table>
+        </div>
+        {state.active ? (
+          <DataGridActiveCell
+            scrollLeft={scrollRef.current.top}
+            scrollTop={scrollRef.current.left}
+            containerHeight={props.height}
+            containerWidth={props.width}
+            finalWidths={finalWidths}
+            active={state.active}
+            hasBottomScrollbar={hasBottomScrollbar}
+            hasRightScrollbar={hasRightScrollbar}
+            onChange={onChange}
+            changed={
+              typeof update?.[state.active.rowIndex]?.[
+                state.active.colIndex
+              ] !== 'undefined'
+            }
+            onBlur={onEditBlur}
+            editing={editing}
+            value={
+              typeof update[state.active.rowIndex]?.[state.active.colIndex] !==
+              'undefined'
+                ? update[state.active.rowIndex][state.active.colIndex]
+                : props.result.rows[state.active.rowIndex][
+                    state.active.colIndex
+                  ]
+            }
+            elRef={activeElRef}
+          />
+        ) : null}
         <div
+          className="grid-content"
+          onScroll={onScroll}
+          ref={gridContentRef}
           style={{
-            marginTop: gridContentMarginTop,
-            height: gridContentHeight,
-            borderBottom: '1px solid #ddd',
+            overflowX: hasBottomScrollbar ? 'scroll' : 'hidden',
+            overflowY: hasRightScrollbar ? 'scroll' : 'hidden',
           }}
         >
-          <DataGridTable
-            visibleStartingInEven={visibleStartingInEven}
-            visibleRows={visibleRows}
-            slice={state.slice}
-            selection={state.selection}
-            gridContentTableTop={gridContentTableTop}
-            gridContentTableWidth={gridContentTableWidth}
-            fields={props.result.fields}
-            finalWidths={finalWidths}
-          />
+          <div
+            style={{
+              marginTop: gridContentMarginTop,
+              height: gridContentHeight,
+              borderBottom: '1px solid #ddd',
+            }}
+          >
+            <DataGridTable
+              visibleStartingInEven={visibleStartingInEven}
+              visibleRows={visibleRows}
+              slice={state.slice}
+              selection={state.selection}
+              gridContentTableTop={gridContentTableTop}
+              gridContentTableWidth={gridContentTableWidth}
+              fields={props.result.fields}
+              finalWidths={finalWidths}
+              update={update}
+            />
+          </div>
         </div>
+        {props.result.rows.length === 0 && props.emptyTable ? (
+          <div className="empty-table">
+            <div>{props.emptyTable}</div>
+          </div>
+        ) : pendingRowsUpdate > 0 ? (
+          <div
+            className="change-dialog"
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              if (document.activeElement instanceof HTMLElement)
+                document.activeElement.blur();
+            }}
+          >
+            {pendingRowsUpdate} pending row{pendingRowsUpdate > 1 ? 's' : ''}{' '}
+            update ({totalChanges} value{totalChanges > 1 ? 's' : ''})
+            <div>
+              <button
+                onClick={() => {
+                  setUpdate({});
+                }}
+                style={{
+                  fontWeight: 'normal',
+                  color: '#444',
+                }}
+              >
+                Discard <i className="fa fa-undo"></i>
+              </button>
+              <button style={{ fontWeight: 'bold' }} onClick={applyClick}>
+                Apply <i className="fa fa-check"></i>
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
-      {props.result.rows.length === 0 && props.emptyTable ? (
-        <div className="empty-table">
-          <div>{props.emptyTable}</div>
-        </div>
-      ) : null}
-    </div>
+    </>
   );
 }

@@ -7,6 +7,7 @@ import {
   rowHeight,
   scrollWidth,
 } from './util';
+import { useEvent } from 'util/useEvent';
 
 interface UpdateActivePos {
   activeEl: HTMLDivElement;
@@ -81,6 +82,10 @@ interface DataGridActiveCellProps {
   finalWidths: number[];
   hasBottomScrollbar: boolean;
   hasRightScrollbar: boolean;
+  onChange: (value: string) => void;
+  editing: boolean | 2;
+  changed: boolean;
+  onBlur: () => void;
 }
 export const DataGridActiveCell = React.memo(
   ({
@@ -94,6 +99,10 @@ export const DataGridActiveCell = React.memo(
     finalWidths,
     hasBottomScrollbar,
     hasRightScrollbar,
+    onChange,
+    editing,
+    changed,
+    onBlur,
   }: DataGridActiveCellProps) => {
     const val = value;
     const type = getType(val);
@@ -111,6 +120,36 @@ export const DataGridActiveCell = React.memo(
     );
     const key = `${active.rowIndex}/${active.colIndex}`;
     const even = active.rowIndex % 2;
+    const textareaRef = useEvent((el: HTMLTextAreaElement | null) => {
+      if (el) {
+        el.focus();
+        if (editing === 2)
+          el.setSelectionRange(el.value.length, el.value.length);
+        else el.select();
+      }
+    });
+    const textareaOnChange = useEvent(
+      (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        onChange(e.target.value);
+      }
+    );
+    const textareaOnBlur = useEvent(() => {
+      onBlur();
+    });
+
+    const onkeydown = useEvent(
+      (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (
+          e.key === 'Escape' ||
+          (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey)
+        ) {
+          if (e.target instanceof HTMLTextAreaElement) {
+            const p = e.target?.closest('[tabindex]');
+            if (p instanceof HTMLElement) p.focus();
+          } else onBlur();
+        }
+      }
+    );
 
     return (
       <div
@@ -118,6 +157,7 @@ export const DataGridActiveCell = React.memo(
           position: 'absolute',
           top,
           left,
+          // pointerEvents: 'none',
           width: wrapperWidth + 4,
           display: top < 0 || wrapperWidth < 0 ? 'none' : '',
         }}
@@ -129,11 +169,22 @@ export const DataGridActiveCell = React.memo(
           style={{ marginLeft: `${-leftCrop}px`, height: `${rowHeight - 1}px` }}
           className={`active-cell-wrapper2 ${type}`}
         >
-          <div className="active-cell">
-            {valString && valString.length > 200
-              ? `${valString.substring(0, 200)}...`
-              : valString}
-          </div>
+          {editing ? (
+            <textarea
+              onChange={textareaOnChange}
+              onBlur={textareaOnBlur}
+              onKeyDown={onkeydown}
+              ref={textareaRef}
+              className="active-cell"
+              defaultValue={valString}
+            />
+          ) : (
+            <div className={`active-cell${changed ? ' changed' : ''}`}>
+              {valString && valString.length > 200
+                ? `${valString.substring(0, 200)}...`
+                : valString}
+            </div>
+          )}
         </div>
       </div>
     );

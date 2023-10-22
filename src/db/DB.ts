@@ -575,6 +575,11 @@ export const DB = {
     }[];
   },
 
+  async pks(schemaName: string, tableName: string) {
+    const cols = await this.listCols(schemaName, tableName);
+    return cols.filter((c) => c.is_primary).map((c) => c.column_name);
+  },
+
   async listIndexes(schemaName: string, tableName: string) {
     const res = await list(
       `
@@ -832,6 +837,38 @@ export const DB = {
             col.name
           )} IS ${str(col.comment)}`
         );
+      await c.query('COMMIT');
+    } catch (err) {
+      await c.query('ROLLBACK');
+      throw err;
+    } finally {
+      c.release(true);
+    }
+  },
+
+  async update(
+    schema: string,
+    table: string,
+    update: {
+      where: { [fieldName: string]: string | number | null };
+      values: { [fieldName: string]: string };
+    }[]
+  ) {
+    const c = await openConnection();
+    try {
+      await c.query('BEGIN');
+
+      for (const { where, values } of update) {
+        let count = 1;
+        await c.query(
+          `UPDATE ${label(schema)}.${label(table)} SET ${Object.keys(values)
+            .map((k) => `${label(k)} = $${count++}`)
+            .join(', ')} WHERE ${Object.keys(where)
+            .map((k) => `${label(k)} = $${count++}`)
+            .join(' AND ')}`,
+          [...Object.values(values), ...Object.values(where)]
+        );
+      }
       await c.query('COMMIT');
     } catch (err) {
       await c.query('ROLLBACK');
