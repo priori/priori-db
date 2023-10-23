@@ -67,6 +67,13 @@ export function TableFrame(props: TableFrameProps) {
             {service.error.message}
           </div>
         </div>
+      ) || service.status === 'starting' && (
+
+        <div className='table-frame--loading'>
+          <div>
+            <i className='fa fa-circle-o-notch' />
+            </div>
+          </div>
       )}
     </>
   );

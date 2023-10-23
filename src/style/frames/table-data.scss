@@ -14,3 +14,57 @@
     text-align: center;
   }
 }
+
+.table-frame--loading {
+  display: flex;
+  height: 100%;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  div {
+    animation: show-loading 60s infinite linear;
+  }
+  .fa {
+    font-size: 100px;
+    animation: fa-spin 4s infinite linear;
+  }
+
+  button {
+    position: absolute;
+    margin-top: 159px;
+    animation: show-loading-button 20s linear;
+  }
+}
+
+@keyframes show-loading-button {
+  0% {
+    opacity: 0;
+    visibility: hidden;
+    display: none;
+  }
+  6% {
+    opacity: 0;
+    visibility: visible;
+  }
+  8% {
+    opacity: 1;
+  }
+}
+@keyframes show-loading {
+  0% {
+    opacity: 0;
+    visibility: hidden;
+    display: none;
+  }
+  2% {
+    opacity: 0;
+    visibility: visible;
+  }
+  4%{
+    opacity: .1;
+  }
+  100% {
+    opacity: .3;
+  }
+}
