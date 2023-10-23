@@ -10,8 +10,8 @@ export function keys(
 }
 
 export function equals(a: unknown, b: unknown) {
-  if (a === b) return true;
-  if ((a && !b) || (!a && b)) return false;
+  if (a === b || (a !== a && b !== b)) return true;
+  if (!a || !b) return false;
   assert(a);
   assert(b);
   if (typeof a === 'object' && typeof b === 'object') {

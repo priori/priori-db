@@ -628,7 +628,7 @@ export function DataGridCore(props: DataGridCoreProps) {
         const fieldName = props.result.fields[colIndex].name;
         const val = update[rowIndex][colIndex];
         assert(typeof fieldName === 'string');
-        assert(typeof val === 'string');
+        assert(val === null || typeof val === 'string');
         values[fieldName] = val;
       }
       const where: { [n: string]: string | number | null } = {};

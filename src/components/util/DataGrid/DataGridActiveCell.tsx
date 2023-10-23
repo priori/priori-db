@@ -82,7 +82,7 @@ interface DataGridActiveCellProps {
   finalWidths: number[];
   hasBottomScrollbar: boolean;
   hasRightScrollbar: boolean;
-  onChange: (value: string) => void;
+  onChange: (value: string | null) => void;
   editing: boolean | 2;
   changed: boolean;
   onBlur: () => void;
@@ -147,6 +147,8 @@ export const DataGridActiveCell = React.memo(
             const p = e.target?.closest('[tabindex]');
             if (p instanceof HTMLElement) p.focus();
           } else onBlur();
+        } else if ( (e.key === "Delete" || e.key === "Backspace") && (e.target instanceof HTMLTextAreaElement) && e.target.value === "" ) {
+          onChange(null);
         }
       }
     );
@@ -175,8 +177,9 @@ export const DataGridActiveCell = React.memo(
               onBlur={textareaOnBlur}
               onKeyDown={onkeydown}
               ref={textareaRef}
+              placeholder={val === null ? "null" : undefined}
               className="active-cell"
-              defaultValue={valString}
+              defaultValue={val === null ? "" : valString}
             />
           ) : (
             <div className={`active-cell${changed ? ' changed' : ''}`}>

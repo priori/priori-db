@@ -105,6 +105,10 @@
 .grid .null {
   opacity: 0.5;
 }
+.grid .active-cell-wrapper2.null {
+  opacity: 1;
+  color: #929073;
+}
 .grid .grid-header {
   position: absolute;
   top: 0;
@@ -146,6 +150,7 @@ textarea.active-cell {
   border: 0;
   font-family: inherit;
   outline: none;
+  background-color: white;
 }
 
 .grid-content > div {
@@ -299,4 +304,12 @@ tr:nth-child(2n):hover td.selected { background: #c0c0c0; }
   font-size: 11px;
   margin-left: 10px;
   font-weight: normal;
+}
+.grid textarea.active-cell {
+  background: white;
+}
+textarea.active-cell::placeholder {
+  font-weight: bold !important;
+  color: black;
+  /* line-height: 1.07em; font-size: 16px; */
 }
