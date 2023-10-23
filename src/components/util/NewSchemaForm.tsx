@@ -9,7 +9,11 @@ export function NewSchemaForm({
 }) {
   const [schemaName, set] = useState('');
   return (
-    <div className="new-schema-form">
+    <div className="new-schema-form" onMouseDown={e=>{
+      if ( e.target instanceof HTMLDivElement && e.target.className === 'new-schema-form' ) {
+        onClose();
+      }
+    }}>
       <div>
         Name:{' '}
         <input
@@ -17,8 +21,23 @@ export function NewSchemaForm({
           onChange={(e) => {
             set(e.target.value);
           }}
+          onKeyDown={(e) => {
+            if ( e.key === 'Enter' && schemaName) {
+              onCreateSchema(schemaName);
+            } else if ( e.key === 'Escape' ) {
+              onClose();
+            }
+          }}
+          ref={el=>{
+            if ( el ) {
+              el.focus();
+            }
+          }}
         />{' '}
-        <button type="button" onClick={() => onCreateSchema(schemaName)}>
+        <button
+        disabled={!schemaName}
+          style={schemaName ? undefined : {opacity: 0.5}}
+           type="button" onClick={schemaName ? () => onCreateSchema(schemaName) : undefined}>
           Ok
         </button>{' '}
         <button type="button" onClick={() => onClose()}>

@@ -22,7 +22,7 @@ button {
   font-weight: bold;
   color: rgba(0, 0, 0, 0.8);
 }
-button:hover {
+button:not([disabled]):hover {
   background: rgba(0, 0, 0, 0.2);
 }
 button:focus {

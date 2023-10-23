@@ -16,6 +16,7 @@ table.table > * > th {
 .new-schema-form input {
   padding: 8px;
   width: 150px;
+  margin-left: 8px;
 }
 .new-schema-form {
   z-index: 10000;
@@ -32,6 +33,7 @@ table.table > * > th {
   left: 75px;
   background: white;
   padding: 10px;
+  padding-left: 20px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.33);
 }
 
