@@ -17,7 +17,7 @@ interface DataGridTableProps {
   gridContentTableWidth: number | undefined;
   fields: FieldDef[];
   finalWidths: number[];
-  update: { [k: number]: { [k: number]: string } };
+  update: { [k: number]: { [k: number]: string | null } };
 }
 
 export const DataGridTable = React.memo(

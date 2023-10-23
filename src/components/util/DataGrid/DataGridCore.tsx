@@ -606,7 +606,7 @@ export function DataGridCore(props: DataGridCoreProps) {
       }
     }
   });
-  const onChange = useEvent((value: string) => {
+  const onChange = useEvent((value: string | null ) => {
     if (!state.active) return;
     if (update?.[state.active.rowIndex]?.[state.active.colIndex] === value)
       return;
@@ -652,7 +652,7 @@ export function DataGridCore(props: DataGridCoreProps) {
   });
 
   const [update, setUpdate] = useState(
-    {} as { [rowIndex: number]: { [colIndex: number]: string } }
+    {} as { [rowIndex: number]: { [colIndex: number]: string | null } }
   );
   const pendingRowsUpdate = Object.keys(update).length;
   const totalChanges = Object.keys(update).reduce(

@@ -137,14 +137,16 @@
   position: relative;
   height: 22px;
   line-height: 22px;
-  transition: tranform 0.15s, box-shadow 0.25s;
+  transition:
+    tranform 0.15s,
+    box-shadow 0.25s;
 }
 
 textarea.active-cell {
   display: block;
   width: 100%;
   height: 22px;
-  line-height: 19px;
+  line-height: 18px;
   padding-left: 5px;
   resize: none;
   border: 0;
@@ -228,7 +230,9 @@ tr:nth-child(2n):hover td.selected { background: #c0c0c0; }
   border: 2px solid #06c;
 }
 .active-cell-wrapper {
-  transition: box-shadow 0.5s, transform 0.5s;
+  transition:
+    box-shadow 0.5s,
+    transform 0.5s;
   overflow: hidden;
 }
 .active-cell-wrapper2 {
@@ -246,6 +250,7 @@ tr:nth-child(2n):hover td.selected { background: #c0c0c0; }
 .grid div .active-cell-wrapper {
   box-shadow: 0 0 rgba(0, 0, 0, 0.25);
 }
+.grid div.editing .active-cell-wrapper,
 .grid div:focus .active-cell-wrapper {
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
 }
@@ -279,29 +284,28 @@ tr:nth-child(2n):hover td.selected { background: #c0c0c0; }
   font-family: sans-serif;
   font-size: 25px;
   color: #ccc;
-  div {
-  }
 }
 .change-dialog {
   position: absolute;
   right: 16px;
   bottom: 16px;
   background: white;
-  padding: 8px;
+  padding: 15px 10px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
   font-family: sans-serif;
   font-size: 13px;
   z-index: 3;
+  min-width: 250px;
   div {
     text-align: right;
     border-top: 1px solid #eee;
-    padding-top: 8px;
-    margin-top: 8px;
+    padding-top: 15px;
+    margin-top: 15px;
   }
 }
 .app-content .change-dialog button {
   padding: 4px 7px !important;
-  font-size: 11px;
+  font-size: 13px;
   margin-left: 10px;
   font-weight: normal;
 }
