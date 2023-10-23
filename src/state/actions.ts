@@ -7,6 +7,7 @@ import { connect as dbConnect, listDatabases } from '../db/Connection';
 import state, { currentState } from './state';
 import { DB } from '../db/DB';
 import { FrameProps } from '../types';
+import { updateConnection } from 'util/browserDb';
 
 export const {
   openFunctions,
@@ -127,6 +128,12 @@ export async function connect(s: string) {
   assert(password);
   try {
     await dbConnect(password, s);
+    await updateConnection(
+      password.host,
+      password.port,
+      password.user,
+      password.database
+    );
     try {
       const schemas = await DB.listAll();
       state.connected(s, schemas);

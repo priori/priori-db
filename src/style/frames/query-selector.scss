@@ -5,6 +5,8 @@
   right: 0;
   bottom: 0;
   overflow: auto;
+}
+.query-selector--queries {
   display: flex;
   align-content: flex-start;
   align-items: stretch;
@@ -92,5 +94,13 @@
     flex: 1;
     padding: 6px;
     margin-top: -1px;
+  }
+  select {
+    outline: none;
+    border: 0;
+    margin-left: -1px;
+    border-bottom: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+    padding-left: 5px;
   }
 }

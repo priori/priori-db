@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { currentState } from 'state/state';
 import { browserDb } from 'util/browserDb';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
@@ -143,15 +144,35 @@ export function QuerySelector({
     cursorEnd: { line: number; ch: number };
   }) => void;
 }) {
+  const appState = currentState();
+  const [configIndex, set] = useState(
+    () =>
+    appState.passwords.findIndex(
+      (p) =>
+      appState.password &&
+        p.user === appState.password.user &&
+        p.host === appState.password.host &&
+        p.port === appState.password.port &&
+        p.database === appState.password.database
+    )
+  );
+  const config = appState.passwords[configIndex] ?? null ;
   const service = useService(
     () =>
       browserDb.query(
-        `SELECT *
+        `SELECT query.*
         FROM query
+        ${config ? `WHERE
+        execution_id IN ( SELECT id FROM execution WHERE
+          execution.user = $1 AND
+          execution.host = $2 AND
+          execution.port = $3 AND
+          execution.database = $4) ` : ''}
         ORDER BY created_at DESC`,
+        config ? [config.user, config.host, config.port, config.database] :
         []
       ) as Promise<ExecutedQueryEntry[]>,
-    []
+    [config]
   );
   const queries = !service.lastValidData
     ? null
@@ -209,9 +230,29 @@ export function QuerySelector({
   }
   return (
     <div className="query-selector">
-      {queries?.map((g) => (
-        <Group key={g.queries[0].id} queries={g.queries} onSelect={onSelect} />
-      ))}
+      <div className="query-selector--header">
+        <input type="text" readOnly disabled style={{ background: 'white' }} />
+        <select
+        value={configIndex}
+        onChange={e=>set(parseInt(e.target.value))}
+        >
+          <option value="-1"></option>
+          {appState.passwords.map((p, i) => (
+            <option value={i} key={i}>{`${p.user}@${p.host}${
+              p.port !== 5432 ? `:${p.port}` : ''
+            }/${p.database}`}</option>
+          ))}
+        </select>
+      </div>
+      <div className="query-selector--queries">
+        {queries?.map((g) => (
+          <Group
+            key={g.queries[0].id}
+            queries={g.queries}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
     </div>
   );
 }

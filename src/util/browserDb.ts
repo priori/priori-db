@@ -98,11 +98,42 @@ const executionPromise = (async () => {
     `
     CREATE TABLE IF NOT EXISTS execution (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      created_at number
+      created_at number,
+      database string,
+      port number,
+      host string,
+      user string
     );
   `,
     []
   );
+  try {
+    await query(
+      'ALTER TABLE execution ADD COLUMN database TEXT default null',
+      []
+    );
+  } catch (e) {
+    // nop
+  }
+  try {
+    await query('ALTER TABLE execution ADD COLUMN host TEXT default null', []);
+  } catch (e) {
+    // nop
+  }
+  try {
+    await query('ALTER TABLE execution ADD COLUMN user TEXT default null', []);
+  } catch (e) {
+    // nop
+  }
+  try {
+    await query(
+      'ALTER TABLE execution ADD COLUMN port number default null',
+      []
+    );
+  } catch (e) {
+    // nop
+  }
+
   return insertId(`INSERT INTO execution (created_at) VALUES (?)`, [
     new Date().getTime(),
   ]);
@@ -111,6 +142,25 @@ const executionPromise = (async () => {
 export const browserDb = {
   query,
 };
+
+export async function updateConnection(
+  host: string,
+  port: number,
+  user: string,
+  database: string
+) {
+  return query(
+    `UPDATE execution
+    SET
+      host = ?,
+      port = ?,
+      user = ?,
+      database = ?
+    WHERE id = ?
+  `,
+    [host, port, user, database, await executionPromise]
+  );
+}
 
 export const saveQuery = async (
   sql: string,
@@ -182,3 +232,5 @@ export async function updateFailedQuery(id: number, time: number) {
     [time, id]
   );
 }
+
+(global as any).browserDb = browserDb;
