@@ -14,8 +14,8 @@ export const DB = {
   async tableComment(schema: string, table: string) {
     const res = await first(
       `SELECT obj_description('${label(schema)}.${label(
-        table
-      )}'::regclass) "comment"`
+        table,
+      )}'::regclass) "comment"`,
     );
     return res.comment as string | null;
   },
@@ -32,7 +32,7 @@ export const DB = {
       scale?: number;
       notNull?: boolean;
       default?: string | null;
-    }
+    },
   ) {
     const c = await openConnection();
     try {
@@ -40,47 +40,47 @@ export const DB = {
       if (update.name && update.name !== column)
         await c.query(
           `ALTER TABLE ${label(schema)}.${label(table)} RENAME COLUMN ${label(
-            column
-          )} TO ${label(update.name)}`
+            column,
+          )} TO ${label(update.name)}`,
         );
       if (update.comment !== undefined) {
         if (update.comment) {
           await c.query(
             `COMMENT ON COLUMN ${label(schema)}.${label(table)}.${label(
-              update.name || column
-            )} IS ${str(update.comment)}`
+              update.name || column,
+            )} IS ${str(update.comment)}`,
           );
         } else {
           await c.query(
             `COMMENT ON COLUMN ${label(schema)}.${label(table)}.${label(
-              update.name || column
-            )} IS NULL`
+              update.name || column,
+            )} IS NULL`,
           );
         }
       }
       if (update.type !== undefined) {
         await c.query(
           `ALTER TABLE ${label(schema)}.${label(table)} ALTER COLUMN ${label(
-            update.name || column
+            update.name || column,
           )} TYPE ${update.type}${
             update.length
               ? `(${update.length}${update.scale ? `, ${update.scale}` : ''})`
               : ''
-          }`
+          }`,
         );
       }
       if (update.notNull !== undefined) {
         if (update.notNull) {
           await c.query(
             `ALTER TABLE ${label(schema)}.${label(table)} ALTER COLUMN ${label(
-              update.name || column
-            )} SET NOT NULL`
+              update.name || column,
+            )} SET NOT NULL`,
           );
         } else {
           await c.query(
             `ALTER TABLE ${label(schema)}.${label(table)} ALTER COLUMN ${label(
-              update.name || column
-            )} DROP NOT NULL`
+              update.name || column,
+            )} DROP NOT NULL`,
           );
         }
       }
@@ -88,14 +88,14 @@ export const DB = {
         if (update.default) {
           await c.query(
             `ALTER TABLE ${label(schema)}.${label(table)} ALTER COLUMN ${label(
-              update.name || column
-            )} SET DEFAULT ${update.default}`
+              update.name || column,
+            )} SET DEFAULT ${update.default}`,
           );
         } else {
           await c.query(
             `ALTER TABLE ${label(schema)}.${label(table)} ALTER COLUMN ${label(
-              update.name || column
-            )} DROP DEFAULT`
+              update.name || column,
+            )} DROP DEFAULT`,
           );
         }
       }
@@ -111,7 +111,7 @@ export const DB = {
   async updateSequence(
     schema: string,
     table: string,
-    update: { comment?: string | null; name?: string; schema?: string }
+    update: { comment?: string | null; name?: string; schema?: string },
   ) {
     return DB.updateEntity('SEQUENCE', schema, table, update);
   },
@@ -120,14 +120,14 @@ export const DB = {
     if (!value || !value.match(/^(\d+|\.)+$/))
       throw new Error(`Invalid sequence value (${value})`);
     await query(
-      `ALTER SEQUENCE ${label(schema)}.${label(name)} RESTART WITH ${value}`
+      `ALTER SEQUENCE ${label(schema)}.${label(name)} RESTART WITH ${value}`,
     );
   },
 
   async updateTable(
     schema: string,
     table: string,
-    update: { comment?: string | null; name?: string; schema?: string }
+    update: { comment?: string | null; name?: string; schema?: string },
   ) {
     return DB.updateEntity('TABLE', schema, table, update);
   },
@@ -135,7 +135,7 @@ export const DB = {
   async updateView(
     schema: string,
     table: string,
-    update: { comment?: string | null; name?: string; schema?: string }
+    update: { comment?: string | null; name?: string; schema?: string },
   ) {
     return DB.updateEntity('VIEW', schema, table, update);
   },
@@ -143,7 +143,7 @@ export const DB = {
   async updateDomain(
     schema: string,
     table: string,
-    update: { comment?: string | null; name?: string; schema?: string }
+    update: { comment?: string | null; name?: string; schema?: string },
   ) {
     return DB.updateEntity('DOMAIN', schema, table, update);
   },
@@ -151,7 +151,7 @@ export const DB = {
   async updateMView(
     schema: string,
     table: string,
-    update: { comment?: string | null; name?: string; schema?: string }
+    update: { comment?: string | null; name?: string; schema?: string },
   ) {
     return DB.updateEntity('MATERIALIZED VIEW', schema, table, update);
   },
@@ -159,7 +159,7 @@ export const DB = {
   async updateFunction(
     schema: string,
     name: string,
-    update: { comment?: string | null; name?: string; schema?: string }
+    update: { comment?: string | null; name?: string; schema?: string },
   ) {
     return DB.updateEntity('FUNCTION', schema, name, update);
   },
@@ -174,7 +174,7 @@ export const DB = {
       | 'DOMAIN',
     schema: string,
     table: string,
-    update: { comment?: string | null; name?: string; schema?: string }
+    update: { comment?: string | null; name?: string; schema?: string },
   ) {
     const c = await openConnection();
     try {
@@ -182,26 +182,26 @@ export const DB = {
       if (update.comment) {
         await c.query(
           `COMMENT ON ${entityType} ${label(schema)}.${label(table)} IS ${str(
-            update.comment
-          )}`
+            update.comment,
+          )}`,
         );
       } else if (update.comment !== undefined) {
         await c.query(
-          `COMMENT ON ${entityType} ${label(schema)}.${label(table)} IS NULL`
+          `COMMENT ON ${entityType} ${label(schema)}.${label(table)} IS NULL`,
         );
       }
       if (update.name) {
         await c.query(
           `ALTER ${entityType} ${label(schema)}.${label(
-            table
-          )} RENAME TO ${label(update.name)}`
+            table,
+          )} RENAME TO ${label(update.name)}`,
         );
       }
       if (update.schema) {
         await c.query(
           `ALTER ${entityType} ${label(schema)}.${label(
-            table
-          )} SET SCHEMA ${label(update.schema)}`
+            table,
+          )} SET SCHEMA ${label(update.schema)}`,
         );
       }
       await c.query('COMMIT');
@@ -215,7 +215,7 @@ export const DB = {
 
   async removeCol(schema: string, table: string, col: string) {
     await query(
-      `ALTER TABLE ${label(schema)}.${label(table)} DROP COLUMN ${label(col)}`
+      `ALTER TABLE ${label(schema)}.${label(table)} DROP COLUMN ${label(col)}`,
     );
   },
 
@@ -227,12 +227,12 @@ export const DB = {
     schema: string,
     _: string,
     index: string,
-    comment: string
+    comment: string,
   ) {
     await query(
       `COMMENT ON INDEX ${label(schema)}.${label(index)} IS ${
         comment ? str(comment) : 'NULL'
-      }`
+      }`,
     );
   },
 
@@ -240,18 +240,20 @@ export const DB = {
     schema: string,
     table: string,
     col: string,
-    comment: string
+    comment: string,
   ) {
     await query(
       `COMMENT ON COLUMN ${label(schema)}.${label(table)}.${label(col)} IS ${
         comment ? str(comment) : 'NULL'
-      }`
+      }`,
     );
   },
 
   async renameIndex(schema: string, _: string, index: string, newName: string) {
     await query(
-      `ALTER INDEX ${label(schema)}.${label(index)} RENAME TO ${label(newName)}`
+      `ALTER INDEX ${label(schema)}.${label(index)} RENAME TO ${label(
+        newName,
+      )}`,
     );
   },
 
@@ -259,12 +261,12 @@ export const DB = {
     schema: string,
     table: string,
     col: string,
-    newName: string
+    newName: string,
   ) {
     await query(
       `ALTER TABLE ${label(schema)}.${label(table)} RENAME COLUMN ${label(
-        col
-      )} TO ${label(newName)}`
+        col,
+      )} TO ${label(newName)}`,
     );
   },
 
@@ -293,7 +295,7 @@ export const DB = {
           length?: number;
           notNull?: boolean;
         }
-    )
+    ),
   ) {
     const c = await openConnection();
     try {
@@ -301,47 +303,47 @@ export const DB = {
       if (update.comment) {
         await c.query(
           `COMMENT ON COLUMN ${label(schema)}.${label(tabela)}.${label(
-            column
+            column,
           )} IS $1;`,
-          [update.comment]
+          [update.comment],
         );
       } else if (update.comment !== undefined) {
         await c.query(
           `COMMENT ON COLUMN ${label(schema)}.${label(tabela)}.${label(
-            column
-          )} IS NULL`
+            column,
+          )} IS NULL`,
         );
       }
       if (update.name) {
         await c.query(
           `ALTER TABLE ${label(schema)}.${label(tabela)} RENAME COLUMN ${label(
-            column
-          )} TO ${label(update.name)}`
+            column,
+          )} TO ${label(update.name)}`,
         );
       }
       if (update.type) {
         await c.query(
           `ALTER TABLE ${label(schema)}.${label(tabela)} ALTER COLUMN ${label(
-            column
+            column,
           )} TYPE ${update.type}${
             update.length
               ? `(${update.length}${update.scale ? `, ${update.scale}` : ''})`
               : ''
-          }`
+          }`,
         );
       }
       if (update.notNull !== undefined) {
         if (update.notNull) {
           await c.query(
             `ALTER TABLE ${label(schema)}.${label(tabela)} ALTER COLUMN ${label(
-              column
-            )} SET NOT NULL`
+              column,
+            )} SET NOT NULL`,
           );
         } else {
           await c.query(
             `ALTER TABLE ${label(schema)}.${label(tabela)} ALTER COLUMN ${label(
-              column
-            )} DROP NOT NULL`
+              column,
+            )} DROP NOT NULL`,
           );
         }
       }
@@ -361,7 +363,7 @@ export const DB = {
       FROM pg_catalog.pg_tables
       WHERE
         schemaname = $1 AND tablename = $2`,
-      [schema, table]
+      [schema, table],
     )) as
       | {
           tableowner: string;
@@ -382,7 +384,7 @@ export const DB = {
       FROM pg_catalog.pg_views
       WHERE
         schemaname = $1 AND viewname = $2`,
-      [schema, table]
+      [schema, table],
     )) as
       | {
           viewowner: string;
@@ -398,7 +400,7 @@ export const DB = {
       FROM pg_catalog.pg_matviews
       WHERE
         schemaname = $1 AND matviewname = $2`,
-      [schema, table]
+      [schema, table],
     )) as
       | {
           matviewowner: string;
@@ -418,7 +420,7 @@ export const DB = {
       JOIN pg_namespace n ON n.oid = typnamespace
       WHERE nspname = $1 AND pg_type.typname = $2
     `,
-      [schema, name]
+      [schema, name],
     );
   },
 
@@ -430,13 +432,13 @@ export const DB = {
       INNER JOIN pg_namespace n ON n.oid = relnamespace AND nspname = $1
       WHERE relname = $2
       `,
-      [schema, name]
+      [schema, name],
     );
   },
 
   async lastValue(schema: string, name: string) {
     const r = await first(
-      `SELECT last_value FROM ${label(schema)}.${label(name)}`
+      `SELECT last_value FROM ${label(schema)}.${label(name)}`,
     );
     return r.last_value;
   },
@@ -561,7 +563,7 @@ export const DB = {
         a.attnum > 0 AND
         NOT a.attisdropped
         `,
-      [schemaName, tableName]
+      [schemaName, tableName],
     );
     return res as {
       column_name: string;
@@ -595,13 +597,13 @@ export const DB = {
           t.relname = $2
         ) AND
         i.indisprimary`,
-      [schema, tableName]
+      [schema, tableName],
     );
     if (e && e.definition && typeof e.definition === 'string') {
       const order = e.definition.replace(/.*\((.*)\)/g, '$1');
       if (order) {
         return `SELECT * FROM ${label(schema)}.${label(
-          tableName
+          tableName,
         )} ORDER BY ${order}`;
       }
     }
@@ -637,7 +639,7 @@ export const DB = {
           SELECT t.oid FROM pg_class t
           WHERE t.relnamespace = (select oid FROM pg_namespace WHERE nspname = $1) AND
           t.relname = $2)`,
-      [schemaName, tableName]
+      [schemaName, tableName],
     );
     return res as {
       name: string;
@@ -670,7 +672,7 @@ export const DB = {
       ON nsp.oid = connamespace
       WHERE nsp.nspname = $1 AND  rel.relname = $2
         `,
-      [schema, table]
+      [schema, table],
     ) as Promise<
       {
         name: string;
@@ -751,7 +753,7 @@ export const DB = {
             e.schema_id === s.schema_id &&
             (e.type === 'MATERIALIZED VIEW' ||
               e.type === 'VIEW' ||
-              e.type === 'BASE TABLE')
+              e.type === 'BASE TABLE'),
         )
         .map((v) => ({ name: v.name, type: v.type })) as {
         type: EntityType & ('MATERIALIZED VIEW' | 'VIEW' | 'BASE TABLE');
@@ -817,10 +819,10 @@ export const DB = {
       nulls?: 'last' | 'first' | undefined;
     }[],
     method?: string | undefined,
-    unique?: boolean | undefined
+    unique?: boolean | undefined,
   ) {
     const q = `CREATE${unique ? ' UNIQUE' : ''} INDEX ON ${label(
-      schema
+      schema,
     )}.${label(table)}${method ? ` USING ${method} ` : ''}(${cols
       .map(
         (c) =>
@@ -828,7 +830,7 @@ export const DB = {
             c.sort === 'asc' ? ' ASC' : c.sort ? ' DESC' : ''
           }${
             c.nulls === 'first' ? ' NULLS FIRST' : c.nulls ? ' NULLS LAST' : ''
-          }`
+          }`,
       )
       .join(', ')})`;
     await query(q);
@@ -845,25 +847,25 @@ export const DB = {
       comment: string | null;
       notNull?: boolean;
       default?: string;
-    }
+    },
   ) {
     const c = await openConnection();
     try {
       await c.query('BEGIN');
       await query(
         `ALTER TABLE ${label(schema)}.${label(table)} ADD COLUMN ${label(
-          col.name
+          col.name,
         )} ${col.type}${
           col.length ? `(${col.length}${col.scale ? `,${col.scale}` : ''})` : ''
         }${col.notNull ? ' NOT NULL' : ''}${
           col.default ? ` DEFAULT ${col.default}` : ''
-        }`
+        }`,
       );
       if (col.comment)
         await c.query(
           `COMMENT ON COLUMN ${label(schema)}.${label(table)}.${label(
-            col.name
-          )} IS ${str(col.comment)}`
+            col.name,
+          )} IS ${str(col.comment)}`,
         );
       await c.query('COMMIT');
     } catch (err) {
@@ -880,7 +882,7 @@ export const DB = {
     update: {
       where: { [fieldName: string]: string | number | null };
       values: { [fieldName: string]: string };
-    }[]
+    }[],
   ) {
     const c = await openConnection();
     try {
@@ -894,7 +896,7 @@ export const DB = {
             .join(', ')} WHERE ${Object.keys(where)
             .map((k) => `${label(k)} = $${count++}`)
             .join(' AND ')}`,
-          [...Object.values(values), ...Object.values(where)]
+          [...Object.values(values), ...Object.values(where)],
         );
       }
       await c.query('COMMIT');
@@ -917,26 +919,26 @@ export const DB = {
   },
   async dropTable(schema: string, name: string, cascade = false) {
     await query(
-      `DROP TABLE ${label(schema)}.${label(name)} ${cascade ? 'CASCADE' : ''}`
+      `DROP TABLE ${label(schema)}.${label(name)} ${cascade ? 'CASCADE' : ''}`,
     );
   },
   async dropFunction(schema: string, name: string, cascade = false) {
     await query(
       `DROP FUNCTION ${label(schema)}.${label(name)} ${
         cascade ? 'CASCADE' : ''
-      }`
+      }`,
     );
   },
   async dropDomain(schema: string, name: string, cascade = false) {
     await query(
-      `DROP DOMAIN ${label(schema)}.${label(name)} ${cascade ? 'CASCADE' : ''}`
+      `DROP DOMAIN ${label(schema)}.${label(name)} ${cascade ? 'CASCADE' : ''}`,
     );
   },
   async dropSequence(schema: string, name: string, cascade = false) {
     await query(
       `DROP SEQUENCE ${label(schema)}.${label(name)} ${
         cascade ? 'CASCADE' : ''
-      }`
+      }`,
     );
   },
 };

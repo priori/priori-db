@@ -32,7 +32,7 @@ type Mutations<MC extends MutationsConfig> = {
 };
 
 function mutationsToActions<MC extends MutationsConfig>(
-  conf: MC
+  conf: MC,
 ): Mutations<MC> {
   const ms = {} as { [k in keyof MC as k]: (v: unknown) => void };
   for (const k in conf) {

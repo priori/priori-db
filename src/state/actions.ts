@@ -65,7 +65,7 @@ export async function open(c: ConnectionConfiguration) {
 
 export async function newConnection(
   conf: ConnectionConfiguration,
-  index?: number
+  index?: number,
 ): Promise<void> {
   removeError();
   try {
@@ -94,7 +94,7 @@ export function createSchema(name: string) {
     },
     (err) => {
       showError(err);
-    }
+    },
   );
 }
 
@@ -132,7 +132,7 @@ export async function connect(s: string) {
       password.host,
       password.port,
       password.user,
-      password.database
+      password.database,
     );
     try {
       const schemas = await DB.listAll();

@@ -53,7 +53,7 @@ export function activateTab(current: AppState, c: Tab) {
   const tabs = current.tabs.map((tab) =>
     c.props.uid === tab.props.uid
       ? { ...tab, active: true }
-      : { ...tab, active: false }
+      : { ...tab, active: false },
   );
   return {
     ...current,
@@ -71,7 +71,7 @@ export function keepTabOpen(current: AppState, tab: Tab | number) {
   const tabs = current.tabs.map((tab2) =>
     uid === tab2.props.uid
       ? { ...tab2, active: true, keep: true }
-      : { ...tab2, active: false }
+      : { ...tab2, active: false },
   );
   return {
     ...current,
@@ -86,7 +86,7 @@ export function keepTabOpen(current: AppState, tab: Tab | number) {
 function newFrame(
   current: AppState,
   fn: (uid: number) => Tab,
-  inTheEnd = false
+  inTheEnd = false,
 ) {
   const tabs0 = current.tabs.map((c) => ({ ...c, active: false }));
   const i = current.tabs.findIndex((c) => c.active);
@@ -96,7 +96,7 @@ function newFrame(
     ? [...tabs0, frame]
     : [
         ...tabs0.filter(
-          (f, i2) => (i2 <= i || i === -1) && (frame.keep || f.keep)
+          (f, i2) => (i2 <= i || i === -1) && (frame.keep || f.keep),
         ),
         frame,
         ...tabs0.filter((f, i2) => i2 > i && (frame.keep || f.keep)),
@@ -109,7 +109,7 @@ function newFrame(
       ...(frame.keep
         ? current.tabsOpenOrder
         : current.tabsOpenOrder.filter(
-            (uid2) => tabs.find((t2) => t2.props.uid === uid2)?.keep
+            (uid2) => tabs.find((t2) => t2.props.uid === uid2)?.keep,
           )),
       uid,
     ],
@@ -118,7 +118,7 @@ function newFrame(
 
 export function previewSchemaInfo(current: AppState, name: string) {
   const openTab = current.tabs.find(
-    (t) => t.props.type === 'schemainfo' && t.props.schema === name
+    (t) => t.props.type === 'schemainfo' && t.props.schema === name,
   );
   if (openTab) {
     return activateTab(current, openTab);
@@ -140,13 +140,13 @@ function openOrActivateTab(
   type: 'function' | 'domain' | 'sequence',
   schema: string,
   name: string,
-  keep: boolean
+  keep: boolean,
 ) {
   const openTab = current.tabs.find(
     (t) =>
       t.props.type === type &&
       t.props.schema === schema &&
-      t.props.name === name
+      t.props.name === name,
   );
   if (openTab) {
     if (keep && !openTab.keep) {
@@ -170,7 +170,7 @@ function openOrActivateTab(
 export function previewFunction(
   current: AppState,
   schema: string,
-  name: string
+  name: string,
 ) {
   return openOrActivateTab(current, 'function', schema, name, false);
 }
@@ -186,7 +186,7 @@ export function keepDomain(current: AppState, schema: string, name: string) {
 export function previewSequence(
   current: AppState,
   schema: string,
-  name: string
+  name: string,
 ) {
   return openOrActivateTab(current, 'sequence', schema, name, false);
 }
@@ -196,7 +196,7 @@ export function keepSequence(current: AppState, schema: string, name: string) {
 
 export function keepSchemaInfo(current: AppState, name: string) {
   const openTab = current.tabs.find(
-    (tab) => tab.props.type === 'schemainfo' && tab.props.schema === name
+    (tab) => tab.props.type === 'schemainfo' && tab.props.schema === name,
   );
   if (openTab) {
     return keepTabOpen(current, openTab.props.uid);
@@ -223,16 +223,16 @@ function findLast<T>(a: T[], f: (i: T) => boolean) {
 export function previewTable(
   current: AppState,
   schema: string,
-  t: { name: string; type: string }
+  t: { name: string; type: string },
 ) {
   const openTab = findLast(
     current.tabsOpenOrder.map(
-      (uid) => current.tabs.find((t2) => t2.props.uid === uid) as Tab
+      (uid) => current.tabs.find((t2) => t2.props.uid === uid) as Tab,
     ),
     (tab) =>
       tab.props.type === 'table' &&
       tab.props.schema === schema &&
-      tab.props.table === t.name
+      tab.props.table === t.name,
   );
   if (openTab) {
     return activateTab(current, openTab);
@@ -267,16 +267,16 @@ export function extraTableTab(current: AppState, schema: string, name: string) {
 export function keepTable(
   current: AppState,
   schema: string,
-  t: { name: string; type: string }
+  t: { name: string; type: string },
 ) {
   const openTab = findLast(
     current.tabsOpenOrder.map(
-      (uid) => current.tabs.find((t2) => t2.props.uid === uid) as Tab
+      (uid) => current.tabs.find((t2) => t2.props.uid === uid) as Tab,
     ),
     (tab) =>
       tab.props.type === 'table' &&
       tab.props.schema === schema &&
-      tab.props.table === t.name
+      tab.props.table === t.name,
   );
   if (openTab) {
     return keepTabOpen(current, openTab.props.uid);
@@ -304,13 +304,13 @@ export function removeError(current: AppState) {
 export function previewTableInfo(
   current: AppState,
   schema: string,
-  table: string
+  table: string,
 ) {
   const openTab = current.tabs.find(
     (tab) =>
       tab.props.type === 'tableinfo' &&
       tab.props.schema === schema &&
-      tab.props.table === table
+      tab.props.table === table,
   );
   if (openTab) {
     return activateTab(current, openTab);
@@ -331,13 +331,13 @@ export function previewTableInfo(
 export function keepTableInfo(
   current: AppState,
   schema: string,
-  table: string
+  table: string,
 ) {
   const openTab = current.tabs.find(
     (tab) =>
       tab.props.type === 'tableinfo' &&
       tab.props.schema === schema &&
-      tab.props.table === table
+      tab.props.table === table,
   );
   if (openTab) {
     return keepTabOpen(current, openTab.props.uid);
@@ -359,7 +359,7 @@ export function updateTabText(current: AppState, uid: number, value: string) {
   return {
     ...current,
     tabs: current.tabs.map((t) =>
-      t.props.uid === uid ? { ...t, title: value } : t
+      t.props.uid === uid ? { ...t, title: value } : t,
     ),
   };
 }
@@ -380,7 +380,7 @@ export function cancelCreateSchema(current: AppState) {
 
 export function updateHeaderTabsDisplayOrder(
   current: AppState,
-  sort: number[]
+  sort: number[],
 ) {
   const newTabs = [...current.tabs];
   newTabs.sort((a, b) => {
@@ -402,7 +402,7 @@ export function closeFullView(current: AppState, name: string) {
             open: true,
             fullView: false,
           }
-        : s
+        : s,
     ),
   };
 }
@@ -424,7 +424,7 @@ export function newTable(current: AppState, schema: string, types: Type[]) {
 export function keepOpenTable(
   current: AppState,
   schema: string,
-  t: { name: string; type: string }
+  t: { name: string; type: string },
 ) {
   return keepTable(current, schema, t);
 }
@@ -451,7 +451,7 @@ export function updateSchemas(
       name: string;
     }[];
     name: string;
-  }[]
+  }[],
 ) {
   const cSchemas = current.schemas;
   return {
@@ -486,7 +486,7 @@ export function closeTab(current: AppState, f: number | FrameProps) {
         tabsOpenOrder.length &&
         tabsOpenOrder[tabsOpenOrder.length - 1] === tab.props.uid
           ? { ...tab, active: true }
-          : tab
+          : tab,
       ),
     tabsOpenOrder,
   };
@@ -501,7 +501,7 @@ export function closeConnectionError(current: AppState) {
 
 export function setConnection(
   current: AppState,
-  password: ConnectionConfiguration
+  password: ConnectionConfiguration,
 ) {
   return { ...current, password };
 }
@@ -518,7 +518,7 @@ export function newQueryTabInTheEnd(current: AppState) {
       },
       active: true,
     }),
-    true
+    true,
   );
 }
 
@@ -537,7 +537,7 @@ export function newQueryTab(current: AppState) {
 export function addConnectionConfiguration(
   current: AppState,
   conf: ConnectionConfiguration,
-  index?: number
+  index?: number,
 ) {
   const passwords =
     typeof index === 'number'
@@ -561,7 +561,7 @@ export function connected(
     sequences: { name: string; type: 'SEQUENCE' }[];
     functions: { name: string; type: 'FUNCTION' }[];
     domains: { name: string; type: 'DOMAIN' }[];
-  }[]
+  }[],
 ) {
   const c = current.password as ConnectionConfiguration;
   return {
@@ -590,7 +590,7 @@ export function toggleSchema(current: AppState, name: string) {
             ...s,
             open: !s.open,
           }
-        : s
+        : s,
     ),
   };
 }
@@ -622,7 +622,7 @@ export function cancelConnection(current: AppState) {
 export function editConnection(
   current: AppState,
   con: ConnectionConfiguration,
-  index: number
+  index: number,
 ) {
   return {
     ...current,
@@ -644,7 +644,7 @@ export function editConnectionSelected(current: AppState) {
         p.database === password.database &&
         p.user === password.user &&
         p.host === password.host &&
-        p.password === password.password
+        p.password === password.password,
     );
     return editConnection(current, password, index);
   }
@@ -666,7 +666,7 @@ export function openSequences(current: AppState, schema: NavSchema) {
   return {
     ...current,
     schemas: current.schemas.map((sc) =>
-      sc === schema ? { ...sc, sequencesOpen: !sc.sequencesOpen } : sc
+      sc === schema ? { ...sc, sequencesOpen: !sc.sequencesOpen } : sc,
     ),
   };
 }
@@ -676,7 +676,7 @@ export function openFunctions(current: AppState, schema: NavSchema) {
   return {
     ...current,
     schemas: current.schemas.map((sc) =>
-      sc === schema ? { ...sc, functionsOpen: !sc.functionsOpen } : sc
+      sc === schema ? { ...sc, functionsOpen: !sc.functionsOpen } : sc,
     ),
   };
 }
@@ -686,7 +686,7 @@ export function openDomains(current: AppState, schema: NavSchema) {
   return {
     ...current,
     schemas: current.schemas.map((sc) =>
-      sc === schema ? { ...sc, domainsOpen: !sc.domainsOpen } : sc
+      sc === schema ? { ...sc, domainsOpen: !sc.domainsOpen } : sc,
     ),
   };
 }
@@ -717,7 +717,7 @@ export function openFullView(current: AppState, name: string) {
             open: true,
             fullView: true,
           }
-        : s
+        : s,
     ),
   };
 }
@@ -748,7 +748,7 @@ export function changeSchema(current: AppState, uid: number, schema: string) {
             title: `${schema}.${t.props.name}`,
             props: { ...t.props, schema },
           }
-        : t
+        : t,
     ),
   };
 }
@@ -775,13 +775,13 @@ export function renameEntity(curret: AppState, uid: number, name: string) {
             ...t,
             title: `${t.props.schema}.${name}${t.props.name.substring(
               t.props.name.lastIndexOf('('),
-              t.props.name.length
+              t.props.name.length,
             )}`,
             props: {
               ...t.props,
               name: `${name}${t.props.name.substring(
                 t.props.name.lastIndexOf('('),
-                t.props.name.length
+                t.props.name.length,
               )}`,
             },
           }
@@ -792,7 +792,7 @@ export function renameEntity(curret: AppState, uid: number, name: string) {
             title: `${t.props.schema}.${name}`,
             props: { ...t.props, name },
           }
-        : t
+        : t,
     ),
   };
 }

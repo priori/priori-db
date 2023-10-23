@@ -54,7 +54,7 @@ export function openConnection() {
 
 export async function listFromConfiguration(
   c: ConnectionConfiguration,
-  query: string
+  query: string,
 ) {
   const client = new pg.Client({
     user: c.user,
@@ -90,17 +90,17 @@ export type SimpleValue =
 
 export async function query(
   q: string,
-  args?: (number | string | boolean | null)[]
+  args?: (number | string | boolean | null)[],
 ): Promise<QueryResult<{ [key: string]: SimpleValue }>>;
 export async function query(
   q: string,
   args: (number | string | boolean | null)[] | undefined,
-  arrayRowMode: true
+  arrayRowMode: true,
 ): Promise<QueryArrayResult<SimpleValue[]>>;
 export async function query(
   q: string,
   args?: Array<string | null | number | boolean>,
-  arrayRowMode?: true
+  arrayRowMode?: true,
 ): Promise<
   QueryResult<{ [key: string]: SimpleValue }> | QueryArrayResult<SimpleValue[]>
 > {
@@ -117,7 +117,7 @@ export async function query(
 
 export async function list(
   q: string,
-  args?: Array<string | null | number | boolean>
+  args?: Array<string | null | number | boolean>,
 ) {
   const res = await query(q, args);
   return res.rows;
@@ -125,7 +125,7 @@ export async function list(
 
 export async function first(
   q: string,
-  args?: Array<string | null | number | boolean>
+  args?: Array<string | null | number | boolean>,
 ) {
   const res = await list(q, args);
   return res[0] || null;
@@ -147,7 +147,7 @@ export async function closeAll() {
         .map(async (ac) => {
           await ac.stopRunningQuery();
           await ac.db?.release(true);
-        })
+        }),
     );
     await hls.pool?.end();
   } catch (err) {
@@ -165,7 +165,7 @@ export async function listDatabases(c: ConnectionConfiguration) {
     c,
     `SELECT datname as name
         FROM pg_database
-        WHERE datistemplate = false;`
+        WHERE datistemplate = false;`,
   );
   return res.rows.map((r) => (r as { name: string }).name) as string[];
 }

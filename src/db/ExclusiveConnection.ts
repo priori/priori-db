@@ -28,7 +28,7 @@ class ExclusiveConnection {
   constructor(
     onNotice: (n: NoticeMessage) => void,
     onPid: (pid: number | null) => void,
-    onError: (e: Error) => void
+    onError: (e: Error) => void,
   ) {
     this.listener = onNotice;
     this.onPid = onPid;
@@ -41,17 +41,17 @@ class ExclusiveConnection {
 
   async query(
     q: string,
-    args?: (number | string | boolean | null)[]
+    args?: (number | string | boolean | null)[],
   ): Promise<QueryResult<{ [key: string]: SimpleValue }>>;
   async query(
     q: string,
     args: (number | string | boolean | null)[] | undefined,
-    arrayRowMode: true
+    arrayRowMode: true,
   ): Promise<QueryArrayResult<SimpleValue[]>>;
   async query(
     q: string,
     args?: (number | string | boolean | null)[],
-    arrayRowMode?: true
+    arrayRowMode?: true,
   ) {
     if (this.db) {
       if (arrayRowMode)
@@ -134,13 +134,13 @@ export const exclusives = [] as ExclusiveConnection[];
 export function useExclusiveConnection(
   onNotice: (a: NoticeMessage) => void,
   onPid: (pid: number | null) => void,
-  onClientError: (e: Error) => void
+  onClientError: (e: Error) => void,
 ): [ExclusiveConnection, () => void] {
   const onNotice2 = useEvent(onNotice);
   const onPid2 = useEvent(onPid);
   const onClientError2 = useEvent(onClientError);
   const [client, setClient] = useState(
-    () => new ExclusiveConnection(onNotice2, onPid2, onClientError2)
+    () => new ExclusiveConnection(onNotice2, onPid2, onClientError2),
   );
   useEffect(() => {
     exclusives.push(client);
@@ -160,7 +160,7 @@ export function useExclusiveConnection(
     client,
     useEvent(() => {
       setClient(
-        () => new ExclusiveConnection(onNotice2, onPid2, onClientError2)
+        () => new ExclusiveConnection(onNotice2, onPid2, onClientError2),
       );
     }),
   ];

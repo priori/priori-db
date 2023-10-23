@@ -4,7 +4,7 @@ let db: any = null;
 if (!db) db = (window as any).openDatabase('PrioriDB', '1.0', 'Priori DB', 0);
 const query = (
   sqlQuery: string,
-  params: (string | null | number | boolean)[]
+  params: (string | null | number | boolean)[],
 ) => {
   return new Promise<{ [key: string]: number | null | string | boolean }[]>(
     (resolve, reject) => {
@@ -21,19 +21,19 @@ const query = (
             reject(
               new Error(
                 `${err.message} ${err.code}\n${sqlQuery}\n${JSON.stringify(
-                  params
-                )}`
-              )
-            )
+                  params,
+                )}`,
+              ),
+            ),
         );
       });
-    }
+    },
   );
 };
 
 const insertId = (
   sqlQuery: string,
-  params: (string | null | number | boolean)[]
+  params: (string | null | number | boolean)[],
 ) => {
   return new Promise<number>((resolve, reject) => {
     db.transaction((tx: any) => {
@@ -47,10 +47,10 @@ const insertId = (
           reject(
             new Error(
               `${err.message} ${err.code}\n${sqlQuery}\n${JSON.stringify(
-                params
-              )}`
-            )
-          )
+                params,
+              )}`,
+            ),
+          ),
       );
     });
   });
@@ -76,7 +76,7 @@ const executionPromise = (async () => {
       success boolean
     );
     `,
-    []
+    [],
   );
   await query(
     `
@@ -84,7 +84,7 @@ const executionPromise = (async () => {
       execution_id DESC, tab_uid DESC, created_at DESC
     );
     `,
-    []
+    [],
   );
   await query(
     `
@@ -92,7 +92,7 @@ const executionPromise = (async () => {
       execution_id DESC, tab_uid DESC, id DESC
     );
     `,
-    []
+    [],
   );
   await query(
     `
@@ -105,12 +105,12 @@ const executionPromise = (async () => {
       user string
     );
   `,
-    []
+    [],
   );
   try {
     await query(
       'ALTER TABLE execution ADD COLUMN database TEXT default null',
-      []
+      [],
     );
   } catch (e) {
     // nop
@@ -128,7 +128,7 @@ const executionPromise = (async () => {
   try {
     await query(
       'ALTER TABLE execution ADD COLUMN port number default null',
-      []
+      [],
     );
   } catch (e) {
     // nop
@@ -147,7 +147,7 @@ export async function updateConnection(
   host: string,
   port: number,
   user: string,
-  database: string
+  database: string,
 ) {
   return query(
     `UPDATE execution
@@ -158,7 +158,7 @@ export async function updateConnection(
       database = ?
     WHERE id = ?
   `,
-    [host, port, user, database, await executionPromise]
+    [host, port, user, database, await executionPromise],
   );
 }
 
@@ -174,7 +174,7 @@ export const saveQuery = async (
     cursorStart: { line: number; ch: number };
     cursorEnd: { line: number; ch: number };
   },
-  tabTitle: string | null
+  tabTitle: string | null,
 ) => {
   const execId = await executionPromise;
   return insertId(
@@ -198,14 +198,14 @@ export const saveQuery = async (
       cursorStart.ch,
       cursorEnd.ch,
       tabTitle,
-    ]
+    ],
   );
 };
 
 export async function updateQuery(
   id: number,
   time: number,
-  resultLength: number | null
+  resultLength: number | null,
 ) {
   return query(
     `
@@ -216,7 +216,7 @@ export async function updateQuery(
         success = true
       WHERE id = ?
     `,
-    [time, resultLength, id]
+    [time, resultLength, id],
   );
 }
 
@@ -229,7 +229,7 @@ export async function updateFailedQuery(id: number, time: number) {
         success = false
       WHERE id = ?
     `,
-    [time, id]
+    [time, id],
   );
 }
 

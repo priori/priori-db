@@ -28,14 +28,14 @@ type ServiceState<T> =
     };
 export function useService<T>(
   func0: () => Promise<T>,
-  deps: DependencyList
+  deps: DependencyList,
 ): ServiceState<T> {
   const [count, setCount] = useState(0);
   const pendingPromises = useRef<(() => void)[]>([]);
   const reload = useEvent(() => {
     setCount(count + 1);
     return new Promise((resolve) =>
-      pendingPromises.current.push(resolve as () => void)
+      pendingPromises.current.push(resolve as () => void),
     );
   });
   const [state, setState] = useState({
@@ -84,7 +84,7 @@ export function useService<T>(
           }
           pendingPromises.current = [];
         }
-      }
+      },
     );
     return () => {
       mounted = false;
