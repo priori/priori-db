@@ -1,0 +1,16 @@
+
+.table-frame--error {
+  display: flex;
+  color: #e11;
+  height: 100%;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  .fa-exclamation-triangle {
+    margin-bottom: 10px;
+    display: block;
+    font-size: 30px;
+    text-align: center;
+  }
+}

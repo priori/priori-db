@@ -119,3 +119,18 @@ button {
     margin: 5px;
   }
 }
+
+.error-message {
+  padding: 20px;
+  text-align: center;
+  border: 1px solid #eee;
+  margin: 10px 0;
+  color: #e11;
+  font-weight: bold;
+  .fa-exclamation-triangle {
+    margin-bottom: 10px;
+    display: block;
+    font-size: 30px;
+    text-align: center;
+  }
+}

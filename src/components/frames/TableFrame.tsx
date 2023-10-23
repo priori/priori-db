@@ -59,6 +59,14 @@ export function TableFrame(props: TableFrameProps) {
           result={service.lastValidData}
           emptyTable="Empty Table"
         />
+      ) || (
+        service.error && service.error?.message &&
+        <div className='table-frame--error'>
+          <div>
+            <i className='fa fa-exclamation-triangle' />
+            {service.error.message}
+          </div>
+        </div>
       )}
     </>
   );

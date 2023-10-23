@@ -207,6 +207,12 @@ export function FunctionFrame(props: FunctionFrameProps) {
           onCancel={() => set({ ...state, editComment: false })}
         />
       ) : null}
+      {service?.error?.message && (
+        <div className="error-message">
+            <i className="fa fa-exclamation-triangle" />
+            {service.error.message}
+            </div>
+      )}
     </div>
   );
 }

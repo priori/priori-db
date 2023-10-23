@@ -1069,6 +1069,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                 </tr>
                 </thead>
             </table> */}
+      {service?.error?.message && (
+        <div className="error-message">
+            <i className="fa fa-exclamation-triangle" />
+            {service.error.message}
+            </div>
+      )}
     </>
   );
 }

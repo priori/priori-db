@@ -218,6 +218,12 @@ export function DomainFrame(props: DomainFrameProps) {
           </div>
         </>
       ) : null}
+      {service?.error?.message && (
+        <div className="error-message">
+            <i className="fa fa-exclamation-triangle" />
+            {service.error.message}
+            </div>
+      )}
     </div>
   );
 }
