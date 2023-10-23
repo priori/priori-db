@@ -580,6 +580,34 @@ export const DB = {
     return cols.filter((c) => c.is_primary).map((c) => c.column_name);
   },
 
+  async selectQuery(schema: string, tableName: string) {
+    const e = await first(
+      `
+      SELECT pg_get_indexdef(c.oid) "definition"
+      FROM pg_class c
+      INNER JOIN pg_index i ON i.indexrelid = c.oid
+      WHERE c.relkind = 'i' AND
+        i.indrelid = (
+          SELECT t.oid FROM pg_class t
+          WHERE t.relnamespace = (
+            SELECT oid FROM pg_namespace WHERE nspname = $1
+          ) AND
+          t.relname = $2
+        ) AND
+        i.indisprimary`,
+      [schema, tableName]
+    );
+    if (e && e.definition && typeof e.definition === 'string') {
+      const order = e.definition.replace(/.*\((.*)\)/g, '$1');
+      if (order) {
+        return `SELECT * FROM ${label(schema)}.${label(
+          tableName
+        )} ORDER BY ${order}`;
+      }
+    }
+    return `SELECT * FROM ${label(schema)}.${label(tableName)}`;
+  },
+
   async listIndexes(schemaName: string, tableName: string) {
     const res = await list(
       `

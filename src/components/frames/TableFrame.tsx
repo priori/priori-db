@@ -7,20 +7,12 @@ import { DataGrid } from '../util/DataGrid/DataGrid';
 import { TableFrameProps } from '../../types';
 import { DB } from 'db/DB';
 
-function buildWhere() {
-  return '';
-}
-
-function buildSortSql() {
-  return '';
-}
-
 export function TableFrame(props: TableFrameProps) {
-  const sql = `SELECT * FROM "${props.schema}"."${
-    props.table
-  }" ${buildWhere()}${buildSortSql()}LIMIT 1000`;
 
-  const service = useService(() => query(sql, [], true), [sql]);
+  const service = useService(async () => {
+    const sql = (await DB.selectQuery(props.schema, props.table) )+ ` LIMIT 1000`;
+    return query(sql, [], true);
+  }, []);
 
   const pks = useService(
     () => DB.pks(props.schema, props.table),
