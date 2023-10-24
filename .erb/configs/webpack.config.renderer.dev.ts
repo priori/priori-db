@@ -171,6 +171,9 @@ const configuration: webpack.Configuration = {
     historyApiFallback: {
       verbose: true,
     },
+    client: {
+      overlay: false
+    },
     setupMiddlewares(middlewares) {
       console.log('Starting preload.js builder...');
       const preloadProcess = spawn('npm', ['run', 'start:preload'], {
