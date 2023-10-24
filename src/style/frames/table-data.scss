@@ -22,17 +22,17 @@
   align-items: center;
   font-weight: bold;
   div {
-    animation: show-loading 60s infinite linear;
+    animation: show-loading 60s infinite linear forwards;
   }
   .fa {
     font-size: 100px;
-    animation: fa-spin 4s infinite linear;
+    animation: fa-spin 4s infinite linear forwards;
   }
 
   button {
     position: absolute;
     margin-top: 159px;
-    animation: show-loading-button 20s linear;
+    animation: show-loading-button 20s linear forwards;
   }
 }
 
