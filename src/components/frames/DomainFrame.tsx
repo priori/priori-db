@@ -33,7 +33,7 @@ export function DomainFrame(props: DomainFrameProps) {
           FROM pg_type
           JOIN pg_namespace n ON n.oid = typnamespace
           WHERE nspname = $1 AND pg_type.typname = $2`,
-          [props.schema, props.name]
+          [props.schema, props.name],
         ) as Promise<{ comment: string | null }>
       ).then((res: { comment: string | null }) => res.comment),
     ]);
@@ -73,7 +73,7 @@ export function DomainFrame(props: DomainFrameProps) {
         },
         (err) => {
           showError(err);
-        }
+        },
       );
     else
       DB.dropDomain(props.schema, props.name).then(
@@ -83,7 +83,7 @@ export function DomainFrame(props: DomainFrameProps) {
         },
         (err) => {
           showError(err);
-        }
+        },
       );
   });
 
@@ -220,9 +220,9 @@ export function DomainFrame(props: DomainFrameProps) {
       ) : null}
       {service?.error?.message && (
         <div className="error-message">
-            <i className="fa fa-exclamation-triangle" />
-            {service.error.message}
-            </div>
+          <i className="fa fa-exclamation-triangle" />
+          {service.error.message}
+        </div>
       )}
     </div>
   );

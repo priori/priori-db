@@ -892,8 +892,10 @@ export const DB = {
         let count = 1;
         await c.query(
           `UPDATE ${label(schema)}.${label(table)} SET ${Object.keys(values)
+            // eslint-disable-next-line no-plusplus
             .map((k) => `${label(k)} = $${count++}`)
             .join(', ')} WHERE ${Object.keys(where)
+            // eslint-disable-next-line no-plusplus
             .map((k) => `${label(k)} = $${count++}`)
             .join(' AND ')}`,
           [...Object.values(values), ...Object.values(where)],

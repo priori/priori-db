@@ -37,17 +37,17 @@ const classNames: Record<FrameType, string> = {
   sequence: 'sequence',
 };
 
-const TabsContext = React.createContext(
-  {} as { [n: number]: UseTabConfiguration }
-);
-const TabContext = React.createContext(0);
-
 interface UseTabConfiguration {
   onClose?: () => boolean;
   // onActivate?: () => void;
   // onDeactivate?: () => void;
   f5?: () => void;
 }
+
+const TabsContext = React.createContext(
+  {} as { [n: number]: UseTabConfiguration },
+);
+const TabContext = React.createContext(0);
 
 export function useTabUid() {
   return useContext(TabContext);
@@ -71,20 +71,20 @@ export function ConnectedApp({ state }: { state: AppState }) {
   const [close, setClose] = React.useState<{ func: () => void } | null>(null);
 
   const tabsConfigurations = React.useMemo(
-    () => ({} as { [n: number]: UseTabConfiguration }),
-    []
+    () => ({}) as { [n: number]: UseTabConfiguration },
+    [],
   );
 
   const framesEls = React.useMemo(
-    () => ({} as { [k: number]: HTMLDivElement }),
-    []
+    () => ({}) as { [k: number]: HTMLDivElement },
+    [],
   );
 
   const activeElements = React.useMemo(() => new WeakMap<HTMLElement>(), []);
 
   const active = React.useMemo(
     () => state.tabs.find((t) => t.active)?.props.uid,
-    [state.tabs]
+    [state.tabs],
   );
 
   useShortcuts({
@@ -155,6 +155,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
   }, [state.tabs]);
 
   useWindowCloseConfirm(async (doit) => {
+    // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, 100));
     if (await hasOpenConnection()) {
       setClose({ func: doit });
@@ -196,8 +197,8 @@ export function ConnectedApp({ state }: { state: AppState }) {
   });
 
   const refFuncs = React.useMemo(
-    () => ({} as { [k: number]: (el: HTMLDivElement | null) => void }),
-    []
+    () => ({}) as { [k: number]: (el: HTMLDivElement | null) => void },
+    [],
   );
 
   return (

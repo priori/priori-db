@@ -32,7 +32,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
         proname = $2 AND
         pronamespace = $1::regnamespace
     `,
-      [props.schema, name]
+      [props.schema, name],
     ) as Promise<{
       definition: string;
       comment: string;
@@ -72,7 +72,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
         },
         (err) => {
           showError(err);
-        }
+        },
       );
     else
       DB.dropFunction(props.schema, props.name).then(
@@ -82,7 +82,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
         },
         (err) => {
           showError(err);
-        }
+        },
       );
   });
 
@@ -209,9 +209,9 @@ export function FunctionFrame(props: FunctionFrameProps) {
       ) : null}
       {service?.error?.message && (
         <div className="error-message">
-            <i className="fa fa-exclamation-triangle" />
-            {service.error.message}
-            </div>
+          <i className="fa fa-exclamation-triangle" />
+          {service.error.message}
+        </div>
       )}
     </div>
   );

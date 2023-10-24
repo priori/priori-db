@@ -33,7 +33,7 @@ export function NewConnection(props: NewConnectionProps) {
 
   const [removeConfirmation, setRemoveConfirmation] = useState(false);
   const [testResult, setTestResult] = useState(
-    null as null | Error | true | 'pending'
+    null as null | Error | true | 'pending',
   );
   function remove() {
     setRemoveConfirmation(true);

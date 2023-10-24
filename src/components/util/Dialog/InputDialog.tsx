@@ -50,7 +50,7 @@ export function InputDialog({
             el.setSelectionRange(el.value.length, el.value.length);
         }, 10);
       }
-    }
+    },
   );
   return (
     <Dialog relativeTo={relativeTo} onBlur={onBlur}>

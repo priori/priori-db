@@ -33,5 +33,5 @@ export const Frame = React.memo(
     assert(type);
     return React.createElement(type, props);
   },
-  (a, b) => equals(a, b)
+  (a, b) => equals(a, b),
 );

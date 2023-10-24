@@ -35,6 +35,7 @@ export function useService<T>(
   const reload = useEvent(() => {
     setCount(count + 1);
     return new Promise((resolve) =>
+      // eslint-disable-next-line no-promise-executor-return
       pendingPromises.current.push(resolve as () => void),
     );
   });

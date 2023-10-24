@@ -1,5 +1,7 @@
 module.exports = {
-  extends: 'erb',
+  extends: ['erb',
+    'plugin:@typescript-eslint/eslint-recommended'],
+  plugins: ['@typescript-eslint/eslint-plugin'],
   rules: {
     'import/no-extraneous-dependencies': 'off',
     'import/no-unresolved': 'error',
@@ -24,6 +26,20 @@ module.exports = {
     'jsx-a11y/no-static-element-interactions': 'off',
     'jsx-a11y/click-events-have-key-events': 'off',
     'no-await-in-loop': 'off',
+    "import/extensions": [
+       "error",
+       "ignorePackages",
+       {
+         "js": "never",
+         "jsx": "never",
+         "ts": "never",
+         "tsx": "never"
+       }
+    ],
+    "react/jsx-filename-extension": [1, { "extensions": [".jsx", ".tsx"] }],
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': ['error'],
+
   },
   parserOptions: {
     ecmaVersion: 2020,

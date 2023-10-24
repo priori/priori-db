@@ -2,12 +2,12 @@ import { assert } from 'util/assert';
 import { useEffect } from 'react';
 import { grantError } from 'util/errors';
 import { sortBy } from 'util/sort';
+import { updateConnection } from 'util/browserDb';
 import { ConnectionConfiguration, savePasswords } from '../db/pgpass';
 import { connect as dbConnect, listDatabases } from '../db/Connection';
 import state, { currentState } from './state';
 import { DB } from '../db/DB';
 import { FrameProps } from '../types';
-import { updateConnection } from 'util/browserDb';
 
 export const {
   openFunctions,

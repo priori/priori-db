@@ -33,7 +33,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
         },
         (err) => {
           showError(err);
-        }
+        },
       );
     } else {
       DB.dropSchema(props.schema).then(
@@ -43,7 +43,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
         },
         (err) => {
           showError(err);
-        }
+        },
       );
     }
   });

@@ -1,5 +1,6 @@
 import React from 'react';
 import { equals } from 'util/equals';
+import { useEvent } from 'util/useEvent';
 import {
   activePos,
   getType,
@@ -7,7 +8,6 @@ import {
   rowHeight,
   scrollWidth,
 } from './util';
-import { useEvent } from 'util/useEvent';
 
 interface UpdateActivePos {
   activeEl: HTMLDivElement;
@@ -41,7 +41,7 @@ export function update({
       containerWidth,
       containerHeight,
       hasBottomScrollbar,
-      hasRightScrollbar
+      hasRightScrollbar,
     );
   activeEl.style.top = `${top}px`;
   activeEl.style.left = `${left}px`;
@@ -116,7 +116,7 @@ export const DataGridActiveCell = React.memo(
       containerWidth,
       containerHeight,
       hasBottomScrollbar,
-      hasRightScrollbar
+      hasRightScrollbar,
     );
     const key = `${active.rowIndex}/${active.colIndex}`;
     const even = active.rowIndex % 2;
@@ -131,7 +131,7 @@ export const DataGridActiveCell = React.memo(
     const textareaOnChange = useEvent(
       (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         onChange(e.target.value);
-      }
+      },
     );
     const textareaOnBlur = useEvent(() => {
       onBlur();
@@ -147,10 +147,14 @@ export const DataGridActiveCell = React.memo(
             const p = e.target?.closest('[tabindex]');
             if (p instanceof HTMLElement) p.focus();
           } else onBlur();
-        } else if ( (e.key === "Delete" || e.key === "Backspace") && (e.target instanceof HTMLTextAreaElement) && e.target.value === "" ) {
+        } else if (
+          (e.key === 'Delete' || e.key === 'Backspace') &&
+          e.target instanceof HTMLTextAreaElement &&
+          e.target.value === ''
+        ) {
           onChange(null);
         }
-      }
+      },
     );
 
     return (
@@ -177,9 +181,9 @@ export const DataGridActiveCell = React.memo(
               onBlur={textareaOnBlur}
               onKeyDown={onkeydown}
               ref={textareaRef}
-              placeholder={val === null ? "null" : undefined}
+              placeholder={val === null ? 'null' : undefined}
               className="active-cell"
-              defaultValue={val === null ? "" : valString}
+              defaultValue={val === null ? '' : valString}
             />
           ) : (
             <div className={`active-cell${changed ? ' changed' : ''}`}>
@@ -192,5 +196,5 @@ export const DataGridActiveCell = React.memo(
       </div>
     );
   },
-  (prev, next) => equals(prev, next)
+  (prev, next) => equals(prev, next),
 );

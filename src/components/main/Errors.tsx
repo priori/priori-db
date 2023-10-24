@@ -13,7 +13,7 @@ function key(e: Record<string, unknown> | null | Error) {
 export function Errors({ errors }: { errors: Error[] }) {
   const timeouts = useMemo(
     () => new WeakMap<Error, ReturnType<typeof setTimeout>>(),
-    []
+    [],
   );
   useEffect(() => {
     for (const e of errors) {

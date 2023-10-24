@@ -7,17 +7,19 @@ export interface EditorProps {
 export class Editor extends Component<EditorProps, never> {
   editor: any = null;
 
-  focus = false;
+  // focus = false;
 
   el: HTMLElement | null = null;
 
   timeout?: ReturnType<typeof setTimeout>;
 
+  // eslint-disable-next-line react/no-unused-class-component-methods
   getQuery() {
     const query = this.editor.getSelection() || this.editor.getValue();
     return query;
   }
 
+  // eslint-disable-next-line react/no-unused-class-component-methods
   getEditorState() {
     const start = this.editor.getCursor(true);
     const end = this.editor.getCursor(false);
@@ -28,6 +30,7 @@ export class Editor extends Component<EditorProps, never> {
     };
   }
 
+  // eslint-disable-next-line react/no-unused-class-component-methods
   setEditorState({
     content,
     cursorStart,
@@ -74,17 +77,17 @@ export class Editor extends Component<EditorProps, never> {
     this.editor.getInputField().focus();
   }
 
-  hide() {
-    this.focus = this.editor.hasFocus();
-    this.editor.getInputField().blur();
-  }
+  // hide() {
+  //   this.focus = this.editor.hasFocus();
+  //   this.editor.getInputField().blur();
+  // }
 
-  show() {
-    setTimeout(() => {
-      this.editor.getInputField().focus();
-      this.editor.refresh();
-    }, 1);
-  }
+  // show() {
+  //   setTimeout(() => {
+  //     this.editor.getInputField().focus();
+  //     this.editor.refresh();
+  //   }, 1);
+  // }
 
   render() {
     const { style } = this.props;

@@ -37,7 +37,7 @@ export interface DataGridCoreProps {
     update: {
       where: { [fieldName: string]: string | number | null };
       values: { [fieldName: string]: string };
-    }[]
+    }[],
   ) => Promise<boolean>;
   pks?: string[];
 }
@@ -72,7 +72,7 @@ export function DataGridCore(props: DataGridCoreProps) {
 
   const baseWidths = useMemo(
     () => buildBaseWidths(props.result),
-    [props.result]
+    [props.result],
   );
 
   useEffect(() => {
@@ -103,9 +103,17 @@ export function DataGridCore(props: DataGridCoreProps) {
     () =>
       buildFinalWidths(
         baseWidths,
-        props.width - (hasRightScrollbar ? scrollWidth : 0) - 1
+        props.width - (hasRightScrollbar ? scrollWidth : 0) - 1,
       ),
-    [baseWidths, props.width, hasRightScrollbar]
+    [baseWidths, props.width, hasRightScrollbar],
+  );
+  const [update, setUpdate] = useState(
+    {} as { [rowIndex: number]: { [colIndex: number]: string | null } },
+  );
+  const pendingRowsUpdate = Object.keys(update).length;
+  const totalChanges = Object.keys(update).reduce(
+    (a, b) => a + Object.keys(update[b]).length,
+    0,
   );
 
   useEffect(() => {
@@ -118,7 +126,7 @@ export function DataGridCore(props: DataGridCoreProps) {
         state.active.colIndex,
         state.active.rowIndex,
         hasRightScrollbar,
-        hasBottomScrollbar
+        hasBottomScrollbar,
       );
     }
   }, [finalWidths, state.active, hasRightScrollbar, hasBottomScrollbar]);
@@ -137,7 +145,7 @@ export function DataGridCore(props: DataGridCoreProps) {
           ? state.selection.rowIndex[1]
           : state.selection.rowIndex[0],
         hasRightScrollbar,
-        hasBottomScrollbar
+        hasBottomScrollbar,
       );
     }
   }, [
@@ -158,9 +166,9 @@ export function DataGridCore(props: DataGridCoreProps) {
   const visibleRows = useMemo(
     () =>
       (props.result.rows as (string | number | null)[][]).filter(
-        (_, i) => state.slice[0] <= i && i <= state.slice[1]
+        (_, i) => state.slice[0] <= i && i <= state.slice[1],
       ),
-    [props.result.rows, state.slice]
+    [props.result.rows, state.slice],
   );
 
   const visibleStartingInEven = !!(state.slice[0] % 2);
@@ -224,7 +232,7 @@ export function DataGridCore(props: DataGridCoreProps) {
       lastScrollTimeRef.current = null;
       const currentMiddleIndex = Math.floor(
         container.scrollTop / rowHeight +
-          container.offsetHeight / (rowHeight * 2)
+          container.offsetHeight / (rowHeight * 2),
       );
       const goodUp = Math.max(currentMiddleIndex - state.slice[0], 0);
       const goodDown = Math.max(state.slice[1] - currentMiddleIndex, 0);
@@ -263,11 +271,11 @@ export function DataGridCore(props: DataGridCoreProps) {
     y += scrollRef.current.top;
     const rowIndex = Math.min(
       Math.max(Math.floor(y / rowHeight), 0),
-      props.result.rows.length - 1
+      props.result.rows.length - 1,
     );
     const colIndex = Math.min(
       Math.max(getColIndex(x), 0),
-      props.result.fields.length - 1
+      props.result.fields.length - 1,
     );
     const selection = {
       rowIndex: [
@@ -311,11 +319,11 @@ export function DataGridCore(props: DataGridCoreProps) {
     y += scrollRef.current.top;
     const rowIndex = Math.min(
       Math.max(Math.floor(y / rowHeight), 0),
-      props.result.rows.length - 1
+      props.result.rows.length - 1,
     );
     const colIndex = Math.min(
       Math.max(getColIndex(x), 0),
-      props.result.fields.length - 1
+      props.result.fields.length - 1,
     );
     const selection = {
       rowIndex: [
@@ -449,13 +457,13 @@ export function DataGridCore(props: DataGridCoreProps) {
                 state.active.colIndex + x,
                 state.selection.colIndex[0] === state.active.colIndex
                   ? state.selection.colIndex[1]
-                  : state.selection.colIndex[0]
+                  : state.selection.colIndex[0],
               ),
               Math.max(
                 state.active.colIndex + x,
                 state.selection.colIndex[0] === state.active.colIndex
                   ? state.selection.colIndex[1]
-                  : state.selection.colIndex[0]
+                  : state.selection.colIndex[0],
               ),
             ],
             rowIndex: [
@@ -463,13 +471,13 @@ export function DataGridCore(props: DataGridCoreProps) {
                 state.active.rowIndex + y,
                 state.selection.rowIndex[0] === state.active.rowIndex
                   ? state.selection.rowIndex[1]
-                  : state.selection.rowIndex[0]
+                  : state.selection.rowIndex[0],
               ),
               Math.max(
                 state.active.rowIndex + y,
                 state.selection.rowIndex[0] === state.active.rowIndex
                   ? state.selection.rowIndex[1]
-                  : state.selection.rowIndex[0]
+                  : state.selection.rowIndex[0],
               ),
             ],
           },
@@ -508,7 +516,6 @@ export function DataGridCore(props: DataGridCoreProps) {
       setEditing(true);
       e.preventDefault();
       e.stopPropagation();
-      return;
     } else if (e.key === 'a' && e.ctrlKey) {
       setState({
         ...state,
@@ -529,7 +536,7 @@ export function DataGridCore(props: DataGridCoreProps) {
         top: Math.max(
           gridContentRef.current.scrollTop -
             gridContentRef.current.offsetHeight,
-          0
+          0,
         ),
         behavior: 'smooth',
       });
@@ -602,11 +609,10 @@ export function DataGridCore(props: DataGridCoreProps) {
           },
         });
         setEditing(2);
-        return;
       }
     }
   });
-  const onChange = useEvent((value: string | null ) => {
+  const onChange = useEvent((value: string | null) => {
     if (!state.active) return;
     if (update?.[state.active.rowIndex]?.[state.active.colIndex] === value)
       return;
@@ -620,7 +626,7 @@ export function DataGridCore(props: DataGridCoreProps) {
   });
 
   const applyClick = useEvent(async () => {
-    const pks = props.pks;
+    const { pks } = props;
     if (!pks || pks.length === 0 || !props.onUpdate) return;
     const update2 = Object.keys(update).map((rowIndex) => {
       const values: { [name: string]: string } = {};
@@ -638,7 +644,7 @@ export function DataGridCore(props: DataGridCoreProps) {
             props.result.fields.findIndex((f) => f.name === name)
           ];
         assert(
-          typeof val === 'string' || typeof val === 'number' || val === null
+          typeof val === 'string' || typeof val === 'number' || val === null,
         );
         where[name] = val;
       }
@@ -651,135 +657,126 @@ export function DataGridCore(props: DataGridCoreProps) {
     setUpdate({});
   });
 
-  const [update, setUpdate] = useState(
-    {} as { [rowIndex: number]: { [colIndex: number]: string | null } }
-  );
-  const pendingRowsUpdate = Object.keys(update).length;
-  const totalChanges = Object.keys(update).reduce(
-    (a, b) => a + Object.keys(update[b]).length,
-    0
-  );
-
   return (
-    <>
-      <div
-        style={{ top: 0, left: 0, bottom: 0, right: 0, position: 'absolute' }}
-        tabIndex={0}
-        className={editing ? 'editing' : undefined}
-        onBlur={onBlur}
-        onKeyDown={onKeyDown}
-        onMouseDown={onMouseDown}
-        onDoubleClick={onDoubleClick}
-        ref={elRef}
-      >
-        <div className="grid-header-wrapper">
-          <table
-            className="grid-header"
-            style={{
-              width: gridContentTableWidth,
-              zIndex: 3,
-            }}
-            ref={headerElRef}
-          >
-            <DataGridThead
-              fields={props.result.fields}
-              pks={props.pks}
-              finalWidths={finalWidths}
-            />
-          </table>
-        </div>
-        {state.active ? (
-          <DataGridActiveCell
-            scrollLeft={scrollRef.current.top}
-            scrollTop={scrollRef.current.left}
-            containerHeight={props.height}
-            containerWidth={props.width}
-            finalWidths={finalWidths}
-            active={state.active}
-            hasBottomScrollbar={hasBottomScrollbar}
-            hasRightScrollbar={hasRightScrollbar}
-            onChange={onChange}
-            changed={
-              typeof update?.[state.active.rowIndex]?.[
-                state.active.colIndex
-              ] !== 'undefined'
-            }
-            onBlur={onEditBlur}
-            editing={editing}
-            value={
-              typeof update[state.active.rowIndex]?.[state.active.colIndex] !==
-              'undefined'
-                ? update[state.active.rowIndex][state.active.colIndex]
-                : props.result.rows[state.active.rowIndex][
-                    state.active.colIndex
-                  ]
-            }
-            elRef={activeElRef}
-          />
-        ) : null}
-        <div
-          className="grid-content"
-          onScroll={onScroll}
-          ref={gridContentRef}
+    <div
+      style={{ top: 0, left: 0, bottom: 0, right: 0, position: 'absolute' }}
+      tabIndex={0}
+      className={editing ? 'editing' : undefined}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+      onMouseDown={onMouseDown}
+      onDoubleClick={onDoubleClick}
+      ref={elRef}
+    >
+      <div className="grid-header-wrapper">
+        <table
+          className="grid-header"
           style={{
-            overflowX: hasBottomScrollbar ? 'scroll' : 'hidden',
-            overflowY: hasRightScrollbar ? 'scroll' : 'hidden',
+            width: gridContentTableWidth,
+            zIndex: 3,
+          }}
+          ref={headerElRef}
+        >
+          <DataGridThead
+            fields={props.result.fields}
+            pks={props.pks}
+            finalWidths={finalWidths}
+          />
+        </table>
+      </div>
+      {state.active ? (
+        <DataGridActiveCell
+          scrollLeft={scrollRef.current.top}
+          scrollTop={scrollRef.current.left}
+          containerHeight={props.height}
+          containerWidth={props.width}
+          finalWidths={finalWidths}
+          active={state.active}
+          hasBottomScrollbar={hasBottomScrollbar}
+          hasRightScrollbar={hasRightScrollbar}
+          onChange={onChange}
+          changed={
+            typeof update?.[state.active.rowIndex]?.[state.active.colIndex] !==
+            'undefined'
+          }
+          onBlur={onEditBlur}
+          editing={editing}
+          value={
+            typeof update[state.active.rowIndex]?.[state.active.colIndex] !==
+            'undefined'
+              ? update[state.active.rowIndex][state.active.colIndex]
+              : props.result.rows[state.active.rowIndex][state.active.colIndex]
+          }
+          elRef={activeElRef}
+        />
+      ) : null}
+      <div
+        className="grid-content"
+        onScroll={onScroll}
+        ref={gridContentRef}
+        style={{
+          overflowX: hasBottomScrollbar ? 'scroll' : 'hidden',
+          overflowY: hasRightScrollbar ? 'scroll' : 'hidden',
+        }}
+      >
+        <div
+          style={{
+            marginTop: gridContentMarginTop,
+            height: gridContentHeight,
+            borderBottom: '1px solid #ddd',
           }}
         >
-          <div
-            style={{
-              marginTop: gridContentMarginTop,
-              height: gridContentHeight,
-              borderBottom: '1px solid #ddd',
-            }}
-          >
-            <DataGridTable
-              visibleStartingInEven={visibleStartingInEven}
-              visibleRows={visibleRows}
-              slice={state.slice}
-              selection={state.selection}
-              gridContentTableTop={gridContentTableTop}
-              gridContentTableWidth={gridContentTableWidth}
-              fields={props.result.fields}
-              finalWidths={finalWidths}
-              update={update}
-            />
+          <DataGridTable
+            visibleStartingInEven={visibleStartingInEven}
+            visibleRows={visibleRows}
+            slice={state.slice}
+            selection={state.selection}
+            gridContentTableTop={gridContentTableTop}
+            gridContentTableWidth={gridContentTableWidth}
+            fields={props.result.fields}
+            finalWidths={finalWidths}
+            update={update}
+          />
+        </div>
+      </div>
+      {props.result.rows.length === 0 && props.emptyTable ? (
+        <div className="empty-table">
+          <div>{props.emptyTable}</div>
+        </div>
+      ) : pendingRowsUpdate > 0 ? (
+        <div
+          className="change-dialog"
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            if (document.activeElement instanceof HTMLElement)
+              document.activeElement.blur();
+          }}
+        >
+          {pendingRowsUpdate} pending row{pendingRowsUpdate > 1 ? 's' : ''}{' '}
+          update ({totalChanges} value{totalChanges > 1 ? 's' : ''})
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                setUpdate({});
+              }}
+              style={{
+                fontWeight: 'normal',
+                color: '#444',
+              }}
+            >
+              Discard <i className="fa fa-undo" />
+            </button>
+            <button
+              type="button"
+              style={{ fontWeight: 'bold' }}
+              onClick={applyClick}
+            >
+              Apply <i className="fa fa-check" />
+            </button>
           </div>
         </div>
-        {props.result.rows.length === 0 && props.emptyTable ? (
-          <div className="empty-table">
-            <div>{props.emptyTable}</div>
-          </div>
-        ) : pendingRowsUpdate > 0 ? (
-          <div
-            className="change-dialog"
-            onMouseDown={(e) => {
-              e.stopPropagation();
-              if (document.activeElement instanceof HTMLElement)
-                document.activeElement.blur();
-            }}
-          >
-            {pendingRowsUpdate} pending row{pendingRowsUpdate > 1 ? 's' : ''}{' '}
-            update ({totalChanges} value{totalChanges > 1 ? 's' : ''})
-            <div>
-              <button
-                onClick={() => {
-                  setUpdate({});
-                }}
-                style={{
-                  fontWeight: 'normal',
-                  color: '#444',
-                }}
-              >
-                Discard <i className="fa fa-undo"></i>
-              </button>
-              <button style={{ fontWeight: 'bold' }} onClick={applyClick}>
-                Apply <i className="fa fa-check"></i>
-              </button>
-            </div>
-          </div>
-        ) : null}
-      </div>
-    </>
+      ) : null}
+    </div>
   );
 }

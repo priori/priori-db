@@ -1,4 +1,3 @@
-
 .table-frame--error {
   display: flex;
   color: #e11;
@@ -61,10 +60,10 @@
     opacity: 0;
     visibility: visible;
   }
-  4%{
-    opacity: .1;
+  4% {
+    opacity: 0.1;
   }
   100% {
-    opacity: .3;
+    opacity: 0.3;
   }
 }

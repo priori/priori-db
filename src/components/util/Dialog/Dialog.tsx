@@ -7,18 +7,18 @@ const safeMargin = 15;
 
 function relativeEl(
   el: HTMLElement,
-  to: 'nextSibling' | 'previousSibling' | 'parentNode'
+  to: 'nextSibling' | 'previousSibling' | 'parentNode',
 ) {
   if (to === 'nextSibling') {
     assert(
-      el.nextElementSibling && el.nextElementSibling instanceof HTMLElement
+      el.nextElementSibling && el.nextElementSibling instanceof HTMLElement,
     );
     return el.nextElementSibling;
   }
   if (to === 'previousSibling') {
     assert(
       el.previousElementSibling &&
-        el.previousElementSibling instanceof HTMLElement
+        el.previousElementSibling instanceof HTMLElement,
     );
     return el.previousElementSibling;
   }
@@ -30,7 +30,7 @@ function positionRelativeTo(
   el: HTMLElement,
   to: HTMLElement,
   h: number,
-  w: number
+  w: number,
 ) {
   const container =
     (to.closest('.frame') as HTMLElement | null) || document.body;

@@ -1,7 +1,7 @@
 import { FieldDef } from 'pg';
 import React from 'react';
-import { cellClassName, getType, getValString } from './util';
 import { equals } from 'util/equals';
+import { cellClassName, getType, getValString } from './util';
 
 interface DataGridTableProps {
   visibleStartingInEven: boolean;
@@ -64,7 +64,7 @@ export const DataGridTable = React.memo(
                   index,
                   slice[0] + rowIndex,
                   selection,
-                  hasChange
+                  hasChange,
                 );
                 return (
                   <td key={index} className={className}>
@@ -97,5 +97,5 @@ export const DataGridTable = React.memo(
       prev.finalWidths === next.finalWidths &&
       equals(prev.update, next.update)
     );
-  }
+  },
 );

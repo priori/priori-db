@@ -58,7 +58,7 @@ function buildMatchers(search: string) {
       .split('')
       .map((ch) => ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       .join('.*?')}`,
-    'g'
+    'g',
   );
   const startWith = {
     match(s: string) {
@@ -143,7 +143,7 @@ function buildMatches(
   entities: Entity[],
   matchers: Matcher[],
   lowerCaseMode: boolean,
-  limit: number
+  limit: number,
 ) {
   const r = [] as Match[];
   const es = [...entities];
@@ -199,7 +199,7 @@ export const NavSearchCore = React.memo(
     const entities = useMemo(() => buildEntitites(schemas), [schemas]);
     const matchers = useMemo(
       () => (search ? buildMatchers(search) : null),
-      [search]
+      [search],
     );
     const limit = showAll ? Infinity : scroll ? 81 : 40;
     const matches = useMemo(
@@ -209,10 +209,10 @@ export const NavSearchCore = React.memo(
               entities,
               matchers,
               search === search?.toLowerCase(),
-              limit
+              limit,
             )
           : null,
-      [entities, matchers, search, limit]
+      [entities, matchers, search, limit],
     );
     useEffect(() => {
       if (search) {
@@ -255,7 +255,7 @@ export const NavSearchCore = React.memo(
               >
                 {m.node}
               </NavItem>
-            )
+            ),
           )}
       </div>
     );
@@ -264,5 +264,5 @@ export const NavSearchCore = React.memo(
     a.schemas === b.schemas &&
     a.search === b.search &&
     a.focus === b.focus &&
-    equals(a.tabs, b.tabs)
+    equals(a.tabs, b.tabs),
 );

@@ -30,7 +30,7 @@ export function ColumnFormDialog({
   const [form, setForm] = useState<ColumnForm>(
     column
       ? { ...column }
-      : { name: '', type: '', notNull: false, comment: null }
+      : { name: '', type: '', notNull: false, comment: null },
   );
   const [error, setError] = useState<Error | null>(null);
   const { lastValidData } = useService(() => DB.types(), []);
@@ -95,7 +95,7 @@ export function ColumnFormDialog({
             value={form.type}
             onChange={(e) => {
               const newType = lastValidData?.find(
-                (t) => t.name === e.target.value
+                (t) => t.name === e.target.value,
               );
               if (newType) {
                 setForm({

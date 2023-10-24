@@ -34,5 +34,5 @@ export const DataGridThead = React.memo(
   (prev, next) =>
     prev.fields === next.fields &&
     prev.finalWidths === next.finalWidths &&
-    equals(prev.pks, next.pks)
+    equals(prev.pks, next.pks),
 );

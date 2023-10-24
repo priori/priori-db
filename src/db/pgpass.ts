@@ -1,6 +1,14 @@
 import path from 'path';
 import fs from 'fs';
 
+export interface ConnectionConfiguration {
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
+}
+
 // windows: %APPDATA%\postgresql\pgpass.conf
 // linux: $HOME/.pgpass
 function getPasswordsFileName() {
@@ -27,14 +35,6 @@ export function savePasswords(passwords: ConnectionConfiguration[]) {
     }
   }
   fs.writeFileSync(fileName, content);
-}
-
-export interface ConnectionConfiguration {
-  host: string;
-  port: number;
-  database: string;
-  user: string;
-  password: string;
 }
 
 function getPasswords(): Array<ConnectionConfiguration> {

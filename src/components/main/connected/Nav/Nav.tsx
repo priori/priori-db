@@ -46,7 +46,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
   const onNewSchemaKeyDown = useEvent(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') newSchema();
-    }
+    },
   );
 
   return (

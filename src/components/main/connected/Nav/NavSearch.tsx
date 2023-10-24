@@ -4,13 +4,13 @@ import { useEvent } from 'util/useEvent';
 import { useDeferredValueFix } from './Nav';
 import { NavSearchCore } from './NavSearchCore';
 
-export const NavSearch = ({
+export function NavSearch({
   schemas,
   tabs,
 }: {
   schemas: NavSchema[];
   tabs: Tab[];
-}) => {
+}) {
   const [searchText, setSearchText] = useState('');
   const [focus, setFocus] = useState(false);
   const search = (useDeferredValue as useDeferredValueFix<string>)(searchText, {
@@ -59,4 +59,4 @@ export const NavSearch = ({
       />
     </>
   );
-};
+}

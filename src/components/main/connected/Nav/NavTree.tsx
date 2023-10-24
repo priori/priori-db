@@ -37,13 +37,13 @@ function height(schema: NavSchema) {
   return schema.tables.length * 20 + 20;
 }
 
-export const NavTree = ({
+export function NavTree({
   schemas,
   tabs,
 }: {
   tabs: Tab[];
   schemas: NavSchema[];
-}) => {
+}) {
   const active = tabs.find((c) => c.active) || null;
   return (
     <div className="nav-tree">
@@ -141,7 +141,7 @@ export const NavTree = ({
                       (c.props.type === 'table' ||
                         c.props.type === 'tableinfo') &&
                       c.props.schema === schema.name &&
-                      c.props.table === t.name
+                      c.props.table === t.name,
                   );
                   return (
                     <div
@@ -280,7 +280,7 @@ export const NavTree = ({
                             (c) =>
                               c.props.type === 'function' &&
                               c.props.schema === schema.name &&
-                              c.props.name === f.name
+                              c.props.name === f.name,
                           );
                           return (
                             <div
@@ -368,7 +368,7 @@ export const NavTree = ({
                           (c) =>
                             c.props.type === 'sequence' &&
                             c.props.schema === schema.name &&
-                            c.props.name === f.name
+                            c.props.name === f.name,
                         );
                         return (
                           <div
@@ -456,7 +456,7 @@ export const NavTree = ({
                           (c) =>
                             c.props.type === 'domain' &&
                             c.props.schema === schema.name &&
-                            c.props.name === f.name
+                            c.props.name === f.name,
                         );
                         return (
                           <div
@@ -499,4 +499,4 @@ export const NavTree = ({
         ))}
     </div>
   );
-};
+}

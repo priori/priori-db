@@ -27,7 +27,7 @@ export function buildBaseWidths(res: QueryArrayResult) {
     return max;
   });
   return fieldsSizes.map(
-    (maxLength) => (maxLength > 40 ? 40 : maxLength) * letterSize + 11
+    (maxLength) => (maxLength > 40 ? 40 : maxLength) * letterSize + 11,
   );
 }
 // const navWidth = 250,
@@ -54,7 +54,7 @@ export function getType(val: unknown) {
 
 export function buildFinalWidths(
   initialColsWidths: number[],
-  areaWidth: number
+  areaWidth: number,
 ) {
   if (initialColsWidths.length === 0) {
     return { finalWidths: [], widths: [] };
@@ -109,8 +109,8 @@ export function cellClassName(
         colIndex: [number, number];
         rowIndex: [number, number];
       }
-    | undefined = undefined,
-  hasChange: boolean
+    | undefined,
+  hasChange: boolean,
 ): string | undefined {
   if (!selection) {
     if (hasChange) return 'changed';
@@ -154,7 +154,7 @@ export function activePos(
   containerWidth: number,
   containerHeight: number,
   hasBottomScrollbar: boolean,
-  hasRightScrollbar: boolean
+  hasRightScrollbar: boolean,
 ) {
   let fieldLeft = 0;
   for (const c in widths) {
@@ -179,9 +179,9 @@ export function activePos(
   const wrapperHeight = Math.max(
     Math.min(
       containerHeight - (hasBottomScrollbar ? scrollWidth : 0) - top0 + 3,
-      rowHeight + 3 - topCrop
+      rowHeight + 3 - topCrop,
     ),
-    0
+    0,
   );
   return { top, left, leftCrop, topCrop, wrapperWidth, wrapperHeight };
 }
@@ -192,7 +192,7 @@ export function scrollTo(
   colIndex: number,
   rowIndex: number,
   hasRightScrollbar: boolean,
-  hasBottomScrollbar: boolean
+  hasBottomScrollbar: boolean,
 ) {
   const y = rowIndex * rowHeight;
   const y2 = (rowIndex + 1) * rowHeight;
@@ -222,20 +222,20 @@ export function scrollTo(
 
 export function getSelectionData(
   result: QueryArrayResult<SimpleValue[]>,
-  selection: { rowIndex: [number, number]; colIndex: [number, number] }
+  selection: { rowIndex: [number, number]; colIndex: [number, number] },
 ) {
   return result.rows
     .filter(
       (_, i) =>
         Math.min(...selection.rowIndex) <= i &&
-        i <= Math.max(...selection.rowIndex)
+        i <= Math.max(...selection.rowIndex),
     )
     .map((row) =>
       row.filter(
         (_, i) =>
           Math.min(...selection.colIndex) <= i &&
-          i <= Math.max(...selection.colIndex)
-      )
+          i <= Math.max(...selection.colIndex),
+      ),
     );
 }
 
@@ -283,14 +283,14 @@ export function toCsv(data: ReturnType<typeof getSelectionData>): string[] {
       ? [
           '\n',
           ...row.flatMap((cell, i) =>
-            i ? [';', toCsvCellValue(cell)] : [toCsvCellValue(cell)]
+            i ? [';', toCsvCellValue(cell)] : [toCsvCellValue(cell)],
           ),
         ]
       : [
           ...row.flatMap((cell, i) =>
-            i ? [';', toCsvCellValue(cell)] : [toCsvCellValue(cell)]
+            i ? [';', toCsvCellValue(cell)] : [toCsvCellValue(cell)],
           ),
-        ]
+        ],
   );
 }
 
@@ -300,14 +300,14 @@ export function toTsv(data: ReturnType<typeof getSelectionData>): string[] {
       ? [
           '\n',
           ...row.flatMap((cell, i) =>
-            i ? ['\t', toTsvCellValue(cell)] : [toTsvCellValue(cell)]
+            i ? ['\t', toTsvCellValue(cell)] : [toTsvCellValue(cell)],
           ),
         ]
       : [
           ...row.flatMap((cell, i) =>
-            i ? ['\t', toTsvCellValue(cell)] : [toTsvCellValue(cell)]
+            i ? ['\t', toTsvCellValue(cell)] : [toTsvCellValue(cell)],
           ),
-        ]
+        ],
   );
 }
 
@@ -323,7 +323,7 @@ export function toHtml(data: ReturnType<typeof getSelectionData>): string {
           </tr>
         ))}
       </tbody>
-    </table>
+    </table>,
   );
 }
 

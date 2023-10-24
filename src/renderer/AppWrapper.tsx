@@ -7,9 +7,5 @@ import '../vendor/codemirror/codemirror';
 import '../vendor/codemirror/sql';
 
 export default function AppWrapper() {
-  return (
-    <>
-      <App />
-    </>
-  );
+  return <App />;
 }

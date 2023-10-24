@@ -18,7 +18,7 @@ function fDate(d: Date) {
 function groupBy<T, G>(
   newGroup: (item: T) => G,
   groupMatch: (g: G, item: T) => boolean,
-  insertInGroup: (g: G, item: T) => G
+  insertInGroup: (g: G, item: T) => G,
 ) {
   return (acc: G[], item: T) => {
     const group = acc.find((g) => groupMatch(g, item));
@@ -28,12 +28,6 @@ function groupBy<T, G>(
     return [...acc, newGroup(item)];
   };
 }
-
-type ExecutedQueryGroup = {
-  tabId: number;
-  executionId: number;
-  queries: ExecutedQuery[];
-};
 
 type ExecutedQueryEntry = {
   execution_id: number;
@@ -73,6 +67,12 @@ type ExecutedQuery = {
       ch: number;
     };
   };
+};
+
+type ExecutedQueryGroup = {
+  tabId: number;
+  executionId: number;
+  queries: ExecutedQuery[];
 };
 
 function Group({
@@ -145,34 +145,36 @@ export function QuerySelector({
   }) => void;
 }) {
   const appState = currentState();
-  const [configIndex, set] = useState(
-    () =>
+  const [configIndex, set] = useState(() =>
     appState.passwords.findIndex(
       (p) =>
-      appState.password &&
+        appState.password &&
         p.user === appState.password.user &&
         p.host === appState.password.host &&
         p.port === appState.password.port &&
-        p.database === appState.password.database
-    )
+        p.database === appState.password.database,
+    ),
   );
-  const config = appState.passwords[configIndex] ?? null ;
+  const config = appState.passwords[configIndex] ?? null;
   const service = useService(
     () =>
       browserDb.query(
         `SELECT query.*
         FROM query
-        ${config ? `WHERE
+        ${
+          config
+            ? `WHERE
         execution_id IN ( SELECT id FROM execution WHERE
           execution.user = $1 AND
           execution.host = $2 AND
           execution.port = $3 AND
-          execution.database = $4) ` : ''}
+          execution.database = $4) `
+            : ''
+        }
         ORDER BY created_at DESC`,
-        config ? [config.user, config.host, config.port, config.database] :
-        []
+        config ? [config.user, config.host, config.port, config.database] : [],
       ) as Promise<ExecutedQueryEntry[]>,
-    [config]
+    [config],
   );
   const queries = !service.lastValidData
     ? null
@@ -200,7 +202,7 @@ export function QuerySelector({
                   ch: q.editor_cursor_end_char,
                 },
               },
-            } as ExecutedQuery)
+            }) as ExecutedQuery,
         )
         .reduce(
           groupBy<ExecutedQuery, ExecutedQueryGroup>(
@@ -211,9 +213,9 @@ export function QuerySelector({
             }),
             (g, item) =>
               item.executionId === g.executionId && item.tabId === g.tabId,
-            (g, item) => ({ ...g, queries: [...g.queries, item] })
+            (g, item) => ({ ...g, queries: [...g.queries, item] }),
           ),
-          [] as ExecutedQueryGroup[]
+          [] as ExecutedQueryGroup[],
         );
   if (queries) {
     queries.forEach((g) => {
@@ -233,10 +235,10 @@ export function QuerySelector({
       <div className="query-selector--header">
         <input type="text" readOnly disabled style={{ background: 'white' }} />
         <select
-        value={configIndex}
-        onChange={e=>set(parseInt(e.target.value))}
+          value={configIndex}
+          onChange={(e) => set(parseInt(e.target.value, 10))}
         >
-          <option value="-1"></option>
+          <option value="-1" />
           {appState.passwords.map((p, i) => (
             <option value={i} key={i}>{`${p.user}@${p.host}${
               p.port !== 5432 ? `:${p.port}` : ''

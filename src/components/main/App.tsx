@@ -23,8 +23,8 @@ export function App() {
                     e.filename ? ` File: ${e.filename}` : ''
                   }`
                 : ''
-            }`
-          )
+            }`,
+          ),
     );
   });
   if (state.connected) return <ConnectedApp state={state} />;

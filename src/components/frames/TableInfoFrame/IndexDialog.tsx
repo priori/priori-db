@@ -69,7 +69,7 @@ export function IndexDialog({
         cols: form.cols.map((col, i) =>
           i === index
             ? { ...col, nulls: !val ? undefined : (val as 'first' | 'last') }
-            : col
+            : col,
         ),
       });
     }
@@ -98,7 +98,7 @@ export function IndexDialog({
         cols: form.cols.map((col, i) =>
           i === index
             ? { ...col, sort: !val ? undefined : (val as 'asc' | 'desc') }
-            : col
+            : col,
         ),
       });
     }
@@ -118,7 +118,7 @@ export function IndexDialog({
       setForm({
         ...form,
         cols: form.cols.map((col, i) =>
-          i === index ? { ...col, name: val } : col
+          i === index ? { ...col, name: val } : col,
         ),
       });
     }
@@ -153,7 +153,7 @@ export function IndexDialog({
                   }
                 : {
                     cols: form.cols,
-                  }
+                  },
             );
           }}
           style={
@@ -211,7 +211,7 @@ export function IndexDialog({
                 .filter(
                   (c) =>
                     (col && c === col.name) ||
-                    !form.cols.find((col2) => col2.name === c)
+                    !form.cols.find((col2) => col2.name === c),
                 )
                 .map((c) => (
                   <option value={c} key={c}>

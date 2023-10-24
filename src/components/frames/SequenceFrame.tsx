@@ -36,7 +36,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
           `SELECT obj_description(oid) "comment"
           FROM pg_class
           WHERE relname = $1 AND relnamespace = $2::regnamespace`,
-          [props.name, props.schema]
+          [props.name, props.schema],
         ) as Promise<{ comment: string | null }>
       ).then((res: { comment: string | null }) => res.comment),
     ]);
@@ -83,7 +83,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
         },
         (err) => {
           showError(err);
-        }
+        },
       );
     else
       DB.dropSequence(props.schema, props.name).then(
@@ -93,7 +93,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
         },
         (err) => {
           showError(err);
-        }
+        },
       );
   });
 
@@ -269,9 +269,9 @@ export function SequenceFrame(props: SequenceFrameProps) {
       ) : null}
       {service?.error?.message && (
         <div className="error-message">
-            <i className="fa fa-exclamation-triangle" />
-            {service.error.message}
-            </div>
+          <i className="fa fa-exclamation-triangle" />
+          {service.error.message}
+        </div>
       )}
     </div>
   );

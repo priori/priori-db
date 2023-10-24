@@ -189,7 +189,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         },
         (err) => {
           showError(err);
-        }
+        },
       );
     else
       DB.dropTable(props.schema, props.table).then(
@@ -199,7 +199,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         },
         (err) => {
           showError(err);
-        }
+        },
       );
   });
 
@@ -286,7 +286,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       props.table,
       form.cols,
       form.method,
-      form.unique
+      form.unique,
     );
     if (!isMounted()) return;
     await service.reload();
@@ -1071,9 +1071,9 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             </table> */}
       {service?.error?.message && (
         <div className="error-message">
-            <i className="fa fa-exclamation-triangle" />
-            {service.error.message}
-            </div>
+          <i className="fa fa-exclamation-triangle" />
+          {service.error.message}
+        </div>
       )}
     </>
   );

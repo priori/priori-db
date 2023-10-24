@@ -43,11 +43,13 @@ class ExclusiveConnection {
     q: string,
     args?: (number | string | boolean | null)[],
   ): Promise<QueryResult<{ [key: string]: SimpleValue }>>;
+
   async query(
     q: string,
     args: (number | string | boolean | null)[] | undefined,
     arrayRowMode: true,
   ): Promise<QueryArrayResult<SimpleValue[]>>;
+
   async query(
     q: string,
     args?: (number | string | boolean | null)[],

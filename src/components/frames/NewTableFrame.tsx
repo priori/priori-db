@@ -94,7 +94,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
       },
       (err) => {
         showError(err);
-      }
+      },
     );
   }
 
@@ -119,7 +119,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
   const colFormRender = (
     c: ColumnNewTable,
     set: (e2: ColumnNewTable) => void,
-    drop: (() => void) | null
+    drop: (() => void) | null,
   ) => {
     return (
       <div className="columns-form-column">
@@ -138,7 +138,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
                 ...c,
                 type:
                   props.types.find(
-                    (t) => t.name === (e.target as HTMLSelectElement).value
+                    (t) => t.name === (e.target as HTMLSelectElement).value,
                   ) || null,
               })
             }
@@ -252,24 +252,23 @@ export function NewTableFrame(props: NewTableFrameProps) {
   };
 
   return (
-    <>
-      <div style={{ width: '720px' }}>
-        <h1>New Table in {props.schema}</h1>
-        <div className="form-field input-form-field">
-          Name:{' '}
-          <input
-            onChange={(e) =>
-              setState((state2) => ({
-                ...state2,
-                newTable: {
-                  ...state.newTable,
-                  name: (e.target as HTMLInputElement).value,
-                },
-              }))
-            }
-          />
-        </div>
-        {/*
+    <div style={{ width: '720px' }}>
+      <h1>New Table in {props.schema}</h1>
+      <div className="form-field input-form-field">
+        Name:{' '}
+        <input
+          onChange={(e) =>
+            setState((state2) => ({
+              ...state2,
+              newTable: {
+                ...state.newTable,
+                name: (e.target as HTMLInputElement).value,
+              },
+            }))
+          }
+        />
+      </div>
+      {/*
                 <div className="form-field combo-form-field">
                     Owner:
                     <input onChange={e=>setState({...state,newTable:{...state.newTable,
@@ -293,25 +292,25 @@ export function NewTableFrame(props: NewTableFrameProps) {
                         onChange={e=>setState({...state,newTable:{...state.newTable,
                           comment:(e.target as HTMLTextAreaElement).value}})} ></textarea>
                 </div> */}
-        <h2>Columns</h2>
+      <h2>Columns</h2>
 
-        <div className="columns-form">
-          <div className="head">
-            <div className="columns-form-head-name">Name</div>
-            <div className="columns-form-head-type">Data Type</div>
-            <div className="columns-form-head-length">Length</div>
-            <div className="columns-form-head-precision">Precision</div>
-            <div className="columns-form-head-notnull">Not Null</div>
-            <div className="columns-form-head-pk">Primary Key</div>
-          </div>
-          <ColumnListInput
-            entries={state.newTable.columns}
-            newEntry={newEntry}
-            onChange={onChangeCols}
-            entryRender={colFormRender}
-          />
+      <div className="columns-form">
+        <div className="head">
+          <div className="columns-form-head-name">Name</div>
+          <div className="columns-form-head-type">Data Type</div>
+          <div className="columns-form-head-length">Length</div>
+          <div className="columns-form-head-precision">Precision</div>
+          <div className="columns-form-head-notnull">Not Null</div>
+          <div className="columns-form-head-pk">Primary Key</div>
         </div>
-        {/*
+        <ColumnListInput
+          entries={state.newTable.columns}
+          newEntry={newEntry}
+          onChange={onChangeCols}
+          entryRender={colFormRender}
+        />
+      </div>
+      {/*
                 <OpenCloseCategory title="Constraints">
                     <h3>Primary Key</h3>
                     Name: <input type="text"/><br/>
@@ -605,11 +604,10 @@ IS 'asdf asdf';
 `} /><br/>
                 </OpenCloseCategory><br/>
                         */}
-        <br />
-        <button type="button" onClick={() => save()}>
-          Save
-        </button>
-      </div>
-    </>
+      <br />
+      <button type="button" onClick={() => save()}>
+        Save
+      </button>
+    </div>
   );
 }

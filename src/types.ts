@@ -10,6 +10,19 @@ export type FrameType =
   | 'sequence'
   | 'domain';
 
+export interface Type {
+  name: string;
+  elemoid: number;
+  length: number;
+  type: string;
+  oid: number;
+  nspname: string;
+  isdup: boolean;
+  is_collatable: boolean;
+  allowLength: boolean;
+  allowPrecision: boolean;
+}
+
 export interface AbstractTabProps<T extends FrameType> {
   readonly type: T;
   readonly uid: number;
@@ -70,19 +83,6 @@ export type FrameProps0<T extends FrameType> = T extends 'query'
   : never;
 
 export type FrameProps = FrameProps0<FrameType>;
-
-export interface Type {
-  name: string;
-  elemoid: number;
-  length: number;
-  type: string;
-  oid: number;
-  nspname: string;
-  isdup: boolean;
-  is_collatable: boolean;
-  allowLength: boolean;
-  allowPrecision: boolean;
-}
 
 export type EntityType =
   | 'MATERIALIZED VIEW'

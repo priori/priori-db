@@ -7,7 +7,7 @@ export interface ListInputProps<Entry> {
   entryRender(
     e: Entry,
     set: (e2: Entry) => void,
-    remove: null | (() => void)
+    remove: null | (() => void),
   ): JSX.Element | null;
   entries: Entry[];
   type?: 'div' | 'span' | 'tr' | undefined;
@@ -180,12 +180,12 @@ export class ListInput<Entry extends object> extends Component<
     if (
       e.target instanceof HTMLElement &&
       (e.target.matches(
-        'input,textarea,select,button,a,[tabindex],[tabIndex]'
+        'input,textarea,select,button,a,[tabindex],[tabIndex]',
       ) ||
         e.currentTarget.contains(
           e.target.closest(
-            'input,textarea,select,button,a,[tabindex],[tabIndex]'
-          )
+            'input,textarea,select,button,a,[tabindex],[tabIndex]',
+          ),
         ))
     ) {
       return;
@@ -193,7 +193,7 @@ export class ListInput<Entry extends object> extends Component<
     e.preventDefault();
     e.stopPropagation();
     const rowEl = (e.target as HTMLElement).closest(
-      '.list-input-item'
+      '.list-input-item',
     ) as HTMLElement;
     const rect = rowEl.getClientRects()[0];
     window.addEventListener('mouseup', this.onMouseUp, true);
@@ -325,7 +325,7 @@ export class ListInput<Entry extends object> extends Component<
             ];
             this.cache.delete(e);
             this.setNewState(newState);
-          }
+          },
     );
     this.cache.set(e, el);
     return el;

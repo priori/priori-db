@@ -68,7 +68,7 @@ export function QueryFrame({ uid }: { uid: number }) {
     (pid) => {
       setState((state2) => ({ ...state2, clientPid: pid }));
     },
-    (clientError) => setState((state2) => ({ ...state2, clientError }))
+    (clientError) => setState((state2) => ({ ...state2, clientError })),
   );
 
   const isMounted = useIsMounted();
@@ -80,7 +80,7 @@ export function QueryFrame({ uid }: { uid: number }) {
         content: string;
         cursorStart: { line: number; ch: number };
         cursorEnd: { line: number; ch: number };
-      } = null
+      } = null,
     ) => {
       setState((state2) => ({ ...state2, running: true, resetNotices: true }));
       const title = currentState().tabs.find((t) => t.props.uid === uid)?.title;
@@ -90,7 +90,7 @@ export function QueryFrame({ uid }: { uid: number }) {
             query,
             uid,
             saveQuery,
-            title === 'New Query' ? null : title || null
+            title === 'New Query' ? null : title || null,
           );
       const start = new Date().getTime();
       try {
@@ -101,7 +101,7 @@ export function QueryFrame({ uid }: { uid: number }) {
           updateQuery(
             id,
             time,
-            typeof resLength === 'number' ? resLength : null
+            typeof resLength === 'number' ? resLength : null,
           );
         const openTransaction = !db.pid
           ? false
@@ -143,7 +143,7 @@ export function QueryFrame({ uid }: { uid: number }) {
             res: null,
           }));
       }
-    }
+    },
   );
 
   const execute = useEvent(async () => {
@@ -222,7 +222,7 @@ export function QueryFrame({ uid }: { uid: number }) {
     setState((state2) => ({
       ...state2,
       notices: state2.notices.map((n2) =>
-        n2 === n ? { ...n2, message: n2.message, fullView: !n2.fullView } : n2
+        n2 === n ? { ...n2, message: n2.message, fullView: !n2.fullView } : n2,
       ),
     }));
   });

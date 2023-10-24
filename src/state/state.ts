@@ -31,11 +31,16 @@ type Mutations<MC extends MutationsConfig> = {
     : never;
 };
 
+type MutationsToActionsHelper<MC> = {
+  [k2 in keyof MC as k2]: (v: unknown) => void;
+};
+
 function mutationsToActions<MC extends MutationsConfig>(
   conf: MC,
 ): Mutations<MC> {
-  const ms = {} as { [k in keyof MC as k]: (v: unknown) => void };
+  const ms: MutationsToActionsHelper<MC> = {} as MutationsToActionsHelper<MC>;
   for (const k in conf) {
+    // eslint-disable-next-line no-loop-func
     ms[k] = (...ev) => {
       current = conf[k](current, ...ev);
       hls.current = current;

@@ -1,5 +1,5 @@
 import { assert } from 'util/assert';
-import { Component, KeyboardEventHandler, MouseEventHandler } from 'react';
+import { Component, KeyboardEventHandler } from 'react';
 import {
   activateTab,
   updateHeaderTabsDisplayOrder,
@@ -27,6 +27,15 @@ export interface TabsState {
 }
 
 export class Tabs extends Component<TabsProps, TabsState> {
+  static tabsDoubleClick(e: React.MouseEvent<HTMLSpanElement, MouseEvent>) {
+    const el = e.target;
+    if (el instanceof HTMLElement) {
+      if (el.matches('span.tabs')) {
+        newQueryTabInTheEnd();
+      }
+    }
+  }
+
   prevEl: HTMLInputElement | null = null;
 
   constructor(props: TabsProps) {
@@ -67,7 +76,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
     if (this.state.sorting) this.applySort();
     const tabs = next.tabs.map((t, index) => {
       const currentTab = this.state.tabs.find(
-        (t2) => t2.props.uid === t.props.uid
+        (t2) => t2.props.uid === t.props.uid,
       );
       const current = currentTab || t;
       return {
@@ -92,6 +101,13 @@ export class Tabs extends Component<TabsProps, TabsState> {
     }, 1);
   }
 
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.fit);
+    window.removeEventListener('mousemove', this.windowMouseMove);
+    window.removeEventListener('mouseup', this.windowMouseUp);
+    window.removeEventListener('blur', this.windowBlur);
+  }
+
   onInputKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === 'Enter') {
       (e.target as HTMLInputElement).blur();
@@ -114,15 +130,6 @@ export class Tabs extends Component<TabsProps, TabsState> {
     } else keepTabOpen(t);
   }
 
-  tabsDoubleClick: MouseEventHandler<HTMLSpanElement> = (e) => {
-    const el = e.target;
-    if (el instanceof HTMLElement) {
-      if (el.matches('span.tabs')) {
-        newQueryTabInTheEnd();
-      }
-    }
-  };
-
   blurInput(input: HTMLInputElement) {
     const { editing } = this.state;
     assert(editing);
@@ -131,13 +138,6 @@ export class Tabs extends Component<TabsProps, TabsState> {
       ...state,
       editing: null,
     }));
-  }
-
-  UNSAFE_componentWillUnmount() {
-    window.removeEventListener('resize', this.fit);
-    window.removeEventListener('mousemove', this.windowMouseMove);
-    window.removeEventListener('mouseup', this.windowMouseUp);
-    window.removeEventListener('blur', this.windowBlur);
   }
 
   private fit() {
@@ -221,7 +221,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
     if (!this.state.sorting) {
       return (
         <div className="tabs-header">
-          <span className="tabs" onDoubleClick={this.tabsDoubleClick}>
+          <span className="tabs" onDoubleClick={Tabs.tabsDoubleClick}>
             {this.props.tabs.map((t, index) => {
               const { width } = this.state.tabs[index];
               return (

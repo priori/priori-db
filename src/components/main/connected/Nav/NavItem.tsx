@@ -26,7 +26,7 @@ const icons = {
   FUNCTION: 'function-icon',
 };
 
-export const NavItem = ({
+export function NavItem({
   entity,
   children,
   tabs,
@@ -34,7 +34,7 @@ export const NavItem = ({
   entity: Entity;
   children: React.ReactNode;
   tabs: Tab[];
-}) => {
+}) {
   const active = tabs.find((c) => c.active) || null;
   const isActive =
     active &&
@@ -69,7 +69,7 @@ export const NavItem = ({
         c.props.name === entity.name) ||
       (c.props.type === 'sequence' &&
         c.props.schema === entity.schema &&
-        c.props.name === entity.name)
+        c.props.name === entity.name),
   );
   const onClick = useEvent(() => {
     const e = entity;
@@ -135,4 +135,4 @@ export const NavItem = ({
       ) : null}
     </div>
   );
-};
+}

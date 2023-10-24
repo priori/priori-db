@@ -13,7 +13,7 @@ export interface GridProps {
     update: {
       where: { [fieldName: string]: string | number | null };
       values: { [fieldName: string]: string };
-    }[]
+    }[],
   ) => Promise<boolean>;
   pks?: string[];
 }
@@ -47,5 +47,5 @@ export const DataGrid = memo(
     equals(a.style, b.style) &&
     equals(a.pks, b.pks) &&
     a.onUpdate === b.onUpdate &&
-    a.onScroll === b.onScroll
+    a.onScroll === b.onScroll,
 );

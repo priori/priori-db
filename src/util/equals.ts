@@ -10,6 +10,7 @@ export function keys(
 }
 
 export function equals(a: unknown, b: unknown) {
+  // eslint-disable-next-line no-self-compare
   if (a === b || (a !== a && b !== b)) return true;
   if (!a || !b) return false;
   assert(a);
