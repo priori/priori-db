@@ -344,7 +344,13 @@ export function DataGridCore(props: DataGridCoreProps) {
   });
 
   const onMouseDown = useEvent((e: React.MouseEvent<HTMLElement>) => {
-    if (e.button === 1 || e.button === 2) return;
+    if (
+      e.button === 1 ||
+      e.button === 2 ||
+      (e.target instanceof HTMLElement &&
+        e.target.matches('input, textarea, select, button'))
+    )
+      return;
     const el = elRef.current as HTMLElement;
     const rect = el.getBoundingClientRect();
     let x = e.clientX - rect.left;
