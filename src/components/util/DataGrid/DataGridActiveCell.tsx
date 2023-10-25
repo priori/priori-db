@@ -177,6 +177,7 @@ export const DataGridActiveCell = React.memo(
         >
           {editing ? (
             <textarea
+              spellCheck={false}
               onChange={textareaOnChange}
               onBlur={textareaOnBlur}
               onKeyDown={onkeydown}
