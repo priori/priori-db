@@ -92,6 +92,11 @@ div.nav {
     position: relative;
     top: 1px;
     font-size: 14px;
+    text-align: center;
+    width: 13px;
+  }
+  .fa-user.table-type {
+    text-align: right;
   }
   .schema-name,
   .group-name,
@@ -427,4 +432,15 @@ div.nav {
   &:hover {
     color: #000;
   }
+}
+
+.table-type.fa-user {
+  color: #007;
+}
+.table-type.fa-users {
+  color: #181;
+}
+.table.active .table-type.fa-user,
+.table.active .table-type.fa-users {
+  color: #fff;
 }

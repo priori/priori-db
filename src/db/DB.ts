@@ -1,6 +1,6 @@
 import { grantError } from 'util/errors';
 import { list, first, query, openConnection } from './Connection';
-import { EntityType, Type } from '../types';
+import { EntityType, TablePrivileges, Type } from '../types';
 
 function label(s: string) {
   return `"${s.replaceAll('"', '""')}"`;
@@ -18,6 +18,18 @@ export const DB = {
       )}'::regclass) "comment"`,
     );
     return res.comment as string | null;
+  },
+
+  async dropRole(name: string) {
+    await query(`DROP ROLE ${label(name)}`);
+  },
+
+  async updateRoleComment(name: string, text: string) {
+    await query(`COMMENT ON ROLE ${label(name)} IS ${str(text)}`);
+  },
+
+  async renameRole(name: string, name2: string) {
+    await query(`ALTER ROLE ${label(name)} RENAME TO ${label(name2)}`);
   },
 
   async updateColumn(
@@ -681,6 +693,231 @@ export const DB = {
         comment: string | null;
       }[]
     >;
+  },
+
+  async updatePrivileges(
+    schema: string,
+    table: string,
+    grantee: string,
+    privileges: {
+      update?: boolean;
+      select?: boolean;
+      insert?: boolean;
+      delete?: boolean;
+      truncate?: boolean;
+      references?: boolean;
+      trigger?: boolean;
+    },
+  ) {
+    const c = await openConnection();
+    try {
+      await c.query('BEGIN');
+      if (privileges.update !== undefined) {
+        await c.query(
+          `${privileges.update ? 'GRANT' : 'REVOKE'} UPDATE ON ${label(
+            schema,
+          )}.${label(table)} ${privileges.update ? ' TO ' : ' FROM '} ${label(
+            grantee,
+          )}`,
+        );
+      }
+      if (privileges.select !== undefined) {
+        await c.query(
+          `${privileges.select ? 'GRANT' : 'REVOKE'} SELECT ON ${label(
+            schema,
+          )}.${label(table)} ${privileges.select ? ' TO ' : ' FROM '} ${label(
+            grantee,
+          )}`,
+        );
+      }
+      if (privileges.insert !== undefined) {
+        await c.query(
+          `${privileges.insert ? 'GRANT' : 'REVOKE'} INSERT ON ${label(
+            schema,
+          )}.${label(table)} ${privileges.insert ? ' TO ' : ' FROM '} ${label(
+            grantee,
+          )}`,
+        );
+      }
+      if (privileges.delete !== undefined) {
+        await c.query(
+          `${privileges.delete ? 'GRANT' : 'REVOKE'} DELETE ON ${label(
+            schema,
+          )}.${label(table)} ${privileges.delete ? ' TO ' : ' FROM '} ${label(
+            grantee,
+          )}`,
+        );
+      }
+      if (privileges.truncate !== undefined) {
+        await c.query(
+          `${privileges.truncate ? 'GRANT' : 'REVOKE'} TRUNCATE ON ${label(
+            schema,
+          )}.${label(table)} ${privileges.truncate ? ' TO ' : ' FROM '} ${label(
+            grantee,
+          )}`,
+        );
+      }
+      if (privileges.references !== undefined) {
+        await c.query(
+          `${privileges.references ? 'GRANT' : 'REVOKE'} REFERENCES ON ${label(
+            schema,
+          )}.${label(table)} ${
+            privileges.references ? ' TO ' : ' FROM '
+          } ${label(grantee)}`,
+        );
+      }
+      if (privileges.trigger !== undefined) {
+        await c.query(
+          `${privileges.trigger ? 'GRANT' : 'REVOKE'} TRIGGER ON ${label(
+            schema,
+          )}.${label(table)} ${privileges.trigger ? ' TO ' : ' FROM '} ${label(
+            grantee,
+          )}`,
+        );
+      }
+
+      await c.query('COMMIT');
+    } catch (e) {
+      c.query('ROLLBACK');
+      throw grantError(e);
+    } finally {
+      c.release(true);
+    }
+  },
+
+  async roleTablePrivileges(role: string) {
+    const res = (await list(
+      `
+      SELECT
+        table_schema,
+        table_name,
+        privilege_type
+      FROM information_schema.table_privileges
+      WHERE
+        grantee = $1
+      ORDER BY table_schema, table_name`,
+      [role],
+    )) as {
+      table_schema: string;
+      table_name: string;
+      privilege_type: string;
+    }[];
+    const ret: {
+      schema: string;
+      table: string;
+      privileges: TablePrivileges;
+    }[] = [];
+    for (const r of res) {
+      const t0 = ret.find(
+        (t2) => t2.table === r.table_name && t2.schema === r.table_schema,
+      );
+      const t = t0 || {
+        schema: r.table_schema,
+        table: r.table_name,
+        privileges: {
+          delete: !!res.find(
+            (r2) =>
+              r2.table_schema === r.table_schema &&
+              r2.table_name === r.table_name &&
+              r2.privilege_type === 'DELETE',
+          ),
+          insert: !!res.find(
+            (r2) =>
+              r2.table_schema === r.table_schema &&
+              r2.table_name === r.table_name &&
+              r2.privilege_type === 'INSERT',
+          ),
+          references: !!res.find(
+            (r2) =>
+              r2.table_schema === r.table_schema &&
+              r2.table_name === r.table_name &&
+              r2.privilege_type === 'REFERENCES',
+          ),
+          select: !!res.find(
+            (r2) =>
+              r2.table_schema === r.table_schema &&
+              r2.table_name === r.table_name &&
+              r2.privilege_type === 'SELECT',
+          ),
+          trigger: !!res.find(
+            (r2) =>
+              r2.table_schema === r.table_schema &&
+              r2.table_name === r.table_name &&
+              r2.privilege_type === 'TRIGGER',
+          ),
+          truncate: !!res.find(
+            (r2) =>
+              r2.table_schema === r.table_schema &&
+              r2.table_name === r.table_name &&
+              r2.privilege_type === 'TRUNCATE',
+          ),
+          update: !!res.find(
+            (r2) =>
+              r2.table_schema === r.table_schema &&
+              r2.table_name === r.table_name &&
+              r2.privilege_type === 'UPDATE',
+          ),
+        },
+      };
+      if (!t0) ret.push(t);
+    }
+    return ret;
+  },
+
+  async tablePrivileges(schema: string, table: string) {
+    const res = await list(
+      `
+      SELECT
+        grantee,
+        privilege_type
+      FROM information_schema.table_privileges
+      WHERE
+        table_schema = $1 AND
+        table_name = $2`,
+      [schema, table],
+    );
+    const byGrantee = [...new Set(res.map((r) => r.grantee))].map(
+      (grantee) => ({
+        roleName: grantee,
+        privileges: {
+          delete: !!res.find(
+            (r) => r.grantee === grantee && r.privilege_type === 'DELETE',
+          ),
+          insert: !!res.find(
+            (r) => r.grantee === grantee && r.privilege_type === 'INSERT',
+          ),
+          references: !!res.find(
+            (r) => r.grantee === grantee && r.privilege_type === 'REFERENCES',
+          ),
+          select: !!res.find(
+            (r) => r.grantee === grantee && r.privilege_type === 'SELECT',
+          ),
+          trigger: !!res.find(
+            (r) => r.grantee === grantee && r.privilege_type === 'TRIGGER',
+          ),
+          truncate: !!res.find(
+            (r) => r.grantee === grantee && r.privilege_type === 'TRUNCATE',
+          ),
+          update: !!res.find(
+            (r) => r.grantee === grantee && r.privilege_type === 'UPDATE',
+          ),
+        },
+      }),
+    );
+    return byGrantee;
+  },
+
+  async listRoles() {
+    return list(
+      `
+      select rolname name, usename IS NOT NULL "isUser"
+      FROM pg_roles
+      LEFT JOIN pg_user
+      ON usename = rolname
+      ORDER BY 1
+    `,
+      [],
+    ) as Promise<{ name: string; isUser: boolean }[]>;
   },
 
   async listAll() {

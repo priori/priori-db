@@ -26,7 +26,11 @@ export type useDeferredValueFix<T> = (s: T, config: { timeoutMs: number }) => T;
 
 const isIOS = process?.platform === 'darwin';
 
-export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
+export function Nav(props: {
+  schemas: NavSchema[];
+  tabs: Tab[];
+  roles: { name: string; isUser: boolean }[];
+}) {
   const tabs = (useDeferredValue as useDeferredValueFix<Tab[]>)(props.tabs, {
     timeoutMs: 150,
   });
@@ -52,7 +56,7 @@ export function Nav(props: { schemas: NavSchema[]; tabs: Tab[] }) {
   return (
     <div className="nav" tabIndex={0} onKeyDown={onKeyDown}>
       <NavSearch schemas={props.schemas} tabs={tabs} />
-      <NavTree schemas={props.schemas} tabs={tabs} />
+      <NavTree schemas={props.schemas} tabs={tabs} roles={props.roles} />
       <span
         className="new-schema"
         onClick={newSchema}

@@ -51,6 +51,8 @@ export const {
   changeSchema,
   showError,
   closeError,
+  keepOpenRole,
+  previewRole,
 } = state;
 
 export async function open(c: ConnectionConfiguration) {
@@ -83,7 +85,8 @@ export async function newConnection(
 
 export async function reloadNav() {
   const newSchemas = await DB.listAll();
-  state.updateSchemas(newSchemas);
+  const roles = await DB.listRoles();
+  state.updateSchemasAndRoles(newSchemas, roles);
 }
 
 export function createSchema(name: string) {
@@ -136,7 +139,8 @@ export async function connect(s: string) {
     );
     try {
       const schemas = await DB.listAll();
-      state.connected(s, schemas);
+      const roles = await DB.listRoles();
+      state.connected(s, schemas, roles);
     } catch (err) {
       state.setConnectionError(grantError(err));
     }

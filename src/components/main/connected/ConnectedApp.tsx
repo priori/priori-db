@@ -35,6 +35,7 @@ const classNames: Record<FrameType, string> = {
   function: 'function',
   domain: 'domain',
   sequence: 'sequence',
+  role: 'role',
 };
 
 interface UseTabConfiguration {
@@ -209,7 +210,11 @@ export function ConnectedApp({ state }: { state: AppState }) {
       )}
       <div className="header">{state.title}</div>
       <Tabs tabs={state.tabs} onActiveTabMouseDown={onActiveTabMouseDown} />
-      <Nav schemas={state.schemas} tabs={state.tabs} />
+      <Nav
+        schemas={state.schemas}
+        tabs={state.tabs}
+        roles={state.roles ?? []}
+      />
       <div className="app-content">
         <TabsContext.Provider value={tabsConfigurations}>
           {tabs.map((t) => (

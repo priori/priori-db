@@ -1,5 +1,6 @@
 import { assert } from 'util/assert';
 import { NavSchema, Tab } from 'types';
+import { useState } from 'react';
 import {
   newTable,
   openSchema,
@@ -20,6 +21,8 @@ import {
   openDomains,
   openSequences,
   extraTableTab,
+  keepOpenRole,
+  previewRole,
 } from '../../../../state/actions';
 
 function height(schema: NavSchema) {
@@ -40,11 +43,14 @@ function height(schema: NavSchema) {
 export function NavTree({
   schemas,
   tabs,
+  roles,
 }: {
   tabs: Tab[];
   schemas: NavSchema[];
+  roles: { name: string; isUser: boolean }[];
 }) {
   const active = tabs.find((c) => c.active) || null;
+  const [rolesOpen, setRolesOpen] = useState(false);
   return (
     <div className="nav-tree">
       {schemas &&
@@ -497,6 +503,76 @@ export function NavTree({
             </div>
           </div>
         ))}
+      <div className="schema schema--internal">
+        <div
+          role="button"
+          tabIndex={0}
+          className={`schema-name arrow ${rolesOpen ? 'open' : ''}`}
+          onClick={() => {
+            setRolesOpen(!rolesOpen);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') {
+              setRolesOpen(!rolesOpen);
+            }
+          }}
+        >
+          Users &amp; Roles
+        </div>
+        <div
+          className="tables"
+          style={{
+            overflow: 'hidden',
+            height: rolesOpen ? roles.length * 20 : 0,
+          }}
+        >
+          {roles.map((r) => (
+            <div
+              className={`table${
+                tabs.find(
+                  (t) =>
+                    t.props.type === 'role' &&
+                    t.props.name === r.name &&
+                    t.active,
+                )
+                  ? ' active'
+                  : ''
+              }${
+                tabs.find(
+                  (t) => t.props.type === 'role' && t.props.name === r.name,
+                )
+                  ? ' open'
+                  : ''
+              }`}
+              key={r.name}
+            >
+              <div
+                role="button"
+                tabIndex={0}
+                className="table-name"
+                onClick={() => {
+                  previewRole(r.name);
+                }}
+                onDoubleClick={() => {
+                  keepOpenRole(r.name);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') {
+                    previewRole(r.name);
+                  }
+                }}
+              >
+                {r.isUser ? (
+                  <i className="table-type fa fa-user" />
+                ) : (
+                  <i className="table-type fa fa-users" />
+                )}{' '}
+                {r.name}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

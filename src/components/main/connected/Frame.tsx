@@ -5,6 +5,7 @@ import { assert } from 'util/assert';
 import { SequenceFrame } from 'components/frames/SequenceFrame';
 import { DomainFrame } from 'components/frames/DomainFrame';
 import { FunctionFrame } from 'components/frames/FunctionFrame';
+import { RoleFrame } from 'components/frames/RoleFrame';
 import { QueryFrame } from '../../frames/QueryFrame/QueryFrame';
 import { TableFrame } from '../../frames/TableFrame';
 import { NewTableFrame } from '../../frames/NewTableFrame';
@@ -24,6 +25,7 @@ const framesTypes: FramesTypesMap<FrameType> = {
   sequence: SequenceFrame,
   domain: DomainFrame,
   function: FunctionFrame,
+  role: RoleFrame,
 };
 
 export const Frame = React.memo(

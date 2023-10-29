@@ -328,6 +328,44 @@ export function previewTableInfo(
   }));
 }
 
+export function keepOpenRole(current: AppState, name: string) {
+  const openTab = current.tabs.find(
+    (tab) => tab.props.type === 'role' && tab.props.name === name,
+  );
+  if (openTab) {
+    return keepTabOpen(current, openTab.props.uid);
+  }
+  return newFrame(current, (uid) => ({
+    title: `${name}`,
+    active: true,
+    keep: true,
+    props: {
+      uid,
+      type: 'role',
+      name,
+    },
+  }));
+}
+
+export function previewRole(current: AppState, name: string) {
+  const openTab = current.tabs.find(
+    (tab) => tab.props.type === 'role' && tab.props.name === name,
+  );
+  if (openTab) {
+    return activateTab(current, openTab);
+  }
+  return newFrame(current, (uid) => ({
+    title: `${name}`,
+    active: true,
+    keep: false,
+    props: {
+      uid,
+      type: 'role',
+      name,
+    },
+  }));
+}
+
 export function keepTableInfo(
   current: AppState,
   schema: string,
@@ -429,7 +467,7 @@ export function keepOpenTable(
   return keepTable(current, schema, t);
 }
 
-export function updateSchemas(
+export function updateSchemasAndRoles(
   current: AppState,
   schemas: {
     internal: boolean;
@@ -452,6 +490,10 @@ export function updateSchemas(
     }[];
     name: string;
   }[],
+  roles: {
+    name: string;
+    isUser: boolean;
+  }[],
 ) {
   const cSchemas = current.schemas;
   return {
@@ -472,6 +514,7 @@ export function updateSchemas(
         functionsOpen: false,
       };
     }),
+    roles,
   } as AppState;
 }
 
@@ -562,6 +605,10 @@ export function connected(
     functions: { name: string; type: 'FUNCTION' }[];
     domains: { name: string; type: 'DOMAIN' }[];
   }[],
+  roles: {
+    name: string;
+    isUser: boolean;
+  }[],
 ) {
   const c = current.password as ConnectionConfiguration;
   return {
@@ -577,6 +624,7 @@ export function connected(
     title: `${c.user}@${c.host}${
       c.port !== 5432 ? `:${c.port}` : ''
     }/${database}`,
+    roles,
   } as AppState;
 }
 
@@ -759,10 +807,18 @@ export function renameEntity(curret: AppState, uid: number, name: string) {
   return {
     ...curret,
     tabs: curret.tabs.map((t) =>
-      (t.props.type === 'table' || t.props.type === 'tableinfo') &&
-      (tab.props.type === 'table' || tab.props.type === 'tableinfo') &&
-      t.props.schema === tab.props.schema &&
-      t.props.table === tab.props.table
+      t.props.type === 'role' &&
+      tab.props.type === 'role' &&
+      t.props.name === tab.props.name
+        ? {
+            ...t,
+            title: `${name}`,
+            props: { ...t.props, name },
+          }
+        : (t.props.type === 'table' || t.props.type === 'tableinfo') &&
+          (tab.props.type === 'table' || tab.props.type === 'tableinfo') &&
+          t.props.schema === tab.props.schema &&
+          t.props.table === tab.props.table
         ? {
             ...t,
             title: `${t.props.schema}.${name}${

@@ -8,7 +8,8 @@ export type FrameType =
   | 'schemainfo'
   | 'function'
   | 'sequence'
-  | 'domain';
+  | 'domain'
+  | 'role';
 
 export interface Type {
   name: string;
@@ -26,6 +27,10 @@ export interface Type {
 export interface AbstractTabProps<T extends FrameType> {
   readonly type: T;
   readonly uid: number;
+}
+
+export interface RoleFrameProps extends AbstractTabProps<'role'> {
+  readonly name: string;
 }
 
 export type QueryFrameProps = AbstractTabProps<'query'>;
@@ -80,6 +85,8 @@ export type FrameProps0<T extends FrameType> = T extends 'query'
   ? FunctionFrameProps
   : T extends 'domain'
   ? DomainFrameProps
+  : T extends 'role'
+  ? RoleFrameProps
   : never;
 
 export type FrameProps = FrameProps0<FrameType>;
@@ -138,4 +145,18 @@ export interface AppState {
   tabsOpenOrder: number[];
   title: string;
   errors: Error[];
+  roles?: {
+    name: string;
+    isUser: boolean;
+  }[];
 }
+
+export type TablePrivileges = {
+  update?: boolean | undefined;
+  insert?: boolean | undefined;
+  select?: boolean | undefined;
+  delete?: boolean | undefined;
+  truncate?: boolean | undefined;
+  references?: boolean | undefined;
+  trigger?: boolean | undefined;
+};

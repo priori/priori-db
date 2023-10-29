@@ -9,7 +9,7 @@ import { Comment } from 'components/util/Comment';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { useIsMounted } from 'util/hooks';
 import { assert } from 'util/assert';
-import { TableInfoFrameProps } from '../../../types';
+import { TableInfoFrameProps, TablePrivileges } from '../../../types';
 import {
   reloadNav,
   closeTab,
@@ -21,6 +21,7 @@ import { DB } from '../../../db/DB';
 import { ChangeSchemaDialog } from '../../util/Dialog/ChangeSchemaDialog';
 import { ColumnForm, ColumnFormDialog } from './ColumnFormDialog';
 import { IndexForm, IndexDialog } from './IndexDialog';
+import { TablePrivilegesDialog } from './TablePrivilegesDialog';
 
 export interface ColTableInfo {
   column_name: string;
@@ -36,6 +37,10 @@ export interface ColTableInfo {
 export interface TableInfoFrameState {
   comment: string | null;
   cols?: ColTableInfo[];
+  privileges?: {
+    roleName: string;
+    privileges: TablePrivileges;
+  }[];
   indexes?: {
     name: string;
     definition: string;
@@ -81,17 +86,27 @@ export interface TableInfoFrameState {
 
 export function TableInfoFrame(props: TableInfoFrameProps) {
   const service = useService(async () => {
-    const [comment, cols, indexes, table, view, mView, type, constraints] =
-      await Promise.all([
-        DB.tableComment(props.schema, props.table),
-        DB.listCols(props.schema, props.table),
-        DB.listIndexes(props.schema, props.table),
-        DB.pgTable(props.schema, props.table),
-        DB.pgView(props.schema, props.table),
-        DB.pgMView(props.schema, props.table),
-        DB.pgType(props.schema, props.table),
-        DB.listConstrants(props.schema, props.table),
-      ]);
+    const [
+      comment,
+      cols,
+      indexes,
+      table,
+      view,
+      mView,
+      type,
+      constraints,
+      privileges,
+    ] = await Promise.all([
+      DB.tableComment(props.schema, props.table),
+      DB.listCols(props.schema, props.table),
+      DB.listIndexes(props.schema, props.table),
+      DB.pgTable(props.schema, props.table),
+      DB.pgView(props.schema, props.table),
+      DB.pgMView(props.schema, props.table),
+      DB.pgType(props.schema, props.table),
+      DB.listConstrants(props.schema, props.table),
+      DB.tablePrivileges(props.schema, props.table),
+    ]);
     return {
       comment,
       cols,
@@ -101,6 +116,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       type,
       mView,
       constraints,
+      privileges,
     } as TableInfoFrameState;
   }, []);
 
@@ -119,6 +135,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     view: null,
     mView: null,
     constraints: null,
+    privileges: null,
   };
 
   const [edit, set] = useState({
@@ -137,6 +154,8 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     newColumn: false,
     newIndex: false,
     openIndexComment: null as string | null,
+    updatePrivilege: null as string | null,
+    newPrivilege: false,
   });
 
   const isMounted = useIsMounted();
@@ -255,6 +274,45 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     if (!isMounted()) return;
     set({ ...edit, removeIndex: null });
   });
+
+  const newPrivilege = useEvent(
+    async (form: { role: string; privileges: TablePrivileges }) => {
+      await DB.updatePrivileges(
+        props.schema,
+        props.table,
+        form.role,
+        form.privileges,
+      );
+      if (!isMounted()) return;
+      await service.reload();
+      if (!isMounted()) return;
+      set({ ...edit, newPrivilege: false });
+    },
+  );
+
+  const onUpdatePrivileges = useEvent(
+    async (
+      roleName: string,
+      curr: TablePrivileges,
+      update: TablePrivileges,
+    ) => {
+      await DB.updatePrivileges(props.schema, props.table, roleName, {
+        update: update.update === curr.update ? undefined : update.update,
+        select: update.select === curr.select ? undefined : update.select,
+        insert: update.insert === curr.insert ? undefined : update.insert,
+        delete: update.delete === curr.delete ? undefined : update.delete,
+        truncate:
+          update.truncate === curr.truncate ? undefined : update.truncate,
+        references:
+          update.references === curr.references ? undefined : update.references,
+        trigger: update.trigger === curr.trigger ? undefined : update.trigger,
+      });
+      if (!isMounted()) return;
+      await service.reload();
+      if (!isMounted()) return;
+      set({ ...edit, updatePrivilege: null });
+    },
+  );
 
   const commentIndex = useEvent(async (index: string, comment: string) => {
     await DB.commentIndex(props.schema, props.table, index, comment);
@@ -977,6 +1035,115 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           </table>
         </>
       ) : null}
+      {!state.privileges?.length ? (
+        <>
+          <h2 style={{ userSelect: 'text' }}>Privileges</h2>
+
+          <div className="empty">
+            No privileges found for table.{' '}
+            <button
+              type="button"
+              className="simple-button"
+              onClick={() => set({ ...edit, newPrivilege: true })}
+            >
+              Grant new privilege <i className="fa fa-plus" />
+            </button>
+            {state.cols && edit.newPrivilege ? (
+              <TablePrivilegesDialog
+                relativeTo="previousSibling"
+                type="by_role"
+                onCancel={() => set({ ...edit, newPrivilege: false })}
+                onUpdate={(form) => newPrivilege(form)}
+              />
+            ) : null}
+          </div>
+        </>
+      ) : (
+        <>
+          <h2 style={{ userSelect: 'text' }}>Privileges</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Update</th>
+                <th>Insert</th>
+                <th>Select</th>
+                <th>Delete</th>
+                <th>Truncate</th>
+                <th>References</th>
+                <th>Trigger</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {state.privileges?.map((p) => (
+                <tr key={p.roleName}>
+                  <td>{p.roleName}</td>
+                  <td>{p.privileges.update ? 'yes' : 'no'}</td>
+                  <td>{p.privileges.insert ? 'yes' : 'no'}</td>
+                  <td>{p.privileges.select ? 'yes' : 'no'}</td>
+                  <td>{p.privileges.delete ? 'yes' : 'no'}</td>
+                  <td>{p.privileges.truncate ? 'yes' : 'no'}</td>
+                  <td>{p.privileges.references ? 'yes' : 'no'}</td>
+                  <td>{p.privileges.trigger ? 'yes' : 'no'}</td>
+                  <td className="actions">
+                    <button
+                      type="button"
+                      className="simple-button"
+                      onClick={() =>
+                        set({ ...edit, updatePrivilege: p.roleName })
+                      }
+                    >
+                      Edit <i className="fa fa-pencil" />
+                    </button>
+                    {edit.updatePrivilege === p.roleName ? (
+                      <TablePrivilegesDialog
+                        relativeTo="previousSibling"
+                        privileges={{
+                          update: p.privileges.update,
+                          insert: p.privileges.insert,
+                          select: p.privileges.select,
+                          delete: p.privileges.delete,
+                          truncate: p.privileges.truncate,
+                          references: p.privileges.references,
+                          trigger: p.privileges.trigger,
+                        }}
+                        type="by_role"
+                        onUpdate={(e) =>
+                          onUpdatePrivileges(
+                            p.roleName,
+                            p.privileges,
+                            e.privileges,
+                          )
+                        }
+                        onCancel={() => set({ ...edit, updatePrivilege: null })}
+                        roleName={p.roleName}
+                      />
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="actions">
+            <button
+              type="button"
+              className="simple-button"
+              onClick={() => set({ ...edit, newPrivilege: true })}
+            >
+              New <i className="fa fa-plus" />
+            </button>
+            {edit.newPrivilege ? (
+              <TablePrivilegesDialog
+                relativeTo="previousSibling"
+                onCancel={() => set({ ...edit, newPrivilege: false })}
+                onUpdate={(form) => newPrivilege(form)}
+                type="by_role"
+              />
+            ) : null}
+          </div>
+        </>
+      )}
       {state.table ? (
         <>
           <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_tables</h2>

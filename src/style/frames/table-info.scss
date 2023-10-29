@@ -3,7 +3,8 @@
 .frame.new-table,
 .frame.function,
 .frame.domain,
-.frame.sequence {
+.frame.sequence,
+.frame.role {
   position: absolute;
   top: 0;
   right: 0;
@@ -163,7 +164,8 @@ span.column {
 .table-info,
 .frame.function,
 .frame.sequence,
-.frame.schema-info {
+.frame.schema-info,
+.frame.role {
   table {
     user-select: text;
   }
@@ -201,7 +203,8 @@ div.frame.table-info,
 div.frame.schema-info,
 div.frame.sequence,
 div.frame.domain,
-div.frame.function {
+div.frame.function,
+div.frame.role {
   h1 {
     user-select: text;
   }
@@ -282,7 +285,8 @@ button[disabled] {
   overflow: auto;
 }
 
-body div.frame.table-info div.dialog-form {
+body div.frame.table-info div.dialog-form,
+body div.frame.role div.dialog-form {
   .fa-close {
     opacity: 0.4;
     cursor: pointer;
