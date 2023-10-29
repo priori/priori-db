@@ -8,7 +8,7 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, Menu } from 'electron';
 // import { autoUpdater } from 'electron-updater';
 // import log from 'electron-log';
 import { resolveHtmlPath } from './util';
@@ -20,8 +20,6 @@ import { resolveHtmlPath } from './util';
 //     autoUpdater.checkForUpdatesAndNotify();
 //   }
 // }
-
-let mainWindow: BrowserWindow | null = null;
 
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
@@ -37,13 +35,7 @@ if (process.env.NODE_ENV === 'production') {
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
-if (isDebug) {
-  require('electron-debug')();
-  const localShortcut = require('electron-localshortcut');
-  localShortcut.register('CommandOrControl+R', () => {});
-  localShortcut.register('F5', () => {});
-}
-
+let windowsCount = 0;
 const installExtensions = async () => {
   const installer = require('electron-devtools-installer');
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
@@ -61,13 +53,13 @@ const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
   }
-
-  mainWindow = new BrowserWindow({
+  windowsCount += 1;
+  const window = new BrowserWindow({
     width: 800,
     height: 600,
     minWidth: 600,
     minHeight: 440,
-    title: '',
+    title: 'Priori DB',
     icon: '../../icon.png',
     fullscreenable: true,
     webPreferences: {
@@ -78,27 +70,28 @@ const createWindow = async () => {
       // opt out to node integration : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
-  mainWindow.setMenu(null);
+  window.setMenu(null);
 
-  mainWindow.loadURL(resolveHtmlPath('index.html'));
+  window.loadURL(resolveHtmlPath('index.html'));
 
-  mainWindow.on('ready-to-show', () => {
-    if (!mainWindow) {
+  window.on('ready-to-show', () => {
+    if (!window) {
       throw new Error('"mainWindow" is not defined');
     }
     if (process.env.START_MINIMIZED) {
-      mainWindow.minimize();
+      window.minimize();
     } else {
-      mainWindow.show();
+      window.show();
     }
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  window.on('closed', () => {
+    // window = null;
+    windowsCount -= 1;
   });
 
   // Open urls in the user's browser
-  mainWindow.webContents.setWindowOpenHandler((edata) => {
+  window.webContents.setWindowOpenHandler((edata) => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
@@ -107,6 +100,15 @@ const createWindow = async () => {
   // new AppUpdater();
 };
 
+if (isDebug) {
+  require('electron-debug')();
+  const localShortcut = require('electron-localshortcut');
+  localShortcut.register('CommandOrControl+R', () => {});
+  localShortcut.register('CommandOrControl+N', () => {
+    createWindow();
+  });
+  localShortcut.register('F5', () => {});
+}
 /**
  * Add event listeners...
  */
@@ -119,14 +121,26 @@ app.on('window-all-closed', () => {
   }
 });
 
+const dockMenu = Menu.buildFromTemplate([
+  {
+    label: 'New Window',
+    click() {
+      createWindow();
+    },
+  },
+]);
+
 app
   .whenReady()
   .then(() => {
     createWindow();
+    if (process.platform === 'darwin') {
+      app.dock.setMenu(dockMenu);
+    }
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) createWindow();
+      if (windowsCount === 0) createWindow();
     });
   })
   .catch(console.log);
