@@ -910,7 +910,7 @@ export const DB = {
   async listRoles() {
     return list(
       `
-      select rolname name, usename IS NOT NULL "isUser"
+      select rolname "name", usename IS NOT NULL "isUser"
       FROM pg_roles
       LEFT JOIN pg_user
       ON usename = rolname
