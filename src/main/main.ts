@@ -60,7 +60,7 @@ const createWindow = async () => {
     minWidth: 600,
     minHeight: 440,
     title: 'Priori DB',
-    icon: '../../icon.png',
+    icon: 'icon.png',
     fullscreenable: true,
     webPreferences: {
       nodeIntegration: true, // opt out to node integration
