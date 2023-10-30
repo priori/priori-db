@@ -179,7 +179,7 @@
     "webpack-merge": "^5.8.0"
   },
   "build": {
-    "productName": "PrioriDB",
+    "productName": "Priori DB",
     "appId": "com.github.priori.PrioriDB",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
