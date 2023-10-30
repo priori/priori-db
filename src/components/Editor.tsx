@@ -1,8 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, CSSProperties } from 'react';
 
+type EditorState = {
+  content: string;
+  cursorStart: { line: number; ch: number };
+  cursorEnd: { line: number; ch: number };
+};
+
+function isSameEditorState(state: EditorState, state2: EditorState) {
+  if (state.content !== state2.content) return false;
+  if (
+    state.cursorStart.line === state.cursorEnd.line &&
+    state.cursorStart.ch === state.cursorEnd.ch &&
+    state2.cursorStart.line === state2.cursorEnd.line &&
+    state2.cursorStart.ch === state2.cursorEnd.ch
+  )
+    return true;
+  return (
+    state.cursorStart.line === state2.cursorStart.line &&
+    state.cursorStart.ch === state2.cursorStart.ch &&
+    state.cursorEnd.line === state2.cursorEnd.line &&
+    state.cursorEnd.ch === state2.cursorEnd.ch
+  );
+}
 export interface EditorProps {
   style: CSSProperties | undefined;
+  onChange?: () => void;
 }
 export class Editor extends Component<EditorProps, never> {
   editor: any = null;
@@ -31,15 +54,7 @@ export class Editor extends Component<EditorProps, never> {
   }
 
   // eslint-disable-next-line react/no-unused-class-component-methods
-  setEditorState({
-    content,
-    cursorStart,
-    cursorEnd,
-  }: {
-    content: string;
-    cursorStart: { line: number; ch: number };
-    cursorEnd: { line: number; ch: number };
-  }) {
+  setEditorState({ content, cursorStart, cursorEnd }: EditorState) {
     this.editor.setValue(content);
     this.editor.setSelection(cursorStart, cursorEnd);
     this.editor.clearHistory();
@@ -65,6 +80,20 @@ export class Editor extends Component<EditorProps, never> {
       lineNumbers: true,
       lineWrapping: true,
       mode: 'text/x-sql',
+    });
+
+    let prev = this.getEditorState();
+    this.editor.on('change', () => {
+      const v = this.getEditorState();
+      if (isSameEditorState(v, prev)) return;
+      prev = v;
+      if (this.props.onChange) this.props.onChange();
+    });
+    this.editor.on('cursorActivity', () => {
+      const v = this.getEditorState();
+      if (isSameEditorState(v, prev)) return;
+      prev = v;
+      if (this.props.onChange) this.props.onChange();
     });
     // var charWidth = editor.defaultCharWidth(), basePadding = 4;
     // editor.on("renderLine", function(cm:any, line:any, elt:any) {

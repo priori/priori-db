@@ -101,7 +101,6 @@
   z-index: 2;
   padding: 5px;
 }
-
 .running span {
   position: absolute;
   right: 66px;
@@ -206,4 +205,46 @@
   margin-left: 3px;
   position: relative;
   top: -2px;
+}
+
+.favorite {
+  position: absolute;
+  z-index: 4;
+  top: 31px;
+  right: 8px;
+}
+
+.query-tab .fa-star {
+  font-size: 28px;
+  color: #26d;
+  cursor: pointer;
+  color: #ddd;
+  &:hover {
+    color: #ccc;
+  }
+}
+.query-tab .fa-star.saved {
+  color: #fd0;
+}
+.favorite-dialog {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  padding: 10px;
+  .actions {
+    text-align: right;
+    margin-top: 10px;
+  }
+  input {
+    padding: 4px;
+  }
+  .app-content & button {
+    box-shadow: 0 0;
+    font-size: 13px;
+    padding: 3px 6px !important;
+    margin-left: 5px;
+  }
 }

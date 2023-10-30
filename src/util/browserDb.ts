@@ -2,10 +2,7 @@
 
 let db: any = null;
 if (!db) db = (window as any).openDatabase('PrioriDB', '1.0', 'Priori DB', 0);
-const query = (
-  sqlQuery: string,
-  params: (string | null | number | boolean)[],
-) => {
+function query(sqlQuery: string, params: (string | null | number | boolean)[]) {
   return new Promise<{ [key: string]: number | null | string | boolean }[]>(
     (resolve, reject) => {
       db.transaction((tx: any) => {
@@ -29,12 +26,12 @@ const query = (
       });
     },
   );
-};
+}
 
-const insertId = (
+function insertId(
   sqlQuery: string,
   params: (string | null | number | boolean)[],
-) => {
+) {
   return new Promise<number>((resolve, reject) => {
     db.transaction((tx: any) => {
       tx.executeSql(
@@ -54,9 +51,26 @@ const insertId = (
       );
     });
   });
-};
+}
 
 const executionPromise = (async () => {
+  await query(
+    `
+    CREATE TABLE IF NOT EXISTS favorite_query (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      execution_id number,
+      sql string,
+      editor_content string,
+      editor_cursor_start_line number,
+      editor_cursor_end_line number,
+      editor_cursor_start_char number,
+      editor_cursor_end_char number,
+      title string,
+      created_at number
+    );
+    `,
+    [],
+  );
   await query(
     `
     CREATE TABLE IF NOT EXISTS query (
@@ -162,7 +176,46 @@ export async function updateConnection(
   );
 }
 
-export const saveQuery = async (
+export async function saveFavoriteQuery(
+  sql: string,
+  title: string,
+  {
+    content,
+    cursorStart,
+    cursorEnd,
+  }: {
+    content: string;
+    cursorStart: { line: number; ch: number };
+    cursorEnd: { line: number; ch: number };
+  },
+) {
+  return insertId(
+    `INSERT INTO favorite_query (
+      sql,
+      title,
+      editor_content,
+      editor_cursor_start_line,
+      editor_cursor_end_line,
+      editor_cursor_start_char,
+      editor_cursor_end_char,
+      created_at,
+      execution_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      sql,
+      title,
+      content,
+      cursorStart.line,
+      cursorEnd.line,
+      cursorStart.ch,
+      cursorEnd.ch,
+      new Date().getTime(),
+      await executionPromise,
+    ],
+  );
+}
+
+export async function saveQuery(
   sql: string,
   uid: number,
   {
@@ -175,7 +228,7 @@ export const saveQuery = async (
     cursorEnd: { line: number; ch: number };
   },
   tabTitle: string | null,
-) => {
+) {
   const execId = await executionPromise;
   return insertId(
     `INSERT INTO query (
@@ -200,7 +253,7 @@ export const saveQuery = async (
       tabTitle,
     ],
   );
-};
+}
 
 export async function updateQuery(
   id: number,

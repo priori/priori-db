@@ -158,8 +158,9 @@ export function QuerySelector({
   const config = appState.passwords[configIndex] ?? null;
   const service = useService(
     () =>
-      browserDb.query(
-        `SELECT query.*
+      Promise.all([
+        browserDb.query(
+          `SELECT query.*
         FROM query
         ${
           config
@@ -172,13 +173,57 @@ export function QuerySelector({
             : ''
         }
         ORDER BY created_at DESC`,
-        config ? [config.user, config.host, config.port, config.database] : [],
-      ) as Promise<ExecutedQueryEntry[]>,
+          config
+            ? [config.user, config.host, config.port, config.database]
+            : [],
+        ) as Promise<ExecutedQueryEntry[]>,
+
+        browserDb.query(
+          `SELECT
+            favorite_query.id,
+            favorite_query.sql,
+            favorite_query.title,
+            favorite_query.created_at,
+            editor_content,
+            editor_cursor_start_line,
+            editor_cursor_end_line,
+            editor_cursor_start_char,
+            editor_cursor_end_char
+        FROM favorite_query
+        ${
+          config
+            ? `WHERE
+        execution_id IN ( SELECT id FROM execution WHERE
+          execution.user = $1 AND
+          execution.host = $2 AND
+          execution.port = $3 AND
+          execution.database = $4) `
+            : ''
+        }
+        ORDER BY title ASC`,
+          config
+            ? [config.user, config.host, config.port, config.database]
+            : [],
+        ) as Promise<
+          {
+            id: number;
+            sql: string;
+            title: string;
+            created_at: number;
+            editor_content: string;
+            editor_cursor_start_line: number;
+            editor_cursor_end_line: number;
+            editor_cursor_start_char: number;
+            editor_cursor_end_char: number;
+          }[]
+        >,
+      ]).then(([queries, favorites]) => ({ queries, favorites })),
+
     [config],
   );
   const queries = !service.lastValidData
     ? null
-    : service.lastValidData
+    : service.lastValidData?.queries
         .map(
           (q) =>
             ({
@@ -230,6 +275,7 @@ export function QuerySelector({
       });
     });
   }
+
   return (
     <div className="query-selector">
       <div className="query-selector--header">
@@ -246,6 +292,42 @@ export function QuerySelector({
           ))}
         </select>
       </div>
+      {service.lastValidData?.favorites?.length ? (
+        <h1>
+          <i className="fa fa-star" />
+          Favorites
+        </h1>
+      ) : null}
+      <div className="query-selector--favorites">
+        {service.lastValidData?.favorites.map((q) => (
+          <div
+            className="query-selector--query"
+            key={q.id}
+            onClick={() => {
+              onSelect({
+                content: q.editor_content,
+                cursorStart: {
+                  line: q.editor_cursor_start_line,
+                  ch: q.editor_cursor_start_char,
+                },
+                cursorEnd: {
+                  line: q.editor_cursor_end_line,
+                  ch: q.editor_cursor_end_char,
+                },
+              });
+            }}
+          >
+            <h1>
+              {q.title ? <div>{q.title}</div> : null}
+              <span>{fDate(new Date(q.created_at))}</span>
+            </h1>
+            <div className="query-selector--sql">{q.sql}</div>
+          </div>
+        ))}
+      </div>
+      {service.lastValidData?.favorites?.length ? (
+        <h1>Last Executed Queries</h1>
+      ) : null}
       <div className="query-selector--queries">
         {queries?.map((g) => (
           <Group

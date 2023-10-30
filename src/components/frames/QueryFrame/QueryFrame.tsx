@@ -7,6 +7,7 @@ import { closeTabNow } from 'state/actions';
 import { DB } from 'db/DB';
 import {
   saveQuery as insertQuery,
+  saveFavoriteQuery,
   updateFailedQuery,
   updateQuery,
 } from 'util/browserDb';
@@ -19,6 +20,7 @@ import { Editor } from '../../Editor';
 import { DataGrid } from '../../util/DataGrid/DataGrid';
 import { useExclusiveConnection } from '../../../db/ExclusiveConnection';
 import { Notices } from './Notices';
+import { FavoriteControl } from './FavoriteControl';
 
 interface QFNoticeMessage extends NoticeMessage {
   fullView?: boolean | undefined;
@@ -227,8 +229,23 @@ export function QueryFrame({ uid }: { uid: number }) {
     }));
   });
 
+  const [saved, setSaved] = useState(false);
+
+  const onFavoriteSave = useEvent(async (name: string) => {
+    if (!editorRef.current || !name) return;
+    const sql = editorRef.current.getQuery();
+    if (!sql) return;
+    await saveFavoriteQuery(sql, name, editorRef.current.getEditorState());
+    setSaved(true);
+  });
+
+  const onEditorChange = useEvent(() => {
+    if (saved) setSaved(false);
+  });
+
   return (
     <>
+      <FavoriteControl onSave={onFavoriteSave} saved={saved} />
       {closeConfirm || closeConfirm2 ? (
         <Dialog relativeTo="nextSibling" onBlur={noClick}>
           {closeConfirm2
@@ -246,7 +263,11 @@ export function QueryFrame({ uid }: { uid: number }) {
         </Dialog>
       ) : null}
 
-      <Editor ref={editorRef} style={{ height: '300px' }} />
+      <Editor
+        ref={editorRef}
+        onChange={onEditorChange}
+        style={{ height: '300px' }}
+      />
 
       {state.clientError ? (
         <span className="client-error">
@@ -374,9 +395,9 @@ export function QueryFrame({ uid }: { uid: number }) {
         </div>
       ) : state.freshTab ? (
         <QuerySelector
-          onSelect={(editorState) =>
-            editorRef.current?.setEditorState({ ...editorState })
-          }
+          onSelect={(editorState) => {
+            editorRef.current?.setEditorState({ ...editorState });
+          }}
         />
       ) : null}
     </>
