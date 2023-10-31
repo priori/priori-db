@@ -110,8 +110,8 @@ export function Dialog({
     }
   });
   const onKeyDown = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Escape') {
-      e.currentTarget.blur();
+    if (e.key === 'Escape' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
     }
   });
   const onBlurListener = useEvent((e: React.FocusEvent<HTMLDivElement>) => {
@@ -124,7 +124,7 @@ export function Dialog({
   return (
     <div
       className={`dialog${className ? ` ${className}` : ''}`}
-      onKeyDown={onKeyDown}
+      onKeyDownCapture={onKeyDown}
       tabIndex={0}
       ref={ref}
       onBlur={onBlurListener}

@@ -22,6 +22,10 @@ export function Comment({
       el.setSelectionRange(el.value.length, el.value.length);
     }
   });
+  const onkeydown = useEvent((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape' && ((!value && !state) || value === state))
+      onCancel();
+  });
   if (!value && !edit) return null;
   if (edit)
     return (
@@ -29,6 +33,7 @@ export function Comment({
         <textarea
           className="comment"
           value={state}
+          onKeyDown={onkeydown}
           onChange={(e) => setState(e.target.value)}
           ref={focusRef}
         />
