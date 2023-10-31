@@ -1035,7 +1035,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           </table>
         </>
       ) : null}
-      {!state.privileges?.length ? (
+      {service.lastValidData && !state.privileges?.length ? (
         <>
           <h2 style={{ userSelect: 'text' }}>Privileges</h2>
 
@@ -1058,7 +1058,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             ) : null}
           </div>
         </>
-      ) : (
+      ) : service.lastValidData ? (
         <>
           <h2 style={{ userSelect: 'text' }}>Privileges</h2>
           <table>
@@ -1143,7 +1143,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             ) : null}
           </div>
         </>
-      )}
+      ) : null}
       {state.table ? (
         <>
           <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_tables</h2>
