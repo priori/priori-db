@@ -354,7 +354,17 @@ export function QueryFrame({ uid }: { uid: number }) {
 
   return (
     <>
-      <FavoriteControl onSave={onFavoriteSave} saved={saved} />
+      <FavoriteControl
+        onSave={onFavoriteSave}
+        style={
+          state.running
+            ? { top: 65 }
+            : state.clientPid
+            ? { top: 31 }
+            : { top: 7 }
+        }
+        saved={saved}
+      />
       {closeConfirm || closeConfirm2 ? (
         <Dialog relativeTo="nextSibling" onBlur={noClick}>
           {closeConfirm2
