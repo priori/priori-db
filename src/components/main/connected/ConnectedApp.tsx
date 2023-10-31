@@ -42,6 +42,8 @@ interface UseTabConfiguration {
   onClose?: () => boolean;
   // onActivate?: () => void;
   // onDeactivate?: () => void;
+  save?: () => void;
+  open?: () => void;
   f5?: () => void;
 }
 
@@ -94,6 +96,28 @@ export function ConnectedApp({ state }: { state: AppState }) {
     },
     prevTab() {
       prevTab();
+    },
+    open() {
+      if (active) {
+        const activeConf = tabsConfigurations[active];
+        if (activeConf && activeConf.open) {
+          activeConf.open();
+          return;
+        }
+      }
+      // eslint-disable-next-line consistent-return
+      return false;
+    },
+    save() {
+      if (active) {
+        const activeConf = tabsConfigurations[active];
+        if (activeConf && activeConf.save) {
+          activeConf.save();
+          return;
+        }
+      }
+      // eslint-disable-next-line consistent-return
+      return false;
     },
     closeTab() {
       askToCloseCurrent();

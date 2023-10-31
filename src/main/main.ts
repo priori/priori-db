@@ -8,7 +8,7 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-import { app, BrowserWindow, shell, Menu } from 'electron';
+import { app, BrowserWindow, shell, Menu, dialog, ipcMain } from 'electron';
 // import { autoUpdater } from 'electron-updater';
 // import log from 'electron-log';
 import { resolveHtmlPath } from './util';
@@ -26,6 +26,42 @@ import { resolveHtmlPath } from './util';
 //   console.log(msgTemplate(arg));
 //   event.reply('ipc-example', msgTemplate('pong'));
 // });
+
+async function openAny() {
+  const { canceled, filePaths } = await dialog.showOpenDialog({});
+  if (!canceled) {
+    return filePaths[0];
+  }
+  return null;
+}
+
+async function openSql() {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    filters: [{ name: 'SQL', extensions: ['sql'] }],
+  });
+  if (!canceled) {
+    return filePaths[0];
+  }
+  return null;
+}
+
+async function saveSql() {
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    filters: [{ name: 'SQL', extensions: ['sql'] }],
+  });
+  if (!canceled) {
+    return filePath;
+  }
+  return null;
+}
+
+async function saveAny() {
+  const { canceled, filePath } = await dialog.showSaveDialog({});
+  if (!canceled) {
+    return filePath;
+  }
+  return null;
+}
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -103,13 +139,13 @@ const createWindow = async () => {
 if (isDebug) {
   require('electron-debug')();
 }
-  const localShortcut = require('electron-localshortcut');
+const localShortcut = require('electron-localshortcut');
 
-  localShortcut.register('CommandOrControl+R', () => {});
-  localShortcut.register('CommandOrControl+N', () => {
-    createWindow();
-  });
-  localShortcut.register('F5', () => {});
+localShortcut.register('CommandOrControl+R', () => {});
+localShortcut.register('CommandOrControl+N', () => {
+  createWindow();
+});
+localShortcut.register('F5', () => {});
 /**
  * Add event listeners...
  */
@@ -143,5 +179,9 @@ app
       // dock icon is clicked and there are no other windows open.
       if (windowsCount === 0) createWindow();
     });
+    ipcMain.handle('dialog:openAny', openAny);
+    ipcMain.handle('dialog:saveAny', saveAny);
+    ipcMain.handle('dialog:openSql', openSql);
+    ipcMain.handle('dialog:saveSql', saveSql);
   })
   .catch(console.log);

@@ -3,6 +3,7 @@ import { PoolClient, QueryArrayResult, QueryResult } from 'pg';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { useEffect, useState } from 'react';
 import { useEvent } from 'util/useEvent';
+import { CopyStreamQuery, CopyToStreamQuery } from 'pg-copy-streams';
 import { openConnection, SimpleValue } from './Connection';
 import { DB } from './DB';
 
@@ -12,9 +13,9 @@ class ExclusiveConnection {
   public pid: number | undefined;
 
   pending: {
-    resolve: (r: QueryArrayResult<SimpleValue[]>) => void;
+    resolve: (r: QueryArrayResult<SimpleValue[]> | CopyStreamQuery) => void;
     reject: (e: unknown) => void;
-    query: string;
+    query: string | CopyToStreamQuery | CopyStreamQuery;
     arrayRowMode: boolean;
     args?: Array<string | number | null | boolean>;
   }[] = [];
@@ -50,15 +51,27 @@ class ExclusiveConnection {
     arrayRowMode: true,
   ): Promise<QueryArrayResult<SimpleValue[]>>;
 
+  async query(q: CopyToStreamQuery): Promise<CopyToStreamQuery>;
+
+  async query(q: CopyStreamQuery): Promise<CopyStreamQuery>;
+
   async query(
-    q: string,
+    q: string | CopyToStreamQuery | CopyStreamQuery,
     args?: (number | string | boolean | null)[],
     arrayRowMode?: true,
   ) {
     if (this.db) {
+      if (q && !(typeof q === 'string')) {
+        const r = this.db.query(q);
+        return Promise.resolve(r as CopyToStreamQuery | CopyStreamQuery);
+      }
       if (arrayRowMode)
-        return this.db.query({ text: q, rowMode: 'array', values: args });
-      return this.db.query(q, args);
+        return this.db.query({
+          text: q as string,
+          rowMode: 'array',
+          values: args,
+        });
+      return this.db.query(q as string, args);
     }
     return new Promise((resolve, reject) => {
       this.pending.push({
@@ -99,10 +112,19 @@ class ExclusiveConnection {
     }
     for (const e of pending) {
       assert(!!this.db);
-      if (e.arrayRowMode) {
+      if (e.query && !(typeof e.query === 'string')) {
+        try {
+          const ret: CopyStreamQuery = (await this.db.query(
+            e.query,
+          )) as unknown as CopyStreamQuery;
+          e.resolve(ret);
+        } catch (err) {
+          e.reject(err);
+        }
+      } else if (e.arrayRowMode) {
         try {
           const ret = await this.db.query({
-            text: e.query,
+            text: e.query as string,
             rowMode: 'array',
             values: e.args,
           });

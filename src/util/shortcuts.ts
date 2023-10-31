@@ -10,6 +10,8 @@ export function useShortcuts({
   newTab,
   newWindow,
   f11,
+  save,
+  open,
   f5,
 }: {
   nextTab?: () => void;
@@ -19,9 +21,29 @@ export function useShortcuts({
   newWindow?: () => void;
   f11?: () => void;
   f5?: () => void;
+  save?: () => void | false;
+  open?: () => void | false;
 }) {
   const listener = useEvent((e: KeyboardEvent) => {
-    if (e.ctrlKey && e.key === 'Tab') {
+    if (
+      save &&
+      ((e.ctrlKey && (e.key === 's' || e.key === 'S')) ||
+        (isIOS && e.metaKey && (e.key === 's' || e.key === 'S')))
+    ) {
+      const r = save();
+      if (r === false) return;
+      e.preventDefault();
+      e.stopPropagation();
+    } else if (
+      open &&
+      ((e.ctrlKey && (e.key === 'o' || e.key === 'O')) ||
+        (isIOS && e.metaKey && (e.key === 'o' || e.key === 'O')))
+    ) {
+      const r = open();
+      if (r === false) return;
+      e.preventDefault();
+      e.stopPropagation();
+    } else if (e.ctrlKey && e.key === 'Tab') {
       if (e.shiftKey) {
         if (prevTab) prevTab();
       } else if (nextTab) nextTab();

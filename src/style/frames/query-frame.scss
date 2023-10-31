@@ -77,6 +77,16 @@
     background: #31bb4d;
   }
 }
+button.query-tab--stdout {
+  position: absolute;
+  right: 20px;
+  margin-top: -54px;
+  z-index: 2;
+  cursor: pointer;
+  padding: 5px !important;
+  font-size: 14px;
+}
+
 .query-tab .mensagem {
   position: absolute;
   margin-top: -36px;

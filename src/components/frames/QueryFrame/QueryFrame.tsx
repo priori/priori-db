@@ -3,8 +3,9 @@ import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { assert } from 'util/assert';
 import { useEvent } from 'util/useEvent';
 import { QueryArrayResult } from 'pg';
-import { closeTabNow } from 'state/actions';
+import { closeTabNow, showError } from 'state/actions';
 import { DB } from 'db/DB';
+import { CopyStreamQuery, CopyToStreamQuery, from, to } from 'pg-copy-streams';
 import {
   saveQuery as insertQuery,
   saveFavoriteQuery,
@@ -14,6 +15,10 @@ import {
 import { currentState } from 'state/state';
 import { useIsMounted } from 'util/hooks';
 import { Dialog } from 'components/util/Dialog/Dialog';
+import { ipcRenderer } from 'electron';
+import { grantError } from 'util/errors';
+import { createReadStream, createWriteStream, readFile, writeFile } from 'fs';
+import { pipeline } from 'node:stream/promises';
 import { QuerySelector } from './QuerySelector';
 import { useTab } from '../../main/connected/ConnectedApp';
 import { Editor } from '../../Editor';
@@ -21,6 +26,19 @@ import { DataGrid } from '../../util/DataGrid/DataGrid';
 import { useExclusiveConnection } from '../../../db/ExclusiveConnection';
 import { Notices } from './Notices';
 import { FavoriteControl } from './FavoriteControl';
+
+function temToStdOut(query: string) {
+  return (
+    !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
+    !!query.match(/^([^']|'([^']|'')*')*to\sstdout/gim)
+  );
+}
+function temFromStdIn(query: string) {
+  return (
+    !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
+    !!query.match(/^([^']|'([^']|'')*')*from\sstdin/gim)
+  );
+}
 
 interface QFNoticeMessage extends NoticeMessage {
   fullView?: boolean | undefined;
@@ -31,10 +49,15 @@ interface QueryFrameState {
   openTransaction: boolean;
   notices: QFNoticeMessage[];
   resetNotices: boolean;
-  res: QueryArrayResult | null;
+  res:
+    | QueryArrayResult
+    | (CopyToStreamQuery & { fields: undefined })
+    | (CopyStreamQuery & { fields: undefined })
+    | null;
   time: null | number;
   clientPid: number | null;
   clientError: Error | null;
+  stdoutResult: null | string;
   error: {
     code: string;
     line: number;
@@ -75,6 +98,9 @@ export function QueryFrame({ uid }: { uid: number }) {
 
   const isMounted = useIsMounted();
 
+  const [stdInFile, setStdInFile] = useState<string | null>(null);
+  const [stdOutFile, setStdOutFile] = useState<string | null>(null);
+
   const executeQuery = useEvent(
     async (
       query: string,
@@ -96,9 +122,45 @@ export function QueryFrame({ uid }: { uid: number }) {
           );
       const start = new Date().getTime();
       try {
-        const res = await db.query(query, [], true);
+        const stdoutMode = stdOutFile && temToStdOut(query);
+        const stdInMode = stdInFile && temFromStdIn(query);
+        if (stdoutMode && stdInMode)
+          throw new Error('Cannot use STDIN and STDOUT at the same time');
+
+        const res = stdoutMode
+          ? ((await db.query(to(query))) as unknown as
+              | QueryArrayResult
+              | (CopyStreamQuery & { fields: undefined })
+              | (CopyToStreamQuery & { fields: undefined }))
+          : stdInMode
+          ? ((await db.query(from(query))) as unknown as
+              | QueryArrayResult
+              | (CopyStreamQuery & { fields: undefined })
+              | (CopyToStreamQuery & { fields: undefined }))
+          : await db.query(query, [], true);
+
+        if (stdoutMode)
+          await pipeline(
+            res as CopyToStreamQuery,
+            createWriteStream(stdOutFile),
+          );
+        if (stdInMode) {
+          const stream = res as CopyStreamQuery;
+          const fileStream = createReadStream(stdInFile);
+          fileStream.pipe(stream);
+          await new Promise((resolve, reject) => {
+            fileStream.on('error', reject);
+            stream.on('error', reject);
+            stream.on('finish', resolve);
+          });
+        }
+
         const time = new Date().getTime() - start;
-        const resLength = res?.rows?.length as number | undefined;
+        const resLength = !('rows' in res)
+          ? undefined
+          : ((res as unknown as QueryArrayResult)?.rows?.length as
+              | number
+              | undefined);
         if (id)
           updateQuery(
             id,
@@ -108,21 +170,26 @@ export function QueryFrame({ uid }: { uid: number }) {
         const openTransaction = !db.pid
           ? false
           : await DB.inOpenTransaction(db.pid);
-        if (isMounted())
+        if (isMounted()) {
+          if (stdoutMode) setStdOutFile(null);
+          if (stdInMode) setStdInFile(null);
           setState((state2) => ({
             ...state2,
             running: false,
             clientPid: db.pid || null,
             openTransaction,
             res,
+            stdoutResult: stdoutMode ? stdOutFile : null,
             notices:
-              (res && res.fields && res.fields.length) || state2.resetNotices
+              (res as { fields?: { length?: number } })?.fields?.length ||
+              state2.resetNotices
                 ? []
                 : state2.notices,
             resetNotices: false,
             time,
             error: null,
           }));
+        }
       } catch (err: unknown) {
         const time = new Date().getTime() - start;
         if (id) updateFailedQuery(id, time);
@@ -139,6 +206,7 @@ export function QueryFrame({ uid }: { uid: number }) {
               position: number;
               message: string;
             },
+            stdoutResult: null,
             freshTab: false,
             clientError: state2.clientError,
             time: null,
@@ -169,9 +237,18 @@ export function QueryFrame({ uid }: { uid: number }) {
     setCloseConfirm2(false);
   });
 
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [openDialogOpen, setOpenDialogOpen] = useState(false);
+
   useTab({
     f5() {
       execute();
+    },
+    open() {
+      setOpenDialogOpen(true);
+    },
+    save() {
+      setSaveDialogOpen(true);
     },
     onClose() {
       if (state.running) {
@@ -243,6 +320,38 @@ export function QueryFrame({ uid }: { uid: number }) {
     if (saved) setSaved(false);
   });
 
+  const onStdOutFileClick = useEvent(async () => {
+    const f = await ipcRenderer.invoke('dialog:saveAny');
+    if (f) setStdOutFile(f);
+    setSaveDialogOpen(false);
+  });
+
+  const onStdInFileClick = useEvent(async () => {
+    const f = await ipcRenderer.invoke('dialog:openAny');
+    if (f) setStdInFile(f);
+  });
+
+  const onSaveSqlQueryToFileClick = useEvent(async () => {
+    const f = await ipcRenderer.invoke('dialog:saveSql');
+    if (f)
+      writeFile(f, editorRef.current?.getQuery() || '', (err: unknown) => {
+        if (err) showError(grantError(err));
+        setSaveDialogOpen(false);
+      });
+  });
+
+  const onOpenSqlQueryFileClick = useEvent(async () => {
+    const f = await ipcRenderer.invoke('dialog:openSql');
+    if (f)
+      readFile(f, (err, data) => {
+        if (err) showError(grantError(err));
+        else {
+          editorRef.current?.setQueryValue(data.toString());
+          setOpenDialogOpen(false);
+        }
+      });
+  });
+
   return (
     <>
       <FavoriteControl onSave={onFavoriteSave} saved={saved} />
@@ -268,6 +377,49 @@ export function QueryFrame({ uid }: { uid: number }) {
         onChange={onEditorChange}
         style={{ height: '300px' }}
       />
+      {saveDialogOpen ? (
+        <Dialog
+          relativeTo="previousSibling"
+          onBlur={() => setSaveDialogOpen(false)}
+        >
+          <button
+            onClick={onSaveSqlQueryToFileClick}
+            style={{ display: 'block', width: '100%', marginBottom: 15 }}
+            type="button"
+          >
+            Save SQL query to a file (.sql)
+          </button>
+          <button
+            style={{ display: 'block', width: '100%' }}
+            type="button"
+            onClick={onStdOutFileClick}
+          >
+            Export query response to a file (PostgreSQL STDOUT)
+          </button>
+        </Dialog>
+      ) : null}
+
+      {openDialogOpen ? (
+        <Dialog
+          relativeTo="previousSibling"
+          onBlur={() => setOpenDialogOpen(false)}
+        >
+          <button
+            type="button"
+            style={{ display: 'block', width: '100%', marginBottom: 15 }}
+            onClick={onOpenSqlQueryFileClick}
+          >
+            Open SQL query from a file (.sql)
+          </button>
+          <button
+            type="button"
+            style={{ display: 'block', width: '100%' }}
+            onClick={onStdInFileClick}
+          >
+            Import data from a file (PostgreSQL STDIN)
+          </button>
+        </Dialog>
+      ) : null}
 
       {state.clientError ? (
         <span className="client-error">
@@ -282,7 +434,31 @@ export function QueryFrame({ uid }: { uid: number }) {
           time.
         </span>
       ) : undefined}
+
       {/* <span className="mensagem error"></span> */}
+
+      {stdOutFile ? (
+        <button
+          type="button"
+          style={{ top: 265 }}
+          className="query-tab--stdout"
+          title={stdOutFile}
+        >
+          STDOUT <i className="fa fa-file-o" />
+        </button>
+      ) : null}
+
+      {stdInFile ? (
+        <button
+          type="button"
+          style={{ top: stdOutFile ? 230 : 265 }}
+          className="query-tab--stdout"
+          title={stdInFile}
+        >
+          STDIN <i className="fa fa-file-o" />
+        </button>
+      ) : null}
+
       {state.running ? (
         <button type="button" disabled className="query-tab--execute">
           Execute <i className="fa fa-check" />
@@ -380,6 +556,14 @@ export function QueryFrame({ uid }: { uid: number }) {
             >
               Query returned successfully: {state.res.rowCount} row affected,{' '}
               {state.time} ms execution time.
+              {state.stdoutResult ? (
+                <div style={{ marginTop: '1em' }}>
+                  Query result exported to file{' '}
+                  <strong style={{ userSelect: 'text' }}>
+                    {state.stdoutResult}
+                  </strong>
+                </div>
+              ) : null}
             </div>
           ) : state.res ? (
             <div

@@ -54,6 +54,11 @@ export class Editor extends Component<EditorProps, never> {
   }
 
   // eslint-disable-next-line react/no-unused-class-component-methods
+  setQueryValue(query: string) {
+    this.editor.setValue(query);
+  }
+
+  // eslint-disable-next-line react/no-unused-class-component-methods
   setEditorState({ content, cursorStart, cursorEnd }: EditorState) {
     this.editor.setValue(content);
     this.editor.setSelection(cursorStart, cursorEnd);
