@@ -279,7 +279,12 @@ export function QuerySelector({
   return (
     <div className="query-selector">
       <div className="query-selector--header">
-        <input type="text" readOnly disabled style={{ background: 'white' }} />
+        <input
+          type="text"
+          readOnly
+          disabled
+          style={{ background: 'white', border: '1px solid #ddd' }}
+        />
         <select
           value={configIndex}
           onChange={(e) => set(parseInt(e.target.value, 10))}

@@ -107,12 +107,21 @@
 }
 
 .query-selector--favorites h1 div {
-  font-size: 25px;
+  font-size: 20px;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  line-height: 25px;
 }
 
 .query-selector--favorites h1 span {
   opacity: 0.5;
-  font-size: 14px;
+  display: block;
+  margin-bottom: -5px;
+  font-size: 11px;
+  margin-top: 0px;
 }
 .query-selector .fa-star {
   color: #03d;
