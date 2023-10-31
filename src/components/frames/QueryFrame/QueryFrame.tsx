@@ -322,13 +322,18 @@ export function QueryFrame({ uid }: { uid: number }) {
 
   const onStdOutFileClick = useEvent(async () => {
     const f = await ipcRenderer.invoke('dialog:saveAny');
-    if (f) setStdOutFile(f);
-    setSaveDialogOpen(false);
+    if (f) {
+      setStdOutFile(f);
+      setSaveDialogOpen(false);
+    }
   });
 
   const onStdInFileClick = useEvent(async () => {
     const f = await ipcRenderer.invoke('dialog:openAny');
-    if (f) setStdInFile(f);
+    if (f) {
+      setStdInFile(f);
+      setOpenDialogOpen(false);
+    }
   });
 
   const onSaveSqlQueryToFileClick = useEvent(async () => {
@@ -347,8 +352,8 @@ export function QueryFrame({ uid }: { uid: number }) {
         if (err) showError(grantError(err));
         else {
           editorRef.current?.setQueryValue(data.toString());
-          setOpenDialogOpen(false);
         }
+        setOpenDialogOpen(false);
       });
   });
 
