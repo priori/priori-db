@@ -310,10 +310,17 @@ export function NavTree({
           const next = schemas[nextIndex];
           if (next) {
             if (next.fullView && next.open) {
-              setFocused({
-                type: 'domains',
-                schema: next.name,
-              });
+              if (next.domainsOpen && next.domains.length)
+                setFocused({
+                  type: 'domain',
+                  schema: next.name,
+                  name: next.domains[next.domains.length - 1].name,
+                });
+              else
+                setFocused({
+                  type: 'domains',
+                  schema: next.name,
+                });
             } else if (next.open) {
               setFocused({
                 type: 'full view button',
@@ -555,17 +562,19 @@ export function NavTree({
       const schemaIndex = schemas.findIndex((s) => s.name === focused.schema);
       const schema = schemas[schemaIndex];
       if (!schema) return;
-      const fIndex = schema.sequences.findIndex((f) => f.name === focused.name);
-      if (direction && schema.sequences[fIndex + direction]) {
+      const dIndex = schema.domains.findIndex((f) => f.name === focused.name);
+      if (direction && schema.domains[dIndex + direction]) {
         setFocused({
-          type: 'sequence',
+          type: 'domain',
           schema: schema.name,
-          name: schema.sequences[fIndex + direction].name,
+          name: schema.domains[dIndex + direction].name,
         });
       } else if (direction === -1) {
-        setFocused({ type: 'sequences', schema: schema.name });
-      } else if (direction === 1) {
         setFocused({ type: 'domains', schema: schema.name });
+      } else if (direction === 1) {
+        if (schemas[schemaIndex + 1])
+          setFocused({ type: 'schema', name: schemas[schemaIndex + 1].name });
+        else setFocused({ type: 'roles' });
       }
     }
   });
@@ -887,6 +896,12 @@ export function NavTree({
                       if (schema.sequences && schema.sequences.length)
                         openSequences(schema);
                     }}
+                    onMouseDown={() => {
+                      setFocused({
+                        type: 'sequences',
+                        schema: schema.name,
+                      });
+                    }}
                   >
                     Sequences
                     <span
@@ -983,6 +998,12 @@ export function NavTree({
                         ? grantVisibility
                         : undefined
                     }
+                    onMouseDown={() => {
+                      setFocused({
+                        type: 'domains',
+                        schema: schema.name,
+                      });
+                    }}
                   >
                     Domains
                     <span
@@ -1039,6 +1060,13 @@ export function NavTree({
                               }}
                               onDoubleClick={() => {
                                 keepDomain(schema.name, f.name);
+                              }}
+                              onMouseDown={() => {
+                                setFocused({
+                                  type: 'domain',
+                                  schema: schema.name,
+                                  name: f.name,
+                                });
                               }}
                             >
                               <i className="fa fa-list-ul" /> {f.name}
