@@ -1005,7 +1005,7 @@ export function NavTree({
                       });
                     }}
                   >
-                    Domains
+                    Domains &amp; Enums
                     <span
                       style={{
                         float: 'right',

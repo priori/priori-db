@@ -949,9 +949,13 @@ export const DB = {
           SELECT
             pg_type.typnamespace schema_id,
             typname "name",
-            'DOMAIN' "type"
+            CASE WHEN
+              pg_enum.enumtypid IS NOT NULL THEN 'ENUM'
+              ELSE 'DOMAIN' END "type"
           FROM pg_catalog.pg_type
-            WHERE typtype = 'd'
+          LEFT JOIN pg_catalog.pg_enum ON pg_enum.enumtypid = pg_type.oid
+            WHERE typtype = 'd' OR
+              pg_enum.enumtypid IS NOT NULL
           UNION
           SELECT
               p.pronamespace schema_id,
@@ -1009,7 +1013,11 @@ export const DB = {
         name: string;
       }[],
       domains: entities
-        .filter((e) => e.schema_id === s.schema_id && e.type === 'DOMAIN')
+        .filter(
+          (e) =>
+            e.schema_id === s.schema_id &&
+            (e.type === 'DOMAIN' || e.type === 'ENUM'),
+        )
         .map((v) => ({ name: v.name, type: v.type })) as {
         type: EntityType & 'DOMAIN';
         name: string;

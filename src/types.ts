@@ -97,7 +97,8 @@ export type EntityType =
   | 'BASE TABLE'
   | 'FUNCTION'
   | 'SEQUENCE'
-  | 'DOMAIN';
+  | 'DOMAIN'
+  | 'ENUM';
 
 export interface NavSchema {
   current: boolean;
