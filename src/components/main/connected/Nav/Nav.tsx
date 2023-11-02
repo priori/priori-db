@@ -1,4 +1,4 @@
-import { useDeferredValue } from 'react';
+import { useDeferredValue, useRef } from 'react';
 import { useEvent } from 'util/useEvent';
 import { newSchema, reloadNav } from '../../../../state/actions';
 import { NavSchema, Tab } from '../../../../types';
@@ -47,19 +47,54 @@ export function Nav(props: {
     }
   });
 
+  const plusRef = useRef<HTMLSpanElement>(null);
+
   const onNewSchemaKeyDown = useEvent(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'ArrowUp') {
+        const el = document.querySelector('.nav-tree');
+        if (el instanceof HTMLElement) el.focus();
+      }
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') newSchema();
     },
   );
 
+  const onNavTreeBlur = useEvent((e: 'next' | 'prev' | 'up' | 'down') => {
+    if (e === 'next' || e === 'down') {
+      plusRef.current?.focus();
+    } else if (e === 'up' || e === 'prev') {
+      const el = document.querySelector('.nav--search input');
+      if (el instanceof HTMLElement) el.focus();
+    }
+  });
+  const onNavSearchBlur = useEvent((e: 'next' | 'prev' | 'up' | 'down') => {
+    if (e === 'next' || e === 'down') {
+      const el = document.querySelector('.nav-tree');
+      if (el instanceof HTMLElement) el.focus();
+    } else if (e === 'up' || e === 'prev') {
+      const h = document.querySelector('.header');
+      if (h instanceof HTMLElement) {
+        h.setAttribute('tabIndex', '0');
+        h.focus();
+        h.blur();
+        h.removeAttribute('tabIndex');
+      }
+    }
+  });
+
   return (
-    <div className="nav" tabIndex={0} onKeyDown={onKeyDown}>
-      <NavSearch schemas={props.schemas} tabs={tabs} />
-      <NavTree schemas={props.schemas} tabs={tabs} roles={props.roles} />
+    <div className="nav" onKeyDown={onKeyDown}>
+      <NavSearch schemas={props.schemas} tabs={tabs} onBlur={onNavSearchBlur} />
+      <NavTree
+        schemas={props.schemas}
+        tabs={tabs}
+        roles={props.roles}
+        onBlur={onNavTreeBlur}
+      />
       <span
         className="new-schema"
         onClick={newSchema}
+        ref={plusRef}
         tabIndex={0}
         role="button"
         onKeyDown={onNewSchemaKeyDown}

@@ -220,7 +220,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
   render() {
     if (!this.state.sorting) {
       return (
-        <div className="tabs-header">
+        <div className="tabs-header" tabIndex={0} style={{ outline: 'none' }}>
           <span className="tabs" onDoubleClick={Tabs.tabsDoubleClick}>
             {this.props.tabs.map((t, index) => {
               const { width } = this.state.tabs[index];

@@ -134,7 +134,7 @@ function buildMatchers(search: string) {
   ] as Matcher[];
 }
 
-type Match = {
+export type Match = {
   node: React.ReactNode;
   entity: Entity;
 };
@@ -144,6 +144,7 @@ function buildMatches(
   matchers: Matcher[],
   lowerCaseMode: boolean,
   limit: number,
+  set = new Set<Entity>(),
 ) {
   const r = [] as Match[];
   const es = [...entities];
@@ -152,14 +153,17 @@ function buildMatches(
     while (c < es.length) {
       const e = es[c];
       if (
-        (m.type === 'fulltext' &&
+        (!set.has(e) &&
+          m.type === 'fulltext' &&
           ((lowerCaseMode && m.match(e.fullTextLowerCase)) ||
             (!lowerCaseMode && m.match(e.fullText)))) ||
-        (m.type === 'name' &&
+        (!set.has(e) &&
+          m.type === 'name' &&
           ((lowerCaseMode && m.match(e.nameLowerCase)) ||
             (!lowerCaseMode && m.match(e.name))))
       ) {
         es.splice(c, 1);
+        set.add(e);
         r.push({
           entity: e,
           node:
@@ -188,11 +192,19 @@ export const NavSearchCore = React.memo(
     schemas,
     focus,
     tabs,
+    onLengthChange,
+    index,
+    onFocusChange,
+    onMouseDown,
   }: {
     focus: boolean;
     search: string | null;
     schemas: NavSchema[];
     tabs: Tab[];
+    onLengthChange: (l: number) => void;
+    index: number | undefined;
+    onFocusChange: (m: Entity | null) => void;
+    onMouseDown: (i: number) => void;
   }) => {
     const [scroll, setScroll] = useState(0);
     const [showAll, setShowAll] = useState(false);
@@ -222,27 +234,53 @@ export const NavSearchCore = React.memo(
     const onScroll = useEvent((e: React.UIEvent<HTMLDivElement>) => {
       setScroll((e.target as HTMLDivElement).scrollTop);
     });
+    const len = matches ? matches.length : 0;
+    useEffect(() => {
+      onLengthChange(len);
+    }, [len, onLengthChange]);
+    const f = matches && index !== undefined ? matches[index]?.entity : null;
+    useEffect(() => {
+      onFocusChange(f);
+    }, [f, onFocusChange]);
+
+    const height304 = useEvent((el: HTMLDivElement | null) => {
+      if (el) {
+        setTimeout(() => {
+          el.style.height = '304px';
+        }, 1);
+      }
+    });
+    const height120 = useEvent((el: HTMLDivElement | null) => {
+      if (el) {
+        setTimeout(() => {
+          el.style.height = '120px';
+        }, 1);
+      }
+    });
+
     if (focus && !search) {
       return (
-        <div className="nav-search">
+        <div
+          className="nav-search"
+          ref={height120}
+          style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}
+        >
           <i className="fa fa-search" />
         </div>
       );
     }
+
     if (!search) return null;
     assert(matches);
     return (
-      <div className="nav-search" onScroll={onScroll}>
+      <div className="nav-search" onScroll={onScroll} ref={height304}>
         {matches
-          .filter((_, i) => i <= 80 || showAll)
+          .filter(
+            (_, i) => i <= 80 || showAll || (index !== undefined && index > 80),
+          )
           .map((m: Match, i) =>
             i === 80 && !showAll ? (
-              <div
-                role="button"
-                tabIndex={0}
-                className="more"
-                onClick={() => setShowAll(true)}
-              >
+              <div className="more" onClick={() => setShowAll(true)}>
                 <i className="fa fa-ellipsis-h" />
               </div>
             ) : (
@@ -252,6 +290,9 @@ export const NavSearchCore = React.memo(
                 }`}
                 entity={m.entity}
                 tabs={tabs}
+                focus={index === i}
+                index={i}
+                onMouseDown={onMouseDown}
               >
                 {m.node}
               </NavItem>
@@ -264,5 +305,9 @@ export const NavSearchCore = React.memo(
     a.schemas === b.schemas &&
     a.search === b.search &&
     a.focus === b.focus &&
-    equals(a.tabs, b.tabs),
+    equals(a.tabs, b.tabs) &&
+    a.onLengthChange === b.onLengthChange &&
+    a.onFocusChange === b.onFocusChange &&
+    a.onMouseDown === b.onMouseDown &&
+    a.index === b.index,
 );

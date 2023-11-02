@@ -20,7 +20,21 @@ export function NewSchemaForm({
         }
       }}
     >
-      <div>
+      <div
+        style={{ outline: 'none' }}
+        onBlurCapture={(e) => {
+          const div = e.currentTarget;
+          setTimeout(() => {
+            if (
+              !document.activeElement ||
+              !div.contains(document.activeElement)
+            ) {
+              onClose();
+            }
+          }, 1);
+        }}
+        tabIndex={0}
+      >
         Name:{' '}
         <input
           type="text"

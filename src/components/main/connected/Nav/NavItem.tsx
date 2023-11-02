@@ -30,10 +30,16 @@ export function NavItem({
   entity,
   children,
   tabs,
+  focus,
+  onMouseDown,
+  index,
 }: {
   entity: Entity;
   children: React.ReactNode;
   tabs: Tab[];
+  focus: boolean;
+  onMouseDown: (i: number) => void;
+  index: number;
 }) {
   const active = tabs.find((c) => c.active) || null;
   const isActive =
@@ -111,13 +117,27 @@ export function NavItem({
     assert(e.schema);
     previewTableInfo(e.schema, e.name);
   });
+  const grantVisible = useEvent((el: HTMLElement | null) => {
+    if (el) {
+      el.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest',
+      });
+    }
+  });
+  const onDivMouseDown = useEvent(() => {
+    onMouseDown(index);
+  });
   return (
     <div
       className={`nav-search--entity${isActive ? ' active' : ''}${
         isOpen ? ' open' : ''
-      }${entity.type === 'VIEW' ? ' view' : ''}`}
+      }${entity.type === 'VIEW' ? ' view' : ''}${focus ? ' focused' : ''}`}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
+      onMouseDown={onDivMouseDown}
+      ref={focus ? grantVisible : undefined}
     >
       {entity.type && icons[entity.type] ? (
         <i className={icons[entity.type]} />

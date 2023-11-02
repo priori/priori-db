@@ -4,11 +4,12 @@ div.nav {
   bottom: 0;
   width: 250px;
   background: #f8f8f8;
-
   display: flex;
   flex-direction: column;
   .nav-tree {
     overflow: auto;
+    outline: none;
+    flex: 1;
   }
   .schema {
     position: relative;
@@ -27,8 +28,14 @@ div.nav {
     padding: 4px;
     opacity: 0.5;
     z-index: 2;
+    outline: none;
   }
   .new-schema:hover {
+    opacity: 1;
+  }
+  .new-schema:focus {
+    transform: scale(1.14);
+    color: #04b;
     opacity: 1;
   }
   .arrow:after {
@@ -183,6 +190,10 @@ div.nav {
   .more:hover {
     background: #dfdfdf;
   }
+  .more.focused {
+    color: #04b;
+    background: #dfdfdf;
+  }
   .table-name,
   .sequence-name,
   .domain-name,
@@ -206,15 +217,27 @@ div.nav {
   }
 
   .schema-name:hover,
-  .group-name:hover {
+  .group-name:hover,
+  .nav-tree:focus .schema-name.focused {
     background: #dfdfdf;
   }
+  .nav-tree:focus .schema-name.focused,
+  .nav-tree:focus .functions.focused,
+  .nav-tree:focus .sequences.focused,
+  .nav-tree:focus .domains.focused {
+    color: #04b;
+  }
+  .nav-tree:focus .arrow.focused:after {
+    border-left-color: #04b;
+  }
+
   .table,
   .sequence,
   .domain,
   .function,
   .nav-search--entity {
-    &:hover {
+    &:hover,
+    &.focused {
       background: #dfdfdf;
     }
     &.open {
@@ -235,6 +258,23 @@ div.nav {
     &.active:hover i {
       color: white;
     }
+  }
+  .sequences.focused,
+  .domains.focused,
+  .functions.focused {
+    background: #dfdfdf;
+  }
+  .table.focused .table-name,
+  .function.focused .function-name,
+  .sequence.focused .sequence-name,
+  .domain.focused .domain-name {
+    color: #04b;
+  }
+  .table.focused.active .table-name,
+  .function.focused.active .function-name,
+  .sequence.focused.active .sequence-name,
+  .domain.focused.active .domain-name {
+    color: #fe0;
   }
 
   .view .fa.fa-table {
@@ -334,11 +374,10 @@ div.nav {
 
 .nav-search {
   font-size: 13px;
-  padding: 10px 0;
   border-bottom: 1px solid #ddd;
   white-space: nowrap;
-  max-height: 304px;
-  min-height: 304px;
+  height: 0;
+  transition: height 1s;
   overflow-y: auto;
   overflow-x: hidden;
   .fa-database {
@@ -398,14 +437,18 @@ div.nav {
   }
 }
 
+.nav-search {
+  position: relative;
+}
 .nav-search i.fa.fa-search {
   position: absolute;
-  top: 115px;
+  top: 50%;
   left: 50%;
   width: 50px;
   text-align: center;
   margin-left: -25px;
   font-size: 42px;
+  margin-top: -30px;
   color: #eee;
 }
 .nav-search--entity {
@@ -443,4 +486,25 @@ div.nav {
 .table.active .table-type.fa-user,
 .table.active .table-type.fa-users {
   color: #fff;
+}
+
+.nav-search--entity.focused:before {
+  content: '';
+  position: absolute;
+  margin-left: -11px;
+  border-top: solid transparent 5px;
+  border-bottom: solid transparent 5px;
+  border-left: solid #04b 7px;
+  height: 0;
+  margin-top: 5px;
+}
+.nav-search--entity.focused.active:before {
+  border-left-color: white;
+}
+
+div.nav .nav-search--entity.focused span {
+  color: #04b;
+}
+div.nav .nav-search--entity.focused.active span {
+  color: white;
 }
