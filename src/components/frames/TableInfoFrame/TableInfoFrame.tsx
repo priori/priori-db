@@ -1037,7 +1037,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       ) : null}
       {service.lastValidData && !state.privileges?.length ? (
         <>
-          <h2 style={{ userSelect: 'text' }}>Privileges</h2>
+          <h2>Privileges</h2>
 
           <div className="empty">
             No privileges found for table.{' '}

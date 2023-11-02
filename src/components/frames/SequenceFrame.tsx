@@ -256,7 +256,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
       ) : null}
       {serviceState.type ? (
         <>
-          <h2>pg_catalog.pg_type</h2>
+          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_type</h2>
           <div className="fields">
             {Object.entries(serviceState.type).map(([k, v]) => (
               <div key={k} className="field">
