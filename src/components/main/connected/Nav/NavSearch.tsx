@@ -1,5 +1,5 @@
 import { useDeferredValue, useRef, useState } from 'react';
-import { NavSchema, Tab } from 'types';
+import { NavSchema } from 'types';
 import { useEvent } from 'util/useEvent';
 import {
   keepDomain,
@@ -17,6 +17,7 @@ import { equals } from 'util/equals';
 import { useEventListener } from 'util/useEventListener';
 import { Entity, useDeferredValueFix } from './Nav';
 import { NavSearchCore } from './NavSearchCore';
+import { Tabs } from './navUtils';
 
 export function NavSearch({
   schemas,
@@ -24,7 +25,7 @@ export function NavSearch({
   onBlur,
 }: {
   schemas: NavSchema[];
-  tabs: Tab[];
+  tabs: Tabs;
   onBlur: (e: 'next' | 'prev' | 'up' | 'down') => void;
 }) {
   const [focusedEntity, setFocusedEntity] = useState<Entity | null>(null);
@@ -184,8 +185,9 @@ export function NavSearch({
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Tab' && e.ctrlKey) return;
       if (e.target instanceof HTMLInputElement && !e.target.value) {
-        if (e.key === 'ArrowUp') onBlur('up');
-        else if (e.key === 'ArrowDown') onBlur('down');
+        // if (e.key === 'ArrowUp') onBlur('up');
+        // else
+        if (e.key === 'ArrowDown') onBlur('down');
       }
       if (e.key === 'Escape') {
         setSearchText('');
@@ -262,7 +264,6 @@ export function NavSearch({
       >
         <NavSearchCore
           onMouseDown={onMouseDown}
-          focus={focus}
           search={search}
           schemas={schemas}
           tabs={tabs}

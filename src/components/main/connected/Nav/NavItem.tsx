@@ -1,4 +1,3 @@
-import { Tab } from 'types';
 import {
   keepDomain,
   keepFunction,
@@ -15,68 +14,37 @@ import {
 } from 'state/actions';
 import { useEvent } from 'util/useEvent';
 import { assert } from 'util/assert';
+import { grantScrollVisibility } from 'main/util';
 import { Entity } from './Nav';
 
 const icons = {
   SEQUENCE: 'fa fa-list-ol',
   DOMAIN: 'fa fa-list-ul',
+  ENUM: 'fa fa-list-ul',
   'BASE TABLE': 'fa fa-table',
   VIEW: 'fa fa-table',
+  'MATERIALIZED VIEW': 'fa fa-table',
   SCHEMA: 'fa fa-database',
   FUNCTION: 'function-icon',
-};
+} as const;
 
 export function NavItem({
   entity,
   children,
-  tabs,
+  isActive,
+  isOpen,
   focus,
   onMouseDown,
   index,
 }: {
   entity: Entity;
   children: React.ReactNode;
-  tabs: Tab[];
+  isActive: boolean;
+  isOpen: boolean;
   focus: boolean;
   onMouseDown: (i: number) => void;
   index: number;
 }) {
-  const active = tabs.find((c) => c.active) || null;
-  const isActive =
-    active &&
-    ((entity.type === 'SCHEMA' &&
-      active.props.type === 'schemainfo' &&
-      entity.name === active.props.schema) ||
-      ((active.props.type === 'table' || active.props.type === 'tableinfo') &&
-        active.props.schema === entity.schema &&
-        active.props.table === entity.name) ||
-      (active.props.type === 'function' &&
-        active.props.schema === entity.schema &&
-        active.props.name === entity.name) ||
-      (active.props.type === 'domain' &&
-        active.props.schema === entity.schema &&
-        active.props.name === entity.name) ||
-      (active.props.type === 'sequence' &&
-        active.props.schema === entity.schema &&
-        active.props.name === entity.name));
-  const isOpen = tabs.find(
-    (c) =>
-      (entity.type === 'SCHEMA' &&
-        c.props.type === 'schemainfo' &&
-        entity.name === c.props.schema) ||
-      ((c.props.type === 'table' || c.props.type === 'tableinfo') &&
-        c.props.schema === entity.schema &&
-        c.props.table === entity.name) ||
-      (c.props.type === 'function' &&
-        c.props.schema === entity.schema &&
-        c.props.name === entity.name) ||
-      (c.props.type === 'domain' &&
-        c.props.schema === entity.schema &&
-        c.props.name === entity.name) ||
-      (c.props.type === 'sequence' &&
-        c.props.schema === entity.schema &&
-        c.props.name === entity.name),
-  );
   const onClick = useEvent(() => {
     const e = entity;
     if (e.type === 'SCHEMA') previewSchemaInfo(e.name);
@@ -90,6 +58,7 @@ export function NavItem({
     else if (e.type === 'FUNCTION') previewFunction(e.schema, e.name);
     else if (e.type === 'SEQUENCE') previewSequence(e.schema, e.name);
   });
+
   const onDoubleClick = useEvent(() => {
     const e = entity;
     if (e.type === 'SCHEMA') keepSchemaInfo(e.name);
@@ -110,6 +79,7 @@ export function NavItem({
     assert(e.schema);
     keepTableInfo(e.schema, e.name);
   });
+
   const onInfoClick = useEvent((ev: React.MouseEvent<HTMLElement>) => {
     ev.preventDefault();
     ev.stopPropagation();
@@ -117,18 +87,11 @@ export function NavItem({
     assert(e.schema);
     previewTableInfo(e.schema, e.name);
   });
-  const grantVisible = useEvent((el: HTMLElement | null) => {
-    if (el) {
-      el.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'nearest',
-      });
-    }
-  });
+
   const onDivMouseDown = useEvent(() => {
     onMouseDown(index);
   });
+
   return (
     <div
       className={`nav-search--entity${isActive ? ' active' : ''}${
@@ -137,7 +100,7 @@ export function NavItem({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onMouseDown={onDivMouseDown}
-      ref={focus ? grantVisible : undefined}
+      ref={focus ? grantScrollVisibility : undefined}
     >
       {entity.type && icons[entity.type] ? (
         <i className={icons[entity.type]} />

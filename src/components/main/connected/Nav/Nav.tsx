@@ -1,9 +1,10 @@
-import { useDeferredValue, useRef } from 'react';
+import { useDeferredValue, useMemo, useRef } from 'react';
 import { useEvent } from 'util/useEvent';
 import { newSchema, reloadNav } from '../../../../state/actions';
 import { NavSchema, Tab } from '../../../../types';
 import { NavSearch } from './NavSearch';
 import { NavTree } from './NavTree';
+import { useTabs } from './navUtils';
 
 export type Entity = {
   fullText: string;
@@ -16,6 +17,7 @@ export type Entity = {
     | 'BASE TABLE'
     | 'FUNCTION'
     | 'DOMAIN'
+    | 'ENUM'
     | 'SEQUENCE'
     | 'SCHEMA';
   schema?: string;
@@ -67,6 +69,7 @@ export function Nav(props: {
       if (el instanceof HTMLElement) el.focus();
     }
   });
+
   const onNavSearchBlur = useEvent((e: 'next' | 'prev' | 'up' | 'down') => {
     if (e === 'next' || e === 'down') {
       const el = document.querySelector('.nav-tree');
@@ -82,25 +85,42 @@ export function Nav(props: {
     }
   });
 
-  return (
-    <div className="nav" onKeyDown={onKeyDown}>
-      <NavSearch schemas={props.schemas} tabs={tabs} onBlur={onNavSearchBlur} />
-      <NavTree
-        schemas={props.schemas}
-        tabs={tabs}
-        roles={props.roles}
-        onBlur={onNavTreeBlur}
-      />
-      <span
-        className="new-schema"
-        onClick={newSchema}
-        ref={plusRef}
-        tabIndex={0}
-        role="button"
-        onKeyDown={onNewSchemaKeyDown}
-      >
-        <i className="fa fa-plus" />
-      </span>
-    </div>
+  const tabs2 = useTabs(tabs);
+
+  return useMemo(
+    () => (
+      <div className="nav" onKeyDown={onKeyDown}>
+        <NavSearch
+          schemas={props.schemas}
+          tabs={tabs2}
+          onBlur={onNavSearchBlur}
+        />
+        <NavTree
+          schemas={props.schemas}
+          tabs={tabs2}
+          roles={props.roles}
+          onBlur={onNavTreeBlur}
+        />
+        <span
+          className="new-schema"
+          onClick={newSchema}
+          ref={plusRef}
+          tabIndex={0}
+          role="button"
+          onKeyDown={onNewSchemaKeyDown}
+        >
+          <i className="fa fa-plus" />
+        </span>
+      </div>
+    ),
+    [
+      props.schemas,
+      props.roles,
+      tabs2,
+      onKeyDown,
+      onNavSearchBlur,
+      onNavTreeBlur,
+      onNewSchemaKeyDown,
+    ],
   );
 }
