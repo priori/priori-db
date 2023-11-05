@@ -1,5 +1,5 @@
 import { assert } from 'util/assert';
-import { Component, CSSProperties } from 'react';
+import { Component, CSSProperties, ReactElement } from 'react';
 
 export interface ListInputProps<Entry> {
   newEntry(): Entry;
@@ -8,7 +8,7 @@ export interface ListInputProps<Entry> {
     e: Entry,
     set: (e2: Entry) => void,
     remove: null | (() => void),
-  ): JSX.Element | null;
+  ): ReactElement | null;
   entries: Entry[];
   type?: 'div' | 'span' | 'tr' | undefined;
   itemType?: 'div' | 'span' | 'tr' | undefined;

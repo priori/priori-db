@@ -119,6 +119,7 @@
 
 .grid {
   font-family: 'Inconsolata';
+  transition: 0.3s opacity;
 }
 .grid table {
   table-layout: fixed;
@@ -316,4 +317,81 @@ textarea.active-cell::placeholder {
   font-weight: bold !important;
   color: black;
   /* line-height: 1.07em; font-size: 16px; */
+}
+
+.grid .fa-sort {
+  position: absolute;
+  right: 16px;
+  bottom: 10px;
+  font-size: 43px;
+  background: white;
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  border-radius: 25px;
+  z-index: 3;
+}
+
+.grid th {
+  position: relative;
+  &.sortable:hover {
+    background: rgba(0, 0, 0, 0.12);
+  }
+}
+
+.asc::before,
+.desc::before {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  position: absolute;
+  right: 3px;
+  height: 14px;
+  width: 16px;
+  background: #1976d2;
+}
+th.asc:hover::before,
+th.desc:hover::before {
+  background: #1166ba !important;
+}
+.asc::after,
+.desc::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  position: absolute;
+  right: 3px;
+  border-right: 8px solid transparent;
+  border-left: 8px solid transparent;
+  margin-top: 1px;
+  opacity: 1;
+}
+.asc::after {
+  border-bottom: 10px solid white;
+}
+.desc:after {
+  border-top: 10px solid white;
+}
+.grid.reloading {
+  opacity: 0.75 !important;
+}
+
+.dialog.form .fa-close {
+  opacity: 0.3;
+  &:hover {
+    opacity: 1;
+  }
+}
+.grid .fa-sort:not(.disabled) {
+  &:hover {
+    background: #1976d2;
+    color: white;
+  }
+  &.disabled {
+    opacity: 0.3;
+  }
 }

@@ -4,6 +4,11 @@ import { equals } from 'util/equals';
 import { SizeControlledArea } from '../SizeControlledArea';
 import { DataGridCore } from './DataGridCore';
 
+export type DataGridSort = {
+  field: string;
+  direction: 'asc' | 'desc';
+}[];
+
 export interface GridProps {
   style: CSSProperties;
   result: QueryArrayResult | undefined;
@@ -16,6 +21,9 @@ export interface GridProps {
     }[],
   ) => Promise<boolean>;
   pks?: string[];
+  currentSort?: DataGridSort;
+  onChangeSort?: (sort: DataGridSort) => void;
+  className?: string;
 }
 
 export const DataGrid = memo(
@@ -25,7 +33,7 @@ export const DataGrid = memo(
       return (
         <SizeControlledArea
           style={props.style}
-          className="grid"
+          className={`grid${props.className ? ` ${props.className}` : ''}`}
           render={(width: number, height: number) => (
             <DataGridCore
               result={res}
@@ -35,6 +43,8 @@ export const DataGrid = memo(
               pks={props.pks}
               emptyTable={props.emptyTable}
               onUpdate={props.onUpdate}
+              currentSort={props.currentSort}
+              onChangeSort={props.onChangeSort}
             />
           )}
         />
@@ -45,7 +55,10 @@ export const DataGrid = memo(
   (a, b) =>
     a.result === b.result &&
     equals(a.style, b.style) &&
+    equals(a.currentSort, b.currentSort) &&
+    a.onChangeSort === b.onChangeSort &&
     equals(a.pks, b.pks) &&
     a.onUpdate === b.onUpdate &&
+    a.className === b.className &&
     a.onScroll === b.onScroll,
 );

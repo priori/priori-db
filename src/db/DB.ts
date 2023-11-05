@@ -2,7 +2,7 @@ import { grantError } from 'util/errors';
 import { list, first, query, openConnection } from './Connection';
 import { EntityType, TablePrivileges, Type } from '../types';
 
-function label(s: string) {
+export function label(s: string) {
   return `"${s.replaceAll('"', '""')}"`;
 }
 
@@ -594,7 +594,7 @@ export const DB = {
     return cols.filter((c) => c.is_primary).map((c) => c.column_name);
   },
 
-  async selectQuery(schema: string, tableName: string) {
+  async defaultSort(schema: string, tableName: string) {
     const e = await first(
       `
       SELECT pg_get_indexdef(c.oid) "definition"
@@ -614,12 +614,34 @@ export const DB = {
     if (e && e.definition && typeof e.definition === 'string') {
       const order = e.definition.replace(/.*\((.*)\)/g, '$1');
       if (order) {
-        return `SELECT * FROM ${label(schema)}.${label(
-          tableName,
-        )} ORDER BY ${order}`;
+        const parts = [] as string[];
+        let i = 0;
+        let prevComa = 0;
+        let inString = false;
+        while (i < order.length) {
+          const ch = order.charAt(i);
+          if (ch === '"') {
+            inString = !inString;
+          }
+          if (ch === ',' && !inString) {
+            parts.push(order.substring(prevComa, i));
+            prevComa = i + 1;
+          }
+          i += 1;
+        }
+        parts.push(order.substring(prevComa, i));
+        return parts.map((p) => {
+          let name = p.trim();
+          if (name.startsWith('"')) {
+            if (!name.endsWith('"'))
+              throw new Error(`Not possible to parse order ${order}`);
+            name = name.substring(1, name.length - 1).replace(/""/g, '"');
+          }
+          return { field: name, direction: 'asc' };
+        });
       }
     }
-    return `SELECT * FROM ${label(schema)}.${label(tableName)}`;
+    return null;
   },
 
   async listIndexes(schemaName: string, tableName: string) {

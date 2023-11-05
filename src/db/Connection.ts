@@ -92,11 +92,13 @@ export async function query(
   q: string,
   args?: (number | string | boolean | null)[],
 ): Promise<QueryResult<{ [key: string]: SimpleValue }>>;
+
 export async function query(
   q: string,
   args: (number | string | boolean | null)[] | undefined,
   arrayRowMode: true,
 ): Promise<QueryArrayResult<SimpleValue[]>>;
+
 export async function query(
   q: string,
   args?: Array<string | null | number | boolean>,

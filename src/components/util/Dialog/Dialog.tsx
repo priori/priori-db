@@ -69,11 +69,13 @@ export function Dialog({
   children,
   relativeTo,
   className,
+  onMouseDown,
 }: {
   onBlur: () => void;
   children: React.ReactNode;
   relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
   className?: string;
+  onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
 }) {
   const elRef = React.useRef<HTMLElement | null>(null);
   const fit = useEvent(() => {
@@ -128,6 +130,7 @@ export function Dialog({
       tabIndex={0}
       ref={ref}
       onBlur={onBlurListener}
+      onMouseDown={onMouseDown}
     >
       {children}
     </div>

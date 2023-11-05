@@ -26,6 +26,8 @@ import {
   toText,
   toTsv,
 } from './util';
+import { DataGridSort } from './DataGrid';
+import { DataGridSortDialog } from './DataGridSortDialog';
 
 export interface DataGridCoreProps {
   result: QueryArrayResult;
@@ -40,6 +42,8 @@ export interface DataGridCoreProps {
     }[],
   ) => Promise<boolean>;
   pks?: string[];
+  currentSort?: DataGridSort;
+  onChangeSort?: (sort: DataGridSort) => void;
 }
 
 export interface DataGridState {
@@ -50,6 +54,8 @@ export interface DataGridState {
 }
 
 export function DataGridCore(props: DataGridCoreProps) {
+  const [openSortDialog, setOpenSortDialog] = useState(false);
+
   const [state, setState] = useState({
     slice: [0, rowsByRender],
   } as DataGridState);
@@ -687,6 +693,8 @@ export function DataGridCore(props: DataGridCoreProps) {
             fields={props.result.fields}
             pks={props.pks}
             finalWidths={finalWidths}
+            currentSort={props.currentSort}
+            onChangeSort={props.onChangeSort}
           />
         </table>
       </div>
@@ -745,6 +753,36 @@ export function DataGridCore(props: DataGridCoreProps) {
           />
         </div>
       </div>
+
+      {openSortDialog && props.onChangeSort && (
+        <DataGridSortDialog
+          onClose={() => setOpenSortDialog(false)}
+          fields={props.result.fields}
+          currentSort={props.currentSort}
+          onChangeSort={props.onChangeSort}
+        />
+      )}
+
+      {props.onChangeSort ? (
+        pendingRowsUpdate > 0 ? (
+          <i
+            className="fa fa-sort disabled"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          />
+        ) : (
+          <i
+            className="fa fa-sort"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpenSortDialog(true);
+            }}
+          />
+        )
+      ) : null}
       {props.result.rows.length === 0 && props.emptyTable ? (
         <div className="empty-table">
           <div>{props.emptyTable}</div>

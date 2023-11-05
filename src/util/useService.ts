@@ -26,6 +26,7 @@ type ServiceState<T> =
       status: 'reloading';
       reload: () => Promise<void>;
     };
+
 export function useService<T>(
   func0: () => Promise<T>,
   deps: DependencyList,
@@ -45,14 +46,15 @@ export function useService<T>(
     status: 'starting' as 'starting' | 'reloading' | 'error' | 'success',
     reload,
   });
-  const firstStateRef = useRef(state);
+  const stateRef = useRef(state);
+  stateRef.current = state;
   const func = useEvent(func0);
   const promiseRef = useRef(null as null | Promise<T>);
   useEffect(() => {
     let mounted = true;
     const promise = func();
     promiseRef.current = promise;
-    if (firstStateRef.current.status !== 'starting') {
+    if (stateRef.current.status !== 'starting') {
       setState((state2) => ({
         ...state2,
         status: 'reloading',
@@ -91,7 +93,7 @@ export function useService<T>(
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, func, firstStateRef, setState, ...deps]);
+  }, [count, func, stateRef, setState, ...deps]);
 
   return state as ServiceState<T>;
 }
