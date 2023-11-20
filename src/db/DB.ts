@@ -1148,13 +1148,12 @@ export const DB = {
     table: string,
     update: {
       where: { [fieldName: string]: string | number | null };
-      values: { [fieldName: string]: string };
+      values: { [fieldName: string]: string | null };
     }[],
   ) {
     const c = await openConnection();
     try {
       await c.query('BEGIN');
-
       for (const { where, values } of update) {
         let count = 1;
         await c.query(

@@ -47,6 +47,7 @@ export function DataGridSortDialog(props: DataGridSortDialogProps) {
             width: 300,
             opacity: formField === null ? 0.3 : undefined,
           }}
+          className="form-row"
           key={i}
         >
           <select

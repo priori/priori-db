@@ -5,20 +5,20 @@ import { useTab } from 'components/main/connected/ConnectedApp';
 import { DB, label } from 'db/DB';
 import { useState } from 'react';
 import { QueryArrayResult } from 'pg';
+import { DataGridSort } from 'components/util/DataGrid/DataGrid';
+import {
+  Filter,
+  buildWhere,
+} from 'components/util/DataGrid/DataGridFilterDialog';
 import { SimpleValue, query } from '../../../db/Connection';
 import { TableFrameProps } from '../../../types';
 
 export function useTableDataFrame(props: TableFrameProps) {
-  const [sort, setSort] = useState<
-    | {
-        field: string;
-        direction: string;
-      }[]
-    | undefined
-  >(undefined);
+  const [sort, setSort] = useState<DataGridSort | undefined>(undefined);
+  const [filter, setFilter] = useState<Filter | undefined>(undefined);
 
   const defaultSortService = useService(
-    () => DB.defaultSort(props.schema, props.table),
+    () => DB.defaultSort(props.schema, props.table) as Promise<DataGridSort>,
     [props.schema, props.table],
   );
 
@@ -32,12 +32,15 @@ export function useTableDataFrame(props: TableFrameProps) {
     if (!sortReady)
       return new Promise<{
         result: QueryArrayResult<SimpleValue[]>;
-        currentSort: {
-          field: string;
-          direction: string;
-        }[];
+        currentSort: DataGridSort;
+        currentFilter?: Filter;
       }>(() => {});
+    const { where, params } = filter
+      ? buildWhere(filter)
+      : { where: '', params: [] };
     const sql = `SELECT * FROM ${label(props.schema)}.${label(props.table)} ${
+      where ? `WHERE ${where} ` : ''
+    }${
       selectedSort && selectedSort.length
         ? `ORDER BY ${selectedSort
             .map(
@@ -47,12 +50,13 @@ export function useTableDataFrame(props: TableFrameProps) {
             .join(', ')} `
         : ''
     }LIMIT 1000`;
-    const result = await query(sql, [], true);
+    const result = await query(sql, params, true);
     return {
       result,
-      currentSort: selectedSort,
+      currentSort: selectedSort as DataGridSort,
+      currentFilter: filter,
     };
-  }, [props.schema, props.table, selectedSort, sortReady]);
+  }, [props.schema, props.table, selectedSort, sortReady, filter]);
 
   const pks = useService(
     () => DB.pks(props.schema, props.table),
@@ -67,7 +71,7 @@ export function useTableDataFrame(props: TableFrameProps) {
     async (
       update: {
         where: { [fieldName: string]: string | number | null };
-        values: { [fieldName: string]: string };
+        values: { [fieldName: string]: string | null };
       }[],
     ) => {
       await DB.update(props.schema, props.table, update);
@@ -75,6 +79,10 @@ export function useTableDataFrame(props: TableFrameProps) {
       return true;
     },
   );
+
+  const onChangeFilter = useEvent((f: Filter) => {
+    setFilter(f);
+  });
 
   useTab({
     f5() {
@@ -88,10 +96,14 @@ export function useTableDataFrame(props: TableFrameProps) {
     pks: pks.lastValidData ?? undefined,
     dataResult: dataService.lastValidData?.result,
     error: dataService.error,
+    currentFilter: dataService.lastValidData?.currentFilter,
     status: dataService.status,
-    defaultSort,
-    currentSort: dataService.lastValidData?.currentSort,
+    defaultSort: defaultSort as DataGridSort | undefined,
+    currentSort: dataService.lastValidData?.currentSort as
+      | DataGridSort
+      | undefined,
     dataStatus: dataService.status,
     onChangeSort: setSort,
+    onChangeFilter,
   };
 }

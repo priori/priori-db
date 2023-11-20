@@ -115,6 +115,9 @@ button {
   padding: 20px;
   line-height: 3em;
   text-align: center;
+  max-height: calc(100vh - 70px);
+  overflow: auto;
+  transition: top 0.3s;
   button {
     margin: 5px;
   }

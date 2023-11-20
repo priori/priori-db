@@ -319,21 +319,6 @@ textarea.active-cell::placeholder {
   /* line-height: 1.07em; font-size: 16px; */
 }
 
-.grid .fa-sort {
-  position: absolute;
-  right: 16px;
-  bottom: 10px;
-  font-size: 43px;
-  background: white;
-  width: 50px;
-  height: 50px;
-  line-height: 50px;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  border-radius: 25px;
-  z-index: 3;
-}
-
 .grid th {
   position: relative;
   &.sortable:hover {
@@ -353,8 +338,8 @@ textarea.active-cell::placeholder {
   width: 16px;
   background: #1976d2;
 }
-th.asc:hover::before,
-th.desc:hover::before {
+th.asc.sortable:hover::before,
+th.desc.sortable:hover::before {
   background: #1166ba !important;
 }
 .asc::after,
@@ -386,12 +371,81 @@ th.desc:hover::before {
     opacity: 1;
   }
 }
-.grid .fa-sort:not(.disabled) {
+
+.grid .fa-sort,
+.grid .fa-filter {
+  position: absolute;
+  bottom: 10px;
+  font-size: 43px;
+  background: white;
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  border-radius: 25px;
+  z-index: 3;
+}
+.grid .fa-sort:not(.disabled),
+.grid .fa-filter:not(.disabled) {
   &:hover {
     background: #1976d2;
     color: white;
   }
   &.disabled {
     opacity: 0.3;
+  }
+}
+
+.grid .fa-sort {
+  right: 16px;
+}
+.grid .fa-filter {
+  right: 76px;
+}
+
+.dialog .form-row input,
+.dialog .form-row select,
+.dialog .form-row textarea {
+  margin-bottom: 0;
+  margin-top: 7px;
+  margin-bottom: 7px;
+}
+.form-row textarea {
+  padding: 6px;
+  height: 38px;
+}
+
+.dialog.form .form-row .fa-close {
+  height: 18px;
+}
+
+.form-row {
+  align-items: center;
+}
+
+.dialog input,
+.dialog textarea,
+.dialog select {
+  border: solid 1px #ccc;
+}
+
+@import './grid--filter-dialog.scss';
+
+.grid .dialog {
+  input,
+  textarea,
+  select {
+    border: solid 1px #ccc;
+    border-radius: 3px;
+    outline: none;
+    &:focus {
+      border-color: #06c;
+      box-shadow:
+        inset 1px 1px 0 0 #06c,
+        inset -1px 1px 0 0 #06c,
+        inset 1px -1px 0 0 #06c,
+        inset -1px -1px 0 0 #06c;
+    }
   }
 }

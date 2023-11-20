@@ -70,12 +70,14 @@ export function Dialog({
   relativeTo,
   className,
   onMouseDown,
+  onKeyDown: onKeyDownProp,
 }: {
   onBlur: () => void;
   children: React.ReactNode;
   relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
   className?: string;
   onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }) {
   const elRef = React.useRef<HTMLElement | null>(null);
   const fit = useEvent(() => {
@@ -112,6 +114,8 @@ export function Dialog({
     }
   });
   const onKeyDown = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (onKeyDownProp) onKeyDownProp(e);
+    if (e.isPropagationStopped()) return;
     if (e.key === 'Escape' && document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }

@@ -3,6 +3,7 @@ import { CSSProperties, memo } from 'react';
 import { equals } from 'util/equals';
 import { SizeControlledArea } from '../SizeControlledArea';
 import { DataGridCore } from './DataGridCore';
+import { Filter } from './DataGridFilterDialog';
 
 export type DataGridSort = {
   field: string;
@@ -17,13 +18,16 @@ export interface GridProps {
   onUpdate?: (
     update: {
       where: { [fieldName: string]: string | number | null };
-      values: { [fieldName: string]: string };
+      values: { [fieldName: string]: string | null };
     }[],
   ) => Promise<boolean>;
   pks?: string[];
   currentSort?: DataGridSort;
+  defaultSort?: DataGridSort;
+  currentFilter?: Filter;
   onChangeSort?: (sort: DataGridSort) => void;
   className?: string;
+  onChangeFilter?: (filter: Filter) => void;
 }
 
 export const DataGrid = memo(
@@ -37,6 +41,7 @@ export const DataGrid = memo(
           render={(width: number, height: number) => (
             <DataGridCore
               result={res}
+              currentFilter={props.currentFilter}
               width={width}
               onScroll={props.onScroll}
               height={height}
@@ -45,6 +50,7 @@ export const DataGrid = memo(
               onUpdate={props.onUpdate}
               currentSort={props.currentSort}
               onChangeSort={props.onChangeSort}
+              onChangeFilter={props.onChangeFilter}
             />
           )}
         />
@@ -60,5 +66,7 @@ export const DataGrid = memo(
     equals(a.pks, b.pks) &&
     a.onUpdate === b.onUpdate &&
     a.className === b.className &&
-    a.onScroll === b.onScroll,
+    a.onScroll === b.onScroll &&
+    a.currentFilter === b.currentFilter &&
+    a.onChangeFilter === b.onChangeFilter,
 );

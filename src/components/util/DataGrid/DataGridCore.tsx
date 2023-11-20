@@ -1,49 +1,31 @@
-import { assert } from 'util/assert';
 import { QueryArrayResult } from 'pg';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useEvent } from 'util/useEvent';
-import { useEventListener } from 'util/useEventListener';
-import {
-  DataGridActiveCell,
-  update as activeUpdate,
-} from './DataGridActiveCell';
+import { DataGridActiveCell } from './DataGridActiveCell';
 import { DataGridTable } from './DataGridTable';
 import { DataGridThead } from './DataGridThead';
-import {
-  allowedBottomDistance,
-  allowedTopDistance,
-  buildBaseWidths,
-  buildFinalWidths,
-  getSelectionData,
-  headerHeight,
-  rowHeight,
-  rowsByRender,
-  scrollTo,
-  scrollWidth,
-  toCsv,
-  toHtml,
-  topRenderOffset,
-  toText,
-  toTsv,
-} from './util';
 import { DataGridSort } from './DataGrid';
 import { DataGridSortDialog } from './DataGridSortDialog';
+import { DataGridFilterDialog, Filter } from './DataGridFilterDialog';
+import { useDataGridCore } from './dataGridCoreUtils';
 
 export interface DataGridCoreProps {
   result: QueryArrayResult;
   width: number;
+  // eslint-disable-next-line react/no-unused-prop-types
   onScroll?: (() => void) | undefined;
   height: number;
   emptyTable?: string | undefined;
+  // eslint-disable-next-line react/no-unused-prop-types
   onUpdate?: (
     update: {
       where: { [fieldName: string]: string | number | null };
-      values: { [fieldName: string]: string };
+      values: { [fieldName: string]: string | null };
     }[],
   ) => Promise<boolean>;
   pks?: string[];
+  currentFilter?: Filter;
   currentSort?: DataGridSort;
   onChangeSort?: (sort: DataGridSort) => void;
+  onChangeFilter?: (filter: Filter) => void;
 }
 
 export interface DataGridState {
@@ -51,629 +33,53 @@ export interface DataGridState {
   active?: { rowIndex: number; colIndex: number };
   selection?: { rowIndex: [number, number]; colIndex: [number, number] };
   mouseDown?: { rowIndex: number; colIndex: number };
+  openSortDialog: boolean;
+  openFilterDialog: boolean;
+  editing: boolean | 2;
+  update: { [rowIndex: string]: { [colIndex: string]: string | null } };
 }
 
 export function DataGridCore(props: DataGridCoreProps) {
-  const [openSortDialog, setOpenSortDialog] = useState(false);
-
-  const [state, setState] = useState({
-    slice: [0, rowsByRender],
-  } as DataGridState);
-
-  const [editing, setEditing] = useState(false as boolean | 2);
-
-  const headerElRef = useRef(null as HTMLTableElement | null);
-
-  const scrollRef = useRef({ left: 0, top: 0 });
-
-  const timeoutRef = useRef(null as ReturnType<typeof setTimeout> | null);
-
-  const elRef = useRef(null as HTMLDivElement | null);
-
-  const activeElRef = useRef(null as HTMLDivElement | null);
-
-  const lastScrollTimeRef = useRef(null as Date | null);
-
-  const gridContentRef = useRef<HTMLDivElement | null>(null);
-
-  const baseWidths = useMemo(
-    () => buildBaseWidths(props.result),
-    [props.result],
-  );
-
-  useEffect(() => {
-    scrollRef.current = { left: 0, top: 0 };
-    gridContentRef.current?.scrollTo(0, 0);
-    setState((state2) => ({
-      ...state2,
-      active: undefined,
-      selection: undefined,
-    }));
-  }, [props.result]);
-
-  const hasRightScrollbar0 =
-    rowHeight * props.result.rows.length + headerHeight + 1 > props.height;
-  const hasBottomScrollbar =
-    baseWidths.reduce((a, b) => a + b, 0) +
-      (hasRightScrollbar0 ? scrollWidth : 0) +
-      2 >
-    props.width;
-  const hasRightScrollbar =
-    hasRightScrollbar0 ||
-    rowHeight * props.result.rows.length +
-      headerHeight +
-      1 +
-      (hasBottomScrollbar ? scrollWidth : 0) >
-      props.height;
-  const { widths: finalWidths, width: gridContentTableWidth } = useMemo(
-    () =>
-      buildFinalWidths(
-        baseWidths,
-        props.width - (hasRightScrollbar ? scrollWidth : 0) - 1,
-      ),
-    [baseWidths, props.width, hasRightScrollbar],
-  );
-  const [update, setUpdate] = useState(
-    {} as { [rowIndex: number]: { [colIndex: number]: string | null } },
-  );
-  const pendingRowsUpdate = Object.keys(update).length;
-  const totalChanges = Object.keys(update).reduce(
-    (a, b) => a + Object.keys(update[b]).length,
-    0,
-  );
-
-  useEffect(() => {
-    if (state.active) {
-      const el = gridContentRef.current;
-      assert(el);
-      scrollTo(
-        el,
-        finalWidths,
-        state.active.colIndex,
-        state.active.rowIndex,
-        hasRightScrollbar,
-        hasBottomScrollbar,
-      );
-    }
-  }, [finalWidths, state.active, hasRightScrollbar, hasBottomScrollbar]);
-
-  useEffect(() => {
-    if (state.selection && state.mouseDown) {
-      const el = gridContentRef.current;
-      assert(el);
-      scrollTo(
-        el,
-        finalWidths,
-        state.mouseDown.colIndex === state.selection.colIndex[0]
-          ? state.selection.colIndex[1]
-          : state.selection.colIndex[0],
-        state.mouseDown.rowIndex === state.selection.rowIndex[0]
-          ? state.selection.rowIndex[1]
-          : state.selection.rowIndex[0],
-        hasRightScrollbar,
-        hasBottomScrollbar,
-      );
-    }
-  }, [
+  const {
+    state,
+    elRef,
+    gridContentTableWidth,
+    headerElRef,
     finalWidths,
-    state.mouseDown,
-    state.selection,
-    hasRightScrollbar,
-    hasBottomScrollbar,
-  ]);
-
-  const gridContentMarginTop = `-${headerHeight}px`;
-  assert(props.result.rows instanceof Array);
-  const gridContentHeight = `${
-    headerHeight + props.result.rows.length * rowHeight
-  }px`;
-  const gridContentTableTop = `${state.slice[0] * rowHeight}px`;
-
-  const visibleRows = useMemo(
-    () =>
-      (props.result.rows as (string | number | null)[][]).filter(
-        (_, i) => state.slice[0] <= i && i <= state.slice[1],
-      ),
-    [props.result.rows, state.slice],
-  );
-
-  const visibleStartingInEven = !!(state.slice[0] % 2);
-
-  function getColIndex(x: number) {
-    let left = 0;
-    let indexCount = -1;
-    for (const w of finalWidths) {
-      if (x < left) return indexCount;
-      left += w;
-      indexCount += 1;
-    }
-    return finalWidths.length - 1;
-  }
-  useEffect(() => {
-    if (state.active && activeElRef.current)
-      activeUpdate({
-        activeEl: activeElRef.current,
-        finalWidths,
-        active: state.active,
-        scrollTop: scrollRef.current.top,
-        scrollLeft: scrollRef.current.left,
-        containerHeight: props.height,
-        containerWidth: props.width,
-        hasBottomScrollbar,
-        hasRightScrollbar,
-      });
-  }, [
-    state.active,
-    finalWidths,
-    props.height,
-    props.width,
+    pendingRowsUpdate,
+    scrollRef,
     hasBottomScrollbar,
     hasRightScrollbar,
-  ]);
-
-  const onScroll = useEvent((e: React.UIEvent<HTMLElement>) => {
-    if (props.onScroll) props.onScroll();
-    const container = e.target as HTMLElement;
-    scrollRef.current = {
-      left: container.scrollLeft,
-      top: container.scrollTop,
-    };
-    if (headerElRef.current) {
-      const headerEl = headerElRef.current;
-      headerEl.style.marginLeft = `-${container.scrollLeft}px`;
-    }
-    if (state.active && activeElRef.current)
-      activeUpdate({
-        activeEl: activeElRef.current,
-        finalWidths,
-        active: state.active,
-        scrollTop: container.scrollTop,
-        scrollLeft: container.scrollLeft,
-        containerHeight: props.height,
-        containerWidth: props.width,
-        hasBottomScrollbar,
-        hasRightScrollbar,
-      });
-    const fn = () => {
-      lastScrollTimeRef.current = null;
-      const currentMiddleIndex = Math.floor(
-        container.scrollTop / rowHeight +
-          container.offsetHeight / (rowHeight * 2),
-      );
-      const goodUp = Math.max(currentMiddleIndex - state.slice[0], 0);
-      const goodDown = Math.max(state.slice[1] - currentMiddleIndex, 0);
-      if (
-        (state.slice[0] && goodUp < allowedTopDistance) ||
-        goodDown < allowedBottomDistance
-      ) {
-        const start = Math.max(currentMiddleIndex - topRenderOffset, 0);
-        if (start !== state.slice[0])
-          setState((state2) => ({
-            ...state2,
-            slice: [start, start + rowsByRender],
-          }));
-      }
-    };
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    const now = new Date();
-    if (
-      lastScrollTimeRef.current &&
-      now.getTime() - lastScrollTimeRef.current.getTime() > 160
-    ) {
-      fn();
-    } else {
-      if (!lastScrollTimeRef.current) lastScrollTimeRef.current = now;
-      timeoutRef.current = setTimeout(fn, 160);
-    }
-  });
-
-  useEventListener(window, 'mouseup', (e) => {
-    if (!state.mouseDown) return;
-    const el = elRef.current as HTMLElement;
-    const rect = el.getBoundingClientRect();
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top - headerHeight;
-    x += scrollRef.current.left;
-    y += scrollRef.current.top;
-    const rowIndex = Math.min(
-      Math.max(Math.floor(y / rowHeight), 0),
-      props.result.rows.length - 1,
-    );
-    const colIndex = Math.min(
-      Math.max(getColIndex(x), 0),
-      props.result.fields.length - 1,
-    );
-    const selection = {
-      rowIndex: [
-        Math.min(rowIndex, state.mouseDown?.rowIndex ?? rowIndex),
-        Math.max(rowIndex, state.mouseDown?.rowIndex ?? -1),
-      ] as [number, number],
-      colIndex: [
-        Math.min(colIndex, state.mouseDown?.colIndex ?? colIndex),
-        Math.max(colIndex, state.mouseDown?.colIndex ?? -1),
-      ] as [number, number],
-    };
-
-    if (
-      document.activeElement === elRef.current &&
-      (rowIndex >= props.result.rows.length ||
-        colIndex >= props.result.fields.length)
-    ) {
-      setState((state2) => ({
-        ...state2,
-        selection,
-        mouseDown: undefined,
-      }));
-      elRef.current?.blur();
-      return;
-    }
-    setState((state2) => ({
-      ...state2,
-      active: { rowIndex, colIndex },
-      selection,
-      mouseDown: undefined,
-    }));
-  });
-
-  useEventListener(window, 'mousemove', (e) => {
-    if (!state.mouseDown) return;
-    const el = elRef.current as HTMLElement;
-    const rect = el.getBoundingClientRect();
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top - headerHeight;
-    x += scrollRef.current.left;
-    y += scrollRef.current.top;
-    const rowIndex = Math.min(
-      Math.max(Math.floor(y / rowHeight), 0),
-      props.result.rows.length - 1,
-    );
-    const colIndex = Math.min(
-      Math.max(getColIndex(x), 0),
-      props.result.fields.length - 1,
-    );
-    const selection = {
-      rowIndex: [
-        Math.min(rowIndex, state.mouseDown?.rowIndex ?? rowIndex),
-        Math.max(rowIndex, state.mouseDown?.rowIndex ?? -1),
-      ] as [number, number],
-      colIndex: [
-        Math.min(colIndex, state.mouseDown?.colIndex ?? colIndex),
-        Math.max(colIndex, state.mouseDown?.colIndex ?? -1),
-      ] as [number, number],
-    };
-    // if shift is pressed, select a range
-    setState((state2) => ({
-      ...state2,
-      selection,
-      active: { rowIndex, colIndex },
-    }));
-  });
-
-  const onMouseDown = useEvent((e: React.MouseEvent<HTMLElement>) => {
-    if (
-      e.button === 1 ||
-      e.button === 2 ||
-      (e.target instanceof HTMLElement &&
-        e.target.matches('input, textarea, select, button'))
-    )
-      return;
-    const el = elRef.current as HTMLElement;
-    const rect = el.getBoundingClientRect();
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top - headerHeight;
-    if (
-      x < 0 ||
-      y < 0 ||
-      x > el.offsetWidth - (hasRightScrollbar ? scrollWidth : 0) ||
-      y >
-        el.offsetHeight - (hasBottomScrollbar ? scrollWidth : 0) - headerHeight
-    ) {
-      return;
-    }
-    x += scrollRef.current.left;
-    y += scrollRef.current.top;
-    const rowIndex = Math.floor(y / rowHeight);
-    if (rowIndex >= props.result.rows.length) {
-      return;
-    }
-    const colIndex = getColIndex(x);
-    // if shift is pressed, select a range
-    setState((state2) => ({
-      ...state2,
-      mouseDown: { rowIndex, colIndex },
-      active: { rowIndex, colIndex },
-      selection: undefined,
-    }));
-  });
-
-  const onDoubleClick = useEvent((e: React.MouseEvent<HTMLElement>) => {
-    if (
-      e.button === 1 ||
-      e.button === 2 ||
-      !props.onUpdate ||
-      !props.pks?.length
-    )
-      return;
-    const el = elRef.current as HTMLElement;
-    const rect = el.getBoundingClientRect();
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top - headerHeight;
-    if (
-      x < 0 ||
-      y < 0 ||
-      x > el.offsetWidth - (hasRightScrollbar ? scrollWidth : 0) ||
-      y >
-        el.offsetHeight - (hasBottomScrollbar ? scrollWidth : 0) - headerHeight
-    ) {
-      return;
-    }
-    x += scrollRef.current.left;
-    y += scrollRef.current.top;
-    const rowIndex = Math.floor(y / rowHeight);
-    if (rowIndex >= props.result.rows.length) {
-      return;
-    }
-    const colIndex = getColIndex(x);
-    if (
-      colIndex === state.active?.colIndex &&
-      rowIndex === state.active?.rowIndex
-    ) {
-      setEditing(true);
-    }
-  });
-
-  const onBlur = useEvent(() => {
-    setState({
-      ...state,
-      mouseDown: undefined,
-    });
-  });
-
-  const onEditBlur = useEvent(() => {
-    setEditing(false);
-  });
-
-  function moveBy(x0: number, y0: number, selection: boolean) {
-    if (!state.active) return;
-    let x = x0;
-    let y = y0;
-    if (state.active.colIndex + x < 0) {
-      x = -state.active.colIndex;
-    } else if (state.active.colIndex + x >= props.result.fields.length) {
-      x = props.result.fields.length - state.active.colIndex - 1;
-    }
-    if (state.active.rowIndex + y < 0) {
-      y = -state.active.rowIndex;
-    } else if (state.active.rowIndex + y >= props.result.rows.length) {
-      y = props.result.rows.length - state.active.rowIndex - 1;
-    }
-    if (x === 0 && y === 0) return;
-    setState({
-      ...state,
-      selection: !selection
-        ? undefined
-        : !state.selection
-        ? {
-            colIndex: [
-              Math.min(state.active.colIndex + x, state.active.colIndex),
-              Math.max(state.active.colIndex + x, state.active.colIndex),
-            ],
-            rowIndex: [
-              Math.min(state.active.rowIndex + y, state.active.rowIndex),
-              Math.max(state.active.rowIndex + y, state.active.rowIndex),
-            ],
-          }
-        : {
-            colIndex: [
-              Math.min(
-                state.active.colIndex + x,
-                state.selection.colIndex[0] === state.active.colIndex
-                  ? state.selection.colIndex[1]
-                  : state.selection.colIndex[0],
-              ),
-              Math.max(
-                state.active.colIndex + x,
-                state.selection.colIndex[0] === state.active.colIndex
-                  ? state.selection.colIndex[1]
-                  : state.selection.colIndex[0],
-              ),
-            ],
-            rowIndex: [
-              Math.min(
-                state.active.rowIndex + y,
-                state.selection.rowIndex[0] === state.active.rowIndex
-                  ? state.selection.rowIndex[1]
-                  : state.selection.rowIndex[0],
-              ),
-              Math.max(
-                state.active.rowIndex + y,
-                state.selection.rowIndex[0] === state.active.rowIndex
-                  ? state.selection.rowIndex[1]
-                  : state.selection.rowIndex[0],
-              ),
-            ],
-          },
-      active: {
-        colIndex: state.active.colIndex + x,
-        rowIndex: state.active.rowIndex + y,
-      },
-    });
-  }
-
-  useEventListener(document, 'copy', (e: ClipboardEvent) => {
-    if (
-      document.activeElement === elRef.current &&
-      e.clipboardData &&
-      state.selection
-    ) {
-      e.preventDefault();
-      e.stopPropagation();
-      const d = e.clipboardData;
-      const sels = getSelectionData(props.result, state.selection);
-      d.setData('text/plain', toText(sels).join(''));
-      d.setData('text/csv', toCsv(sels).join(''));
-      d.setData('text/tab-separated-values', toTsv(sels).join(''));
-      d.setData('text/html', toHtml(sels));
-      d.setData('application/json', JSON.stringify(sels));
-    }
-  });
-
-  const onKeyDown = useEvent((e: React.KeyboardEvent) => {
-    if (e.target instanceof HTMLTextAreaElement) return;
-    if (
-      props.onUpdate &&
-      props.pks?.length &&
-      (e.key === 'F2' || e.key === 'Enter')
-    ) {
-      setEditing(true);
-      e.preventDefault();
-      e.stopPropagation();
-    } else if (e.key === 'a' && e.ctrlKey) {
-      setState({
-        ...state,
-        selection: {
-          colIndex: [0, props.result.fields.length - 1],
-          rowIndex: [0, props.result.rows.length - 1],
-        },
-      });
-    } else if (e.key === 'PageUp') {
-      if (e.shiftKey || state.active) {
-        const pageRows = Math.round((props.height - headerHeight) / rowHeight);
-        moveBy(0, -pageRows, e.shiftKey);
-        return;
-      }
-      assert(gridContentRef.current);
-      gridContentRef.current.scrollTo({
-        left: gridContentRef.current.scrollLeft,
-        top: Math.max(
-          gridContentRef.current.scrollTop -
-            gridContentRef.current.offsetHeight,
-          0,
-        ),
-        behavior: 'smooth',
-      });
-    } else if (e.key === 'PageDown') {
-      if (e.shiftKey || state.active) {
-        const pageRows = Math.round((props.height - headerHeight) / rowHeight);
-        moveBy(0, pageRows, e.shiftKey);
-        return;
-      }
-      assert(gridContentRef.current);
-      gridContentRef.current.scrollTo({
-        left: gridContentRef.current.scrollLeft,
-        top:
-          gridContentRef.current.scrollTop +
-          gridContentRef.current.offsetHeight,
-        behavior: 'smooth',
-      });
-    } else if (e.key === 'Home') {
-      if (e.shiftKey || state.active) {
-        moveBy(0, -Infinity, e.shiftKey);
-        return;
-      }
-      assert(gridContentRef.current);
-      gridContentRef.current.scrollTo({
-        left: gridContentRef.current.scrollLeft,
-        top: 0,
-        behavior: 'smooth',
-      });
-    } else if (e.key === 'End') {
-      if (e.shiftKey || state.active) {
-        moveBy(0, Infinity, e.shiftKey);
-        return;
-      }
-      assert(gridContentRef.current);
-      gridContentRef.current.scrollTo({
-        left: gridContentRef.current.scrollLeft,
-        top:
-          gridContentRef.current.scrollHeight -
-          gridContentRef.current.offsetHeight +
-          scrollWidth,
-        behavior: 'smooth',
-      });
-    } else if (state.active) {
-      if (e.key === 'Escape') {
-        if (elRef.current) elRef.current.blur();
-      } else if (e.key === 'ArrowDown') {
-        moveBy(0, 1, e.shiftKey);
-      } else if (e.key === 'ArrowUp') {
-        moveBy(0, -1, e.shiftKey);
-      } else if (e.key === 'ArrowLeft') {
-        moveBy(-1, 0, e.shiftKey);
-      } else if (e.key === 'ArrowRight') {
-        moveBy(1, 0, e.shiftKey);
-      } else if (
-        props.onUpdate &&
-        props.pks?.length &&
-        e.key &&
-        e.key.length === 1 &&
-        !e.ctrlKey &&
-        !e.altKey &&
-        !e.metaKey
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        setUpdate({
-          ...update,
-          [state.active.rowIndex]: {
-            ...update?.[state.active.rowIndex],
-            [state.active.colIndex]: e.key,
-          },
-        });
-        setEditing(2);
-      }
-    }
-  });
-  const onChange = useEvent((value: string | null) => {
-    if (!state.active) return;
-    if (update?.[state.active.rowIndex]?.[state.active.colIndex] === value)
-      return;
-    setUpdate({
-      ...update,
-      [state.active.rowIndex]: {
-        ...update?.[state.active.rowIndex],
-        [state.active.colIndex]: value,
-      },
-    });
-  });
-
-  const applyClick = useEvent(async () => {
-    const { pks } = props;
-    if (!pks || pks.length === 0 || !props.onUpdate) return;
-    const update2 = Object.keys(update).map((rowIndex) => {
-      const values: { [name: string]: string } = {};
-      for (const colIndex in update[rowIndex]) {
-        const fieldName = props.result.fields[colIndex].name;
-        const val = update[rowIndex][colIndex];
-        assert(typeof fieldName === 'string');
-        assert(val === null || typeof val === 'string');
-        values[fieldName] = val;
-      }
-      const where: { [n: string]: string | number | null } = {};
-      for (const name of pks) {
-        const val =
-          props.result.rows?.[rowIndex]?.[
-            props.result.fields.findIndex((f) => f.name === name)
-          ];
-        assert(
-          typeof val === 'string' || typeof val === 'number' || val === null,
-        );
-        where[name] = val;
-      }
-      return {
-        where,
-        values,
-      };
-    });
-    await props.onUpdate(update2);
-    setUpdate({});
-  });
+    activeElRef,
+    gridContentRef,
+    gridContentMarginTop,
+    gridContentHeight,
+    visibleStartingInEven,
+    visibleRows,
+    gridContentTableTop,
+    totalChanges,
+    onBlur,
+    onKeyDown,
+    onMouseDown,
+    onDoubleClick,
+    onChange,
+    onEditBlur,
+    onFilterClose,
+    onScroll,
+    onSortClose,
+    onSortClick,
+    onFilterClick,
+    nop,
+    onChangeDialogMouseDown,
+    onDiscardClick,
+    applyClick,
+  } = useDataGridCore(props);
 
   return (
     <div
       style={{ top: 0, left: 0, bottom: 0, right: 0, position: 'absolute' }}
       tabIndex={0}
-      className={editing ? 'editing' : undefined}
+      className={state.editing ? 'editing' : undefined}
       onBlur={onBlur}
       onKeyDown={onKeyDown}
       onMouseDown={onMouseDown}
@@ -694,7 +100,7 @@ export function DataGridCore(props: DataGridCoreProps) {
             pks={props.pks}
             finalWidths={finalWidths}
             currentSort={props.currentSort}
-            onChangeSort={props.onChangeSort}
+            onChangeSort={pendingRowsUpdate ? undefined : props.onChangeSort}
           />
         </table>
       </div>
@@ -710,15 +116,17 @@ export function DataGridCore(props: DataGridCoreProps) {
           hasRightScrollbar={hasRightScrollbar}
           onChange={onChange}
           changed={
-            typeof update?.[state.active.rowIndex]?.[state.active.colIndex] !==
-            'undefined'
+            typeof state.update?.[state.active.rowIndex]?.[
+              state.active.colIndex
+            ] !== 'undefined'
           }
           onBlur={onEditBlur}
-          editing={editing}
+          editing={state.editing}
           value={
-            typeof update[state.active.rowIndex]?.[state.active.colIndex] !==
-            'undefined'
-              ? update[state.active.rowIndex][state.active.colIndex]
+            typeof state.update[state.active.rowIndex]?.[
+              state.active.colIndex
+            ] !== 'undefined'
+              ? state.update[state.active.rowIndex][state.active.colIndex]
               : props.result.rows[state.active.rowIndex][state.active.colIndex]
           }
           elRef={activeElRef}
@@ -749,61 +157,55 @@ export function DataGridCore(props: DataGridCoreProps) {
             gridContentTableWidth={gridContentTableWidth}
             fields={props.result.fields}
             finalWidths={finalWidths}
-            update={update}
+            update={state.update}
           />
         </div>
       </div>
 
-      {openSortDialog && props.onChangeSort && (
+      {state.openSortDialog && props.onChangeSort && (
         <DataGridSortDialog
-          onClose={() => setOpenSortDialog(false)}
+          onClose={onSortClose}
           fields={props.result.fields}
           currentSort={props.currentSort}
           onChangeSort={props.onChangeSort}
         />
       )}
 
+      {state.openFilterDialog && props.onChangeFilter && (
+        <DataGridFilterDialog
+          onChange={props.onChangeFilter}
+          currentFilter={props.currentFilter}
+          onClose={onFilterClose}
+          fields={props.result.fields}
+        />
+      )}
+
       {props.onChangeSort ? (
         pendingRowsUpdate > 0 ? (
-          <i
-            className="fa fa-sort disabled"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          />
+          <i className="fa fa-sort disabled" onMouseDown={nop} />
         ) : (
-          <i
-            className="fa fa-sort"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setOpenSortDialog(true);
-            }}
-          />
+          <i className="fa fa-sort" onMouseDown={onSortClick} />
         )
       ) : null}
+
+      {pendingRowsUpdate > 0 ? (
+        <i className="fa fa-filter disabled" onMouseDown={nop} />
+      ) : (
+        <i className="fa fa-filter" onMouseDown={onFilterClick} />
+      )}
+
       {props.result.rows.length === 0 && props.emptyTable ? (
         <div className="empty-table">
           <div>{props.emptyTable}</div>
         </div>
       ) : pendingRowsUpdate > 0 ? (
-        <div
-          className="change-dialog"
-          onMouseDown={(e) => {
-            e.stopPropagation();
-            if (document.activeElement instanceof HTMLElement)
-              document.activeElement.blur();
-          }}
-        >
+        <div className="change-dialog" onMouseDown={onChangeDialogMouseDown}>
           {pendingRowsUpdate} pending row{pendingRowsUpdate > 1 ? 's' : ''}{' '}
           update ({totalChanges} value{totalChanges > 1 ? 's' : ''})
           <div>
             <button
               type="button"
-              onClick={() => {
-                setUpdate({});
-              }}
+              onClick={onDiscardClick}
               style={{
                 fontWeight: 'normal',
                 color: '#444',

@@ -12,8 +12,10 @@ export function TableDataFrame(props: TableFrameProps): JSX.Element {
     status,
     defaultSort,
     currentSort,
+    currentFilter,
     onChangeSort,
     dataStatus,
+    onChangeFilter,
   } = useTableDataFrame(props);
 
   return (
@@ -30,8 +32,10 @@ export function TableDataFrame(props: TableFrameProps): JSX.Element {
           right: 0,
         }}
         onUpdate={onUpdate}
+        currentFilter={currentFilter}
         defaultSort={defaultSort}
         currentSort={currentSort}
+        onChangeFilter={onChangeFilter}
         onChangeSort={onChangeSort}
         result={dataResult}
         emptyTable="Empty Table"
