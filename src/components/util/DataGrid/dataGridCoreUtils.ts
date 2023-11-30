@@ -23,6 +23,8 @@ import {
 } from './util';
 import { DataGridCoreProps, DataGridState } from './DataGridCore';
 
+const isIOS = process?.platform === 'darwin';
+
 export function useDataGridCore(props: DataGridCoreProps) {
   const [state0, setState] = useState<DataGridState>({
     slice: [0, rowsByRender],
@@ -55,6 +57,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
   }
 
   const len = resultRef.current.rows.length;
+
   const extraRows = useMemo(() => {
     if (!props.onUpdate) return 0;
     let i = 0;
@@ -96,11 +99,13 @@ export function useDataGridCore(props: DataGridCoreProps) {
       1 +
       extraBottomSpace >
     props.height;
+
   const hasBottomScrollbar =
     baseWidths.reduce((a, b) => a + b, 0) +
       (hasRightScrollbar0 ? scrollWidth : 0) +
       2 >
     props.width;
+
   const hasRightScrollbar =
     hasRightScrollbar0 ||
     rowHeight * props.result.rows.length +
@@ -108,6 +113,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       1 +
       (hasBottomScrollbar ? scrollWidth : 0) >
       props.height;
+
   const { widths: finalWidths, width: gridContentTableWidth } = useMemo(
     () =>
       buildFinalWidths(
@@ -116,6 +122,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       ),
     [baseWidths, props.width, hasRightScrollbar],
   );
+
   const totalChanges = Object.keys(state.update).reduce(
     (a, b) => a + Object.keys(state.update[b]).length,
     0,
@@ -162,9 +169,12 @@ export function useDataGridCore(props: DataGridCoreProps) {
   ]);
 
   const gridContentMarginTop = -headerHeight;
+
   assert(props.result.rows instanceof Array);
+
   const gridContentHeight =
     headerHeight + (props.result.rows.length + extraRows) * rowHeight;
+
   const gridContentTableTop = `${state.slice[0] * rowHeight}px`;
 
   const visibleRows = useMemo(() => {
@@ -504,6 +514,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
           }
         : undefined,
       update: {},
+      updateFail: undefined,
     }));
   });
 
@@ -520,7 +531,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       }));
       e.preventDefault();
       e.stopPropagation();
-    } else if (e.key === 'a' && e.ctrlKey) {
+    } else if (e.key === 'a' && (e.ctrlKey || (e.metaKey && isIOS))) {
       setState((s) => ({
         ...s,
         selection: {
@@ -778,6 +789,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
           values,
         };
       });
+
     const inserts = Object.keys(state.update)
       .filter((i) => parseInt(i, 10) >= props.result.rows.length)
       .map((rowIndex) => {

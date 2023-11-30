@@ -21,11 +21,14 @@ export function DataGridUpdateInfoDialog({
 }) {
   const onChangeDialogMouseDown = useEvent((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (document.activeElement instanceof HTMLElement)
-      document.activeElement.blur();
+    if (e.target instanceof HTMLElement) e.target.focus();
   });
   return (
-    <div className="change-dialog" onMouseDown={onChangeDialogMouseDown}>
+    <div
+      className="change-dialog"
+      onMouseDown={onChangeDialogMouseDown}
+      tabIndex={0}
+    >
       {applyingUpdate ? (
         <div className="data-grid-update-info--updating">
           <i className="fa fa-circle-o-notch fa-spin" />
@@ -43,19 +46,16 @@ export function DataGridUpdateInfoDialog({
         {pendingInserts > 0 && pendingRowsUpdate > 0
           ? ` ${pendingInserts} insert${
               pendingInserts > 1 ? 's' : ''
-            }, ${pendingRowsUpdate} update${
+            } and ${pendingRowsUpdate} update${
               pendingRowsUpdate > 1 ? 's' : ''
             } pending `
-          : pendingInserts
+          : pendingInserts > 0
           ? `${pendingInserts} pending row${
               pendingInserts > 1 ? 's' : ''
             } insert${pendingInserts > 1 ? 's' : ''}`
-          : `${pendingInserts} pending row${
-              pendingInserts > 1 ? 's' : ''
-            } insert${
-              pendingInserts > 1 ? 's' : ''
-            } and ${pendingRowsUpdate} pending row
-    ${pendingRowsUpdate > 1 ? 's' : ''} update`}{' '}
+          : `${pendingRowsUpdate} pending row${
+              pendingRowsUpdate > 1 ? 's' : ''
+            } update`}{' '}
         ({totalChanges} value
         {totalChanges > 1 ? 's' : ''})
         {fail ? (
