@@ -1146,15 +1146,16 @@ export const DB = {
   async update(
     schema: string,
     table: string,
-    update: {
+    updates: {
       where: { [fieldName: string]: string | number | null };
       values: { [fieldName: string]: string | null };
     }[],
+    inserts: { [fieldName: string]: string | null }[],
   ) {
     const c = await openConnection();
     try {
       await c.query('BEGIN');
-      for (const { where, values } of update) {
+      for (const { where, values } of updates) {
         let count = 1;
         await c.query(
           `UPDATE ${label(schema)}.${label(table)} SET ${Object.keys(values)
@@ -1165,6 +1166,16 @@ export const DB = {
             .map((k) => `${label(k)} = $${count++}`)
             .join(' AND ')}`,
           [...Object.values(values), ...Object.values(where)],
+        );
+      }
+      for (const insert of inserts) {
+        await c.query(
+          `INSERT INTO ${label(schema)}.${label(table)} (${Object.keys(insert)
+            .map((k) => label(k))
+            .join(', ')}) VALUES (${Object.keys(insert)
+            .map((_, i) => `$${i + 1}`)
+            .join(', ')})`,
+          Object.values(insert),
         );
       }
       await c.query('COMMIT');

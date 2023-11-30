@@ -15,12 +15,13 @@ export interface GridProps {
   result: QueryArrayResult | undefined;
   onScroll?: (() => void) | undefined;
   emptyTable?: string | undefined;
-  onUpdate?: (
-    update: {
+  onUpdate?: (u: {
+    updates: {
       where: { [fieldName: string]: string | number | null };
       values: { [fieldName: string]: string | null };
-    }[],
-  ) => Promise<boolean>;
+    }[];
+    inserts: { [fieldName: string]: string | null }[];
+  }) => Promise<boolean>;
   pks?: string[];
   currentSort?: DataGridSort;
   defaultSort?: DataGridSort;

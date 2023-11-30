@@ -6,6 +6,7 @@ import { DataGridSort } from './DataGrid';
 import { DataGridSortDialog } from './DataGridSortDialog';
 import { DataGridFilterDialog, Filter } from './DataGridFilterDialog';
 import { useDataGridCore } from './dataGridCoreUtils';
+import { DataGridUpdateInfoDialog } from './DataGridUpdateInfo';
 
 export interface DataGridCoreProps {
   result: QueryArrayResult;
@@ -15,12 +16,13 @@ export interface DataGridCoreProps {
   height: number;
   emptyTable?: string | undefined;
   // eslint-disable-next-line react/no-unused-prop-types
-  onUpdate?: (
-    update: {
+  onUpdate?: (u: {
+    updates: {
       where: { [fieldName: string]: string | number | null };
       values: { [fieldName: string]: string | null };
-    }[],
-  ) => Promise<boolean>;
+    }[];
+    inserts: { [fieldName: string]: string | null }[];
+  }) => Promise<boolean>;
   pks?: string[];
   currentFilter?: Filter;
   currentSort?: DataGridSort;
@@ -37,6 +39,8 @@ export interface DataGridState {
   openFilterDialog: boolean;
   editing: boolean | 2;
   update: { [rowIndex: string]: { [colIndex: string]: string | null } };
+  updateFail?: Error;
+  updateRunning?: boolean;
 }
 
 export function DataGridCore(props: DataGridCoreProps) {
@@ -47,6 +51,7 @@ export function DataGridCore(props: DataGridCoreProps) {
     headerElRef,
     finalWidths,
     pendingRowsUpdate,
+    pendingInserts,
     scrollRef,
     hasBottomScrollbar,
     hasRightScrollbar,
@@ -70,9 +75,12 @@ export function DataGridCore(props: DataGridCoreProps) {
     onSortClick,
     onFilterClick,
     nop,
-    onChangeDialogMouseDown,
     onDiscardClick,
     applyClick,
+    onPlusClick,
+    extraBottomSpace,
+    onDiscardFailClick,
+    applyingUpdate,
   } = useDataGridCore(props);
 
   return (
@@ -123,11 +131,11 @@ export function DataGridCore(props: DataGridCoreProps) {
           onBlur={onEditBlur}
           editing={state.editing}
           value={
-            typeof state.update[state.active.rowIndex]?.[
-              state.active.colIndex
-            ] !== 'undefined'
-              ? state.update[state.active.rowIndex][state.active.colIndex]
-              : props.result.rows[state.active.rowIndex][state.active.colIndex]
+            typeof state.update[state.active.rowIndex] !== 'undefined'
+              ? state.update[state.active.rowIndex]?.[state.active.colIndex]
+              : props.result.rows[state.active.rowIndex]?.[
+                  state.active.colIndex
+                ]
           }
           elRef={activeElRef}
         />
@@ -143,22 +151,27 @@ export function DataGridCore(props: DataGridCoreProps) {
       >
         <div
           style={{
-            marginTop: gridContentMarginTop,
-            height: gridContentHeight,
-            borderBottom: '1px solid #ddd',
+            height: gridContentHeight + extraBottomSpace + gridContentMarginTop,
           }}
         >
-          <DataGridTable
-            visibleStartingInEven={visibleStartingInEven}
-            visibleRows={visibleRows}
-            slice={state.slice}
-            selection={state.selection}
-            gridContentTableTop={gridContentTableTop}
-            gridContentTableWidth={gridContentTableWidth}
-            fields={props.result.fields}
-            finalWidths={finalWidths}
-            update={state.update}
-          />
+          <div
+            style={{
+              marginTop: gridContentMarginTop,
+              height: gridContentHeight,
+            }}
+          >
+            <DataGridTable
+              visibleStartingInEven={visibleStartingInEven}
+              visibleRows={visibleRows}
+              slice={state.slice}
+              selection={state.selection}
+              gridContentTableTop={gridContentTableTop}
+              gridContentTableWidth={gridContentTableWidth}
+              fields={props.result.fields}
+              finalWidths={finalWidths}
+              update={state.update}
+            />
+          </div>
         </div>
       </div>
 
@@ -189,39 +202,40 @@ export function DataGridCore(props: DataGridCoreProps) {
       ) : null}
 
       {pendingRowsUpdate > 0 ? (
-        <i className="fa fa-filter disabled" onMouseDown={nop} />
+        <>
+          {props.onChangeFilter ? (
+            <i className="fa fa-filter disabled" onMouseDown={nop} />
+          ) : null}
+          {props.onUpdate ? (
+            <i className="fa fa-plus disabled" onMouseDown={nop} />
+          ) : null}
+        </>
       ) : (
-        <i className="fa fa-filter" onMouseDown={onFilterClick} />
+        <>
+          {props.onChangeFilter ? (
+            <i className="fa fa-filter" onMouseDown={onFilterClick} />
+          ) : null}
+          {props.onUpdate ? (
+            <i className="fa fa-plus" onMouseDown={onPlusClick} />
+          ) : null}
+        </>
       )}
 
       {props.result.rows.length === 0 && props.emptyTable ? (
         <div className="empty-table">
           <div>{props.emptyTable}</div>
         </div>
-      ) : pendingRowsUpdate > 0 ? (
-        <div className="change-dialog" onMouseDown={onChangeDialogMouseDown}>
-          {pendingRowsUpdate} pending row{pendingRowsUpdate > 1 ? 's' : ''}{' '}
-          update ({totalChanges} value{totalChanges > 1 ? 's' : ''})
-          <div>
-            <button
-              type="button"
-              onClick={onDiscardClick}
-              style={{
-                fontWeight: 'normal',
-                color: '#444',
-              }}
-            >
-              Discard <i className="fa fa-undo" />
-            </button>
-            <button
-              type="button"
-              style={{ fontWeight: 'bold' }}
-              onClick={applyClick}
-            >
-              Apply <i className="fa fa-check" />
-            </button>
-          </div>
-        </div>
+      ) : pendingRowsUpdate > 0 || pendingInserts > 0 ? (
+        <DataGridUpdateInfoDialog
+          onDiscardFailClick={onDiscardFailClick}
+          pendingRowsUpdate={pendingRowsUpdate}
+          pendingInserts={pendingInserts}
+          totalChanges={totalChanges}
+          onDiscardClick={onDiscardClick}
+          onApplyClick={applyClick}
+          fail={state.updateFail}
+          applyingUpdate={applyingUpdate}
+        />
       ) : null}
     </div>
   );

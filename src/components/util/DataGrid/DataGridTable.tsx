@@ -53,11 +53,23 @@ export const DataGridTable = React.memo(
         <tbody>
           {visibleStartingInEven ? <tr style={{ display: 'none' }} /> : null}
           {visibleRows.map((row, rowIndex) => (
-            <tr key={rowIndex}>
+            <tr
+              key={rowIndex}
+              className={
+                rowIndex === visibleRows.length - 1 &&
+                row.length === 0 &&
+                (!update?.[slice[0] + rowIndex] ||
+                  Object.values(update?.[slice[0] + rowIndex]).length === 0)
+                  ? 'spare'
+                  : undefined
+              }
+            >
               {fields.map((_, index) => {
                 const hasChange =
-                  typeof update?.[rowIndex]?.[index] !== 'undefined';
-                const val = hasChange ? update[rowIndex][index] : row[index];
+                  typeof update?.[slice[0] + rowIndex]?.[index] !== 'undefined';
+                const val = hasChange
+                  ? update[slice[0] + rowIndex][index]
+                  : row[index];
                 const type = getType(val);
                 const valString = getValString(val);
                 const className = cellClassName(

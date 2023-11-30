@@ -2,6 +2,7 @@ import { assert } from 'util/assert';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { useEventListener } from 'util/useEventListener';
+import { grantError } from 'util/errors';
 import { update as activeUpdate } from './DataGridActiveCell';
 import {
   allowedBottomDistance,
@@ -23,13 +24,13 @@ import {
 import { DataGridCoreProps, DataGridState } from './DataGridCore';
 
 export function useDataGridCore(props: DataGridCoreProps) {
-  const [state0, setState] = useState({
+  const [state0, setState] = useState<DataGridState>({
     slice: [0, rowsByRender],
     openSortDialog: false,
     openFilterDialog: false,
     editing: false,
     update: {},
-  } as DataGridState);
+  });
 
   const scrollRef = useRef({ left: 0, top: 0 });
 
@@ -53,6 +54,15 @@ export function useDataGridCore(props: DataGridCoreProps) {
     setState(state);
   }
 
+  const len = resultRef.current.rows.length;
+  const extraRows = useMemo(() => {
+    if (!props.onUpdate) return 0;
+    let i = 0;
+    while (state.update[i + len] && Object.values(state.update[i + len]).length)
+      i += 1;
+    return i + 1;
+  }, [props.onUpdate, state.update, len]);
+
   const headerElRef = useRef(null as HTMLTableElement | null);
 
   const timeoutRef = useRef(null as ReturnType<typeof setTimeout> | null);
@@ -68,8 +78,24 @@ export function useDataGridCore(props: DataGridCoreProps) {
     [props.result],
   );
 
+  const pendingInserts = Object.keys(state.update).filter(
+    (i) => parseInt(i, 10) >= props.result.rows.length,
+  ).length;
+  const pendingRowsUpdate = Object.keys(state.update).length - pendingInserts;
+
+  const extraBottomSpace =
+    pendingRowsUpdate || pendingInserts
+      ? 130
+      : props.onChangeFilter || props.onChangeSort || props.onUpdate
+      ? 68
+      : 0;
+
   const hasRightScrollbar0 =
-    rowHeight * props.result.rows.length + headerHeight + 1 > props.height;
+    rowHeight * (props.result.rows.length + extraRows) +
+      headerHeight +
+      1 +
+      extraBottomSpace >
+    props.height;
   const hasBottomScrollbar =
     baseWidths.reduce((a, b) => a + b, 0) +
       (hasRightScrollbar0 ? scrollWidth : 0) +
@@ -90,7 +116,6 @@ export function useDataGridCore(props: DataGridCoreProps) {
       ),
     [baseWidths, props.width, hasRightScrollbar],
   );
-  const pendingRowsUpdate = Object.keys(state.update).length;
   const totalChanges = Object.keys(state.update).reduce(
     (a, b) => a + Object.keys(state.update[b]).length,
     0,
@@ -136,20 +161,28 @@ export function useDataGridCore(props: DataGridCoreProps) {
     hasBottomScrollbar,
   ]);
 
-  const gridContentMarginTop = `-${headerHeight}px`;
+  const gridContentMarginTop = -headerHeight;
   assert(props.result.rows instanceof Array);
-  const gridContentHeight = `${
-    headerHeight + props.result.rows.length * rowHeight
-  }px`;
+  const gridContentHeight =
+    headerHeight + (props.result.rows.length + extraRows) * rowHeight;
   const gridContentTableTop = `${state.slice[0] * rowHeight}px`;
 
-  const visibleRows = useMemo(
-    () =>
-      (props.result.rows as (string | number | null)[][]).filter(
-        (_, i) => state.slice[0] <= i && i <= state.slice[1],
-      ),
-    [props.result.rows, state.slice],
-  );
+  const visibleRows = useMemo(() => {
+    const r = (props.result.rows as (string | number | null)[][]).filter(
+      (_, i) => state.slice[0] <= i && i <= state.slice[1],
+    );
+    let i = extraRows;
+    while (i) {
+      i -= 1;
+      const u = state.update[i];
+      r.push(
+        u && Object.values(u).length
+          ? props.result.rows.map((_, j) => u?.[j])
+          : [],
+      );
+    }
+    return r;
+  }, [props.result.rows, state.slice, extraRows, state.update]);
 
   const visibleStartingInEven = !!(state.slice[0] % 2);
 
@@ -196,7 +229,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     y += scrollRef.current.top;
     const rowIndex = Math.min(
       Math.max(Math.floor(y / rowHeight), 0),
-      props.result.rows.length - 1,
+      props.result.rows.length - 1 + extraRows,
     );
     const colIndex = Math.min(
       Math.max(getColIndex(x), 0),
@@ -215,7 +248,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
     if (
       document.activeElement === elRef.current &&
-      (rowIndex >= props.result.rows.length ||
+      (rowIndex >= props.result.rows.length + extraRows ||
         colIndex >= props.result.fields.length)
     ) {
       setState((state2) => ({
@@ -244,7 +277,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     y += scrollRef.current.top;
     const rowIndex = Math.min(
       Math.max(Math.floor(y / rowHeight), 0),
-      props.result.rows.length - 1,
+      props.result.rows.length - 1 + extraRows,
     );
     const colIndex = Math.min(
       Math.max(getColIndex(x), 0),
@@ -279,8 +312,11 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }
     if (state.active.rowIndex + y < 0) {
       y = -state.active.rowIndex;
-    } else if (state.active.rowIndex + y >= props.result.rows.length) {
-      y = props.result.rows.length - state.active.rowIndex - 1;
+    } else if (
+      state.active.rowIndex + y >=
+      props.result.rows.length + extraRows
+    ) {
+      y = props.result.rows.length - state.active.rowIndex - 1 + extraRows;
     }
     if (x === 0 && y === 0) return;
     setState((s) => {
@@ -435,14 +471,40 @@ export function useDataGridCore(props: DataGridCoreProps) {
     });
   });
 
-  const onChangeDialogMouseDown = useEvent((e: React.MouseEvent) => {
+  const onPlusClick = useEvent((e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
-    if (document.activeElement instanceof HTMLElement)
-      document.activeElement.blur();
+    let i = props.result.rows.length;
+    while (state.update[i]) i += 1;
+    setState((s) => ({
+      ...s,
+      editing: true,
+      active: { colIndex: 0, rowIndex: i },
+      selection: {
+        colIndex: [0, 0],
+        rowIndex: [i, i],
+      },
+    }));
   });
 
   const onDiscardClick = useEvent(() => {
-    setState((s) => ({ ...s, update: {} }));
+    setState((s) => ({
+      ...s,
+      active:
+        s.active && s.active.rowIndex < props.result.rows.length + 1
+          ? s.active
+          : undefined,
+      selection: s.selection
+        ? {
+            rowIndex: [
+              Math.min(s.selection.rowIndex[0], props.result.rows.length),
+              Math.min(s.selection.rowIndex[1], props.result.rows.length),
+            ],
+            colIndex: s.selection.colIndex,
+          }
+        : undefined,
+      update: {},
+    }));
   });
 
   const onKeyDown = useEvent((e: React.KeyboardEvent) => {
@@ -584,7 +646,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     x += scrollRef.current.left;
     y += scrollRef.current.top;
     const rowIndex = Math.floor(y / rowHeight);
-    if (rowIndex >= props.result.rows.length) {
+    if (rowIndex >= props.result.rows.length + extraRows) {
       return;
     }
     const colIndex = getColIndex(x);
@@ -621,7 +683,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     x += scrollRef.current.left;
     y += scrollRef.current.top;
     const rowIndex = Math.floor(y / rowHeight);
-    if (rowIndex >= props.result.rows.length) {
+    if (rowIndex >= props.result.rows.length + extraRows) {
       return;
     }
     const colIndex = getColIndex(x);
@@ -678,37 +740,69 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }));
   });
 
+  const onDiscardFailClick = useEvent(() => {
+    setState((s) => ({
+      ...s,
+      updateFail: undefined,
+    }));
+  });
+
   const applyClick = useEvent(async () => {
     const { pks } = props;
     if (!pks || pks.length === 0 || !props.onUpdate) return;
-    const update2 = Object.keys(state.update).map((rowIndex) => {
-      const values: { [name: string]: string | null } = {};
-      for (const colIndex in state.update[rowIndex]) {
-        const fieldName =
-          props.result.fields[colIndex as unknown as number].name;
-        const val = state.update[rowIndex][colIndex];
-        assert(typeof fieldName === 'string');
-        assert(val === null || typeof val === 'string');
-        values[fieldName] = val;
-      }
-      const where: { [n: string]: string | number | null } = {};
-      for (const name of pks) {
-        const val =
-          props.result.rows?.[rowIndex as unknown as number]?.[
-            props.result.fields.findIndex((f) => f.name === name)
-          ];
-        assert(
-          typeof val === 'string' || typeof val === 'number' || val === null,
-        );
-        where[name] = val;
-      }
-      return {
-        where,
-        values,
-      };
-    });
-    await props.onUpdate(update2);
-    setState((s) => ({ ...s, update: {} }));
+    const updates = Object.keys(state.update)
+      .filter((i) => parseInt(i, 10) < props.result.rows.length)
+      .map((rowIndex) => {
+        const values: { [name: string]: string | null } = {};
+        for (const colIndex in state.update[rowIndex]) {
+          const fieldName =
+            props.result.fields[colIndex as unknown as number].name;
+          const val = state.update[rowIndex][colIndex];
+          assert(typeof fieldName === 'string');
+          assert(val === null || typeof val === 'string');
+          values[fieldName] = val;
+        }
+        const where: { [n: string]: string | number | null } = {};
+        for (const name of pks) {
+          const val =
+            props.result.rows?.[rowIndex as unknown as number]?.[
+              props.result.fields.findIndex((f) => f.name === name)
+            ];
+          assert(
+            typeof val === 'string' || typeof val === 'number' || val === null,
+          );
+          where[name] = val;
+        }
+        return {
+          where,
+          values,
+        };
+      });
+    const inserts = Object.keys(state.update)
+      .filter((i) => parseInt(i, 10) >= props.result.rows.length)
+      .map((rowIndex) => {
+        const values: { [name: string]: string | null } = {};
+        for (const colIndex in state.update[rowIndex]) {
+          const fieldName =
+            props.result.fields[colIndex as unknown as number].name;
+          const val = state.update[rowIndex][colIndex];
+          assert(typeof fieldName === 'string');
+          assert(val === null || typeof val === 'string');
+          values[fieldName] = val;
+        }
+        return values;
+      });
+    try {
+      setState((s) => ({ ...s, updateRunning: true }));
+      await props.onUpdate({ updates, inserts });
+      setState((s) => ({ ...s, update: {}, updateRunning: false }));
+    } catch (e) {
+      setState((s) => ({
+        ...s,
+        updateFail: grantError(e),
+        updateRunning: false,
+      }));
+    }
   });
 
   return {
@@ -722,6 +816,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     headerElRef,
     finalWidths,
     pendingRowsUpdate,
+    pendingInserts,
     scrollRef,
     hasBottomScrollbar,
     hasRightScrollbar,
@@ -740,9 +835,13 @@ export function useDataGridCore(props: DataGridCoreProps) {
     onSortClick,
     onFilterClick,
     nop,
-    onChangeDialogMouseDown,
     totalChanges,
     onDiscardClick,
     applyClick,
+    onPlusClick,
+    extraRows,
+    extraBottomSpace,
+    onDiscardFailClick,
+    applyingUpdate: state.updateRunning,
   };
 }

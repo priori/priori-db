@@ -6,6 +6,8 @@ const letterSize = 6;
 export function getValString(val: unknown) {
   return val === null
     ? 'null'
+    : val === undefined
+    ? ''
     : val instanceof Date
     ? val.toLocaleString()
     : typeof val === 'object'

@@ -68,13 +68,17 @@ export function useTableDataFrame(props: TableFrameProps) {
   });
 
   const onUpdate = useEvent(
-    async (
-      update: {
+    async ({
+      updates,
+      inserts,
+    }: {
+      updates: {
         where: { [fieldName: string]: string | number | null };
         values: { [fieldName: string]: string | null };
-      }[],
-    ) => {
-      await DB.update(props.schema, props.table, update);
+      }[];
+      inserts: { [fieldName: string]: string | null }[];
+    }) => {
+      await DB.update(props.schema, props.table, updates, inserts);
       dataService.reload();
       return true;
     },
