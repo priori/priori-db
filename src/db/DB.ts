@@ -886,6 +886,20 @@ export const DB = {
     return ret;
   },
 
+  async functionsPrivileges(schema: string, func: string) {
+    const res = await list(
+      `
+      SELECT rolname role
+      FROM pg_roles
+      WHERE pg_catalog.has_function_privilege(rolname, '${label(
+        schema,
+      )}.${func}', 'EXECUTE')
+      `,
+      [],
+    );
+    return res.map((e) => e.role as string);
+  },
+
   async tablePrivileges(schema: string, table: string) {
     const res = await list(
       `
@@ -1224,4 +1238,49 @@ export const DB = {
       }`,
     );
   },
+
+  async revokeFunction(schema: string, name: string, role: string) {
+    const hasPublicPrivilege = (
+      await first(`SELECT
+        pg_catalog.has_function_privilege((0)::oid, '${label(
+          schema,
+        )}.${name}', 'EXECUTE') has`)
+    ).has;
+    if (hasPublicPrivilege) {
+      const roles = (await list(
+        `
+        SELECT rolname role
+        FROM pg_roles
+        WHERE pg_catalog.has_function_privilege(rolname, '${label(
+          schema,
+        )}.${name}', 'EXECUTE')
+        `,
+        [],
+      )) as { role: string }[];
+      await query(`
+          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM PUBLIC;
+          ${roles
+            .map(
+              (r) =>
+                `GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(
+                  r.role,
+                )}`,
+            )
+            .join(';')};
+          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(
+            role,
+          )}
+      `);
+    } else
+      await query(`
+        REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(role)}
+      `);
+  },
+
+  async grantFunction(schema: string, name: string, role: string) {
+    await query(`
+      GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(role)}
+    `);
+  },
 };
+

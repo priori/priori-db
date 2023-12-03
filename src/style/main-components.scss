@@ -122,3 +122,26 @@
     color: #c21;
   }
 }
+
+.privileges-role {
+  line-height: 2.3;
+  background: #eee;
+  padding: 5px 8px !important;
+  font-size: 12px !important;
+  border-radius: 4px;
+  white-space: nowrap;
+  .fa-close {
+    opacity: 0.1;
+    position: relative;
+    top: -3px;
+    right: -3px;
+    cursor: pointer;
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+.new-privileges-role {
+  padding: 2px 4px;
+  font-size: 13px;
+}
