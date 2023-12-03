@@ -20,6 +20,52 @@ export const DB = {
     return res.comment as string | null;
   },
 
+  async alterTableOwner(schema: string, table: string, owner: string) {
+    await query(`
+      ALTER TABLE ${label(schema)}.${label(table)}
+      OWNER TO ${label(owner)}
+    `);
+  },
+
+  async tableSize(schema: string, table: string) {
+    const c = await openConnection();
+    try {
+      await c.query('BEGIN');
+      await c.query("SET statement_timeout TO '1s'");
+      const r = await c.query(`
+      SELECT
+      pg_size_pretty(pg_total_relation_size('${label(schema)}.${label(
+        table,
+      )}'::regclass)) "pretty",
+      pg_total_relation_size('${label(schema)}.${label(
+        table,
+      )}'::regclass) "size",
+        pg_size_pretty(pg_table_size('${label(schema)}.${label(
+          table,
+        )}'::regclass)) "onlyTable",
+        pg_size_pretty(pg_indexes_size('${label(schema)}.${label(
+          table,
+        )}'::regclass)) "indexes"
+        `);
+      await c.query('COMMIT');
+      const info = r.rows[0] as {
+        pretty: string;
+        onlyTable: string;
+        indexes: string;
+        size: string;
+      };
+      return {
+        ...info,
+        size: parseInt(info.size, 10),
+      };
+    } catch (e) {
+      await c.query('ROLLBACK');
+      throw grantError(e);
+    } finally {
+      c.release(true);
+    }
+  },
+
   async dropRole(name: string) {
     await query(`DROP ROLE ${label(name)}`);
   },
@@ -1281,6 +1327,63 @@ export const DB = {
     await query(`
       GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(role)}
     `);
+  },
+
+  async domainPrivileges(schema: string, name: string) {
+    const res = (await list(
+      `
+      SELECT rolname role
+      FROM pg_roles
+      WHERE pg_catalog.has_type_privilege(rolname, '${label(schema)}.${label(
+        name,
+      )}', 'USAGE')`,
+      [],
+    )) as { role: string }[];
+    return res.map((r) => r.role);
+  },
+
+  async grantDomain(schema: string, name: string, role: string) {
+    await query(`
+      GRANT USAGE ON TYPE ${label(schema)}.${label(name)} TO ${label(role)}
+    `);
+  },
+
+  async revokeDomain(schema: string, name: string, role: string) {
+    const hasPublicPrivilege = (
+      await first(`SELECT
+        pg_catalog.has_type_privilege((0)::oid, '${label(
+          schema,
+        )}.${name}', 'USAGE') has`)
+    ).has;
+    if (hasPublicPrivilege) {
+      const roles = (await list(
+        `
+        SELECT rolname role
+        FROM pg_roles
+        WHERE pg_catalog.has_type_privilege(rolname, '${label(schema)}.${label(
+          name,
+        )}', 'USAGE')
+        `,
+        [],
+      )) as { role: string }[];
+      await query(`
+          REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM PUBLIC;
+          ${roles
+            .map(
+              (r) =>
+                `GRANT USAGE ON TYPE ${label(schema)}.${label(name)} TO ${label(
+                  r.role,
+                )}`,
+            )
+            .join(';')};
+          REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(
+            role,
+          )}
+      `);
+    } else
+      await query(`
+        REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(role)}
+      `);
   },
 };
 

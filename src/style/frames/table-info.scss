@@ -350,3 +350,43 @@ body div.frame.role div.dialog-form {
   }
   overflow: auto;
 }
+
+.hd {
+  font-size: 19px;
+  line-height: 27px;
+  margin-left: 3px;
+  margin-top: 21px;
+  margin-bottom: 21px;
+  .fa {
+    position: relative;
+    bottom: -3px;
+    font-size: 27px;
+  }
+}
+
+.owner {
+  background: #eee;
+  font-family: monospace;
+  font-size: 19px;
+  line-height: 19px;
+  padding: 5px;
+  border-radius: 6px;
+  margin-bottom: 21px;
+  width: fit-content;
+  .name {
+    user-select: text;
+    margin-left: -3px;
+  }
+  padding-right: 10px;
+}
+.owner .fa-pencil {
+  font-size: 12px;
+  position: relative;
+  top: -7px;
+  right: -6px;
+  cursor: pointer;
+  opacity: 0.3;
+  &:hover {
+    opacity: 1;
+  }
+}

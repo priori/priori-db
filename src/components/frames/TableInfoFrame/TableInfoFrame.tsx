@@ -9,6 +9,7 @@ import { Comment } from 'components/util/Comment';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { useIsMounted } from 'util/hooks';
 import { assert } from 'util/assert';
+import { currentState } from 'state/state';
 import { TableInfoFrameProps, TablePrivileges } from '../../../types';
 import {
   reloadNav,
@@ -156,6 +157,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     openIndexComment: null as string | null,
     updatePrivilege: null as string | null,
     newPrivilege: false,
+    editOwner: false as boolean | string,
   });
 
   const isMounted = useIsMounted();
@@ -368,6 +370,11 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     return null;
   }, [state.cols, edit.updateColumn]);
 
+  const size = useService(
+    () => DB.tableSize(props.schema, props.table),
+    [props.schema, props.table],
+  );
+
   const onUpdateColumn = useEvent(async (form: ColumnForm) => {
     assert(updateColumn);
     const typeChanged =
@@ -399,6 +406,29 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     if (!isMounted()) return;
     set({ ...edit, updateColumn: null });
   });
+
+  const owner = state?.table?.tableowner ?? state?.view?.viewowner;
+
+  const saveOwner = useEvent(() => {
+    DB.alterTableOwner(
+      props.schema,
+      props.table,
+      edit.editOwner as string,
+    ).then(
+      () => {
+        if (!isMounted()) return;
+        service.reload();
+        if (!isMounted()) return;
+        set({ ...edit, editOwner: false });
+      },
+      (err) => {
+        showError(err);
+      },
+    );
+  });
+
+  const { roles } = currentState();
+
   return (
     <>
       <h1>
@@ -495,6 +525,69 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           onUpdate={onUpdateComment}
         />
       ) : null}
+
+      <div
+        className="hd"
+        style={size.status === 'starting' ? { opacity: 0.3 } : undefined}
+      >
+        <i
+          className="fa-hdd-o fa"
+          title={size.error?.message}
+          style={
+            size.error
+              ? { color: '#e11', fontWeight: 'bold' }
+              : { fontWeight: 'bold' }
+          }
+        />{' '}
+        {size.lastValidData?.pretty}{' '}
+        {size.lastValidData && size.lastValidData.size ? (
+          <span
+            style={{ color: '#aaa', fontWeight: 'normal' }}
+            title={`${size.lastValidData.onlyTable} for TOAST, free space map and visibility map + ${size.lastValidData.indexes} for indexes`}
+          >
+            ({size.lastValidData.onlyTable} + {size.lastValidData.indexes})
+          </span>
+        ) : null}
+      </div>
+
+      {owner ? (
+        <div className="owner" title="OWNER">
+          <i className="fa fa-user" /> <span className="name">{owner}</span>
+          <i
+            className="fa fa-pencil"
+            onClick={() => set({ ...edit, editOwner: true })}
+          />
+          {edit.editOwner ? (
+            <Dialog
+              relativeTo="previousSibling"
+              onBlur={() => set({ ...edit, editOwner: false })}
+            >
+              <select
+                onChange={(e) => set({ ...edit, editOwner: e.target.value })}
+                value={
+                  typeof edit.editOwner === 'string' ? edit.editOwner : owner
+                }
+              >
+                {roles?.map((r) => <option key={r.name}>{r.name}</option>)}
+              </select>
+              <div>
+                <button
+                  style={{ fontWeight: 'normal' }}
+                  onClick={() => set({ ...edit, editOwner: false })}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button onClick={saveOwner} type="button">
+                  Save
+                  <i className="fa fa-check" />
+                </button>
+              </div>
+            </Dialog>
+          ) : null}
+        </div>
+      ) : null}
+
       {(state.view && state.view.definition) ||
       (state.mView && state.mView.definition) ? (
         <div className="view">
@@ -1209,33 +1302,15 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         </>
       ) : null}
       {/*
-            <h2>Constraints</h2>
-            <table>
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>...</th>
-                </tr>
-                </thead>
-            </table>
-            <h2>Rules</h2>
-            <table>
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>...</th>
-                </tr>
-                </thead>
-            </table>
-            <h2>Triggers</h2>
-            <table>
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>...</th>
-                </tr>
-                </thead>
-            </table> */}
+        <h2>Triggers</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>...</th>
+            </tr>
+            </thead>
+        </table> */}
       {service?.error?.message && (
         <div className="error-message">
           <i className="fa fa-exclamation-triangle" />
