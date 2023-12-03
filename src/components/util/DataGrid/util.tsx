@@ -2,7 +2,7 @@ import { SimpleValue } from 'db/Connection';
 import { QueryArrayResult } from 'pg';
 import { renderToString } from 'react-dom/server';
 
-const letterSize = 6;
+export const letterSize = 6;
 export function getValString(val: unknown) {
   return val === null
     ? 'null'
@@ -15,29 +15,12 @@ export function getValString(val: unknown) {
     : `${val}`;
 }
 
-export function buildBaseWidths(res: QueryArrayResult) {
-  const fieldsSizes = res.fields.map((f, index) => {
-    let max = f.name.length;
-    for (const row of res.rows) {
-      const val = row[index];
-      const valString = getValString(val);
-      const { length } = valString;
-      if (length > max) {
-        max = length;
-      }
-    }
-    return max;
-  });
-  return fieldsSizes.map(
-    (maxLength) => (maxLength > 40 ? 40 : maxLength) * letterSize + 11,
-  );
-}
 // const navWidth = 250,
 export const rowHeight = 23;
 export const scrollWidth = 10;
 export const headerHeight = 21;
 // medidos em tamanho de linha
-export const rowsByRender = 250;
+export const rowsByRender = 210;
 export const topRenderOffset = 100;
 export const allowedBottomDistance = 50;
 export const allowedTopDistance = 50;
@@ -52,55 +35,6 @@ export function getType(val: unknown) {
     : val instanceof Date
     ? 'date'
     : undefined;
-}
-
-export function buildFinalWidths(
-  initialColsWidths: number[],
-  areaWidth: number,
-) {
-  if (initialColsWidths.length === 0) {
-    return { finalWidths: [], widths: [] };
-  }
-  const minWidth = initialColsWidths.reduce((a: number, b: number) => a + b, 1);
-  const finalWidth = areaWidth > minWidth ? areaWidth : minWidth;
-  const ratio = finalWidth / minWidth;
-  const floatSizes = initialColsWidths.map((w: number) => w * ratio);
-  const roundedSizes = floatSizes.map((w) => Math.round(w));
-  const fields = initialColsWidths.map((_, i) => i);
-  const sortedByDiff = [...fields];
-  sortedByDiff.sort((aIndex, bIndex) => {
-    const floatA = floatSizes[aIndex];
-    const roundedA = roundedSizes[aIndex];
-    const floatB = floatSizes[bIndex];
-    const roundedB = roundedSizes[bIndex];
-    return floatB - roundedB - (floatA - roundedA);
-  });
-  const totalRounded = roundedSizes.reduce((a, b) => a + b);
-  const finalWidths = [...roundedSizes];
-  if (finalWidth > totalRounded) {
-    let temQueSomar = finalWidth - totalRounded;
-    while (temQueSomar > 0) {
-      for (const index of sortedByDiff) {
-        finalWidths[index] += 1;
-        temQueSomar -= 1;
-        if (temQueSomar === 0) break;
-      }
-    }
-  } else if (finalWidth < totalRounded) {
-    let temQueSub = totalRounded - finalWidth;
-    while (temQueSub > 0) {
-      for (let c = sortedByDiff.length - 1; c >= 0; c -= 1) {
-        const index = sortedByDiff[c];
-        finalWidths[index] -= 1;
-        temQueSub -= 1;
-        if (temQueSub === 0) break;
-      }
-    }
-  }
-  return {
-    widths: finalWidths,
-    width: finalWidth,
-  };
 }
 
 export function cellClassName(

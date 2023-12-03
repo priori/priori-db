@@ -20,7 +20,7 @@ interface UpdateActivePos {
   hasBottomScrollbar: boolean;
   hasRightScrollbar: boolean;
 }
-export function update({
+export function activeCellUpdate({
   activeEl,
   finalWidths,
   active,
@@ -79,7 +79,7 @@ interface DataGridActiveCellProps {
   scrollLeft: number;
   containerWidth: number;
   containerHeight: number;
-  finalWidths: number[];
+  colsWidths: number[];
   hasBottomScrollbar: boolean;
   hasRightScrollbar: boolean;
   onChange: (value: string | null) => void;
@@ -96,7 +96,7 @@ export const DataGridActiveCell = React.memo(
     scrollTop,
     containerWidth,
     containerHeight,
-    finalWidths,
+    colsWidths,
     hasBottomScrollbar,
     hasRightScrollbar,
     onChange,
@@ -108,7 +108,7 @@ export const DataGridActiveCell = React.memo(
     const type = getType(val);
     const valString = getValString(val);
     const { top, left, leftCrop, wrapperWidth } = activePos(
-      finalWidths,
+      colsWidths,
       active.colIndex,
       active.rowIndex,
       scrollLeft,

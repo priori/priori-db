@@ -3,12 +3,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { useEventListener } from 'util/useEventListener';
 import { grantError } from 'util/errors';
-import { update as activeUpdate } from './DataGridActiveCell';
+import { activeCellUpdate } from './DataGridActiveCell';
 import {
   allowedBottomDistance,
   allowedTopDistance,
-  buildBaseWidths,
-  buildFinalWidths,
   getSelectionData,
   headerHeight,
   rowHeight,
@@ -22,6 +20,7 @@ import {
   toTsv,
 } from './util';
 import { DataGridCoreProps, DataGridState } from './DataGridCore';
+import { useGridColsSizes } from './useGridColsSizes';
 
 const isIOS = process?.platform === 'darwin';
 
@@ -76,11 +75,6 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
   const lastScrollTimeRef = useRef(null as Date | null);
 
-  const baseWidths = useMemo(
-    () => buildBaseWidths(props.result),
-    [props.result],
-  );
-
   const pendingInserts = Object.keys(state.update).filter(
     (i) => parseInt(i, 10) >= props.result.rows.length,
   ).length;
@@ -93,40 +87,47 @@ export function useDataGridCore(props: DataGridCoreProps) {
       ? 68
       : 0;
 
-  const hasRightScrollbar0 =
-    rowHeight * (props.result.rows.length + extraRows) +
-      headerHeight +
-      1 +
-      extraBottomSpace >
-    props.height;
-
-  const hasBottomScrollbar =
-    baseWidths.reduce((a, b) => a + b, 0) +
-      (hasRightScrollbar0 ? scrollWidth : 0) +
-      2 >
-    props.width;
-
-  const hasRightScrollbar =
-    hasRightScrollbar0 ||
-    rowHeight * props.result.rows.length +
-      headerHeight +
-      1 +
-      (hasBottomScrollbar ? scrollWidth : 0) >
-      props.height;
-
-  const { widths: finalWidths, width: gridContentTableWidth } = useMemo(
-    () =>
-      buildFinalWidths(
-        baseWidths,
-        props.width - (hasRightScrollbar ? scrollWidth : 0) - 1,
-      ),
-    [baseWidths, props.width, hasRightScrollbar],
-  );
-
   const totalChanges = Object.keys(state.update).reduce(
     (a, b) => a + Object.keys(state.update[b]).length,
     0,
   );
+
+  const gridActiveCellUpdate = useEvent(
+    (
+      widths: number[],
+      hasBottomScrollbar: boolean,
+      hasRightScrollbar: boolean,
+    ) => {
+      if (activeElRef.current && state.active)
+        activeCellUpdate({
+          activeEl: activeElRef.current,
+          finalWidths: widths,
+          active: state.active,
+          scrollTop: scrollRef.current.top,
+          scrollLeft: scrollRef.current.left,
+          containerHeight: props.height,
+          containerWidth: props.width,
+          hasBottomScrollbar,
+          hasRightScrollbar,
+        });
+    },
+  );
+
+  const {
+    colsWidths,
+    hasRightScrollbar,
+    hasBottomScrollbar,
+    onStartResize,
+    gridContentTableWidth,
+  } = useGridColsSizes({
+    result: props.result,
+    width: props.width,
+    height: props.height,
+    extraRows,
+    extraBottomSpace,
+    elRef,
+    activeCellUpdate: gridActiveCellUpdate,
+  });
 
   useEffect(() => {
     if (state.active) {
@@ -134,14 +135,14 @@ export function useDataGridCore(props: DataGridCoreProps) {
       assert(el);
       scrollTo(
         el,
-        finalWidths,
+        colsWidths,
         state.active.colIndex,
         state.active.rowIndex,
         hasRightScrollbar,
         hasBottomScrollbar,
       );
     }
-  }, [finalWidths, state.active, hasRightScrollbar, hasBottomScrollbar]);
+  }, [colsWidths, state.active, hasRightScrollbar, hasBottomScrollbar]);
 
   useEffect(() => {
     if (state.selection && state.mouseDown) {
@@ -149,7 +150,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       assert(el);
       scrollTo(
         el,
-        finalWidths,
+        colsWidths,
         state.mouseDown.colIndex === state.selection.colIndex[0]
           ? state.selection.colIndex[1]
           : state.selection.colIndex[0],
@@ -161,7 +162,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       );
     }
   }, [
-    finalWidths,
+    colsWidths,
     state.mouseDown,
     state.selection,
     hasRightScrollbar,
@@ -199,19 +200,19 @@ export function useDataGridCore(props: DataGridCoreProps) {
   function getColIndex(x: number) {
     let left = 0;
     let indexCount = -1;
-    for (const w of finalWidths) {
+    for (const w of colsWidths) {
       if (x < left) return indexCount;
       left += w;
       indexCount += 1;
     }
-    return finalWidths.length - 1;
+    return colsWidths.length - 1;
   }
 
   useEffect(() => {
     if (state.active && activeElRef.current)
-      activeUpdate({
+      activeCellUpdate({
         activeEl: activeElRef.current,
-        finalWidths,
+        finalWidths: colsWidths,
         active: state.active,
         scrollTop: scrollRef.current.top,
         scrollLeft: scrollRef.current.left,
@@ -222,7 +223,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       });
   }, [
     state.active,
-    finalWidths,
+    colsWidths,
     props.height,
     props.width,
     hasBottomScrollbar,
@@ -414,9 +415,9 @@ export function useDataGridCore(props: DataGridCoreProps) {
       headerEl.style.marginLeft = `-${container.scrollLeft}px`;
     }
     if (state.active && activeElRef.current)
-      activeUpdate({
+      activeCellUpdate({
         activeEl: activeElRef.current,
-        finalWidths,
+        finalWidths: colsWidths,
         active: state.active,
         scrollTop: container.scrollTop,
         scrollLeft: container.scrollLeft,
@@ -819,6 +820,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
   return {
     state,
+    onStartResize,
     onBlur,
     onKeyDown,
     onMouseDown,
@@ -826,7 +828,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     elRef,
     gridContentTableWidth,
     headerElRef,
-    finalWidths,
+    colsWidths,
     pendingRowsUpdate,
     pendingInserts,
     scrollRef,

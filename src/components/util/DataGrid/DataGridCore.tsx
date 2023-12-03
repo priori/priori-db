@@ -49,7 +49,7 @@ export function DataGridCore(props: DataGridCoreProps) {
     elRef,
     gridContentTableWidth,
     headerElRef,
-    finalWidths,
+    colsWidths,
     pendingRowsUpdate,
     pendingInserts,
     scrollRef,
@@ -81,6 +81,7 @@ export function DataGridCore(props: DataGridCoreProps) {
     extraBottomSpace,
     onDiscardFailClick,
     applyingUpdate,
+    onStartResize,
   } = useDataGridCore(props);
 
   return (
@@ -106,9 +107,10 @@ export function DataGridCore(props: DataGridCoreProps) {
           <DataGridThead
             fields={props.result.fields}
             pks={props.pks}
-            finalWidths={finalWidths}
+            colsWidths={colsWidths}
             currentSort={props.currentSort}
             onChangeSort={pendingRowsUpdate ? undefined : props.onChangeSort}
+            onStartResize={onStartResize}
           />
         </table>
       </div>
@@ -118,7 +120,7 @@ export function DataGridCore(props: DataGridCoreProps) {
           scrollTop={scrollRef.current.left}
           containerHeight={props.height}
           containerWidth={props.width}
-          finalWidths={finalWidths}
+          colsWidths={colsWidths}
           active={state.active}
           hasBottomScrollbar={hasBottomScrollbar}
           hasRightScrollbar={hasRightScrollbar}
@@ -156,21 +158,30 @@ export function DataGridCore(props: DataGridCoreProps) {
         >
           <div
             style={{
-              marginTop: gridContentMarginTop,
-              height: gridContentHeight,
+              width: gridContentTableWidth,
+              height: gridContentHeight + extraBottomSpace,
             }}
+            className="grid-content--table-wrapper-outer"
           >
-            <DataGridTable
-              visibleStartingInEven={visibleStartingInEven}
-              visibleRows={visibleRows}
-              slice={state.slice}
-              selection={state.selection}
-              gridContentTableTop={gridContentTableTop}
-              gridContentTableWidth={gridContentTableWidth}
-              fields={props.result.fields}
-              finalWidths={finalWidths}
-              update={state.update}
-            />
+            <div
+              style={{
+                marginTop: gridContentMarginTop,
+                height: gridContentHeight,
+              }}
+              className="grid-content--table-wrapper"
+            >
+              <DataGridTable
+                visibleStartingInEven={visibleStartingInEven}
+                visibleRows={visibleRows}
+                slice={state.slice}
+                selection={state.selection}
+                gridContentTableTop={gridContentTableTop}
+                gridContentTableWidth={gridContentTableWidth}
+                fields={props.result.fields}
+                finalWidths={colsWidths}
+                update={state.update}
+              />
+            </div>
           </div>
         </div>
       </div>

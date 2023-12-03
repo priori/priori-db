@@ -5,19 +5,21 @@ import { DataGridSort } from './DataGrid';
 
 interface DataGridTheadProps {
   fields: FieldDef[];
-  finalWidths: number[];
+  colsWidths: number[];
   pks?: string[];
   onChangeSort?: (sort: DataGridSort) => void;
   currentSort?: DataGridSort;
+  onStartResize: (index: number, e: React.MouseEvent) => void;
 }
 
 export const DataGridThead = React.memo(
   ({
     fields,
-    finalWidths,
+    colsWidths,
     pks,
     onChangeSort,
     currentSort,
+    onStartResize,
   }: DataGridTheadProps) => (
     <thead>
       <tr>
@@ -33,7 +35,7 @@ export const DataGridThead = React.memo(
               .filter((v) => v)
               .join(' ')}
             style={{
-              width: finalWidths[index],
+              width: colsWidths[index],
               ...(f.name === '?column?'
                 ? {
                     color: 'rgba(256,256,256,.3)',
@@ -68,6 +70,7 @@ export const DataGridThead = React.memo(
             }
           >
             {f.name}
+            <div onMouseDown={(e) => onStartResize(index + 1, e)} />
           </th>
         ))}
       </tr>
@@ -75,7 +78,7 @@ export const DataGridThead = React.memo(
   ),
   (prev, next) =>
     prev.fields === next.fields &&
-    prev.finalWidths === next.finalWidths &&
+    prev.colsWidths === next.colsWidths &&
     prev.onChangeSort === next.onChangeSort &&
     equals(prev.currentSort, next.currentSort) &&
     equals(prev.pks, next.pks),
