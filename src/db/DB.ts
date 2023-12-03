@@ -1190,29 +1190,33 @@ export const DB = {
   async cancelBackend(pid: number) {
     return query('SELECT pg_cancel_backend($1)', [pid]);
   },
+
   async createSchema(schemaName: string) {
     await query(`CREATE SCHEMA ${label(schemaName)}`);
   },
+
   async dropSchema(schemaName: string, cascade = false) {
     await query(`DROP SCHEMA ${label(schemaName)} ${cascade ? 'CASCADE' : ''}`);
   },
+
   async dropTable(schema: string, name: string, cascade = false) {
     await query(
       `DROP TABLE ${label(schema)}.${label(name)} ${cascade ? 'CASCADE' : ''}`,
     );
   },
+
   async dropFunction(schema: string, name: string, cascade = false) {
     await query(
-      `DROP FUNCTION ${label(schema)}.${label(name)} ${
-        cascade ? 'CASCADE' : ''
-      }`,
+      `DROP FUNCTION ${label(schema)}.${name} ${cascade ? 'CASCADE' : ''}`,
     );
   },
+
   async dropDomain(schema: string, name: string, cascade = false) {
     await query(
       `DROP DOMAIN ${label(schema)}.${label(name)} ${cascade ? 'CASCADE' : ''}`,
     );
   },
+
   async dropSequence(schema: string, name: string, cascade = false) {
     await query(
       `DROP SEQUENCE ${label(schema)}.${label(name)} ${
