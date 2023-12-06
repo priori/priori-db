@@ -6,7 +6,7 @@ import {
   showError,
 } from 'state/actions';
 import { DB } from 'db/DB';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FunctionFrameProps } from 'types';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
@@ -15,6 +15,7 @@ import { Dialog } from 'components/util/Dialog/Dialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
 import { currentState } from 'state/state';
+import { useIsMounted } from 'util/hooks';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 
 export function FunctionFrame(props: FunctionFrameProps) {
@@ -23,26 +24,40 @@ export function FunctionFrame(props: FunctionFrameProps) {
     props.name.lastIndexOf('(') > 0
       ? props.name.substring(0, props.name.lastIndexOf('('))
       : props.name;
-  const service = useService(() => {
-    return Promise.all([
+  const service = useService(async () => {
+    const [info, privileges] = await Promise.all([
       first(
         `
-      SELECT
-        pg_get_functiondef(oid) definition,
-        obj_description(oid) "comment"
-      FROM pg_proc
-      WHERE
-        proname = $2 AND
-        pronamespace = $1::regnamespace
-    `,
-        [props.schema, name],
-      ) as Promise<{
-        definition: string;
-        comment: string;
-      }>,
+          SELECT
+            pg_get_functiondef(oid) definition,
+            obj_description(oid) "comment",
+            pg_proc.proowner::regrole owner,
+            pg_proc.*
+          FROM pg_proc
+          WHERE
+            pg_proc.proname || '('||oidvectortypes(proargtypes)||')' = $2 AND
+            pronamespace = $1::regnamespace
+        `,
+        [props.schema, props.name],
+      ),
       DB.functionsPrivileges(props.schema, props.name),
     ]);
+    const comment = info.comment as string;
+    const definition = info.definition as string;
+    const owner = info.owner as string;
+    delete (info as any).comment;
+    delete (info as any).definition;
+    delete (info as any).owner;
+    return {
+      pgProc: info,
+      comment,
+      definition,
+      privileges,
+      owner,
+    };
   }, [props.schema, props.name]);
+
+  const info = service?.lastValidData;
 
   const [state, set] = useState({
     dropCascadeConfirmation: false,
@@ -52,6 +67,8 @@ export function FunctionFrame(props: FunctionFrameProps) {
     changeSchema: false,
     revoke: '',
     grant: false as string | false | true,
+    editOwner: false as string | boolean,
+    hideInternalRoles: true,
   });
 
   const dropCascade = useEvent(() => {
@@ -152,6 +169,29 @@ export function FunctionFrame(props: FunctionFrameProps) {
     set({ ...state, changeSchema: false });
   });
 
+  const isMounted = useIsMounted();
+
+  const saveOwner = useEvent(() => {
+    DB.alterFuncOwner(props.schema, props.name, state.editOwner as string).then(
+      () => {
+        if (!isMounted()) return;
+        service.reload();
+        if (!isMounted()) return;
+        set({ ...state, editOwner: false });
+      },
+      (err) => {
+        showError(err);
+      },
+    );
+  });
+
+  const internalRoles = useMemo(
+    () =>
+      service.lastValidData?.privileges.filter((v) => v.startsWith('pg_'))
+        .length,
+    [service.lastValidData?.privileges],
+  );
+
   return (
     <div>
       <h1>
@@ -234,12 +274,10 @@ export function FunctionFrame(props: FunctionFrameProps) {
           Drop Cascade <i className="fa fa-warning" />
         </button>
       </div>
-      {service?.lastValidData?.[0].definition ? (
-        <div className="view">{service.lastValidData[0].definition}</div>
-      ) : null}
-      {service?.lastValidData?.[0].comment || state.editComment ? (
+      {info?.definition ? <div className="view">{info.definition}</div> : null}
+      {info?.comment || state.editComment ? (
         <Comment
-          value={service?.lastValidData?.[0].comment || ''}
+          value={info?.comment || ''}
           edit={state.editComment}
           onUpdate={onUpdateComment}
           onCancel={() => set({ ...state, editComment: false })}
@@ -251,7 +289,48 @@ export function FunctionFrame(props: FunctionFrameProps) {
           {service.error.message}
         </div>
       )}
-      {service?.lastValidData?.[1] ? (
+
+      {info?.owner ? (
+        <div className="owner" title="OWNER">
+          <i className="fa fa-user" />{' '}
+          <span className="name">{info.owner}</span>
+          <i
+            className="fa fa-pencil"
+            onClick={() => set({ ...state, editOwner: true })}
+          />
+          {state.editOwner ? (
+            <Dialog
+              relativeTo="previousSibling"
+              onBlur={() => set({ ...state, editOwner: false })}
+            >
+              <select
+                onChange={(e) => set({ ...state, editOwner: e.target.value })}
+                value={
+                  typeof state.editOwner === 'string'
+                    ? state.editOwner
+                    : info.owner
+                }
+              >
+                {roles?.map((r) => <option key={r.name}>{r.name}</option>)}
+              </select>
+              <div>
+                <button
+                  style={{ fontWeight: 'normal' }}
+                  onClick={() => set({ ...state, editOwner: false })}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button onClick={saveOwner} type="button">
+                  Save
+                  <i className="fa fa-check" />
+                </button>
+              </div>
+            </Dialog>
+          ) : null}
+        </div>
+      ) : null}
+      {info?.privileges ? (
         <>
           <h2 style={{ marginBottom: 3 }}>
             Privileges /{' '}
@@ -261,19 +340,27 @@ export function FunctionFrame(props: FunctionFrameProps) {
             </span>
           </h2>
           <div>
-            {service?.lastValidData?.[1].map((role) => (
-              <React.Fragment key={role}>
-                <span className="privileges-role">
-                  {role}
-                  <i
-                    className="fa fa-close"
-                    onClick={() =>
-                      set({
-                        ...state,
-                        revoke: role,
-                      })
+            {info.privileges
+              .filter((r) => !state.hideInternalRoles || !r.startsWith('pg_'))
+              .map((role) => (
+                <React.Fragment key={role}>
+                  <span
+                    className="privileges-role"
+                    style={
+                      role.startsWith('pg_') ? { opacity: 0.4 } : undefined
                     }
-                  />
+                  >
+                    {role}
+                    <i
+                      className="fa fa-close"
+                      onClick={() =>
+                        set({
+                          ...state,
+                          revoke: role,
+                        })
+                      }
+                    />
+                  </span>
                   {role === state.revoke ? (
                     <Dialog
                       onBlur={() =>
@@ -302,14 +389,31 @@ export function FunctionFrame(props: FunctionFrameProps) {
                         </button>
                       </div>
                     </Dialog>
-                  ) : null}
-                </span>{' '}
-              </React.Fragment>
-            ))}
+                  ) : null}{' '}
+                </React.Fragment>
+              ))}
+            {internalRoles ? (
+              <button
+                type="button"
+                className={`simple-button simple-button2 hide-button ${
+                  state.hideInternalRoles ? ' hidden' : ' shown'
+                }`}
+                key={state.hideInternalRoles ? 1 : 0}
+                onClick={() => {
+                  set({
+                    ...state,
+                    hideInternalRoles: !state.hideInternalRoles,
+                  });
+                }}
+              >
+                {internalRoles} pg_* <i className="fa fa-eye-slash" />
+                <i className="fa fa-eye" />
+              </button>
+            ) : null}{' '}
             <button
               type="button"
               className="simple-button new-privileges-role"
-              disabled={roles?.length === service?.lastValidData?.[1].length}
+              disabled={roles?.length === info.privileges.length}
               onClick={() => set({ ...state, grant: true })}
             >
               New <i className="fa fa-plus" />
@@ -330,10 +434,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
                   <option value="" />
                   {roles
                     ?.filter(
-                      (r) =>
-                        !service?.lastValidData?.[1].find(
-                          (r2) => r2 === r.name,
-                        ),
+                      (r) => !info.privileges.find((r2) => r2 === r.name),
                     )
                     .map((r) => (
                       <option key={r.name} value={r.name}>
@@ -361,6 +462,19 @@ export function FunctionFrame(props: FunctionFrameProps) {
                 </div>
               </Dialog>
             ) : null}
+          </div>
+        </>
+      ) : null}
+      {info?.pgProc ? (
+        <>
+          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_proc</h2>
+          <div className="fields">
+            {Object.entries(info.pgProc).map(([k, v]) => (
+              <div key={k} className="field">
+                <strong>{k.startsWith('typ') ? k.substring(3) : k}:</strong>{' '}
+                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
+              </div>
+            ))}
           </div>
         </>
       ) : null}

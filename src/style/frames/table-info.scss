@@ -16,6 +16,10 @@
   .dialog {
     margin-top: 20px;
     font-size: 16px;
+    .fa-square-o,
+    .fa-check-square-o {
+      width: 14px;
+    }
   }
   .dialog.executing {
     color: #bbb;
@@ -136,6 +140,13 @@
       margin-right: 20px;
       width: 175px;
       font-size: 13px;
+      span {
+        max-width: 175px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+        vertical-align: top;
+      }
     }
   }
   .no {
@@ -372,6 +383,7 @@ body div.frame.role div.dialog-form {
   padding: 5px;
   border-radius: 6px;
   margin-bottom: 21px;
+  margin-top: 21px;
   width: fit-content;
   .name {
     user-select: text;
@@ -390,3 +402,15 @@ body div.frame.role div.dialog-form {
     opacity: 1;
   }
 }
+/*
+.hd {
+  position: absolute;
+  top: 35px;
+  right: 20px;
+}
+.owner {
+  position: absolute;
+  top: -5px;
+  right: 20px;
+}
+*/

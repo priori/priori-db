@@ -6,7 +6,7 @@ import {
   changeSchema,
 } from 'state/actions';
 import { DB } from 'db/DB';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { DomainFrameProps } from 'types';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
@@ -15,6 +15,7 @@ import { first } from 'db/Connection';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
 import { currentState } from 'state/state';
+import { useIsMounted } from 'util/hooks';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 
 interface DomainFrameServiceState {
@@ -23,6 +24,8 @@ interface DomainFrameServiceState {
   };
   comment: string | null;
   privileges: string[];
+  owner: string;
+  hideInternalRoles: true;
 }
 
 export function DomainFrame(props: DomainFrameProps) {
@@ -30,18 +33,18 @@ export function DomainFrame(props: DomainFrameProps) {
   const service = useService(async () => {
     const [type, comment, privileges] = await Promise.all([
       DB.pgType(props.schema, props.name),
-      (
-        first(
-          `SELECT obj_description(pg_type.oid) "comment"
+      first(
+        `SELECT
+            obj_description(pg_type.oid) "comment",
+            typowner::regrole "owner"
           FROM pg_type
           JOIN pg_namespace n ON n.oid = typnamespace
           WHERE nspname = $1 AND pg_type.typname = $2`,
-          [props.schema, props.name],
-        ) as Promise<{ comment: string | null }>
-      ).then((res: { comment: string | null }) => res.comment),
+        [props.schema, props.name],
+      ) as Promise<{ comment: string | null; owner: string }>,
       DB.domainPrivileges(props.schema, props.name),
     ]);
-    return { type, comment, privileges } as DomainFrameServiceState;
+    return { type, ...comment, privileges } as DomainFrameServiceState;
   }, [props.schema, props.name]);
 
   const [state, set] = useState({
@@ -52,6 +55,8 @@ export function DomainFrame(props: DomainFrameProps) {
     changeSchema: false,
     revoke: '',
     grant: false as string | boolean,
+    editOwner: false as string | boolean,
+    hideInternalRoles: true,
   });
 
   const dropCascade = useEvent(() => {
@@ -151,6 +156,28 @@ export function DomainFrame(props: DomainFrameProps) {
         },
       );
   });
+  const isMounted = useIsMounted();
+  const owner = service.lastValidData?.owner;
+  const saveOwner = useEvent(() => {
+    DB.alterTypeOwner(props.schema, props.name, state.editOwner as string).then(
+      () => {
+        if (!isMounted()) return;
+        service.reload();
+        if (!isMounted()) return;
+        set({ ...state, editOwner: false });
+      },
+      (err) => {
+        showError(err);
+      },
+    );
+  });
+
+  const internalRoles = useMemo(
+    () =>
+      service.lastValidData?.privileges.filter((v) => v.startsWith('pg_'))
+        .length,
+    [service.lastValidData?.privileges],
+  );
 
   return (
     <div>
@@ -242,25 +269,51 @@ export function DomainFrame(props: DomainFrameProps) {
           onCancel={() => set({ ...state, editComment: false })}
         />
       ) : null}
-      {service.lastValidData && service.lastValidData.type ? (
-        <>
-          <h2>pg_catalog.pg_type</h2>
-          <div className="fields">
-            {Object.entries(service.lastValidData.type).map(([k, v]) => (
-              <div key={k} className="field">
-                <strong>{k.startsWith('typ') ? k.substring(3) : k}:</strong>{' '}
-                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      ) : null}
+
       {service?.error?.message && (
         <div className="error-message">
           <i className="fa fa-exclamation-triangle" />
           {service.error.message}
         </div>
       )}
+
+      {owner ? (
+        <div className="owner" title="OWNER">
+          <i className="fa fa-user" /> <span className="name">{owner}</span>
+          <i
+            className="fa fa-pencil"
+            onClick={() => set({ ...state, editOwner: true })}
+          />
+          {state.editOwner ? (
+            <Dialog
+              relativeTo="previousSibling"
+              onBlur={() => set({ ...state, editOwner: false })}
+            >
+              <select
+                onChange={(e) => set({ ...state, editOwner: e.target.value })}
+                value={
+                  typeof state.editOwner === 'string' ? state.editOwner : owner
+                }
+              >
+                {roles?.map((r) => <option key={r.name}>{r.name}</option>)}
+              </select>
+              <div>
+                <button
+                  style={{ fontWeight: 'normal' }}
+                  onClick={() => set({ ...state, editOwner: false })}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button onClick={saveOwner} type="button">
+                  Save
+                  <i className="fa fa-check" />
+                </button>
+              </div>
+            </Dialog>
+          ) : null}
+        </div>
+      ) : null}
 
       {service?.lastValidData?.privileges ? (
         <>
@@ -272,19 +325,27 @@ export function DomainFrame(props: DomainFrameProps) {
             </span>
           </h2>
           <div>
-            {service?.lastValidData?.privileges.map((role) => (
-              <React.Fragment key={role}>
-                <span className="privileges-role">
-                  {role}
-                  <i
-                    className="fa fa-close"
-                    onClick={() =>
-                      set({
-                        ...state,
-                        revoke: role,
-                      })
+            {service?.lastValidData?.privileges
+              .filter((r) => !state.hideInternalRoles || !r.startsWith('pg_'))
+              .map((role) => (
+                <React.Fragment key={role}>
+                  <span
+                    className="privileges-role"
+                    style={
+                      role.startsWith('pg_') ? { opacity: 0.4 } : undefined
                     }
-                  />
+                  >
+                    {role}
+                    <i
+                      className="fa fa-close"
+                      onClick={() =>
+                        set({
+                          ...state,
+                          revoke: role,
+                        })
+                      }
+                    />
+                  </span>
                   {role === state.revoke ? (
                     <Dialog
                       onBlur={() =>
@@ -313,10 +374,27 @@ export function DomainFrame(props: DomainFrameProps) {
                         </button>
                       </div>
                     </Dialog>
-                  ) : null}
-                </span>{' '}
-              </React.Fragment>
-            ))}
+                  ) : null}{' '}
+                </React.Fragment>
+              ))}
+            {internalRoles ? (
+              <button
+                type="button"
+                key={state.hideInternalRoles ? 1 : 0}
+                className={`simple-button simple-button2 hide-button ${
+                  state.hideInternalRoles ? ' hidden' : ' shown'
+                }`}
+                onClick={() => {
+                  set({
+                    ...state,
+                    hideInternalRoles: !state.hideInternalRoles,
+                  });
+                }}
+              >
+                {internalRoles} pg_* <i className="fa fa-eye-slash" />
+                <i className="fa fa-eye" />
+              </button>
+            ) : null}{' '}
             <button
               type="button"
               className="simple-button new-privileges-role"
@@ -374,6 +452,20 @@ export function DomainFrame(props: DomainFrameProps) {
                 </div>
               </Dialog>
             ) : null}
+          </div>
+        </>
+      ) : null}
+
+      {service.lastValidData && service.lastValidData.type ? (
+        <>
+          <h2>pg_catalog.pg_type</h2>
+          <div className="fields">
+            {Object.entries(service.lastValidData.type).map(([k, v]) => (
+              <div key={k} className="field">
+                <strong>{k.startsWith('typ') ? k.substring(3) : k}:</strong>{' '}
+                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
+              </div>
+            ))}
           </div>
         </>
       ) : null}

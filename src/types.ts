@@ -161,3 +161,14 @@ export type TablePrivileges = {
   references?: boolean | undefined;
   trigger?: boolean | undefined;
 };
+
+export type SequencePrivileges = {
+  update?: boolean | undefined;
+  usage?: boolean | undefined;
+  select?: boolean | undefined;
+};
+
+export type SchemaPrivileges = {
+  usage?: boolean | undefined;
+  create?: boolean | undefined;
+};

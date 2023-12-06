@@ -141,7 +141,24 @@
     }
   }
 }
+.app-content button.simple-button2 {
+  background: #eee;
+}
 .new-privileges-role {
   padding: 2px 4px;
   font-size: 13px;
+}
+.hide-button {
+  &.hidden:not(:hover) .fa-eye {
+    display: none;
+  }
+  &.shown:not(:hover) .fa-eye-slash {
+    display: none;
+  }
+  &.hidden:hover .fa-eye-slash {
+    display: none;
+  }
+  &.shown:hover .fa-eye {
+    display: none;
+  }
 }

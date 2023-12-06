@@ -6,8 +6,8 @@ import {
   showError,
 } from 'state/actions';
 import { DB } from 'db/DB';
-import { useState } from 'react';
-import { SequenceFrameProps } from 'types';
+import { useMemo, useState } from 'react';
+import { SequenceFrameProps, SequencePrivileges } from 'types';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
@@ -16,7 +16,11 @@ import { first } from 'db/Connection';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
+import { useIsMounted } from 'util/hooks';
+import { currentState } from 'state/state';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
+import { SequencePrivilegesDialog } from './SequencePrivilegesDialog';
+import { TdCheck } from './TableInfoFrame/TableInfoFrame';
 
 type SequenceFrameState = {
   type: {
@@ -24,24 +28,31 @@ type SequenceFrameState = {
   };
   lastValue: number | string | null;
   comment: string | null;
+  owner: string;
+  privileges: { roleName: string; privileges: SequencePrivileges }[];
 };
 
 export function SequenceFrame(props: SequenceFrameProps) {
   const service = useService(async () => {
-    const [type, lastValue, comment] = await Promise.all([
+    const [type, lastValue, comment, privileges] = await Promise.all([
       DB.pgClass(props.schema, props.name),
       DB.lastValue(props.schema, props.name),
-      (
-        first(
-          `SELECT obj_description(oid) "comment"
+      first(
+        `SELECT obj_description(oid) "comment",
+          pg_class.relowner::regrole owner
           FROM pg_class
           WHERE relname = $1 AND relnamespace = $2::regnamespace`,
-          [props.name, props.schema],
-        ) as Promise<{ comment: string | null }>
-      ).then((res: { comment: string | null }) => res.comment),
+        [props.name, props.schema],
+      ) as Promise<{ comment: string | null }> as Promise<{
+        comment: string | null;
+        owner: string;
+      }>,
+      DB.sequencePrivileges(props.schema, props.name),
     ]);
-    return { type, lastValue, comment } as SequenceFrameState;
+    return { type, lastValue, ...comment, privileges } as SequenceFrameState;
   }, [props.schema, props.name]);
+
+  const privileges = service.lastValidData?.privileges;
 
   const serviceState = service.lastValidData || {
     type: null,
@@ -56,6 +67,10 @@ export function SequenceFrame(props: SequenceFrameProps) {
     rename: false,
     updateValue: false,
     changeSchema: false,
+    editOwner: false as string | boolean,
+    updatePrivilege: null as string | null,
+    newPrivilege: false,
+    hideInternalRoles: true,
   });
 
   const dropCascade = useEvent(() => {
@@ -137,6 +152,68 @@ export function SequenceFrame(props: SequenceFrameProps) {
     reloadNav();
     set({ ...state, changeSchema: false });
   });
+
+  const isMounted = useIsMounted();
+  const { roles } = currentState();
+  const owner = service.lastValidData?.owner;
+  const saveOwner = useEvent(() => {
+    DB.alterSequenceOwner(
+      props.schema,
+      props.name,
+      state.editOwner as string,
+    ).then(
+      () => {
+        if (!isMounted()) return;
+        service.reload();
+        if (!isMounted()) return;
+        set({ ...state, editOwner: false });
+      },
+      (err) => {
+        showError(err);
+      },
+    );
+  });
+
+  const newPrivilege = useEvent(
+    async (form: { role: string; privileges: SequencePrivileges }) => {
+      await DB.updateSequencePrivileges(
+        props.schema,
+        props.name,
+        form.role,
+        form.privileges,
+      );
+      if (!isMounted()) return;
+      await service.reload();
+      if (!isMounted()) return;
+      set({ ...state, newPrivilege: false });
+    },
+  );
+
+  const onUpdatePrivileges = useEvent(
+    async (
+      roleName: string,
+      curr: SequencePrivileges,
+      update: SequencePrivileges,
+    ) => {
+      await DB.updateSequencePrivileges(props.schema, props.name, roleName, {
+        update: update.update === curr.update ? undefined : update.update,
+        select: update.select === curr.select ? undefined : update.select,
+        usage: update.usage === curr.usage ? undefined : update.usage,
+      });
+      if (!isMounted()) return;
+      await service.reload();
+      if (!isMounted()) return;
+      set({ ...state, updatePrivilege: null });
+    },
+  );
+
+  const internalRoles = useMemo(
+    () =>
+      service.lastValidData?.privileges.filter((v) =>
+        v.roleName.startsWith('pg_'),
+      ).length,
+    [service.lastValidData?.privileges],
+  );
 
   return (
     <div>
@@ -254,6 +331,178 @@ export function SequenceFrame(props: SequenceFrameProps) {
           onCancel={() => set({ ...state, editComment: false })}
         />
       ) : null}
+      {owner ? (
+        <div className="owner" title="OWNER">
+          <i className="fa fa-user" /> <span className="name">{owner}</span>
+          <i
+            className="fa fa-pencil"
+            onClick={() => set({ ...state, editOwner: true })}
+          />
+          {state.editOwner ? (
+            <Dialog
+              relativeTo="previousSibling"
+              onBlur={() => set({ ...state, editOwner: false })}
+            >
+              <select
+                onChange={(e) => set({ ...state, editOwner: e.target.value })}
+                value={
+                  typeof state.editOwner === 'string' ? state.editOwner : owner
+                }
+              >
+                {roles?.map((r) => <option key={r.name}>{r.name}</option>)}
+              </select>
+              <div>
+                <button
+                  style={{ fontWeight: 'normal' }}
+                  onClick={() => set({ ...state, editOwner: false })}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button onClick={saveOwner} type="button">
+                  Save
+                  <i className="fa fa-check" />
+                </button>
+              </div>
+            </Dialog>
+          ) : null}
+        </div>
+      ) : null}
+      {service?.error?.message && (
+        <div className="error-message">
+          <i className="fa fa-exclamation-triangle" />
+          {service.error.message}
+        </div>
+      )}
+      {service.lastValidData && !privileges?.length ? (
+        <>
+          <h2>Privileges</h2>
+
+          <div className="empty">
+            No privileges found for table.{' '}
+            <button
+              type="button"
+              className="simple-button"
+              onClick={() => set({ ...state, newPrivilege: true })}
+            >
+              Grant new privilege <i className="fa fa-plus" />
+            </button>
+            {state.newPrivilege ? (
+              <SequencePrivilegesDialog
+                relativeTo="previousSibling"
+                type="by_role"
+                onCancel={() => set({ ...state, newPrivilege: false })}
+                onUpdate={(form) => newPrivilege(form)}
+              />
+            ) : null}
+          </div>
+        </>
+      ) : service.lastValidData ? (
+        <>
+          <h2 style={{ userSelect: 'text' }}>Privileges</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th style={{ width: 75 }}>Usage</th>
+                <th style={{ width: 75 }}>Select</th>
+                <th style={{ width: 75 }}>Update</th>
+                <th style={{ width: 62 }} />
+              </tr>
+            </thead>
+            <tbody>
+              {privileges
+                ?.filter(
+                  (r) =>
+                    !state.hideInternalRoles || !r.roleName.startsWith('pg_'),
+                )
+                .map((p) => (
+                  <tr
+                    key={p.roleName}
+                    style={
+                      p.roleName.startsWith('pg_')
+                        ? { color: '#ccc' }
+                        : undefined
+                    }
+                  >
+                    <td>{p.roleName}</td>
+                    <TdCheck checked={!!p.privileges.usage} />
+                    <TdCheck checked={!!p.privileges.select} />
+                    <TdCheck checked={!!p.privileges.update} />
+                    <td className="actions">
+                      <button
+                        type="button"
+                        className="simple-button"
+                        onClick={() =>
+                          set({ ...state, updatePrivilege: p.roleName })
+                        }
+                      >
+                        Edit <i className="fa fa-pencil" />
+                      </button>
+                      {state.updatePrivilege === p.roleName ? (
+                        <SequencePrivilegesDialog
+                          relativeTo="previousSibling"
+                          privileges={{
+                            update: p.privileges.update,
+                            select: p.privileges.select,
+                            usage: p.privileges.usage,
+                          }}
+                          type="by_role"
+                          onUpdate={(e) =>
+                            onUpdatePrivileges(
+                              p.roleName,
+                              p.privileges,
+                              e.privileges,
+                            )
+                          }
+                          onCancel={() =>
+                            set({ ...state, updatePrivilege: null })
+                          }
+                          roleName={p.roleName}
+                        />
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+          <div className="actions">
+            {internalRoles ? (
+              <button
+                type="button"
+                key={state.hideInternalRoles ? 1 : 0}
+                className={`simple-button simple-button2 hide-button ${
+                  state.hideInternalRoles ? ' hidden' : ' shown'
+                }`}
+                onClick={() => {
+                  set({
+                    ...state,
+                    hideInternalRoles: !state.hideInternalRoles,
+                  });
+                }}
+              >
+                {internalRoles} pg_* <i className="fa fa-eye-slash" />
+                <i className="fa fa-eye" />
+              </button>
+            ) : null}{' '}
+            <button
+              type="button"
+              className="simple-button"
+              onClick={() => set({ ...state, newPrivilege: true })}
+            >
+              New <i className="fa fa-plus" />
+            </button>
+            {state.newPrivilege ? (
+              <SequencePrivilegesDialog
+                relativeTo="previousSibling"
+                onCancel={() => set({ ...state, newPrivilege: false })}
+                onUpdate={(form) => newPrivilege(form)}
+                type="by_role"
+              />
+            ) : null}
+          </div>
+        </>
+      ) : null}
       {serviceState.type ? (
         <>
           <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_type</h2>
@@ -267,12 +516,6 @@ export function SequenceFrame(props: SequenceFrameProps) {
           </div>
         </>
       ) : null}
-      {service?.error?.message && (
-        <div className="error-message">
-          <i className="fa fa-exclamation-triangle" />
-          {service.error.message}
-        </div>
-      )}
     </div>
   );
 }

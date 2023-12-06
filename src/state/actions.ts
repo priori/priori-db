@@ -53,6 +53,7 @@ export const {
   closeError,
   keepOpenRole,
   previewRole,
+  renameSchema,
 } = state;
 
 export async function open(c: ConnectionConfiguration) {

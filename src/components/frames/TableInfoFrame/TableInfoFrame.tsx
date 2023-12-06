@@ -85,6 +85,21 @@ export interface TableInfoFrameState {
   };
 }
 
+export function TdCheck({ checked }: { checked: boolean }) {
+  return (
+    <td
+      style={{
+        fontWeight: 'bold',
+        textAlign: 'center',
+        userSelect: 'none',
+        ...(!checked ? { fontSize: 20, color: '#ccc' } : {}),
+      }}
+    >
+      {checked ? <i className="fa fa-check" /> : '-'}
+    </td>
+  );
+}
+
 export function TableInfoFrame(props: TableInfoFrameProps) {
   const service = useService(async () => {
     const [
@@ -158,6 +173,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     updatePrivilege: null as string | null,
     newPrivilege: false,
     editOwner: false as boolean | string,
+    hideInternalRoles: true,
   });
 
   const isMounted = useIsMounted();
@@ -427,6 +443,14 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     );
   });
 
+  const internalRoles = useMemo(
+    () =>
+      service.lastValidData?.privileges?.filter((v) =>
+        v.roleName.startsWith('pg_'),
+      ).length,
+    [service.lastValidData?.privileges],
+  );
+
   const { roles } = currentState();
 
   return (
@@ -517,6 +541,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           Drop Cascade <i className="fa fa-warning" />
         </button>
       </div>
+
       {state.comment || edit.editComment ? (
         <Comment
           value={state.comment || ''}
@@ -528,6 +553,9 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
       <div
         className="hd"
+        title={
+          size.lastValidData?.size === 0 && state.view ? 'View' : undefined
+        }
         style={size.status === 'starting' ? { opacity: 0.3 } : undefined}
       >
         <i
@@ -543,7 +571,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         {size.lastValidData && size.lastValidData.size ? (
           <span
             style={{ color: '#aaa', fontWeight: 'normal' }}
-            title={`${size.lastValidData.onlyTable} for TOAST, free space map and visibility map + ${size.lastValidData.indexes} for indexes`}
+            title={`${size.lastValidData.onlyTable} used by the table (including TOAST, free space map, and visibility map) + ${size.lastValidData.indexes} for indexes`}
           >
             ({size.lastValidData.onlyTable} + {size.lastValidData.indexes})
           </span>
@@ -610,7 +638,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                   <th>Length</th>
                   <th>Scale</th>
                   <th>Primary key</th>
-                  {state.table ? <th /> : null}
+                  {state.table ? <th colSpan={2} /> : null}
                 </tr>
               </thead>
               <tbody>
@@ -664,20 +692,16 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                       >
                         {col.column_default}
                       </td>
-                      <td style={{ textAlign: 'center' }}>
-                        {col.not_null ? (
-                          <strong>yes</strong>
-                        ) : (
-                          <span className="no">no</span>
-                        )}
-                      </td>
+                      <TdCheck checked={!!col.not_null} />
                       <td
                         style={{
                           wordBreak: 'break-word',
+                          background: 'transparent',
                           ...(!col.comment
                             ? { textAlign: 'center' }
                             : undefined),
                         }}
+                        className={!col.comment ? 'actions' : undefined}
                       >
                         {col.comment}
                         {col.comment ? (
@@ -720,17 +744,28 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           />
                         ) : null}
                       </td>
-                      <td>{col.length}</td>
-                      <td>{col.scale || null}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        {col.is_primary ? (
-                          <strong>yes</strong>
-                        ) : (
-                          <span className="no">no</span>
-                        )}
+                      <td
+                        style={{
+                          textAlign: 'center',
+                        }}
+                      >
+                        {col.length}
                       </td>
+                      <td
+                        style={{
+                          textAlign: 'center',
+                        }}
+                      >
+                        {col.scale || null}
+                      </td>
+                      <TdCheck checked={col.is_primary} />
                       {state.table ? (
-                        <td className="actions">
+                        <td
+                          className="actions"
+                          style={{
+                            textAlign: 'right',
+                          }}
+                        >
                           <button
                             type="button"
                             className="simple-button"
@@ -750,7 +785,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                                 set({ ...edit, updateColumn: null })
                               }
                             />
-                          ) : null}
+                          ) : null}{' '}
                           <button
                             type="button"
                             className="simple-button"
@@ -883,6 +918,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                       style={
                         !index.comment ? { textAlign: 'center' } : undefined
                       }
+                      className={!index.comment ? 'actions' : undefined}
                     >
                       {index.comment}
                       {index.comment ? (
@@ -1158,67 +1194,99 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             <thead>
               <tr>
                 <th>Role</th>
-                <th>Update</th>
-                <th>Insert</th>
-                <th>Select</th>
-                <th>Delete</th>
-                <th>Truncate</th>
-                <th>References</th>
-                <th>Trigger</th>
-                <th />
+                <th style={{ width: 75 }}>Update</th>
+                <th style={{ width: 75 }}>Insert</th>
+                <th style={{ width: 75 }}>Select</th>
+                <th style={{ width: 75 }}>Delete</th>
+                <th style={{ width: 75 }}>Truncate</th>
+                <th style={{ width: 80 }}>References</th>
+                <th style={{ width: 75 }}>Trigger</th>
+                <th style={{ width: 62 }} />
               </tr>
             </thead>
             <tbody>
-              {state.privileges?.map((p) => (
-                <tr key={p.roleName}>
-                  <td>{p.roleName}</td>
-                  <td>{p.privileges.update ? 'yes' : 'no'}</td>
-                  <td>{p.privileges.insert ? 'yes' : 'no'}</td>
-                  <td>{p.privileges.select ? 'yes' : 'no'}</td>
-                  <td>{p.privileges.delete ? 'yes' : 'no'}</td>
-                  <td>{p.privileges.truncate ? 'yes' : 'no'}</td>
-                  <td>{p.privileges.references ? 'yes' : 'no'}</td>
-                  <td>{p.privileges.trigger ? 'yes' : 'no'}</td>
-                  <td className="actions">
-                    <button
-                      type="button"
-                      className="simple-button"
-                      onClick={() =>
-                        set({ ...edit, updatePrivilege: p.roleName })
-                      }
-                    >
-                      Edit <i className="fa fa-pencil" />
-                    </button>
-                    {edit.updatePrivilege === p.roleName ? (
-                      <TablePrivilegesDialog
-                        relativeTo="previousSibling"
-                        privileges={{
-                          update: p.privileges.update,
-                          insert: p.privileges.insert,
-                          select: p.privileges.select,
-                          delete: p.privileges.delete,
-                          truncate: p.privileges.truncate,
-                          references: p.privileges.references,
-                          trigger: p.privileges.trigger,
-                        }}
-                        type="by_role"
-                        onUpdate={(e) =>
-                          onUpdatePrivileges(
-                            p.roleName,
-                            p.privileges,
-                            e.privileges,
-                          )
+              {state.privileges
+                ?.filter(
+                  (r) =>
+                    !edit.hideInternalRoles || !r.roleName.startsWith('pg_'),
+                )
+                .map((p) => (
+                  <tr
+                    key={p.roleName}
+                    style={
+                      p.roleName.startsWith('pg_')
+                        ? { color: '#ccc' }
+                        : undefined
+                    }
+                  >
+                    <td>{p.roleName}</td>
+                    <TdCheck checked={!!p.privileges.update} />
+                    <TdCheck checked={!!p.privileges.insert} />
+                    <TdCheck checked={!!p.privileges.select} />
+                    <TdCheck checked={!!p.privileges.delete} />
+                    <TdCheck checked={!!p.privileges.truncate} />
+                    <TdCheck checked={!!p.privileges.references} />
+                    <TdCheck checked={!!p.privileges.trigger} />
+                    <td className="actions">
+                      <button
+                        type="button"
+                        className="simple-button"
+                        onClick={() =>
+                          set({ ...edit, updatePrivilege: p.roleName })
                         }
-                        onCancel={() => set({ ...edit, updatePrivilege: null })}
-                        roleName={p.roleName}
-                      />
-                    ) : null}
-                  </td>
-                </tr>
-              ))}
+                      >
+                        Edit <i className="fa fa-pencil" />
+                      </button>
+                      {edit.updatePrivilege === p.roleName ? (
+                        <TablePrivilegesDialog
+                          relativeTo="previousSibling"
+                          privileges={{
+                            update: p.privileges.update,
+                            insert: p.privileges.insert,
+                            select: p.privileges.select,
+                            delete: p.privileges.delete,
+                            truncate: p.privileges.truncate,
+                            references: p.privileges.references,
+                            trigger: p.privileges.trigger,
+                          }}
+                          type="by_role"
+                          onUpdate={(e) =>
+                            onUpdatePrivileges(
+                              p.roleName,
+                              p.privileges,
+                              e.privileges,
+                            )
+                          }
+                          onCancel={() =>
+                            set({ ...edit, updatePrivilege: null })
+                          }
+                          roleName={p.roleName}
+                        />
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
           <div className="actions">
+            {internalRoles ? (
+              <button
+                type="button"
+                key={edit.hideInternalRoles ? 1 : 0}
+                className={`simple-button simple-button2 hide-button ${
+                  edit.hideInternalRoles ? ' hidden' : ' shown'
+                }`}
+                onClick={() => {
+                  set({
+                    ...edit,
+                    hideInternalRoles: !edit.hideInternalRoles,
+                  });
+                }}
+              >
+                {internalRoles} pg_* <i className="fa fa-eye-slash" />
+                <i className="fa fa-eye" />
+              </button>
+            ) : null}{' '}
             <button
               type="button"
               className="simple-button"

@@ -543,7 +543,7 @@ export function NavTree({
                 focused?.type === 'role' && focused.name === r.name
                   ? ' focused'
                   : ''
-              }`}
+              }${r.name.startsWith('pg_') ? ' internal' : ''}`}
               key={r.name}
             >
               <div

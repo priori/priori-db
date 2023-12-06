@@ -1,6 +1,6 @@
 import { assert } from 'util/assert';
 import { ConnectionConfiguration } from 'db/pgpass';
-import { AppState, FrameProps, NavSchema, Tab, Type } from 'types';
+import { AppState, FrameProps, NavSchema, Tab, Tab0, Type } from 'types';
 
 export function setBases(current: AppState, bases: string[]) {
   return {
@@ -799,6 +799,70 @@ export function changeSchema(current: AppState, uid: number, schema: string) {
         : t,
     ),
   };
+}
+
+export function renameSchema(current: AppState, uid: number, name: string) {
+  const tab = current.tabs.find(
+    (t) => t.props.uid === uid,
+  ) as Tab0<'schemainfo'> | null;
+  if (!tab) return current;
+  const newState = {
+    ...current,
+    schemas: current.schemas?.map((s) =>
+      s.name === tab.props.schema
+        ? {
+            ...s,
+            name,
+          }
+        : s,
+    ),
+    tabs: current.tabs.map((t) =>
+      (t.props.type === 'table' || t.props.type === 'tableinfo') &&
+      t.props.schema === tab.props.schema
+        ? {
+            ...t,
+            title: `${name}.${t.props.table}${
+              t.props.type === 'tableinfo' ? ' info' : ''
+            }`,
+            props: { ...t.props, schema: name },
+          }
+        : t.props.type === 'function' && t.props.schema === tab.props.schema
+        ? {
+            ...t,
+            title: `${t.props.schema}.${t.props.name}`,
+            props: {
+              ...t.props,
+              schema: name,
+            },
+          }
+        : (t.props.type === 'sequence' || t.props.type === 'domain') &&
+          t.props.schema === tab.props.schema
+        ? {
+            ...t,
+            title: `${name}.${t.props.name}`,
+            props: { ...t.props, schema: name },
+          }
+        : t.props.type === 'schemainfo' && t.props.schema === tab.props.schema
+        ? {
+            ...t,
+            title: `${name} info`,
+            props: {
+              ...t.props,
+              schema: name,
+            },
+          }
+        : 'schema' in t.props && t.props.schema === tab.props.schema
+        ? {
+            ...t,
+            props: {
+              ...t.props,
+              schema: name,
+            },
+          }
+        : t,
+    ),
+  };
+  return newState;
 }
 
 export function renameEntity(curret: AppState, uid: number, name: string) {
