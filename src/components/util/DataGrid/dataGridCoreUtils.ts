@@ -578,7 +578,8 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }
     if (
       props.onUpdate &&
-      props.pks?.length &&
+      (props.pks?.length ||
+        (state.active && state.active.rowIndex >= props.result.rows.length)) &&
       (e.key === 'F2' || e.key === 'Enter')
     ) {
       setState((s) => ({
@@ -665,7 +666,9 @@ export function useDataGridCore(props: DataGridCoreProps) {
         tabMove(e, e.shiftKey ? -1 : 1);
       } else if (
         props.onUpdate &&
-        props.pks?.length &&
+        (props.pks?.length ||
+          (state.active &&
+            state.active.rowIndex >= props.result.rows.length)) &&
         e.key &&
         e.key.length === 1 &&
         !e.ctrlKey &&
@@ -733,7 +736,10 @@ export function useDataGridCore(props: DataGridCoreProps) {
       e.button === 1 ||
       e.button === 2 ||
       !props.onUpdate ||
-      !props.pks?.length
+      !(
+        props.pks?.length ||
+        (state.active && state.active.rowIndex >= props.result.rows.length)
+      )
     )
       return;
     const el = elRef.current as HTMLElement;
@@ -818,7 +824,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
   const applyClick = useEvent(async () => {
     const { pks } = props;
-    if (!pks || pks.length === 0 || !props.onUpdate) return;
+    if (!props.onUpdate) return;
     const updates = Object.keys(state.update)
       .filter((i) => parseInt(i, 10) < props.result.rows.length)
       .map((rowIndex) => {
@@ -832,16 +838,19 @@ export function useDataGridCore(props: DataGridCoreProps) {
           values[fieldName] = val;
         }
         const where: { [n: string]: string | number | null } = {};
-        for (const name of pks) {
-          const val =
-            props.result.rows?.[rowIndex as unknown as number]?.[
-              props.result.fields.findIndex((f) => f.name === name)
-            ];
-          assert(
-            typeof val === 'string' || typeof val === 'number' || val === null,
-          );
-          where[name] = val;
-        }
+        if (pks)
+          for (const name of pks) {
+            const val =
+              props.result.rows?.[rowIndex as unknown as number]?.[
+                props.result.fields.findIndex((f) => f.name === name)
+              ];
+            assert(
+              typeof val === 'string' ||
+                typeof val === 'number' ||
+                val === null,
+            );
+            where[name] = val;
+          }
         return {
           where,
           values,
