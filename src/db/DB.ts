@@ -1026,7 +1026,7 @@ export const DB = {
 
       UNION
       SELECT
-        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = p.pronamespace) schema,
+        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = p.pronamespace) "schema",
         p.proname || '('||oidvectortypes(proargtypes)||')' "name",
         'function',
         'EXECUTE'
@@ -1035,7 +1035,7 @@ export const DB = {
 
       UNION
       SELECT
-        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = p.pronamespace) schema,
+        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = p.pronamespace) "schema",
         p.proname || '('||oidvectortypes(proargtypes)||')' "name",
         'function',
         'EXECUTE'
@@ -1067,7 +1067,7 @@ export const DB = {
           typtype = 'd' OR
           pg_enum.enumtypid IS NOT NULL)
 
-      ORDER BY schema, name`,
+      ORDER BY "schema", name`,
       [role],
     )) as {
       schema: string;

@@ -31,7 +31,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
           SELECT
             pg_get_functiondef(oid) definition,
             obj_description(oid) "comment",
-            pg_proc.proowner::regrole owner,
+            pg_proc.proowner::regrole "owner",
             pg_proc.*
           FROM pg_proc
           WHERE
