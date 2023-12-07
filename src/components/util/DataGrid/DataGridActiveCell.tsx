@@ -83,7 +83,7 @@ interface DataGridActiveCellProps {
   hasBottomScrollbar: boolean;
   hasRightScrollbar: boolean;
   onChange: (value: string | null) => void;
-  editing: boolean | 2;
+  editing: boolean | 1 | 2;
   changed: boolean;
   onBlur: () => void;
 }
@@ -125,7 +125,9 @@ export const DataGridActiveCell = React.memo(
         el.focus();
         if (editing === 2)
           el.setSelectionRange(el.value.length, el.value.length);
-        else el.select();
+        else if (editing === true) {
+          el.select();
+        }
       }
     });
     const textareaOnChange = useEvent(

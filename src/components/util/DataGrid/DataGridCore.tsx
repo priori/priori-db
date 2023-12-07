@@ -37,7 +37,7 @@ export interface DataGridState {
   mouseDown?: { rowIndex: number; colIndex: number };
   openSortDialog: boolean;
   openFilterDialog: boolean;
-  editing: boolean | 2;
+  editing: boolean | 2 | 1;
   update: { [rowIndex: string]: { [colIndex: string]: string | null } };
   updateFail?: Error;
   updateRunning?: boolean;

@@ -312,7 +312,40 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }));
   });
 
-  function moveBy(x0: number, y0: number, selection: boolean) {
+  function tabMove(e: React.KeyboardEvent, direction = 1) {
+    if (!state.active) return;
+    const colIndex =
+      state.active.colIndex + direction === props.result.fields.length
+        ? 0
+        : state.active.colIndex + direction === -1
+        ? props.result.fields.length - 1
+        : state.active.colIndex + direction;
+    const rowIndex =
+      state.active.colIndex + direction === props.result.fields.length
+        ? state.active.rowIndex + 1
+        : state.active.colIndex + direction === -1
+        ? state.active.rowIndex - 1
+        : state.active.rowIndex;
+    if (rowIndex >= 0 && rowIndex < props.result.rows.length + extraRows) {
+      setState((s) => ({
+        ...s,
+        selection: {
+          colIndex: [colIndex, colIndex],
+          rowIndex: [rowIndex, rowIndex],
+        },
+        editing: !!s.editing,
+        active: { rowIndex, colIndex },
+      }));
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+  function moveBy(
+    x0: number,
+    y0: number,
+    selection: boolean,
+    editing?: 1 | 2 | boolean,
+  ) {
     if (!state.active) return;
     let x = x0;
     let y = y0;
@@ -334,6 +367,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       if (!s.active) return s;
       return {
         ...s,
+        editing: editing === undefined ? s.editing : editing,
         selection: !selection
           ? undefined
           : !state.selection
@@ -520,7 +554,28 @@ export function useDataGridCore(props: DataGridCoreProps) {
   });
 
   const onKeyDown = useEvent((e: React.KeyboardEvent) => {
-    if (e.target !== elRef.current) return;
+    if (e.target !== elRef.current) {
+      if (
+        e.target instanceof HTMLTextAreaElement &&
+        e.target.classList.contains('active-cell')
+      ) {
+        const el = e.target;
+        const cursorOnEnd =
+          el.selectionEnd === el.value.length &&
+          el.selectionStart === el.value.length;
+        const cursor0 = el.selectionEnd === 0 && el.selectionStart === 0;
+        if (e.key === 'ArrowDown' && cursorOnEnd) {
+          moveBy(0, 1, false, 2);
+        }
+        if (e.key === 'ArrowRight' && cursorOnEnd) moveBy(1, 0, false, 2);
+        if (e.key === 'ArrowLeft' && cursor0) moveBy(-1, 0, false, 1);
+        if (e.key === 'ArrowUp' && cursor0) moveBy(0, -1, false, 1);
+        if (e.key === 'Tab') {
+          tabMove(e, e.shiftKey ? -1 : +1);
+        }
+      }
+      return;
+    }
     if (
       props.onUpdate &&
       props.pks?.length &&
@@ -606,6 +661,8 @@ export function useDataGridCore(props: DataGridCoreProps) {
         moveBy(-1, 0, e.shiftKey);
       } else if (e.key === 'ArrowRight') {
         moveBy(1, 0, e.shiftKey);
+      } else if (e.key === 'Tab') {
+        tabMove(e, e.shiftKey ? -1 : 1);
       } else if (
         props.onUpdate &&
         props.pks?.length &&
