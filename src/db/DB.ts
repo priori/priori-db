@@ -1167,7 +1167,8 @@ export const DB = {
     }
     functions.sort(
       (a, b) =>
-        schemaCompare(a.schema, b.schema, publics) || a.name.localeCompare(b),
+        schemaCompare(a.schema, b.schema, publics) ||
+        a.name.localeCompare(b.name),
     );
 
     const types = [] as {
@@ -1184,7 +1185,8 @@ export const DB = {
     }
     types.sort(
       (a, b) =>
-        schemaCompare(a.schema, b.schema, publics) || a.name.localeCompare(b),
+        schemaCompare(a.schema, b.schema, publics) ||
+        a.name.localeCompare(b.name),
     );
 
     return {
