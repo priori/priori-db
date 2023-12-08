@@ -1152,8 +1152,7 @@ export const DB = {
         },
       });
     }
-    const ps = await this.publicsSchemas();
-    schemas.sort((a, b) => schemaCompare(a.name, b.name, ps));
+    schemas.sort((a, b) => schemaCompare(a.name, b.name, publics));
 
     const functions = [] as {
       schema: string;
@@ -1166,6 +1165,10 @@ export const DB = {
         name: f.name,
       });
     }
+    functions.sort(
+      (a, b) =>
+        schemaCompare(a.schema, b.schema, publics) || a.name.localeCompare(b),
+    );
 
     const types = [] as {
       schema: string;
@@ -1179,6 +1182,10 @@ export const DB = {
         name: f.name,
       });
     }
+    types.sort(
+      (a, b) =>
+        schemaCompare(a.schema, b.schema, publics) || a.name.localeCompare(b),
+    );
 
     return {
       tables,
