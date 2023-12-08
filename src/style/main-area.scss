@@ -40,3 +40,23 @@ table.table > * > th {
 .list-input > .list-input-item {
   transition: top 0.5s;
 }
+.header--title {
+  height: 37px;
+  background: #e4e4e4;
+  line-height: 37px;
+  z-index: 3;
+  font-size: 12px;
+  padding: 0 7px;
+  width: 225px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: bold;
+  text-align: center;
+  position: relative;
+  z-index: 11;
+  cursor: default;
+}
+body {
+  height: 100vh;
+}

@@ -23,10 +23,12 @@ export function NavSearch({
   schemas,
   tabs,
   onBlur,
+  disabled,
 }: {
   schemas: NavSchema[];
   tabs: Tabs;
   onBlur: (e: 'next' | 'prev' | 'up' | 'down') => void;
+  disabled?: boolean;
 }) {
   const [focusedEntity, setFocusedEntity] = useState<Entity | null>(null);
   const [index, setIndex] = useState(0);
@@ -37,9 +39,11 @@ export function NavSearch({
     timeoutMs: 300,
   });
   const onSearchFocusChange = useEvent((s: Entity | null) => {
+    if (disabled) return;
     setFocusedEntity(s);
   });
   const onChange = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     if (index !== 0) setIndex(0);
     setSearchText(e.target.value);
   });
@@ -50,6 +54,7 @@ export function NavSearch({
   });
   const contentRef = useRef<HTMLDivElement>(null);
   useEventListener(document.body, 'keydown', (e: KeyboardEvent) => {
+    if (disabled) return;
     if (e.key === 'Tab' && e.ctrlKey) return;
     if (
       e.key &&
@@ -68,6 +73,7 @@ export function NavSearch({
     }
   });
   const onKeyUp = useEvent((e: React.KeyboardEvent<unknown>) => {
+    if (disabled) return;
     if (e.key === 'Tab' && e.ctrlKey) return;
     const doubleHit =
       lastKeyUp.current.key === e.key &&
@@ -104,6 +110,7 @@ export function NavSearch({
   });
 
   const onKeyDown = useEvent((e: React.KeyboardEvent<unknown>) => {
+    if (disabled) return;
     if (e.key === 'Tab' && e.ctrlKey) return;
     const strongHit = e.shiftKey || e.altKey || e.ctrlKey || e.metaKey;
     const isInput = e.target instanceof HTMLInputElement;
@@ -181,8 +188,10 @@ export function NavSearch({
       }
     }
   });
+
   const onInputKeyDown = useEvent(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (disabled) return;
       if (e.key === 'Tab' && e.ctrlKey) return;
       if (e.target instanceof HTMLInputElement && !e.target.value) {
         // if (e.key === 'ArrowUp') onBlur('up');
@@ -214,24 +223,31 @@ export function NavSearch({
     },
   );
   const onInputFocus = useEvent(() => {
+    if (disabled) return;
     setFocus(true);
   });
   const onInputBlur = useEvent(() => {
+    if (disabled) return;
     setFocus(false);
   });
   const onCloseClick = useEvent(() => {
+    if (disabled) return;
     setSearchText('');
   });
   const onLengthChange = useEvent((l: number) => {
+    if (disabled) return;
     setLen(l);
   });
   const onMouseDown = useEvent((i: number) => {
+    if (disabled) return;
     setIndex(i);
   });
   const onDivBlur = useEvent(() => {
+    if (disabled) return;
     setFocus(false);
   });
   const onDivFocus = useEvent(() => {
+    if (disabled) return;
     setFocus(true);
   });
 
@@ -246,6 +262,7 @@ export function NavSearch({
           onFocus={onInputFocus}
           onBlur={onInputBlur}
           onKeyUp={onKeyUp}
+          disabled={disabled}
         />
         {searchText ? (
           <i className="fa fa-close" onClick={onCloseClick} />
@@ -254,7 +271,7 @@ export function NavSearch({
         )}
       </div>
       <div
-        tabIndex={0}
+        tabIndex={disabled ? -1 : 0}
         onKeyDown={onKeyDown}
         style={{ outline: 'none' }}
         onKeyUp={onKeyUp}

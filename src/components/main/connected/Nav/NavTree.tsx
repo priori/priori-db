@@ -31,11 +31,13 @@ export function NavTree({
   tabs,
   roles,
   onBlur,
+  disabled,
 }: {
   tabs: Tabs;
   schemas: NavSchema[];
   roles: { name: string; isUser: boolean }[];
   onBlur: (e: 'next' | 'prev' | 'up' | 'down') => void;
+  disabled?: boolean;
 }) {
   const { active } = tabs;
   const {
@@ -47,7 +49,7 @@ export function NavTree({
     focused,
     rolesOpen,
     setRolesOpen,
-  } = useNavTree(schemas, roles, onBlur);
+  } = useNavTree(schemas, roles, onBlur, disabled);
 
   return (
     <div

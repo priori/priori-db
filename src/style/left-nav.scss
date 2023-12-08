@@ -1,4 +1,9 @@
 div.nav {
+  line-height: 1.1em;
+  font-weight: normal;
+  text-align: left;
+  font-size: 13px;
+  cursor: default;
   left: 0;
   top: 40px;
   bottom: 0;
@@ -21,9 +26,9 @@ div.nav {
     font-size: 12px;
   }
   .new-schema {
-    position: fixed;
-    bottom: 0;
-    left: 205px;
+    position: absolute;
+    bottom: 3px;
+    right: 20px;
     font-size: 22px;
     padding: 4px;
     opacity: 0.5;

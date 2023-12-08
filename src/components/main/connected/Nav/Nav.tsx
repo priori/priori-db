@@ -32,6 +32,9 @@ export function Nav(props: {
   schemas: NavSchema[];
   tabs: Tab[];
   roles: { name: string; isUser: boolean }[];
+  style?: React.CSSProperties;
+  disabled?: boolean;
+  title?: string;
 }) {
   const tabs = (useDeferredValue as useDeferredValueFix<Tab[]>)(props.tabs, {
     timeoutMs: 150,
@@ -53,6 +56,7 @@ export function Nav(props: {
 
   const onNewSchemaKeyDown = useEvent(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (props.disabled) return;
       if (e.key === 'ArrowUp') {
         const el = document.querySelector('.nav-tree');
         if (el instanceof HTMLElement) el.focus();
@@ -89,23 +93,28 @@ export function Nav(props: {
 
   return useMemo(
     () => (
-      <div className="nav" onKeyDown={onKeyDown}>
+      <div className="nav" onKeyDown={onKeyDown} style={props.style}>
+        {props.title ? (
+          <div className="header--title">{props.title}</div>
+        ) : null}
         <NavSearch
           schemas={props.schemas}
           tabs={tabs2}
           onBlur={onNavSearchBlur}
+          disabled={props.disabled}
         />
         <NavTree
           schemas={props.schemas}
           tabs={tabs2}
           roles={props.roles}
           onBlur={onNavTreeBlur}
+          disabled={props.disabled}
         />
         <span
           className="new-schema"
           onClick={newSchema}
           ref={plusRef}
-          tabIndex={0}
+          tabIndex={props.disabled ? -1 : 0}
           role="button"
           onKeyDown={onNewSchemaKeyDown}
         >
@@ -121,6 +130,9 @@ export function Nav(props: {
       onNavSearchBlur,
       onNavTreeBlur,
       onNewSchemaKeyDown,
+      props.style,
+      props.disabled,
+      props.title,
     ],
   );
 }

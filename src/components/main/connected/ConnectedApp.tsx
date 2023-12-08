@@ -9,6 +9,7 @@ import { useEvent } from 'util/useEvent';
 import { assert } from 'util/assert';
 import { fullScreen } from 'util/fullScreen';
 import { useShortcuts } from 'util/shortcuts';
+import { horizontalResize } from 'util/resize';
 import { Nav } from './Nav/Nav';
 import { Tabs } from './Tabs';
 import {
@@ -226,20 +227,122 @@ export function ConnectedApp({ state }: { state: AppState }) {
     [],
   );
 
+  const [leftWidth, setLeftWidth] = React.useState(250);
+
+  const [hover, setHover] = React.useState(false);
+
+  const hideClick = useEvent((e: React.MouseEvent) => {
+    if (
+      e.target instanceof HTMLElement &&
+      !e.target.closest('.nav, .header--title')
+    ) {
+      setLeftWidth(leftWidth ? 0 : 250);
+      setHover(false);
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 1);
+    }
+  });
+
+  const [rootClass, setClass] = React.useState<string | undefined>();
+
+  const onResizeMouseDown = useEvent(async (e: React.MouseEvent) => {
+    setClass('resizing');
+    let el: HTMLElement | null = null;
+    const inc2 = await horizontalResize(
+      e,
+      (inc) => {
+        if (inc + leftWidth > 320) {
+          return false;
+        }
+        if (leftWidth + inc < 90) {
+          setClass(undefined);
+          const el2 = document.querySelector('.resize--indicator');
+          if (el2 instanceof HTMLElement) {
+            el = el2;
+            el.style.opacity = '0.03';
+          }
+        } else {
+          setClass('resizing');
+          if (el) {
+            el.style.opacity = '';
+            el = null;
+          }
+        }
+        setLeftWidth(leftWidth + inc < 90 ? 0 : leftWidth + inc);
+        return true;
+      },
+      document.documentElement,
+      leftWidth,
+    );
+    setClass(undefined);
+    if (inc2 === undefined) {
+      setLeftWidth(leftWidth);
+    } else {
+      setLeftWidth(leftWidth + inc2 < 90 ? 0 : leftWidth + inc2);
+    }
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 1);
+  });
+
   return (
-    <div>
+    <div className={rootClass}>
       <Errors errors={state.errors} />
       {close && (
         <CloseConfirmation onConfirm={close.func} onDecline={onDecline} />
       )}
-      <div className="header">{state.title}</div>
-      <Tabs tabs={state.tabs} onActiveTabMouseDown={onActiveTabMouseDown} />
-      <Nav
-        schemas={state.schemas}
+      <div className="header-and--nav">
+        <div className="header" style={{ width: Math.max(leftWidth, 33) }}>
+          {state.title}
+          <span
+            className="header--menu"
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            style={{
+              left: leftWidth <= 40 ? 0 : Math.max(leftWidth - 37, 0),
+              opacity: leftWidth <= 40 ? 1 : undefined,
+              width: leftWidth <= 40 ? 40 : undefined,
+            }}
+            onClick={hideClick}
+          >
+            {leftWidth <= 40 ? (
+              <i className="fa fa-bars" />
+            ) : (
+              <i className="fa fa-chevron-left" />
+            )}{' '}
+            {hover && leftWidth <= 40 ? (
+              <Nav
+                title={state.title}
+                style={{ width: 225, height: 500, zIndex: 10 }}
+                schemas={state.schemas}
+                tabs={state.tabs}
+                roles={state.roles ?? []}
+              />
+            ) : null}
+          </span>
+        </div>
+        <Nav
+          style={{ width: leftWidth }}
+          schemas={state.schemas}
+          tabs={state.tabs}
+          roles={state.roles ?? []}
+          disabled={leftWidth <= 40}
+        />
+      </div>
+      <Tabs
         tabs={state.tabs}
-        roles={state.roles ?? []}
+        style={{ left: Math.max(leftWidth, 40) }}
+        onActiveTabMouseDown={onActiveTabMouseDown}
       />
-      <div className="app-content">
+      {leftWidth > 40 ? (
+        <div
+          className="resize-helper"
+          style={{ left: leftWidth - 1 }}
+          onMouseDown={onResizeMouseDown}
+        />
+      ) : null}
+      <div className="app-content" style={{ left: leftWidth }}>
         <TabsContext.Provider value={tabsConfigurations}>
           {tabs.map((t) => (
             <div

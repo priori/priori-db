@@ -18,6 +18,7 @@
   bottom: 0;
   right: 0;
   background: #e4e4e4;
+  transition: left 0.3s;
 }
 .tabs-header {
   right: 0;
@@ -27,6 +28,7 @@
   background: #aaa;
   overflow: hidden;
   z-index: 3;
+  transition: left 0.3s;
 }
 .tabs.moving .tab {
   position: absolute;
@@ -35,9 +37,6 @@
   left: 1px;
 }
 .header {
-  position: absolute;
-  left: 0;
-  top: 0;
   width: 250px;
   height: 40px;
   background: #e4e4e4;
@@ -50,6 +49,65 @@
   white-space: nowrap;
   font-weight: bold;
   text-align: center;
+  transition: width 0.3s;
+  .header--menu {
+    position: fixed;
+    left: 213px;
+    width: 37px;
+    height: 40px;
+    z-index: 5;
+    line-height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    background: #e4e4e4;
+    &:hover {
+      background: white;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+    }
+    opacity: 0;
+    transition: 0.3s all;
+  }
+
+  .nav {
+    background: #fbfbfb;
+    box-shadow: 0 1px 17px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
+    position: relative;
+    top: 0;
+  }
+  .nav:before {
+    display: block;
+    width: 40px;
+    height: 10px;
+    content: '';
+    position: absolute;
+    top: -10px;
+    z-index: 1;
+    cursor: pointer;
+    animation: white 0.3s forwards;
+    pointer-events: none;
+  }
+  div.nav .new-schema {
+    right: 10px;
+    bottom: 4px;
+  }
+  .fa-chevron-left {
+    color: #bbb;
+  }
+  &:hover .fa-chevron-left {
+    color: #000;
+  }
+}
+.header-and--nav:hover .header--menu {
+  opacity: 1;
+}
+@keyframes white {
+  0% {
+    background: #e4e4e4;
+  }
+  100% {
+    background: white;
+  }
 }
 
 .app-content > .frame {
@@ -141,6 +199,9 @@
     }
   }
 }
+.nav {
+  transition: width 0.3s;
+}
 .app-content button.simple-button2 {
   background: #eee;
 }
@@ -160,5 +221,23 @@
   }
   &.shown:hover .fa-eye {
     display: none;
+  }
+}
+
+.resize-helper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  cursor: ew-resize;
+}
+
+.resizing {
+  .app-content,
+  .tabs-header,
+  .header,
+  .header .header--menu,
+  .nav {
+    transition: 0s !important;
   }
 }

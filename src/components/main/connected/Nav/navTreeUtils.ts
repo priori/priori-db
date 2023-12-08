@@ -88,6 +88,7 @@ export function useNavTree(
   schemas: NavSchema[],
   roles: { name: string; isUser: boolean }[],
   onBlur: (e: 'next' | 'prev' | 'up' | 'down') => void,
+  disable?: boolean,
 ) {
   const [rolesOpen, setRolesOpen] = useState(false);
   const [focused, setFocused] = useState<Focused>(null);
@@ -102,6 +103,7 @@ export function useNavTree(
   });
 
   const onDivBlur = useEvent(() => {
+    if (disable) return;
     if (document.activeElement instanceof HTMLElement)
       document.activeElement.blur();
     setFocused(null);
@@ -113,6 +115,7 @@ export function useNavTree(
     focused: null as Focused | null,
   });
   const onKeyUp = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (disable) return;
     if (e.key === 'Tab' && e.ctrlKey) return;
     const doubleHit =
       (lastKeyUp.current.key === e.key &&
@@ -154,6 +157,7 @@ export function useNavTree(
   });
 
   const onKeyDown = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (disable) return;
     if (e.key === 'Tab' && e.ctrlKey) return;
     const strongHit = e.shiftKey || e.altKey || e.ctrlKey || e.metaKey;
     if (
@@ -573,6 +577,7 @@ export function useNavTree(
   }, [schemas, roles, focused]);
 
   const onFocus = useEvent(() => {
+    if (disable) return;
     if (focused === null) {
       setFocused(
         lastFocused.current || { type: 'schema', name: schemas[0].name },

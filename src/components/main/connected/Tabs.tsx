@@ -14,6 +14,7 @@ import { Tab } from '../../../types';
 export interface TabsProps {
   tabs: Tab[];
   onActiveTabMouseDown: () => void;
+  style?: React.CSSProperties;
 }
 export interface TabWidth extends Tab {
   width: number;
@@ -38,10 +39,17 @@ export class Tabs extends Component<TabsProps, TabsState> {
 
   prevEl: HTMLInputElement | null = null;
 
+  // eslint-disable-next-line react/sort-comp
+  left() {
+    if (this.props.style?.left !== undefined)
+      return this.props.style.left as number;
+    return 250;
+  }
+
   constructor(props: TabsProps) {
     super(props);
 
-    const areaWidth = window.innerWidth - 250 - 40;
+    const areaWidth = window.innerWidth - this.left() - 40;
     let width = areaWidth / props.tabs.length;
     if (width > 220) width = 220;
     width += 1;
@@ -141,7 +149,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
   }
 
   private fit() {
-    const areaWidth = window.innerWidth - 250 - 40;
+    const areaWidth = window.innerWidth - this.left() - 40;
     let width = areaWidth / this.state.tabs.length;
     if (width > 220) width = 220;
     width += 1;
@@ -191,7 +199,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
 
   private calculate() {
     // let pos = 0;
-    const areaWidth = window.innerWidth - 250 - 40;
+    const areaWidth = window.innerWidth - this.left() - 40;
     let offsetWidth = areaWidth / this.state.tabs.length;
     if (offsetWidth > 220) offsetWidth = 220;
     const styleWidth = offsetWidth + 1;
@@ -220,7 +228,11 @@ export class Tabs extends Component<TabsProps, TabsState> {
   render() {
     if (!this.state.sorting) {
       return (
-        <div className="tabs-header" tabIndex={0} style={{ outline: 'none' }}>
+        <div
+          className="tabs-header"
+          tabIndex={0}
+          style={{ outline: 'none', ...this.props.style }}
+        >
           <span className="tabs" onDoubleClick={Tabs.tabsDoubleClick}>
             {this.props.tabs.map((t, index) => {
               const { width } = this.state.tabs[index];
@@ -286,7 +298,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
 
     const { tabs, width } = this.calculate();
     return (
-      <div className="tabs-header">
+      <div className="tabs-header" style={this.props.style}>
         <span className="tabs">
           {tabs.map((t, index) => (
             <span
