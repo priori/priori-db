@@ -78,6 +78,9 @@ export function useTableDataFrame(props: TableFrameProps) {
       }[];
       inserts: { [fieldName: string]: string | null }[];
     }) => {
+      if ((!pks.lastValidData || !pks.lastValidData.length) && updates.length) {
+        throw new Error('Primay Keys not found for table!!');
+      }
       await DB.update(props.schema, props.table, updates, inserts);
       dataService.reload();
       return true;

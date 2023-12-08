@@ -133,7 +133,10 @@ export function DataGridCore(props: DataGridCoreProps) {
           onBlur={onEditBlur}
           editing={state.editing}
           value={
-            typeof state.update[state.active.rowIndex] !== 'undefined'
+            typeof state.update[state.active.rowIndex] !== 'undefined' &&
+            typeof state.update[state.active.rowIndex][
+              state.active.colIndex
+            ] !== 'undefined'
               ? state.update[state.active.rowIndex]?.[state.active.colIndex]
               : props.result.rows[state.active.rowIndex]?.[
                   state.active.colIndex

@@ -327,15 +327,25 @@ export function useDataGridCore(props: DataGridCoreProps) {
         ? state.active.rowIndex - 1
         : state.active.rowIndex;
     if (rowIndex >= 0 && rowIndex < props.result.rows.length + extraRows) {
-      setState((s) => ({
-        ...s,
-        selection: {
-          colIndex: [colIndex, colIndex],
-          rowIndex: [rowIndex, rowIndex],
-        },
-        editing: !!s.editing,
-        active: { rowIndex, colIndex },
-      }));
+      setState((s) => {
+        const newEditing =
+          (!props.pks || !props.pks.length) &&
+          rowIndex < props.result.rows.length
+            ? false
+            : !!s.editing;
+        if (!newEditing && s.editing) {
+          elRef.current?.focus();
+        }
+        return {
+          ...s,
+          selection: {
+            colIndex: [colIndex, colIndex],
+            rowIndex: [rowIndex, rowIndex],
+          },
+          editing: newEditing,
+          active: { rowIndex, colIndex },
+        };
+      });
       e.preventDefault();
       e.stopPropagation();
     }
@@ -365,9 +375,20 @@ export function useDataGridCore(props: DataGridCoreProps) {
     if (x === 0 && y === 0) return;
     setState((s) => {
       if (!s.active) return s;
+      const newEditing =
+        (s.editing || editing) &&
+        (!props.pks || !props.pks.length) &&
+        s.active.rowIndex + y < props.result.rows.length
+          ? false
+          : editing === undefined
+          ? s.editing
+          : s.editing;
+      if (!newEditing && s.editing) {
+        elRef.current?.focus();
+      }
       return {
         ...s,
-        editing: editing === undefined ? s.editing : editing,
+        editing: newEditing,
         selection: !selection
           ? undefined
           : !state.selection
@@ -570,7 +591,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         if (e.key === 'ArrowRight' && cursorOnEnd) moveBy(1, 0, false, 2);
         if (e.key === 'ArrowLeft' && cursor0) moveBy(-1, 0, false, 1);
         if (e.key === 'ArrowUp' && cursor0) moveBy(0, -1, false, 1);
-        if (e.key === 'Tab') {
+        if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey) {
           tabMove(e, e.shiftKey ? -1 : +1);
         }
       }
@@ -662,7 +683,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         moveBy(-1, 0, e.shiftKey);
       } else if (e.key === 'ArrowRight') {
         moveBy(1, 0, e.shiftKey);
-      } else if (e.key === 'Tab') {
+      } else if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey) {
         tabMove(e, e.shiftKey ? -1 : 1);
       } else if (
         props.onUpdate &&
@@ -825,6 +846,14 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const applyClick = useEvent(async () => {
     const { pks } = props;
     if (!props.onUpdate) return;
+    if (
+      Object.keys(state.update).filter(
+        (i) => parseInt(i, 10) < props.result.rows.length,
+      ).length &&
+      (!pks || !pks.length)
+    ) {
+      throw new Error('Primay Keys not found for table!');
+    }
     const updates = Object.keys(state.update)
       .filter((i) => parseInt(i, 10) < props.result.rows.length)
       .map((rowIndex) => {
