@@ -81,8 +81,11 @@
   }
   td,
   th {
-    border: 1px solid #ddd;
-    padding: 4px;
+    border-bottom: 1px solid #ddd;
+    padding: 2px;
+    &:first-of-type {
+      text-align: left;
+    }
   }
   th {
     font-size: 12px;
@@ -132,14 +135,17 @@
   }
   .fields {
     display: flex;
+    overflow: hidden;
     flex-wrap: wrap;
-    border: 1px solid #ddd;
     padding: 5px;
     user-select: text;
     .field {
       margin-right: 20px;
-      width: 175px;
+      width: 217px;
       font-size: 13px;
+      border-left: 1px solid #ddd;
+      margin-left: -15px;
+      padding-left: 10px;
       span {
         max-width: 175px;
         overflow: hidden;
@@ -223,17 +229,17 @@ div.frame.role {
     user-select: none;
     text-align: right;
     padding-top: 4px;
-    padding-right: 6px;
+    padding-right: 5px;
   }
   button.simple-button {
-    padding: 5px 8px !important;
+    padding: 3px 8px !important;
     font-size: 12px !important;
     box-shadow: none;
   }
   table td.actions {
     text-align: right;
     user-select: none;
-    padding: 2px 4px;
+    padding: 0 4px;
     table button,
     table .dialog {
       user-select: none;
