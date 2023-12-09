@@ -98,7 +98,8 @@
     color: #000;
   }
 }
-.header-and--nav:hover .header--menu {
+.header-and--nav:hover .header--menu,
+.left-nav-resizing .header--menu {
   opacity: 1;
 }
 @keyframes white {
@@ -230,14 +231,15 @@
   bottom: 0;
   width: 3px;
   cursor: ew-resize;
+  z-index: 3;
 }
 
-.resizing {
+.left-nav-resizing {
   .app-content,
   .tabs-header,
   .header,
   .header .header--menu,
   .nav {
-    transition: 0s !important;
+    transition: none !important;
   }
 }

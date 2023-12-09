@@ -9,7 +9,6 @@ import { useEvent } from 'util/useEvent';
 import { assert } from 'util/assert';
 import { fullScreen } from 'util/fullScreen';
 import { useShortcuts } from 'util/shortcuts';
-import { horizontalResize } from 'util/resize';
 import { Nav } from './Nav/Nav';
 import { Tabs } from './Tabs';
 import {
@@ -26,6 +25,7 @@ import {
 import { Frame } from './Frame';
 import { CloseConfirmation } from './CloseConfirmation';
 import { Errors } from '../Errors';
+import { useLeftArea } from './leftArea';
 
 const classNames: Record<FrameType, string> = {
   query: 'query-tab',
@@ -227,67 +227,30 @@ export function ConnectedApp({ state }: { state: AppState }) {
     [],
   );
 
-  const [leftWidth, setLeftWidth] = React.useState(250);
+  const { onResizeMouseDown, leftWidth, toggleLeftArea } = useLeftArea();
 
   const [hover, setHover] = React.useState(false);
 
-  const hideClick = useEvent((e: React.MouseEvent) => {
+  const onHeaderMouseEnter = useEvent(() => {
+    setHover(true);
+  });
+
+  const onHeaderMouseLeave = useEvent(() => {
+    setHover(false);
+  });
+
+  const onHeaderMenuClick = useEvent((e: React.MouseEvent) => {
     if (
       e.target instanceof HTMLElement &&
       !e.target.closest('.nav, .header--title')
     ) {
-      setLeftWidth(leftWidth ? 0 : 250);
+      toggleLeftArea();
       setHover(false);
-      setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-      }, 1);
     }
-  });
-
-  const [rootClass, setClass] = React.useState<string | undefined>();
-
-  const onResizeMouseDown = useEvent(async (e: React.MouseEvent) => {
-    setClass('resizing');
-    let el: HTMLElement | null = null;
-    const inc2 = await horizontalResize(
-      e,
-      (inc) => {
-        if (inc + leftWidth > 320) {
-          return false;
-        }
-        if (leftWidth + inc < 90) {
-          setClass(undefined);
-          const el2 = document.querySelector('.resize--indicator');
-          if (el2 instanceof HTMLElement) {
-            el = el2;
-            el.style.opacity = '0.03';
-          }
-        } else {
-          setClass('resizing');
-          if (el) {
-            el.style.opacity = '';
-            el = null;
-          }
-        }
-        setLeftWidth(leftWidth + inc < 90 ? 0 : leftWidth + inc);
-        return true;
-      },
-      document.documentElement,
-      leftWidth,
-    );
-    setClass(undefined);
-    if (inc2 === undefined) {
-      setLeftWidth(leftWidth);
-    } else {
-      setLeftWidth(leftWidth + inc2 < 90 ? 0 : leftWidth + inc2);
-    }
-    setTimeout(() => {
-      window.dispatchEvent(new Event('resize'));
-    }, 1);
   });
 
   return (
-    <div className={rootClass}>
+    <div>
       <Errors errors={state.errors} />
       {close && (
         <CloseConfirmation onConfirm={close.func} onDecline={onDecline} />
@@ -297,20 +260,20 @@ export function ConnectedApp({ state }: { state: AppState }) {
           {state.title}
           <span
             className="header--menu"
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
+            onMouseEnter={onHeaderMouseEnter}
+            onMouseLeave={onHeaderMouseLeave}
             style={{
               left: leftWidth <= 40 ? 0 : Math.max(leftWidth - 37, 0),
               opacity: leftWidth <= 40 ? 1 : undefined,
               width: leftWidth <= 40 ? 40 : undefined,
             }}
-            onClick={hideClick}
+            onClick={onHeaderMenuClick}
           >
-            {leftWidth <= 40 ? (
-              <i className="fa fa-bars" />
-            ) : (
-              <i className="fa fa-chevron-left" />
-            )}{' '}
+            <i
+              className={`fa ${
+                leftWidth <= 40 ? 'fa-bars' : 'fa-chevron-left'
+              }`}
+            />
             {hover && leftWidth <= 40 ? (
               <Nav
                 title={state.title}
