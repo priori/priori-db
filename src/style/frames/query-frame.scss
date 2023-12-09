@@ -170,11 +170,6 @@ button.query-tab--stdout {
     color: #03a;
   }
 }
-.pid--running {
-  top: 33px;
-  right: 66px;
-  transition: all 0.5s;
-}
 
 @keyframes opacity {
   0% {
@@ -224,6 +219,20 @@ button.query-tab--stdout {
   right: 8px;
   transition: 0.3s top;
 }
+.favorite {
+  top: 7px;
+}
+.favorite--has-pid {
+  top: 31px;
+}
+.favorite.favorite--running {
+  top: 65px;
+}
+.pid--running {
+  top: 33px;
+  right: 66px;
+  transition: all 0.5s;
+}
 
 .query-tab .fa-star {
   font-size: 28px;
@@ -258,4 +267,12 @@ button.query-tab--stdout {
     padding: 3px 6px !important;
     margin-left: 5px;
   }
+}
+.query-frame--resize-helper {
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 4;
+  position: absolute;
+  cursor: ns-resize;
 }

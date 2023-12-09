@@ -137,12 +137,14 @@ function Group({
 
 export function QuerySelector({
   onSelect,
+  style,
 }: {
   onSelect: (state: {
     content: string;
     cursorStart: { line: number; ch: number };
     cursorEnd: { line: number; ch: number };
   }) => void;
+  style?: React.CSSProperties;
 }) {
   const appState = currentState();
   const [configIndex, set] = useState(() =>
@@ -277,7 +279,7 @@ export function QuerySelector({
   }
 
   return (
-    <div className="query-selector">
+    <div className="query-selector" style={style}>
       <div className="query-selector--header">
         <input
           type="text"

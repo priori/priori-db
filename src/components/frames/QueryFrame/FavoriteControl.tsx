@@ -4,11 +4,11 @@ import { useEvent } from 'util/useEvent';
 export function FavoriteControl({
   onSave,
   saved,
-  style,
+  className,
 }: {
   onSave: (name: string) => void;
   saved: boolean;
-  style?: React.CSSProperties;
+  className: string;
 }) {
   const [openFav, setOpenFav] = useState(false);
   const [name, setName] = useState('');
@@ -64,7 +64,7 @@ export function FavoriteControl({
   });
 
   return (
-    <span className="favorite" ref={ref} style={style}>
+    <span className={`favorite${className ? ` ${className}` : ''}`} ref={ref}>
       <i
         className={`fa fa-star${saved ? ' saved' : ''}`}
         onClick={startFavorite}

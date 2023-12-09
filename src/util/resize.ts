@@ -19,7 +19,7 @@ function resize(
   document.body.append(lock);
 
   const indicator = document.createElement('div');
-  indicator.className = 'resize--indicator';
+  indicator.className = `resize--indicator resize--indicator--${type}`;
   lock.append(indicator);
   const rect = el.getClientRects()[0];
   if (type === 'horizontal') {
@@ -111,4 +111,12 @@ export function horizontalResize(
   pos: number,
 ) {
   return resize(e, ({ x }) => fn(x), 'horizontal', el, pos).then((v) => v?.x);
+}
+export function verticalResize(
+  e: React.MouseEvent,
+  fn: (inc: number) => boolean,
+  el: HTMLElement,
+  pos: number,
+) {
+  return resize(e, ({ y }) => fn(y), 'vertical', el, pos).then((v) => v?.y);
 }

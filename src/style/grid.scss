@@ -534,10 +534,16 @@ th.desc.sortable:hover::before {
 .resize--indicator {
   top: 0;
   bottom: 0;
-  margin-left: -1px;
   left: 0;
   right: 0;
   background: #15c;
   position: absolute;
   width: 3px;
+  height: 3px;
+}
+.resize--indicator--horizontal {
+  margin-left: -1px;
+}
+.resize--indicator--vertical {
+  margin-top: -1px;
 }

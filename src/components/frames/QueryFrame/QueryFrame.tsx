@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useRef, useState } from 'react';
+import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { assert } from 'util/assert';
 import { useEvent } from 'util/useEvent';
@@ -19,6 +19,7 @@ import { ipcRenderer } from 'electron';
 import { grantError } from 'util/errors';
 import { createReadStream, createWriteStream, readFile, writeFile } from 'fs';
 import { pipeline } from 'node:stream/promises';
+import { verticalResize } from 'util/resize';
 import { QuerySelector } from './QuerySelector';
 import { useTab } from '../../main/connected/ConnectedApp';
 import { Editor } from '../../Editor';
@@ -65,6 +66,23 @@ interface QueryFrameState {
     message: string;
   } | null;
   freshTab: boolean;
+}
+
+function useDelayTrue(value: boolean, delay: number) {
+  const [state, setState] = useState(value);
+  useEffect(() => {
+    if (value) {
+      const timeout = setTimeout(() => {
+        setState(true);
+      }, delay);
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+    setState(false);
+    return undefined;
+  }, [value, delay]);
+  return state;
 }
 
 export function QueryFrame({ uid }: { uid: number }) {
@@ -357,17 +375,53 @@ export function QueryFrame({ uid }: { uid: number }) {
       });
   });
 
+  const running = useDelayTrue(state.running, 200);
+  const hasPid = useDelayTrue(!!state.clientPid, 200);
+
+  const [topHeightState, setTopHeightState] = useState(300);
+  const topHeight = topHeightState;
+  const onResizeHelperMouseDown = useEvent(async (e: React.MouseEvent) => {
+    assert(e.target instanceof HTMLElement);
+    const el = e.target.closest('.frame.query-tab');
+    assert(el instanceof HTMLElement);
+    const maxHeight = el.offsetHeight - 60;
+    const inc2 = await verticalResize(
+      e,
+      (inc) => {
+        setTopHeightState(
+          topHeight + inc < 120
+            ? 120
+            : topHeight + inc > maxHeight
+            ? maxHeight
+            : topHeight + inc,
+        );
+        if (topHeight + inc < 120 || topHeight + inc > maxHeight) return false;
+        return true;
+      },
+      el,
+      topHeight,
+    );
+    if (inc2 === undefined) {
+      setTopHeightState(topHeight);
+    } else {
+      setTopHeightState(
+        topHeight + inc2 < 120
+          ? 120
+          : topHeight + inc2 > maxHeight
+          ? maxHeight
+          : topHeight + inc2,
+      );
+    }
+  });
+
   return (
     <>
       <FavoriteControl
         onSave={onFavoriteSave}
-        style={
-          state.running
-            ? { top: 65 }
-            : state.clientPid
-            ? { top: 31 }
-            : { top: 7 }
-        }
+        className={[
+          ...(running ? ['favorite--running'] : []),
+          ...(hasPid ? ['favorite--has-pid'] : []),
+        ].join(' ')}
         saved={saved}
       />
       {closeConfirm || closeConfirm2 ? (
@@ -386,12 +440,7 @@ export function QueryFrame({ uid }: { uid: number }) {
           </div>
         </Dialog>
       ) : null}
-
-      <Editor
-        ref={editorRef}
-        onChange={onEditorChange}
-        style={{ height: '300px' }}
-      />
+      <Editor ref={editorRef} onChange={onEditorChange} height={topHeight} />
       {saveDialogOpen ? (
         <Dialog
           relativeTo="previousSibling"
@@ -484,7 +533,7 @@ export function QueryFrame({ uid }: { uid: number }) {
         </button>
       )}
 
-      {state.running ? (
+      {running ? (
         <div className="running">
           <i className="fa fa-circle-o-notch fa-spin fa-3x fa-fw" />
           <span
@@ -498,11 +547,17 @@ export function QueryFrame({ uid }: { uid: number }) {
         </div>
       ) : null}
 
-      {state.clientPid ? (
-        <div className={`pid${state.running ? ' pid--running' : ''}`}>
+      {hasPid ? (
+        <div className={`pid${running ? ' pid--running' : ''}`}>
           {state.clientPid} <i className="fa fa-link" />
         </div>
       ) : null}
+
+      <div
+        className="query-frame--resize-helper"
+        style={{ top: topHeight }}
+        onMouseDown={onResizeHelperMouseDown}
+      />
 
       {state.error ? (
         <div className="error">
@@ -534,7 +589,7 @@ export function QueryFrame({ uid }: { uid: number }) {
             <DataGrid
               style={{
                 position: 'absolute',
-                top: '300px',
+                top: topHeight,
                 left: 0,
                 bottom: 0,
                 right: 0,
@@ -546,7 +601,7 @@ export function QueryFrame({ uid }: { uid: number }) {
           <DataGrid
             style={{
               position: 'absolute',
-              top: '300px',
+              top: topHeight,
               left: 0,
               bottom: 0,
               right: 0,
@@ -555,7 +610,7 @@ export function QueryFrame({ uid }: { uid: number }) {
           />
         )
       ) : state.res || state.notices?.length ? (
-        <div className="not-grid-result">
+        <div className="not-grid-result" style={{ top: topHeight }}>
           <Notices
             notices={state.notices}
             onFullViewNotice={fullViewNotice}
@@ -594,6 +649,7 @@ export function QueryFrame({ uid }: { uid: number }) {
         </div>
       ) : state.freshTab ? (
         <QuerySelector
+          style={{ top: topHeight + 1 }}
           onSelect={(editorState) => {
             editorRef.current?.setEditorState({ ...editorState });
           }}

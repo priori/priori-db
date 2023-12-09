@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, CSSProperties } from 'react';
+import { Component } from 'react';
 
 type EditorState = {
   content: string;
@@ -24,7 +24,7 @@ function isSameEditorState(state: EditorState, state2: EditorState) {
   );
 }
 export interface EditorProps {
-  style: CSSProperties | undefined;
+  height: number;
   onChange?: () => void;
 }
 export class Editor extends Component<EditorProps, never> {
@@ -124,9 +124,18 @@ export class Editor extends Component<EditorProps, never> {
   // }
 
   render() {
-    const { style } = this.props;
+    const { height } = this.props;
     return (
-      <div className="editor" style={style} ref={(el) => this.setEditor(el)} />
+      <div
+        className="editor"
+        style={
+          {
+            height,
+            '--editor-height': `${height}px`,
+          } as React.CSSProperties
+        }
+        ref={(el) => this.setEditor(el)}
+      />
     );
   }
 }
