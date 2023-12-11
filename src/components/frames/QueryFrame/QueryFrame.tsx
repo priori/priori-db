@@ -385,17 +385,19 @@ export function QueryFrame({ uid }: { uid: number }) {
     const el = e.target.closest('.frame.query-tab');
     assert(el instanceof HTMLElement);
     const maxHeight = el.offsetHeight - 60;
+    const minHeight = 155;
     const inc2 = await verticalResize(
       e,
       (inc) => {
         setTopHeightState(
-          topHeight + inc < 120
-            ? 120
+          topHeight + inc < minHeight
+            ? minHeight
             : topHeight + inc > maxHeight
             ? maxHeight
             : topHeight + inc,
         );
-        if (topHeight + inc < 120 || topHeight + inc > maxHeight) return false;
+        if (topHeight + inc < minHeight) return minHeight - topHeight;
+        if (topHeight + inc > maxHeight) return maxHeight - topHeight;
         return true;
       },
       el,
@@ -405,13 +407,16 @@ export function QueryFrame({ uid }: { uid: number }) {
       setTopHeightState(topHeight);
     } else {
       setTopHeightState(
-        topHeight + inc2 < 120
-          ? 120
+        topHeight + inc2 < minHeight
+          ? minHeight
           : topHeight + inc2 > maxHeight
           ? maxHeight
           : topHeight + inc2,
       );
     }
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 1);
   });
 
   return (

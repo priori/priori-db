@@ -1,6 +1,6 @@
 function resize(
   e: React.MouseEvent,
-  fn: (v: { x: number; y: number }) => boolean,
+  fn: (v: { x: number; y: number }) => boolean | { x: number; y: number },
   type: 'horizontal' | 'vertical',
   el: HTMLElement,
   pos: number,
@@ -49,19 +49,18 @@ function resize(
 
   let lastValid: { x: number; y: number } | undefined;
 
-  // let timeout: ReturnType<typeof setTimeout>;
   function moveListener(e2: MouseEvent) {
-    // if (timeout) clearTimeout(timeout);
-    // timeout = setTimeout(() => {
-    const ret = fn({ x: e2.pageX - x0, y: e2.clientY - y0 });
+    const inc = { x: e2.pageX - x0, y: e2.clientY - y0 };
+    const ret = fn(inc);
     if (ret === false) return;
-    lastValid = { x: e2.pageX - x0, y: e2.clientY - y0 };
+    const jump =
+      typeof ret === 'object' && (ret.x !== inc.x || ret.y !== inc.y);
+    lastValid = jump ? ret : inc;
     indicator.style[type === 'horizontal' ? 'left' : 'top'] = `${
       pos +
-      (type === 'horizontal' ? e2.pageX - x0 : e2.clientY - y0) +
+      (type === 'horizontal' ? lastValid.x : lastValid.y) +
       (type === 'horizontal' ? rect.left : rect.top)
     }px`;
-    // }, 3);
   }
 
   function keydownListener(e2: KeyboardEvent) {
@@ -106,17 +105,37 @@ function resize(
 
 export function horizontalResize(
   e: React.MouseEvent,
-  fn: (inc: number) => boolean,
+  fn: (inc: number) => boolean | number,
   el: HTMLElement,
   pos: number,
 ) {
-  return resize(e, ({ x }) => fn(x), 'horizontal', el, pos).then((v) => v?.x);
+  return resize(
+    e,
+    ({ x, y }) => {
+      const ret = fn(x);
+      if (typeof ret === 'number') return { x: ret, y };
+      return ret;
+    },
+    'horizontal',
+    el,
+    pos,
+  ).then((v) => v?.x);
 }
 export function verticalResize(
   e: React.MouseEvent,
-  fn: (inc: number) => boolean,
+  fn: (inc: number) => boolean | number,
   el: HTMLElement,
   pos: number,
 ) {
-  return resize(e, ({ y }) => fn(y), 'vertical', el, pos).then((v) => v?.y);
+  return resize(
+    e,
+    ({ x, y }) => {
+      const ret = fn(y);
+      if (typeof ret === 'number') return { x, y: ret };
+      return ret;
+    },
+    'vertical',
+    el,
+    pos,
+  ).then((v) => v?.y);
 }

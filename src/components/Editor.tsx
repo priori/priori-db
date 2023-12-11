@@ -125,6 +125,7 @@ export class Editor extends Component<EditorProps, never> {
 
   render() {
     const { height } = this.props;
+    if (this.editor && this.editor.refresh) this.editor.refresh();
     return (
       <div
         className="editor"

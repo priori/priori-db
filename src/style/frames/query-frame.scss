@@ -113,7 +113,7 @@ button.query-tab--stdout {
 }
 .running span {
   position: absolute;
-  right: 66px;
+  right: 62px;
   top: 9px;
   background: #ddd;
   padding: 2px 4px;
@@ -151,7 +151,7 @@ button.query-tab--stdout {
 
 .pid {
   position: absolute;
-  right: 5px;
+  right: 15px;
   top: 8px;
 
   background: #ddd;
@@ -185,7 +185,7 @@ button.query-tab--stdout {
   animation: opacity 1.5s;
   animation-fill-mode: forwards;
   position: absolute;
-  right: 0;
+  right: 8px;
   top: 0;
   width: 180px;
   z-index: 2;
@@ -216,7 +216,7 @@ button.query-tab--stdout {
   position: absolute;
   z-index: 4;
   top: 31px;
-  right: 8px;
+  right: 15px;
   transition: 0.3s top;
 }
 .favorite {
@@ -226,11 +226,11 @@ button.query-tab--stdout {
   top: 31px;
 }
 .favorite.favorite--running {
-  top: 65px;
+  top: 62px;
 }
 .pid--running {
   top: 33px;
-  right: 66px;
+  right: 70px;
   transition: all 0.5s;
 }
 
