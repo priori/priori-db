@@ -513,4 +513,13 @@ div.nav .nav-search--entity.focused.active span {
 }
 .internal {
   opacity: 0.3;
+  &:hover {
+    opacity: 0.5;
+  }
+  &.open {
+    opacity: 0.7;
+  }
+  &.active {
+    opacity: 0.8;
+  }
 }

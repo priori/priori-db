@@ -93,6 +93,8 @@
   }
   .fa-chevron-left {
     color: #bbb;
+    position: relative;
+    top: 1px;
   }
   &:hover .fa-chevron-left {
     color: #000;

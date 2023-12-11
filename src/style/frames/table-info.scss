@@ -13,6 +13,7 @@
   padding: 20px;
   background: white;
   overflow: auto;
+  overflow-y: scroll;
   .dialog {
     margin-top: 20px;
     font-size: 16px;
@@ -239,12 +240,12 @@ div.frame.role {
   table td.actions {
     text-align: right;
     user-select: none;
-    padding: 0 4px;
+    padding: 2px 4px;
+    line-height: 22px;
     table button,
     table .dialog {
       user-select: none;
     }
-    line-height: 27px;
   }
 }
 .comment--form {
