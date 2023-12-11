@@ -165,7 +165,7 @@ export const DataGridActiveCell = React.memo(
           position: 'absolute',
           top,
           left,
-          // pointerEvents: 'none',
+          pointerEvents: editing ? undefined : 'none',
           width: wrapperWidth + 4,
           display: top < 0 || wrapperWidth < 0 ? 'none' : '',
         }}
