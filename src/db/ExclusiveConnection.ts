@@ -1,7 +1,7 @@
 import { assert } from 'util/assert';
 import { PoolClient, QueryArrayResult, QueryResult } from 'pg';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { CopyStreamQuery, CopyToStreamQuery } from 'pg-copy-streams';
 import { openConnection, SimpleValue } from './Connection';
@@ -166,20 +166,25 @@ export function useExclusiveConnection(
   const [client, setClient] = useState(
     () => new ExclusiveConnection(onNotice2, onPid2, onClientError2),
   );
+  const destroy = useEvent(() => {
+    if (client.pid) {
+      client.stopRunningQuery().then(() => {
+        exclusives.splice(exclusives.indexOf(client), 1);
+        client.db?.release(true);
+      });
+      return;
+    }
+    exclusives.splice(exclusives.indexOf(client), 1);
+    client.db?.release(true);
+  });
+  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    exclusives.push(client);
+    if (timeout.current) clearTimeout(timeout.current);
+    else exclusives.push(client);
     return () => {
-      if (client.pid) {
-        client.stopRunningQuery().then(() => {
-          exclusives.splice(exclusives.indexOf(client), 1);
-          client.db?.release(true);
-        });
-        return;
-      }
-      exclusives.splice(exclusives.indexOf(client), 1);
-      client.db?.release(true);
+      timeout.current = setTimeout(destroy, 10);
     };
-  }, [client]);
+  }, [client, destroy]);
   return [
     client,
     useEvent(() => {
