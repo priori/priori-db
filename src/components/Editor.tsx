@@ -125,7 +125,19 @@ export class Editor extends Component<EditorProps, never> {
 
   render() {
     const { height } = this.props;
-    if (this.editor && this.editor.refresh) this.editor.refresh();
+    if (this.editor && this.editor.refresh) {
+      this.editor.refresh();
+      setTimeout(() => this.editor.refresh(), 1);
+    }
+    if (this.editor && height === 40 && this.editor.isReadOnly() === false) {
+      this.editor.setOption('readOnly', true);
+    } else if (
+      this.editor &&
+      height !== 40 &&
+      this.editor.isReadOnly() === true
+    ) {
+      this.editor.setOption('readOnly', false);
+    }
     return (
       <div
         className="editor"
