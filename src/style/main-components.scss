@@ -30,12 +30,6 @@
   z-index: 3;
   transition: left 0.3s;
 }
-.tabs.moving .tab {
-  position: absolute;
-}
-.tabs.moving {
-  left: 1px;
-}
 .header {
   width: 250px;
   height: 40px;

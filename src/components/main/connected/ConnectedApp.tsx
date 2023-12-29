@@ -10,7 +10,7 @@ import { assert } from 'util/assert';
 import { fullScreen } from 'util/fullScreen';
 import { useShortcuts } from 'util/shortcuts';
 import { Nav } from './Nav/Nav';
-import { Tabs } from './Tabs';
+import { TabsHeader } from './TabsHeader';
 import {
   askToCloseWindow,
   cancelAskToCloseWindow,
@@ -293,9 +293,9 @@ export function ConnectedApp({ state }: { state: AppState }) {
           disabled={leftWidth <= 40}
         />
       </div>
-      <Tabs
+      <TabsHeader
         tabs={state.tabs}
-        style={{ left: Math.max(leftWidth, 40) }}
+        left={Math.max(leftWidth, 40)}
         onActiveTabMouseDown={onActiveTabMouseDown}
       />
       {leftWidth > 40 ? (

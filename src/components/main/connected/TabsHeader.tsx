@@ -11,15 +11,17 @@ import {
 } from '../../../state/actions';
 import { Tab } from '../../../types';
 
-export interface TabsProps {
+export interface TabsHeaderProps {
   tabs: Tab[];
   onActiveTabMouseDown: () => void;
-  style?: React.CSSProperties;
+  left: number;
 }
+
 export interface TabWidth extends Tab {
   width: number;
 }
-export interface TabsState {
+
+export interface TabsHeaderState {
   tabs: TabWidth[];
   sorting: boolean;
   initialClientX: number;
@@ -27,11 +29,11 @@ export interface TabsState {
   editing: Tab | null;
 }
 
-export class Tabs extends Component<TabsProps, TabsState> {
+export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
   static tabsDoubleClick(e: React.MouseEvent<HTMLSpanElement, MouseEvent>) {
     const el = e.target;
     if (el instanceof HTMLElement) {
-      if (el.matches('span.tabs')) {
+      if (el.matches('.tabs-header__tabs')) {
         newQueryTabInTheEnd();
       }
     }
@@ -39,17 +41,10 @@ export class Tabs extends Component<TabsProps, TabsState> {
 
   prevEl: HTMLInputElement | null = null;
 
-  // eslint-disable-next-line react/sort-comp
-  left() {
-    if (this.props.style?.left !== undefined)
-      return this.props.style.left as number;
-    return 250;
-  }
-
-  constructor(props: TabsProps) {
+  constructor(props: TabsHeaderProps) {
     super(props);
 
-    const areaWidth = window.innerWidth - this.left() - 40;
+    const areaWidth = window.innerWidth - props.left - 40;
     let width = areaWidth / props.tabs.length;
     if (width > 220) width = 220;
     width += 1;
@@ -80,7 +75,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
     window.addEventListener('blur', this.windowBlur);
   }
 
-  UNSAFE_componentWillReceiveProps(next: TabsProps) {
+  UNSAFE_componentWillReceiveProps(next: TabsHeaderProps) {
     if (this.state.sorting) this.applySort();
     const tabs = next.tabs.map((t, index) => {
       const currentTab = this.state.tabs.find(
@@ -149,7 +144,7 @@ export class Tabs extends Component<TabsProps, TabsState> {
   }
 
   private fit() {
-    const areaWidth = window.innerWidth - this.left() - 40;
+    const areaWidth = window.innerWidth - this.props.left - 40;
     let width = areaWidth / this.state.tabs.length;
     if (width > 220) width = 220;
     width += 1;
@@ -198,18 +193,15 @@ export class Tabs extends Component<TabsProps, TabsState> {
   }
 
   private calculate() {
-    // let pos = 0;
-    const areaWidth = window.innerWidth - this.left() - 40;
+    const areaWidth = window.innerWidth - this.props.left - 40;
     let offsetWidth = areaWidth / this.state.tabs.length;
     if (offsetWidth > 220) offsetWidth = 220;
     const styleWidth = offsetWidth + 1;
-
     const currentActiveIndex = this.props.tabs.findIndex((t) => t.active);
     const indexOffset = Math.round(this.state.offset / offsetWidth);
     const finalActiveIndex = currentActiveIndex + indexOffset;
     const tabs = this.props.tabs.map((t, i) => {
       if (t.active) {
-        // pos += offsetWidth;
         let left = this.state.offset + currentActiveIndex * offsetWidth;
         if (left < 0) left = 0;
         if (left && left + styleWidth + 1 > areaWidth)
@@ -231,15 +223,18 @@ export class Tabs extends Component<TabsProps, TabsState> {
         <div
           className="tabs-header"
           tabIndex={0}
-          style={{ outline: 'none', ...this.props.style }}
+          style={{ outline: 'none', left: this.props.left }}
         >
-          <span className="tabs" onDoubleClick={Tabs.tabsDoubleClick}>
+          <span
+            className="tabs-header__tabs"
+            onDoubleClick={TabsHeader.tabsDoubleClick}
+          >
             {this.props.tabs.map((t, index) => {
               const { width } = this.state.tabs[index];
               return (
                 <span
-                  className={`tab${t.active ? ' active' : ''}${
-                    t.keep ? '' : ' pik'
+                  className={`tabs-header__tab${
+                    t.active ? ' tabs-header__tab--active' : ''
                   }`}
                   key={t.keep ? t.props.uid : -index}
                   onMouseDown={(e) => {
@@ -255,14 +250,13 @@ export class Tabs extends Component<TabsProps, TabsState> {
                 >
                   {this.state.editing === t ? (
                     <input
+                      className="tabs-header__input"
                       type="text"
                       defaultValue={t.title}
                       ref={(el: HTMLInputElement | null) => {
                         if (el) {
                           el.focus();
                           el.setSelectionRange(0, t.title.length);
-                          // } else if ( this.state.editing == t && this.prevEl ){
-                          // this.blurInput(this.prevEl);
                         }
                         this.prevEl = el;
                       }}
@@ -272,13 +266,19 @@ export class Tabs extends Component<TabsProps, TabsState> {
                       }
                     />
                   ) : (
-                    <span className="tab-name">{t.title}</span>
+                    <span
+                      className={`tabs-header__tab-name ${
+                        t.keep ? '' : ' tabs-header__tab-name--preview'
+                      }`}
+                    >
+                      {t.title}
+                    </span>
                   )}
                   {this.state.editing === t ? (
-                    <i className="fa fa-close" />
+                    <i className="tabs-header__close fa fa-close" />
                   ) : (
                     <i
-                      className="fa fa-close"
+                      className="tabs-header__close fa fa-close"
                       onClick={(e) => {
                         askToCloseTab(t.props);
                         e.stopPropagation();
@@ -289,8 +289,11 @@ export class Tabs extends Component<TabsProps, TabsState> {
               );
             })}
           </span>
-          <span className="add" onClick={() => newQueryTabInTheEnd()}>
-            <i className="fa fa-plus" />
+          <span
+            className="tabs-header__add"
+            onClick={() => newQueryTabInTheEnd()}
+          >
+            <i className="tabs-header__plus fa fa-plus" />
           </span>
         </div>
       );
@@ -298,23 +301,32 @@ export class Tabs extends Component<TabsProps, TabsState> {
 
     const { tabs, width } = this.calculate();
     return (
-      <div className="tabs-header" style={this.props.style}>
-        <span className="tabs">
+      <div className="tabs-header" style={{ left: this.props.left }}>
+        <span className="tabs-header__tabs">
           {tabs.map((t, index) => (
             <span
-              className={`tab${t.active ? ' active' : ''}${
-                t.keep ? '' : ' pik'
-              }`}
+              className={`tabs-header__tab${
+                t.active ? ' tabs-header__tab--active' : ''
+              }${t.keep ? '' : ' preview'}`}
               key={t.keep ? t.props.uid : -index}
               style={{ width, position: 'absolute', left: t.left }}
             >
-              <span className="tab-name">{t.title}</span>
-              <i className="fa fa-close" />
+              <span
+                className={`tabs-header__tab-name ${
+                  t.keep ? '' : ' tabs-header__tab-name--preview'
+                }`}
+              >
+                {t.title}
+              </span>
+              <i className="tabs-header__close fa fa-close" />
             </span>
           ))}
         </span>
-        <span className="add" onClick={() => newQueryTabInTheEnd()}>
-          <i className="fa fa-plus" />
+        <span
+          className="tabs-header__add"
+          onClick={() => newQueryTabInTheEnd()}
+        >
+          <i className="tabs-header__plus fa fa-plus" />
         </span>
       </div>
     );

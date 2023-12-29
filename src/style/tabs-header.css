@@ -1,0 +1,84 @@
+.tabs-header__tabs {
+  width: 999999px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+.tabs-header__add {
+  width: 40px;
+  z-index: 2;
+  height: 40px;
+  text-align: center;
+  background: #ddd;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: width 0.5s;
+}
+.tabs-header__tab-name--preview {
+  color: rgba(0, 0, 0, 0.2);
+  font-style: italic;
+}
+.tabs-header__add:hover {
+  background: #ccc;
+}
+
+.tabs-header__close,
+i.tabs-header__plus {
+  line-height: 40px;
+}
+.tabs-header__close {
+  position: absolute;
+  right: 4px;
+  top: 2px;
+  color: #888;
+  padding: 5px 5px 5px 2px;
+}
+.tabs-header__close:hover {
+  color: #000;
+}
+
+.tabs-header__tab {
+  height: 40px;
+  line-height: 32px;
+  float: left;
+  overflow: hidden;
+  transition:
+    width 0.5s,
+    left 0.5s;
+  padding-top: 4px;
+  box-shadow: 1px 0px rgb(0 0 0 / 20%);
+}
+.tabs-header__tab-name {
+  white-space: nowrap;
+  overflow: hidden;
+  display: block;
+  margin-right: 17px;
+  text-overflow: ellipsis;
+  padding: 1px 7px;
+}
+.tabs-header__tab {
+  position: relative;
+  color: #444;
+  overflow: hidden;
+  margin-left: -1px;
+}
+.tabs-header__tab:hover {
+  background: #bbb;
+}
+.tabs-header__tab--active,
+.tabs-header__tab--active:hover {
+  background: white;
+  color: #000;
+  z-index: 2;
+  transition: width 0.5s;
+  border-color: white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+.tabs-header__input {
+  padding: 3px;
+  margin-top: 5px;
+  margin-left: 10px;
+  max-width: calc(100% - 20px);
+}
