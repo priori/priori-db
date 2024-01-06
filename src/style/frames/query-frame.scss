@@ -11,7 +11,6 @@
   width: 10px;
   height: 10px;
 }
-/* .not-grid-result::-webkit-scrollbar-track {} */
 .not-grid-result::-webkit-scrollbar-thumb {
   background-color: #ccc;
 }
@@ -407,11 +406,35 @@ button.query-frame--apply2 {
   border-radius: 3px;
   margin-bottom: 2px;
 }
+.query-frame--code-editor-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
 .query-frame--popup {
+  position: absolute;
+  z-index: 11;
+  top: 40px;
+  box-shadow: 0 3px 20px rgba(0, 0, 0, 0.2);
   button.query-tab--execute {
     right: 20px;
   }
   .mensagem {
     right: 138px;
   }
+}
+button.query-tab--save-sql {
+  display: block;
+  width: 100%;
+  margin-bottom: 15px;
+  margin-left: 0;
+  margin-right: 0;
+}
+button.query-tab--save-stdout {
+  display: block;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
 }

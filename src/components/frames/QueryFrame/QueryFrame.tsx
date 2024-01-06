@@ -616,24 +616,17 @@ export function QueryFrame({ uid }: { uid: number }) {
         <div
           onMouseEnter={popup ? onPopupMouseEnter : undefined}
           onMouseLeave={popup ? onPopupMouseLeave : undefined}
-          className={popup ? 'query-frame--popup' : undefined}
+          className={
+            popup ? 'query-frame--popup' : 'query-frame--code-editor-area'
+          }
           style={
             popup
               ? {
-                  position: 'absolute',
-                  top: 40,
-                  left: 40,
+                  left: 120 - popup.right,
                   right: popup.right,
                   height: popup.height,
-                  zIndex: 11,
-                  boxShadow: '0 3px 20px rgba(0,0,0,.2)',
                 }
               : {
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
                   overflow: topHeight === 40 ? 'hidden' : undefined,
                 }
           }
@@ -674,13 +667,13 @@ export function QueryFrame({ uid }: { uid: number }) {
             >
               <button
                 onClick={onSaveSqlQueryToFileClick}
-                style={{ display: 'block', width: '100%', marginBottom: 15 }}
+                className="query-tab--save-sql"
                 type="button"
               >
                 Save SQL query to a file (.sql)
               </button>
               <button
-                style={{ display: 'block', width: '100%' }}
+                className="query-tab--save-stdout"
                 type="button"
                 onClick={onStdOutFileClick}
               >
@@ -696,14 +689,14 @@ export function QueryFrame({ uid }: { uid: number }) {
             >
               <button
                 type="button"
-                style={{ display: 'block', width: '100%', marginBottom: 15 }}
+                className="query-tab--save-sql"
                 onClick={onOpenSqlQueryFileClick}
               >
                 Open SQL query from a file (.sql)
               </button>
               <button
                 type="button"
-                style={{ display: 'block', width: '100%' }}
+                className="query-tab--save-stdout"
                 onClick={onStdInFileClick}
               >
                 Import data from a file (PostgreSQL STDIN)
