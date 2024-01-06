@@ -2,7 +2,7 @@ import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { assert } from 'util/assert';
 import { useEvent } from 'util/useEvent';
-import { QueryArrayResult } from 'pg';
+import { FieldDef, QueryArrayResult } from 'pg';
 import { closeTabNow, showError } from 'state/actions';
 import { DB } from 'db/DB';
 import { CopyStreamQuery, CopyToStreamQuery, from, to } from 'pg-copy-streams';
@@ -21,6 +21,7 @@ import { createReadStream, createWriteStream, readFile, writeFile } from 'fs';
 import { pipeline } from 'node:stream/promises';
 import { verticalResize } from 'util/resize';
 import { useEventListener } from 'util/useEventListener';
+import { SimpleValue } from 'db/Connection';
 import { QuerySelector } from './QuerySelector';
 import { useTab } from '../../main/connected/ConnectedApp';
 import { Editor } from '../../Editor';
@@ -32,13 +33,13 @@ import { FavoriteControl } from './FavoriteControl';
 function temToStdOut(query: string) {
   return (
     !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
-    !!query.match(/^([^']|'([^']|'')*')*to\sstdout/gim)
+    !!query.match(/^([^']|'([^']|'')*')*to\s+stdout/gim)
   );
 }
 function temFromStdIn(query: string) {
   return (
     !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
-    !!query.match(/^([^']|'([^']|'')*')*from\sstdin/gim)
+    !!query.match(/^([^']|'([^']|'')*')*from\s+stdin/gim)
   );
 }
 
@@ -52,7 +53,16 @@ interface QueryFrameState {
   notices: QFNoticeMessage[];
   resetNotices: boolean;
   res:
-    | QueryArrayResult
+    | {
+        rows: SimpleValue[][];
+        fields: FieldDef[];
+        rowCount: number;
+        fetchMoreRows?: () => Promise<{
+          rows: SimpleValue[][];
+          fields: FieldDef[];
+          rowCount: number;
+        }>;
+      }
     | (CopyToStreamQuery & { fields: undefined })
     | (CopyStreamQuery & { fields: undefined })
     | null;
@@ -163,7 +173,7 @@ export function QueryFrame({ uid }: { uid: number }) {
               | QueryArrayResult
               | (CopyStreamQuery & { fields: undefined })
               | (CopyToStreamQuery & { fields: undefined }))
-          : await db.query(query, [], true);
+          : await db.query(query, []);
 
         if (stdoutMode)
           await pipeline(
@@ -488,9 +498,32 @@ export function QueryFrame({ uid }: { uid: number }) {
       setPopup(null);
     }, 10);
   });
+
   useEventListener(window, 'resize', () => {
     setPopup(null);
   });
+
+  const fetching = useRef(false);
+  const fetchMoreRows0 = useEvent(async () => {
+    if (
+      !state.res ||
+      !('fetchMoreRows' in state.res && state.res.fetchMoreRows) ||
+      fetching.current
+    )
+      return;
+    fetching.current = true;
+    const res2 = await state.res.fetchMoreRows();
+    fetching.current = false;
+    setState((state2) => ({
+      ...state2,
+      res: res2,
+      time: null,
+    }));
+  });
+  const fetchMoreRows =
+    state.res && 'fetchMoreRows' in state.res && state.res.fetchMoreRows
+      ? fetchMoreRows0
+      : undefined;
 
   return (
     <>
@@ -531,11 +564,24 @@ export function QueryFrame({ uid }: { uid: number }) {
                   </div>
                 ) : null}
                 {state.res && state.res.fields && state.res.fields.length ? (
-                  <>
-                    Query returned {state.res.rows.length} row
-                    {state.res.rows.length > 1 ? 's' : ''}, {state.time} ms
-                    execution time.
-                  </>
+                  state.res.fetchMoreRows ? (
+                    <>
+                      {state.res.rows.length} row
+                      {state.res.rows.length > 1 ? 's' : ''} fetched
+                      {state.time === null ? undefined : (
+                        <>, {state.time} ms execution time</>
+                      )}
+                      .
+                    </>
+                  ) : (
+                    <>
+                      Query returned {state.res.rows.length} row
+                      {state.res.rows.length > 1 ? 's' : ''}
+                      {state.time === null ? undefined : (
+                        <>, {state.time} ms execution time</>
+                      )}
+                    </>
+                  )
                 ) : (
                   <br />
                 )}
@@ -673,9 +719,21 @@ export function QueryFrame({ uid }: { uid: number }) {
 
           {state.res && state.res.fields && state.res.fields.length ? (
             <span className="mensagem">
-              Query returned {state.res.rows.length} row
-              {state.res.rows.length > 1 ? 's' : ''}, {state.time} ms execution
-              time.
+              {state.res.fetchMoreRows ? (
+                <>
+                  {state.res.rows.length} row
+                  {state.res.rows.length > 1 ? 's' : ''} fetched
+                </>
+              ) : (
+                <>
+                  Query returned {state.res.rows.length} row
+                  {state.res.rows.length > 1 ? 's' : ''}
+                </>
+              )}
+              {state.time === null ? undefined : (
+                <>, {state.time} ms execution time</>
+              )}
+              .
             </span>
           ) : undefined}
 
@@ -831,6 +889,7 @@ export function QueryFrame({ uid }: { uid: number }) {
                   bottom: 0,
                   right: 0,
                 }}
+                fetchMoreRows={fetchMoreRows}
                 result={state.res}
               />
             </div>
@@ -843,6 +902,7 @@ export function QueryFrame({ uid }: { uid: number }) {
                 bottom: 0,
                 right: 0,
               }}
+              fetchMoreRows={fetchMoreRows}
               result={state.res}
             />
           )
@@ -853,7 +913,7 @@ export function QueryFrame({ uid }: { uid: number }) {
               onFullViewNotice={fullViewNotice}
               onRemoveNotice={removeNotice}
             />
-            {state.res && state.res.rowCount ? (
+            {state.res && 'rowCount' in state.res && state.res.rowCount ? (
               <div
                 style={{
                   fontSize: '20px',
@@ -861,8 +921,11 @@ export function QueryFrame({ uid }: { uid: number }) {
                   lineHeight: '1.5em',
                 }}
               >
-                Query returned successfully: {state.res.rowCount} row affected,{' '}
-                {state.time} ms execution time.
+                Query returned successfully: {state.res.rowCount} row affected
+                {state.time === null ? undefined : (
+                  <>, {state.time} ms execution time</>
+                )}
+                .
                 {state.stdoutResult ? (
                   <div style={{ marginTop: '1em' }}>
                     Query result exported to file{' '}

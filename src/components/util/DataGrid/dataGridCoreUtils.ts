@@ -24,6 +24,24 @@ import { useGridColsSizes } from './useGridColsSizes';
 
 const isIOS = process?.platform === 'darwin';
 
+function useMoreTime(b: boolean, timeout: number) {
+  const [b2, setB2] = useState(b);
+  useEffect(() => {
+    if (b === b2) return () => {};
+    if (!b) {
+      const t = setTimeout(() => {
+        setB2(b);
+      }, timeout);
+      return () => {
+        clearTimeout(t);
+      };
+    }
+    setB2(b);
+    return () => {};
+  }, [b, b2, timeout]);
+  return b2;
+}
+
 export function useDataGridCore(props: DataGridCoreProps) {
   const [state0, setState] = useState<DataGridState>({
     slice: [0, rowsByRender],
@@ -31,6 +49,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     openFilterDialog: false,
     editing: false,
     update: {},
+    fetchingNewRows: false,
   });
 
   const scrollRef = useRef({ left: 0, top: 0 });
@@ -40,19 +59,30 @@ export function useDataGridCore(props: DataGridCoreProps) {
   let state = state0;
   const resultRef = useRef(props.result);
   if (resultRef.current !== props.result) {
-    state = {
-      slice: [0, rowsByRender],
-      openSortDialog: false,
-      openFilterDialog: false,
-      editing: false,
-      update: {},
-      active: undefined,
-      selection: undefined,
-    };
-    resultRef.current = props.result;
-    scrollRef.current = { left: 0, top: 0 };
-    gridContentRef.current?.scrollTo(0, 0);
-    setState(state);
+    if (
+      state.fetchingNewRows &&
+      props.result.rows.length > resultRef.current.rows.length
+    ) {
+      resultRef.current = props.result;
+      setState((s) => ({
+        ...s,
+        fetchingNewRows: false,
+      }));
+    } else {
+      state = {
+        slice: [0, rowsByRender],
+        openSortDialog: false,
+        openFilterDialog: false,
+        editing: false,
+        update: {},
+        active: undefined,
+        selection: undefined,
+      };
+      resultRef.current = props.result;
+      scrollRef.current = { left: 0, top: 0 };
+      gridContentRef.current?.scrollTo(0, 0);
+      setState(state);
+    }
   }
 
   const len = resultRef.current.rows.length;
@@ -81,11 +111,12 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const pendingRowsUpdate = Object.keys(state.update).length - pendingInserts;
 
   const extraBottomSpace =
-    pendingRowsUpdate || pendingInserts
+    (props.fetchMoreRows ? 90 : 0) +
+    (pendingRowsUpdate || pendingInserts
       ? 130
       : props.onChangeFilter || props.onChangeSort || props.onUpdate
       ? 68
-      : 0;
+      : 0);
 
   const totalChanges = Object.keys(state.update).reduce(
     (a, b) => a + Object.keys(state.update[b]).length,
@@ -458,6 +489,22 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }
   });
 
+  const fetchMoreRows0 = useEvent(async () => {
+    if (!props.fetchMoreRows || state.fetchingNewRows) return;
+    setState((s) => ({
+      ...s,
+      fetchingNewRows: true,
+    }));
+    await props.fetchMoreRows();
+  });
+  const fetchMoreRows = props.fetchMoreRows ? fetchMoreRows0 : undefined;
+
+  useEffect(() => {
+    if (state.active?.rowIndex === props.result.rows.length - 1) {
+      fetchMoreRows0();
+    }
+  }, [state.active?.rowIndex, props.result.rows.length, fetchMoreRows0]);
+
   const onScroll = useEvent((e: React.UIEvent<HTMLElement>) => {
     if (props.onScroll) props.onScroll();
     const container = e.target as HTMLElement;
@@ -465,6 +512,12 @@ export function useDataGridCore(props: DataGridCoreProps) {
       left: container.scrollLeft,
       top: container.scrollTop,
     };
+    if (
+      container.scrollTop + container.offsetHeight >=
+      container.scrollHeight - 40
+    ) {
+      fetchMoreRows0();
+    }
     if (headerElRef.current) {
       const headerEl = headerElRef.current;
       headerEl.style.marginLeft = `-${container.scrollLeft}px`;
@@ -913,6 +966,8 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }
   });
 
+  const fetchingNewRows = useMoreTime(!!state.fetchingNewRows, 200);
+
   return {
     state,
     onStartResize,
@@ -951,6 +1006,8 @@ export function useDataGridCore(props: DataGridCoreProps) {
     extraRows,
     extraBottomSpace,
     onDiscardFailClick,
+    fetchMoreRows,
+    fetchingNewRows,
     applyingUpdate: state.updateRunning,
   };
 }

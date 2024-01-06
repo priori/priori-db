@@ -1,4 +1,4 @@
-import { QueryArrayResult } from 'pg';
+import { FieldDef } from 'pg';
 import { CSSProperties, memo } from 'react';
 import { equals } from 'util/equals';
 import { SizeControlledArea } from '../SizeControlledArea';
@@ -12,7 +12,13 @@ export type DataGridSort = {
 
 export interface GridProps {
   style: CSSProperties;
-  result: QueryArrayResult | undefined;
+  fetchMoreRows?: () => void;
+  result:
+    | {
+        rows: any[];
+        fields: FieldDef[];
+      }
+    | undefined;
   onScroll?: (() => void) | undefined;
   emptyTable?: string | undefined;
   onUpdate?: (u: {
@@ -24,6 +30,7 @@ export interface GridProps {
   }) => Promise<boolean>;
   pks?: string[];
   currentSort?: DataGridSort;
+  // eslint-disable-next-line react/no-unused-prop-types
   defaultSort?: DataGridSort;
   currentFilter?: Filter;
   onChangeSort?: (sort: DataGridSort) => void;
@@ -52,6 +59,7 @@ export const DataGrid = memo(
               currentSort={props.currentSort}
               onChangeSort={props.onChangeSort}
               onChangeFilter={props.onChangeFilter}
+              fetchMoreRows={props.fetchMoreRows}
             />
           )}
         />
@@ -69,5 +77,6 @@ export const DataGrid = memo(
     a.className === b.className &&
     a.onScroll === b.onScroll &&
     a.currentFilter === b.currentFilter &&
+    a.fetchMoreRows === b.fetchMoreRows &&
     a.onChangeFilter === b.onChangeFilter,
 );

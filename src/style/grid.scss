@@ -547,3 +547,13 @@ th.desc.sortable:hover::before {
 .resize--indicator--vertical {
   margin-top: -1px;
 }
+
+.grid-content--fetch-more-rows {
+  padding-bottom: 20px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.2);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}

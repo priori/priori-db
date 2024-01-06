@@ -10,6 +10,7 @@ function useCache<T>(v: T) {
   ref.current = v;
   return ref.current;
 }
+
 export function useTabs(tabs0: Tab[]) {
   const tabs = useCache(tabs0.filter((t) => t.props.type !== 'query'));
   return useMemo(() => {

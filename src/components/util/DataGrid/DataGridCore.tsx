@@ -1,4 +1,4 @@
-import { QueryArrayResult } from 'pg';
+import { FieldDef } from 'pg';
 import { DataGridActiveCell } from './DataGridActiveCell';
 import { DataGridTable } from './DataGridTable';
 import { DataGridThead } from './DataGridThead';
@@ -9,7 +9,11 @@ import { useDataGridCore } from './dataGridCoreUtils';
 import { DataGridUpdateInfoDialog } from './DataGridUpdateInfo';
 
 export interface DataGridCoreProps {
-  result: QueryArrayResult;
+  result: {
+    rows: any[];
+    fields: FieldDef[];
+  };
+  fetchMoreRows?: () => void;
   width: number;
   // eslint-disable-next-line react/no-unused-prop-types
   onScroll?: (() => void) | undefined;
@@ -41,6 +45,7 @@ export interface DataGridState {
   update: { [rowIndex: string]: { [colIndex: string]: string | null } };
   updateFail?: Error;
   updateRunning?: boolean;
+  fetchingNewRows?: boolean;
 }
 
 export function DataGridCore(props: DataGridCoreProps) {
@@ -82,6 +87,7 @@ export function DataGridCore(props: DataGridCoreProps) {
     onDiscardFailClick,
     applyingUpdate,
     onStartResize,
+    fetchingNewRows,
   } = useDataGridCore(props);
 
   return (
@@ -188,6 +194,11 @@ export function DataGridCore(props: DataGridCoreProps) {
           </div>
         </div>
       </div>
+      {props.fetchMoreRows && fetchingNewRows ? (
+        <div className="grid-content--fetch-more-rows">
+          <i className="fa fa-circle-o-notch fa-spin fa-3x fa-fw" />
+        </div>
+      ) : null}
 
       {state.openSortDialog && props.onChangeSort && (
         <DataGridSortDialog

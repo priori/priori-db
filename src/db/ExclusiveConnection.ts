@@ -1,11 +1,24 @@
 import { assert } from 'util/assert';
-import { PoolClient, QueryArrayResult, QueryResult } from 'pg';
+import { FieldDef, PoolClient } from 'pg';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { useEffect, useRef, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { CopyStreamQuery, CopyToStreamQuery } from 'pg-copy-streams';
+import { grantError } from 'util/errors';
+import PgCursor from 'pg-cursor';
 import { openConnection, SimpleValue } from './Connection';
 import { DB } from './DB';
+
+function isMultipleQueries(q: string) {
+  let inString = false;
+  for (const c of q) {
+    if (c === "'") inString = !inString;
+    if (c === ';' && !inString) return true;
+  }
+  return false;
+}
+
+const fetchSize = 500;
 
 class ExclusiveConnection {
   db: PoolClient | null = null;
@@ -13,10 +26,17 @@ class ExclusiveConnection {
   public pid: number | undefined;
 
   pending: {
-    resolve: (r: QueryArrayResult<SimpleValue[]> | CopyStreamQuery) => void;
+    resolve: (
+      r:
+        | {
+            rows: SimpleValue[][];
+            fields: FieldDef[];
+            rowCount: number;
+          }
+        | CopyStreamQuery,
+    ) => void;
     reject: (e: unknown) => void;
     query: string | CopyToStreamQuery | CopyStreamQuery;
-    arrayRowMode: boolean;
     args?: Array<string | number | null | boolean>;
   }[] = [];
 
@@ -40,16 +60,21 @@ class ExclusiveConnection {
     if (this.pid) await DB.cancelBackend(this.pid);
   }
 
-  async query(
-    q: string,
-    args?: (number | string | boolean | null)[],
-  ): Promise<QueryResult<{ [key: string]: SimpleValue }>>;
+  lastCursor: PgCursor | null = null;
 
   async query(
     q: string,
     args: (number | string | boolean | null)[] | undefined,
-    arrayRowMode: true,
-  ): Promise<QueryArrayResult<SimpleValue[]>>;
+  ): Promise<{
+    rows: SimpleValue[][];
+    fields: FieldDef[];
+    rowCount: number;
+    fetchMoreRows?: () => Promise<{
+      rows: SimpleValue[][];
+      fields: FieldDef[];
+      rowCount: number;
+    }>;
+  }>;
 
   async query(q: CopyToStreamQuery): Promise<CopyToStreamQuery>;
 
@@ -58,27 +83,88 @@ class ExclusiveConnection {
   async query(
     q: string | CopyToStreamQuery | CopyStreamQuery,
     args?: (number | string | boolean | null)[],
-    arrayRowMode?: true,
   ) {
+    if (this.lastCursor) {
+      await this.lastCursor.close();
+      this.lastCursor = null;
+    }
     if (this.db) {
       if (q && !(typeof q === 'string')) {
         const r = this.db.query(q);
         return Promise.resolve(r as CopyToStreamQuery | CopyStreamQuery);
       }
-      if (arrayRowMode)
-        return this.db.query({
+      if (isMultipleQueries(q)) {
+        const res = this.db.query({
           text: q as string,
           rowMode: 'array',
           values: args,
         });
-      return this.db.query(q as string, args);
+        return res;
+      }
+      const c = this.db.query(
+        new PgCursor(q as string, args, { rowMode: 'array' }),
+      );
+      this.lastCursor = c;
+      if ('state' in c && c.state === 'error') {
+        await c.close();
+        // eslint-disable-next-line no-underscore-dangle
+        throw grantError('_error' in c ? c._error : c);
+      }
+      return new Promise((resolve, reject) => {
+        c.read(fetchSize, (err: unknown, rows: SimpleValue[][]) => {
+          if (err) {
+            this.lastCursor = c;
+            // eslint-disable-next-line promise/no-promise-in-callback
+            c.close().then(() => reject(grantError(err)));
+            return;
+          }
+          const ret = {
+            rows,
+            // eslint-disable-next-line no-underscore-dangle
+            fields: (c as any)._result.fields as FieldDef[],
+            // eslint-disable-next-line no-underscore-dangle
+            rowCount: (c as any)._result.rowCount,
+            fetchMoreRows:
+              rows.length === fetchSize
+                ? () => {
+                    return new Promise<{
+                      rows: SimpleValue[][];
+                      fields: FieldDef[];
+                      rowCount: number;
+                    }>((_resolve, _reject) => {
+                      c.read(
+                        fetchSize,
+                        (err2: unknown, newRows: SimpleValue[][]) => {
+                          if (err2) {
+                            c.close();
+                            this.lastCursor = null;
+                            _reject(grantError(err2));
+                            return;
+                          }
+                          ret.rows = [...ret.rows, ...newRows];
+                          ret.fetchMoreRows =
+                            newRows.length === fetchSize
+                              ? ret.fetchMoreRows
+                              : undefined;
+                          _resolve({
+                            ...ret,
+                          });
+                        },
+                      );
+                    });
+                  }
+                : undefined,
+          };
+          resolve(ret);
+        });
+      });
+      /* */
     }
     return new Promise((resolve, reject) => {
       this.pending.push({
         resolve,
         reject,
         query: q,
-        arrayRowMode: arrayRowMode || false,
         args,
       });
       if (this.pending.length === 1) this.openConnection();
@@ -121,36 +207,15 @@ class ExclusiveConnection {
         } catch (err) {
           e.reject(err);
         }
-      } else if (e.arrayRowMode) {
-        try {
-          const ret = await this.db.query({
-            text: e.query as string,
-            rowMode: 'array',
-            values: e.args,
-          });
-          e.resolve(ret);
-        } catch (err) {
-          e.reject(err);
-        }
       } else {
         try {
-          const ret = await this.db.query(e.query, e.args);
+          const ret = await this.query(e.query as string, e.args);
           e.resolve(ret);
         } catch (err) {
           e.reject(err);
         }
       }
     }
-  }
-
-  async list(q: string, args?: Array<string | null | number | boolean>) {
-    const res = await this.query(q, args);
-    return res.rows;
-  }
-
-  async first(q: string, args?: Array<string | null | number | boolean>) {
-    const res = await this.list(q, args);
-    return res[0] || null;
   }
 }
 

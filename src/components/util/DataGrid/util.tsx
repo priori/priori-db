@@ -1,5 +1,4 @@
 import { SimpleValue } from 'db/Connection';
-import { QueryArrayResult } from 'pg';
 import { renderToString } from 'react-dom/server';
 
 export const letterSize = 6;
@@ -157,7 +156,7 @@ export function scrollTo(
 }
 
 export function getSelectionData(
-  result: QueryArrayResult<SimpleValue[]>,
+  result: { rows: SimpleValue[][] },
   selection: { rowIndex: [number, number]; colIndex: [number, number] },
 ) {
   return result.rows

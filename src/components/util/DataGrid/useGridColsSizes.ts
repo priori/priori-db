@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { QueryArrayResult } from 'pg';
+import { FieldDef } from 'pg';
 import { useEvent } from 'util/useEvent';
 import { horizontalResize } from 'util/resize';
 import { assert } from 'util/assert';
@@ -83,7 +83,10 @@ export function useGridColsSizes({
   elRef,
   activeCellUpdate,
 }: {
-  result: QueryArrayResult;
+  result: {
+    rows: any[];
+    fields: FieldDef[];
+  };
   extraRows: number;
   width: number;
   height: number;
