@@ -11,9 +11,14 @@ import { DB } from './DB';
 
 function isMultipleQueries(q: string) {
   let inString = false;
+  let semicolon = false;
   for (const c of q) {
-    if (c === "'") inString = !inString;
-    if (c === ';' && !inString) return true;
+    if (semicolon) {
+      if (c !== ' ' && c !== '\n' && c !== '\t') return true;
+    } else {
+      if (c === "'") inString = !inString;
+      if (c === ';' && !inString) semicolon = true;
+    }
   }
   return false;
 }
