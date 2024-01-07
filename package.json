@@ -20,6 +20,8 @@
     "name": "Leonardo Priori",
     "email": "leonardopriori@gmail.com"
   },
+  "license": "UNLICENSED",
+  "private": true,
   "contributors": [],
   "main": "./src/main/main.ts",
   "scripts": {
