@@ -489,13 +489,13 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }
   });
 
-  const fetchMoreRows0 = useEvent(async () => {
+  const fetchMoreRows0 = useEvent(() => {
     if (!props.fetchMoreRows || state.fetchingNewRows) return;
     setState((s) => ({
       ...s,
       fetchingNewRows: true,
     }));
-    await props.fetchMoreRows();
+    props.fetchMoreRows();
   });
   const fetchMoreRows = props.fetchMoreRows ? fetchMoreRows0 : undefined;
 

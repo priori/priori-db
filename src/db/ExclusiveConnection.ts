@@ -160,7 +160,7 @@ class ExclusiveConnection {
                   }
                 : undefined,
           };
-          resolve(ret);
+          resolve({ ...ret });
         });
       });
       /* */
