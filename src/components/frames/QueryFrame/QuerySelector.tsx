@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { currentState } from 'state/state';
 import { browserDb } from 'util/browserDb';
+import { equals } from 'util/equals';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 
@@ -135,7 +136,7 @@ function Group({
   );
 }
 
-export function QuerySelector({
+function QuerySelector0({
   onSelect,
   style,
 }: {
@@ -162,12 +163,11 @@ export function QuerySelector({
     () =>
       Promise.all([
         browserDb.query(
-          `SELECT query.*
-        FROM query
+          `SELECT query.* FROM query
         ${
           config
             ? `WHERE
-        execution_id IN ( SELECT id FROM execution WHERE
+          execution_id IN ( SELECT id FROM execution WHERE
           execution.user = $1 AND
           execution.host = $2 AND
           execution.port = $3 AND
@@ -223,63 +223,78 @@ export function QuerySelector({
 
     [config],
   );
-  const queries = !service.lastValidData
-    ? null
-    : service.lastValidData?.queries
-        .map(
-          (q) =>
-            ({
-              id: q.id,
-              tabId: q.tab_uid,
-              executionId: q.execution_id,
-              sql: q.sql,
-              title: q.tab_title,
-              createdAt: new Date(q.created_at),
-              executionTime: q.execution_time,
-              resultLength: q.result_length,
-              success: q.success === 1 ? true : q.success === 0 ? false : null,
-              editorState: {
-                content: q.editor_content,
-                cursorStart: {
-                  line: q.editor_cursor_start_line,
-                  ch: q.editor_cursor_start_char,
+  const queries = useMemo(() => {
+    const qs = !service.lastValidData
+      ? null
+      : service.lastValidData?.queries
+          .map(
+            (q) =>
+              ({
+                id: q.id,
+                tabId: q.tab_uid,
+                executionId: q.execution_id,
+                sql: q.sql,
+                title: q.tab_title,
+                createdAt: new Date(q.created_at),
+                executionTime: q.execution_time,
+                resultLength: q.result_length,
+                success:
+                  q.success === 1 ? true : q.success === 0 ? false : null,
+                editorState: {
+                  content: q.editor_content,
+                  cursorStart: {
+                    line: q.editor_cursor_start_line,
+                    ch: q.editor_cursor_start_char,
+                  },
+                  cursorEnd: {
+                    line: q.editor_cursor_end_line,
+                    ch: q.editor_cursor_end_char,
+                  },
                 },
-                cursorEnd: {
-                  line: q.editor_cursor_end_line,
-                  ch: q.editor_cursor_end_char,
-                },
-              },
-            }) as ExecutedQuery,
-        )
-        .reduce(
-          groupBy<ExecutedQuery, ExecutedQueryGroup>(
-            (q) => ({
-              executionId: q.executionId,
-              tabId: q.tabId,
-              queries: [q],
-            }),
-            (g, item) =>
-              item.executionId === g.executionId && item.tabId === g.tabId,
-            (g, item) => ({ ...g, queries: [...g.queries, item] }),
-          ),
-          [] as ExecutedQueryGroup[],
-        );
-  if (queries) {
-    queries.forEach((g) => {
-      g.queries.sort((a, b) => {
-        if (a.createdAt > b.createdAt) {
-          return -1;
-        }
-        if (a.createdAt < b.createdAt) {
-          return 1;
-        }
-        return 0;
+              }) as ExecutedQuery,
+          )
+          .reduce(
+            groupBy<ExecutedQuery, ExecutedQueryGroup>(
+              (q) => ({
+                executionId: q.executionId,
+                tabId: q.tabId,
+                queries: [q],
+              }),
+              (g, item) =>
+                item.executionId === g.executionId && item.tabId === g.tabId,
+              (g, item) => ({ ...g, queries: [...g.queries, item] }),
+            ),
+            [] as ExecutedQueryGroup[],
+          );
+    if (qs) {
+      qs.forEach((g) => {
+        g.queries.sort((a, b) => {
+          if (a.createdAt > b.createdAt) {
+            return -1;
+          }
+          if (a.createdAt < b.createdAt) {
+            return 1;
+          }
+          return 0;
+        });
       });
-    });
-  }
+    }
+    return qs;
+  }, [service.lastValidData]);
+
+  const [limit, setLimit] = useState(80);
+  const onScroll = useEvent((e: React.UIEvent<HTMLDivElement>) => {
+    if (!queries?.length) return;
+    if (e.target instanceof HTMLElement) {
+      const { scrollTop, scrollHeight, clientHeight } = e.target;
+      if (scrollTop + clientHeight > scrollHeight - 100) {
+        if (limit < queries.length) setLimit(limit + 100);
+      }
+    }
+  });
 
   return (
-    <div className="query-selector" style={style}>
+    <div className="query-selector" style={style} onScroll={onScroll}>
       <div className="query-selector--header">
         <input
           type="text"
@@ -336,14 +351,21 @@ export function QuerySelector({
         <h1>Last Executed Queries</h1>
       ) : null}
       <div className="query-selector--queries">
-        {queries?.map((g) => (
-          <Group
-            key={g.queries[0].id}
-            queries={g.queries}
-            onSelect={onSelect}
-          />
-        ))}
+        {queries
+          ?.filter((_, i) => i < limit)
+          .map((g) => (
+            <Group
+              key={g.queries[0].id}
+              queries={g.queries}
+              onSelect={onSelect}
+            />
+          ))}
       </div>
     </div>
   );
 }
+
+export const QuerySelector = React.memo(
+  QuerySelector0,
+  (a, b) => equals(a.style, b.style) && a.onSelect === b.onSelect,
+);
