@@ -1,36 +1,30 @@
-import { assert } from './assert';
-
-export function keys(
-  a: Record<string, unknown>,
-  b: Record<string, unknown>,
-): string[] {
-  const k1 = Object.keys(a).concat(Object.keys(b));
-  const keys2 = k1.filter((k, i) => k1.indexOf(k) === i);
-  return keys2;
-}
-
 export function equals(a: unknown, b: unknown) {
   // eslint-disable-next-line no-self-compare
-  if (a === b || (a !== a && b !== b)) return true;
+  if (a === b || (Number.isNaN(a) && Number.isNaN(b))) return true;
   if (!a || !b) return false;
-  assert(a);
-  assert(b);
   if (typeof a === 'object' && typeof b === 'object') {
-    const keys2 = keys(
-      a as Record<string, unknown>,
-      b as Record<string, unknown>,
-    );
-    for (const i of keys2) {
-      if (!equals(a[i], b[i])) return false;
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i += 1) {
+        if (!equals(a[i], b[i])) return false;
+      }
+      return true;
+    }
+    if (a instanceof Date && b instanceof Date)
+      return a.getTime() === b.getTime();
+    const keys = Object.keys(a);
+    if (keys.length !== Object.keys(b).length) return false;
+    for (const key of keys) {
+      if (
+        !Object.prototype.hasOwnProperty.call(b, key) ||
+        !equals(
+          (a as Record<string, unknown>)[key],
+          (b as Record<string, unknown>)[key],
+        )
+      )
+        return false;
     }
     return true;
   }
-  if (
-    typeof a === 'number' &&
-    Number.isNaN(a) &&
-    typeof b === 'number' &&
-    Number.isNaN(b)
-  )
-    return true;
   return false;
 }
