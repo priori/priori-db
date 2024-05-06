@@ -6,6 +6,7 @@ import {
   TablePrivileges,
   Type,
 } from '../types';
+import { buildWhere, Filter, Sort } from './util';
 
 function schemaCompare(a: string, b: string, publics: string[]) {
   const aPublic = publics.includes(a);
@@ -13,14 +14,14 @@ function schemaCompare(a: string, b: string, publics: string[]) {
   return aPublic && !bPublic
     ? -1
     : !aPublic && bPublic
-    ? 1
-    : (a === 'information_schema' || a === 'pg_catalog') &&
-      !(b === 'information_schema' || b === 'pg_catalog')
-    ? 1
-    : !(a === 'information_schema' || a === 'pg_catalog') &&
-      (b === 'information_schema' || b === 'pg_catalog')
-    ? -1
-    : a.localeCompare(b);
+      ? 1
+      : (a === 'information_schema' || a === 'pg_catalog') &&
+          !(b === 'information_schema' || b === 'pg_catalog')
+        ? 1
+        : !(a === 'information_schema' || a === 'pg_catalog') &&
+            (b === 'information_schema' || b === 'pg_catalog')
+          ? -1
+          : a.localeCompare(b);
 }
 
 export function label(s: string) {
@@ -36,6 +37,83 @@ export const DB = {
     await query(`
       COMMENT ON SCHEMA ${label(schema)} IS ${str(comment)}
     `);
+  },
+
+  async select({
+    schema,
+    table,
+    sort,
+    filter,
+  }: {
+    schema: string;
+    table: string;
+    sort: Sort | null;
+    filter: Filter | undefined;
+  }) {
+    const { where, params } = filter
+      ? buildWhere(filter)
+      : { where: '', params: [] };
+    const sql = `SELECT * FROM ${label(schema)}.${label(table)} ${
+      where ? `WHERE ${where} ` : ''
+    }${
+      sort && sort.length
+        ? `ORDER BY ${sort
+            .map(
+              (x) =>
+                `${label(x.field)}${x.direction === 'desc' ? ' DESC' : ''}`,
+            )
+            .join(', ')} `
+        : ''
+    }LIMIT 1000`;
+    return query(sql, params, true);
+  },
+
+  async createTable(newTable: {
+    name: string;
+    owner: string;
+    schema: string;
+    tableSpace: string;
+    comment: string;
+    like?: string;
+    columns: {
+      name: string;
+      type: Type | null;
+      length: string;
+      precision: string;
+      notNull: boolean;
+      primaryKey: boolean;
+    }[];
+  }) {
+    const pks = newTable.columns.filter((col) => col.primaryKey);
+    const sql = `CREATE TABLE "${newTable.schema}"."${newTable.name}"
+        (
+        ${newTable.columns
+          .map((col) => {
+            if (!col.type) throw new Error('Invalid type.');
+
+            return `"${col.name}" ${col.type.name} ${
+              (col.type.allowLength || col.type.allowPrecision) && col.length
+                ? `( ${col.length}${
+                    col.type.allowPrecision && col.precision
+                      ? `, ${col.precision}`
+                      : ''
+                  } )`
+                : ''
+            }${col.notNull ? ' NOT NULL' : ''}${
+              pks.length === 1 && col.primaryKey ? ' PRIMARY KEY' : ''
+            }`;
+          })
+          .join(',\n')}
+            ${
+              pks.length > 1
+                ? `PRIMARY KEY (${pks
+                    .map((col) => ` "${col.name}"`)
+                    .join(', ')})`
+                : ''
+            }
+        )
+    `;
+    await query(sql);
   },
 
   async renameSchema(schema: string, name: string) {
@@ -1810,4 +1888,3 @@ export const DB = {
       `);
   },
 };
-

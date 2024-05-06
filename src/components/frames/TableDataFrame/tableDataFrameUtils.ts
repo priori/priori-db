@@ -2,23 +2,19 @@ import { keepTabOpen } from 'state/actions';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
-import { DB, label } from 'db/DB';
+import { DB } from 'db/DB';
 import { useState } from 'react';
 import { QueryArrayResult } from 'pg';
-import { DataGridSort } from 'components/util/DataGrid/DataGrid';
-import {
-  Filter,
-  buildWhere,
-} from 'components/util/DataGrid/DataGridFilterDialog';
-import { SimpleValue, query } from '../../../db/Connection';
+import { Filter, Sort } from 'db/util';
+import { SimpleValue } from '../../../db/Connection';
 import { TableFrameProps } from '../../../types';
 
 export function useTableDataFrame(props: TableFrameProps) {
-  const [sort, setSort] = useState<DataGridSort | undefined>(undefined);
+  const [sort, setSort] = useState<Sort | undefined>(undefined);
   const [filter, setFilter] = useState<Filter | undefined>(undefined);
 
   const defaultSortService = useService(
-    () => DB.defaultSort(props.schema, props.table) as Promise<DataGridSort>,
+    () => DB.defaultSort(props.schema, props.table) as Promise<Sort>,
     [props.schema, props.table],
   );
 
@@ -32,28 +28,20 @@ export function useTableDataFrame(props: TableFrameProps) {
     if (!sortReady)
       return new Promise<{
         result: QueryArrayResult<SimpleValue[]>;
-        currentSort: DataGridSort;
+        currentSort: Sort;
         currentFilter?: Filter;
       }>(() => {});
-    const { where, params } = filter
-      ? buildWhere(filter)
-      : { where: '', params: [] };
-    const sql = `SELECT * FROM ${label(props.schema)}.${label(props.table)} ${
-      where ? `WHERE ${where} ` : ''
-    }${
-      selectedSort && selectedSort.length
-        ? `ORDER BY ${selectedSort
-            .map(
-              (x) =>
-                `${label(x.field)}${x.direction === 'desc' ? ' DESC' : ''}`,
-            )
-            .join(', ')} `
-        : ''
-    }LIMIT 1000`;
-    const result = await query(sql, params, true);
+
+    const result = await DB.select({
+      schema: props.schema,
+      table: props.table,
+      sort: selectedSort,
+      filter,
+    });
+
     return {
       result,
-      currentSort: selectedSort as DataGridSort,
+      currentSort: selectedSort as Sort,
       currentFilter: filter,
     };
   }, [props.schema, props.table, selectedSort, sortReady, filter]);
@@ -105,10 +93,8 @@ export function useTableDataFrame(props: TableFrameProps) {
     error: dataService.error,
     currentFilter: dataService.lastValidData?.currentFilter,
     status: dataService.status,
-    defaultSort: defaultSort as DataGridSort | undefined,
-    currentSort: dataService.lastValidData?.currentSort as
-      | DataGridSort
-      | undefined,
+    defaultSort: defaultSort as Sort | undefined,
+    currentSort: dataService.lastValidData?.currentSort as Sort | undefined,
     dataStatus: dataService.status,
     onChangeSort: setSort,
     onChangeFilter,

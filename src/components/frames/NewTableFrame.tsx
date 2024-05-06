@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { DB } from 'db/DB';
 import { NewTableFrameProps, Type } from '../../types';
 import { ListInput } from '../util/ListInput';
-import { query } from '../../db/Connection';
 import { closeThisAndReloadNav, showError } from '../../state/actions';
 
 export interface ColumnNewTable {
@@ -57,38 +57,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
   } as { constraintsOpen: boolean; newTable: NewTable });
 
   function save() {
-    const pks = state.newTable.columns.filter((col) => col.primaryKey);
-
-    const sql = `CREATE TABLE "${props.schema}"."${state.newTable.name}"
-        (
-        ${state.newTable.columns
-          .map((col) => {
-            if (!col.type) throw new Error('Invalid type.');
-
-            return `"${col.name}" ${col.type.name} ${
-              (col.type.allowLength || col.type.allowPrecision) && col.length
-                ? `( ${col.length}${
-                    col.type.allowPrecision && col.precision
-                      ? `, ${col.precision}`
-                      : ''
-                  } )`
-                : ''
-            }${col.notNull ? ' NOT NULL' : ''}${
-              pks.length === 1 && col.primaryKey ? ' PRIMARY KEY' : ''
-            }`;
-          })
-          .join(',\n')}
-            ${
-              pks.length > 1
-                ? `PRIMARY KEY (${pks
-                    .map((col) => ` "${col.name}"`)
-                    .join(', ')})`
-                : ''
-            }
-        )
-        `;
-
-    query(sql).then(
+    DB.createTable(state.newTable).then(
       () => {
         closeThisAndReloadNav(props.uid);
       },

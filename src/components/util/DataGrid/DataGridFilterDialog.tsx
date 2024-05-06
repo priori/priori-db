@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
 import { label } from 'db/DB';
+import {
+  Filter,
+  operators,
+  operators2,
+  operators3,
+  str,
+  wrapWithParentheses,
+} from 'db/util';
 import { Dialog } from '../Dialog/Dialog';
 
 function ValueListInput({
@@ -64,9 +72,6 @@ function ValueListInput({
     </div>
   );
 }
-export function str(s: string) {
-  return `'${s.replace(/'/g, "''")}'`;
-}
 
 let t: ReturnType<typeof setTimeout>;
 
@@ -109,75 +114,6 @@ function validSql(s: string) {
   return valid;
 }
 
-const operators = {
-  eq: '=',
-  ne: '≠',
-  gt: '>',
-  gte: '≥',
-  lt: '<',
-  lte: '≤',
-  like: 'LIKE',
-  nlike: 'NOT LIKE',
-  ilike: 'ILIKE',
-  nilike: 'NOT ILIKE',
-  similar: 'SIMILAR TO',
-  nsimilar: 'NOT SIMILAR TO',
-  posix: 'REGEXP LIKE (POSIX)',
-  nposix: 'NOT REGEXP LIKE (POSIX)',
-  posixi: 'REGEXP ILIKE',
-  nposixi: 'NOT REGEXP ILIKE',
-  null: 'IS NULL',
-  notnull: 'IS NOT NULL',
-  in: 'IN',
-  nin: 'NOT IN',
-  between: 'BETWEEN',
-  nbetween: 'NOT BETWEEN',
-};
-
-export type Filter =
-  | (
-      | {
-          field: string;
-          operator:
-            | 'eq'
-            | 'ne'
-            | 'gt'
-            | 'gte'
-            | 'lt'
-            | 'lte'
-            | 'like'
-            | 'nlike'
-            | 'ilike'
-            | 'nilike'
-            | 'similar'
-            | 'nsimilar'
-            | 'posix'
-            | 'nposix'
-            | 'posixi'
-            | 'nposixi'
-            | 'null'
-            | 'notnull'
-            | '';
-          value: string | null;
-          sql?: boolean;
-        }
-      | {
-          field: string;
-          operator: 'in' | 'nin';
-          values: (string | null)[];
-          sql?: never;
-        }
-      | {
-          field: string;
-          operator: 'between' | 'nbetween';
-          value: string | null;
-          value2: string | null;
-          sql?: boolean;
-          sql2?: boolean;
-        }
-    )[][]
-  | { type: 'query'; where: string };
-
 interface DataGridFilterDialogProps {
   fields: { name: string }[];
   onClose: () => void;
@@ -189,38 +125,6 @@ function fit() {
   setTimeout(() => {
     window.dispatchEvent(new Event('resize'));
   }, 10);
-}
-
-const operators2 = {
-  eq: '=',
-  ne: '!=',
-  gt: '>',
-  gte: '>=',
-  lt: '<',
-  lte: '<=',
-  like: 'LIKE',
-  nlike: 'NOT LIKE',
-  ilike: 'ILIKE',
-  nilike: 'NOT ILIKE',
-  similar: 'SIMILAR TO',
-  nsimilar: 'NOT SIMILAR TO',
-};
-
-const operators3 = {
-  posix: (n: string, v: string) => `regexp_like(${label(n)}, ${v})`,
-  nposix: (n: string, v: string | null) =>
-    `NOT regexp_like(${label(n)}, ${v}))`,
-  posixi: (n: string, v: string | null) => `regexp_ilike(${label(n)}, ${v}))`,
-  nposixi: (n: string, v: string | null) =>
-    `NOT regexp_ilike(${label(n)}, ${v}))`,
-  between: (n: string, v: string, v2: string) =>
-    `${label(n)} BETWEEN ${v} AND ${v2}`,
-  nbetween: (n: string, v: string, v2: string) =>
-    `${label(n)} NOT BETWEEN ${v} AND ${v2}`,
-};
-
-function wrapWithParentheses(s: string) {
-  return `(${s})`;
 }
 
 function buildSql(filter: Filter): string {
@@ -236,43 +140,43 @@ function buildSql(filter: Filter): string {
               f.sql && f.value
                 ? wrapWithParentheses(f.value ?? '')
                 : f.sql
-                ? '<<SQL>>'
-                : (f as { value: string | null }).value === null
-                ? 'NULL'
-                : str((f as { value: string }).value)
+                  ? '<<SQL>>'
+                  : (f as { value: string | null }).value === null
+                    ? 'NULL'
+                    : str((f as { value: string }).value)
             }`
           : f.operator in operators3
-          ? (f.sql && !f.value ? '-- ' : '') +
-            operators3[f.operator as keyof typeof operators3](
-              f.field,
-              f.sql
-                ? f.value
-                  ? wrapWithParentheses(f.value)
-                  : '<<SQL>>'
-                : (f as { value: string | null }).value === null
-                ? 'NULL'
-                : str((f as { value: string }).value),
-              'sql2' in f && f.sql2
-                ? f.value2
-                  ? wrapWithParentheses(f.value2)
-                  : '<<SQL>>'
-                : (f as { value2: string | null }).value2 === null
-                ? 'NULL'
-                : str((f as { value2: string }).value2),
-            )
-          : f.operator === 'in' || f.operator === 'nin'
-          ? `${f.field ? label(f.field) : '???'} ${
-              f.operator === 'in' ? 'IN' : 'NOT IN'
-            } (${(f as { values: string[] }).values.map(str).join(', ')})`
-          : f.field
-          ? /* --  */ `${label(f.field)} ???`
-          : /* --  */ `???${
-              (f as { value?: string | null }).value === null
-                ? ' null'
-                : (f as { value?: string }).value
-                ? ` ${str((f as { value: string }).value)}`
-                : ''
-            }`,
+            ? (f.sql && !f.value ? '-- ' : '') +
+              operators3[f.operator as keyof typeof operators3](
+                f.field,
+                f.sql
+                  ? f.value
+                    ? wrapWithParentheses(f.value)
+                    : '<<SQL>>'
+                  : (f as { value: string | null }).value === null
+                    ? 'NULL'
+                    : str((f as { value: string }).value),
+                'sql2' in f && f.sql2
+                  ? f.value2
+                    ? wrapWithParentheses(f.value2)
+                    : '<<SQL>>'
+                  : (f as { value2: string | null }).value2 === null
+                    ? 'NULL'
+                    : str((f as { value2: string }).value2),
+              )
+            : f.operator === 'in' || f.operator === 'nin'
+              ? `${f.field ? label(f.field) : '???'} ${
+                  f.operator === 'in' ? 'IN' : 'NOT IN'
+                } (${(f as { values: string[] }).values.map(str).join(', ')})`
+              : f.field
+                ? /* --  */ `${label(f.field)} ???`
+                : /* --  */ `???${
+                    (f as { value?: string | null }).value === null
+                      ? ' null'
+                      : (f as { value?: string }).value
+                        ? ` ${str((f as { value: string }).value)}`
+                        : ''
+                  }`,
       )
       .filter((v) => v),
   );
@@ -280,76 +184,6 @@ function buildSql(filter: Filter): string {
     .map((p) => p.join('\nAND ') || '  ??')
     .join('\nOR\n')
     .replace(/\nAND --/g, '\n-- AND ');
-}
-
-export function buildWhere(filter: Filter): {
-  where: string;
-  params: (string | null)[];
-} {
-  return {
-    where:
-      'type' in filter
-        ? (filter.where as string)
-        : filter.length === 1 && filter[0].length === 0
-        ? ''
-        : filter
-            .map((ands) =>
-              ands
-                .map((f) =>
-                  f.operator in operators2
-                    ? `${f.field ? label(f.field) : '"???"'} ${
-                        operators2[f.operator as keyof typeof operators2]
-                      } ${
-                        f.sql && f.value
-                          ? wrapWithParentheses(f.value ?? '')
-                          : f.sql
-                          ? '<<SQL>>'
-                          : (f as { value: string | null }).value === null
-                          ? 'NULL'
-                          : str((f as { value: string }).value)
-                      }`
-                    : f.operator in operators3
-                    ? (f.sql && !f.value ? '-- ' : '') +
-                      operators3[f.operator as keyof typeof operators3](
-                        f.field,
-                        f.sql
-                          ? f.value
-                            ? wrapWithParentheses(f.value)
-                            : '<<SQL>>'
-                          : (f as { value: string | null }).value === null
-                          ? 'NULL'
-                          : str((f as { value: string }).value),
-                        'sql2' in f && f.sql2
-                          ? f.value2
-                            ? wrapWithParentheses(f.value2)
-                            : '<<SQL>>'
-                          : (f as { value2: string | null }).value2 === null
-                          ? 'NULL'
-                          : str((f as { value2: string }).value2),
-                      )
-                    : f.operator === 'in' || f.operator === 'nin'
-                    ? `${f.field ? label(f.field) : '???'} ${
-                        f.operator === 'in' ? 'IN' : 'NOT IN'
-                      } (${(f as { values: string[] }).values
-                        .map(str)
-                        .join(', ')})`
-                    : f.field
-                    ? /* --  */ `${label(f.field)} ???`
-                    : /* --  */ `???${
-                        (f as { value?: string | null }).value === null
-                          ? ' null'
-                          : (f as { value?: string }).value
-                          ? ` ${str((f as { value: string }).value)}`
-                          : ''
-                      }`,
-                )
-                .filter((v) => v),
-            )
-            .map((p) => p.join('\nAND ') || '  ??')
-            .join('\nOR\n')
-            .replace(/\nAND --/g, '\n-- AND '),
-    params: [],
-  };
 }
 
 export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
@@ -515,8 +349,8 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                         i === 0
                           ? { visibility: 'hidden' }
                           : formField === null
-                          ? { opacity: 0.16 }
-                          : undefined
+                            ? { opacity: 0.16 }
+                            : undefined
                       }
                     >
                       AND{' '}
@@ -593,20 +427,20 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                           values: string[];
                                         })
                                       : e.target.value === 'between' ||
-                                        e.target.value === 'nbetween'
-                                      ? {
-                                          value2: '',
-                                          field: '',
-                                          operator: e.target.value,
-                                          value: '',
-                                        }
-                                      : {
-                                          operator: e.target.value as
-                                            | keyof typeof operators
-                                            | '',
-                                          field: '',
-                                          value: '',
-                                        },
+                                          e.target.value === 'nbetween'
+                                        ? {
+                                            value2: '',
+                                            field: '',
+                                            operator: e.target.value,
+                                            value: '',
+                                          }
+                                        : {
+                                            operator: e.target.value as
+                                              | keyof typeof operators
+                                              | '',
+                                            field: '',
+                                            value: '',
+                                          },
                                   ]
                                 : g2,
                             ) as Filter,
@@ -632,57 +466,60 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                             values: string[];
                                           })
                                         : e.target.value === 'between' ||
-                                          e.target.value === 'nbetween'
-                                        ? {
-                                            field: f.field,
-                                            operator: e.target.value,
-                                            value:
-                                              (f as { value?: string | null })
-                                                .value === undefined
-                                                ? ''
-                                                : (
-                                                    f as {
-                                                      value: string | null;
-                                                    }
-                                                  ).value,
-                                            value2:
-                                              (f as { value2?: string | null })
-                                                .value2 === undefined
-                                                ? ''
-                                                : (
-                                                    f as {
-                                                      value2: string | null;
-                                                    }
-                                                  ).value2,
-                                            sql: formField.sql,
-                                            sql2:
-                                              'sql2' in formField
-                                                ? formField.sql2
-                                                : undefined,
-                                          }
-                                        : ({
-                                            field: f.field,
-                                            sql: formField.sql,
-                                            operator: e.target.value as
-                                              | keyof typeof operators
-                                              | '',
-                                            value:
-                                              (f as { value?: string | null })
-                                                .value === undefined
-                                                ? ''
-                                                : (
-                                                    f as {
-                                                      value: string | null;
-                                                    }
-                                                  ).value,
-                                          } as {
-                                            field: string;
-                                            operator:
-                                              | keyof typeof operators
-                                              | '';
-                                            value: string | null;
-                                            sql?: boolean;
-                                          })
+                                            e.target.value === 'nbetween'
+                                          ? {
+                                              field: f.field,
+                                              operator: e.target.value,
+                                              value:
+                                                (f as { value?: string | null })
+                                                  .value === undefined
+                                                  ? ''
+                                                  : (
+                                                      f as {
+                                                        value: string | null;
+                                                      }
+                                                    ).value,
+                                              value2:
+                                                (
+                                                  f as {
+                                                    value2?: string | null;
+                                                  }
+                                                ).value2 === undefined
+                                                  ? ''
+                                                  : (
+                                                      f as {
+                                                        value2: string | null;
+                                                      }
+                                                    ).value2,
+                                              sql: formField.sql,
+                                              sql2:
+                                                'sql2' in formField
+                                                  ? formField.sql2
+                                                  : undefined,
+                                            }
+                                          : ({
+                                              field: f.field,
+                                              sql: formField.sql,
+                                              operator: e.target.value as
+                                                | keyof typeof operators
+                                                | '',
+                                              value:
+                                                (f as { value?: string | null })
+                                                  .value === undefined
+                                                  ? ''
+                                                  : (
+                                                      f as {
+                                                        value: string | null;
+                                                      }
+                                                    ).value,
+                                            } as {
+                                              field: string;
+                                              operator:
+                                                | keyof typeof operators
+                                                | '';
+                                              value: string | null;
+                                              sql?: boolean;
+                                            })
                                       : f,
                                   )
                                 : g2,
@@ -880,12 +717,12 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                               formField?.sql
                                 ? 'sql'
                                 : (
-                                    formField as {
-                                      value?: string | null;
-                                    } | null
-                                  )?.value === null
-                                ? 'null'
-                                : ''
+                                      formField as {
+                                        value?: string | null;
+                                      } | null
+                                    )?.value === null
+                                  ? 'null'
+                                  : ''
                             }
                             onChange={(e) => {
                               if (formField === null) {
@@ -920,18 +757,22 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                                   e.target.value === 'null'
                                                     ? null
                                                     : e.target.value ===
-                                                        'sql' &&
-                                                      (
-                                                        formField as {
-                                                          value: string | null;
-                                                        }
-                                                      ).value === null
-                                                    ? ''
-                                                    : (
-                                                        formField as {
-                                                          value: string | null;
-                                                        }
-                                                      ).value ?? '',
+                                                          'sql' &&
+                                                        (
+                                                          formField as {
+                                                            value:
+                                                              | string
+                                                              | null;
+                                                          }
+                                                        ).value === null
+                                                      ? ''
+                                                      : (
+                                                          formField as {
+                                                            value:
+                                                              | string
+                                                              | null;
+                                                          }
+                                                        ).value ?? '',
                                                 sql: e.target.value === 'sql',
                                                 values:
                                                   formField?.operator ===
@@ -1084,12 +925,12 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                 formField?.sql2
                                   ? 'sql'
                                   : (
-                                      formField as {
-                                        value2?: string | null;
-                                      } | null
-                                    )?.value2 === null
-                                  ? 'null'
-                                  : ''
+                                        formField as {
+                                          value2?: string | null;
+                                        } | null
+                                      )?.value2 === null
+                                    ? 'null'
+                                    : ''
                               }
                               onChange={(e) => {
                                 setFilter(
@@ -1103,18 +944,22 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                                   e.target.value === 'null'
                                                     ? null
                                                     : e.target.value ===
-                                                        'sql' &&
-                                                      (
-                                                        formField as {
-                                                          value2: string | null;
-                                                        }
-                                                      ).value2 === null
-                                                    ? ''
-                                                    : (
-                                                        formField as {
-                                                          value2: string | null;
-                                                        }
-                                                      ).value2 ?? '',
+                                                          'sql' &&
+                                                        (
+                                                          formField as {
+                                                            value2:
+                                                              | string
+                                                              | null;
+                                                          }
+                                                        ).value2 === null
+                                                      ? ''
+                                                      : (
+                                                          formField as {
+                                                            value2:
+                                                              | string
+                                                              | null;
+                                                          }
+                                                        ).value2 ?? '',
                                                 sql2: e.target.value === 'sql',
                                                 values: undefined,
                                               }

@@ -1,14 +1,14 @@
+import { Sort } from 'db/util';
 import { FieldDef } from 'pg';
 import React from 'react';
 import { equals } from 'util/equals';
-import { DataGridSort } from './DataGrid';
 
 interface DataGridTheadProps {
   fields: FieldDef[];
   colsWidths: number[];
   pks?: string[];
-  onChangeSort?: (sort: DataGridSort) => void;
-  currentSort?: DataGridSort;
+  onChangeSort?: (sort: Sort) => void;
+  currentSort?: Sort;
   onStartResize: (index: number, e: React.MouseEvent) => void;
 }
 
@@ -53,13 +53,13 @@ export const DataGridThead = React.memo(
                           curr?.direction === 'asc'
                             ? 'desc'
                             : curr?.direction === 'desc'
-                            ? 'asc'
-                            : ((e.ctrlKey ? 1 : 0) +
-                                (e.metaKey ? 1 : 0) +
-                                (e.altKey ? 1 : 0)) %
-                              2
-                            ? 'desc'
-                            : 'asc',
+                              ? 'asc'
+                              : ((e.ctrlKey ? 1 : 0) +
+                                    (e.metaKey ? 1 : 0) +
+                                    (e.altKey ? 1 : 0)) %
+                                  2
+                                ? 'desc'
+                                : 'asc',
                       },
                       ...(e.shiftKey
                         ? currentSort?.filter((s) => s.field !== f.name) || []

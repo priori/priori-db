@@ -1,14 +1,9 @@
 import { FieldDef } from 'pg';
 import { CSSProperties, memo } from 'react';
 import { equals } from 'util/equals';
+import { Filter, Sort } from 'db/util';
 import { SizeControlledArea } from '../SizeControlledArea';
 import { DataGridCore } from './DataGridCore';
-import { Filter } from './DataGridFilterDialog';
-
-export type DataGridSort = {
-  field: string;
-  direction: 'asc' | 'desc';
-}[];
 
 export interface GridProps {
   style: CSSProperties;
@@ -29,11 +24,11 @@ export interface GridProps {
     inserts: { [fieldName: string]: string | null }[];
   }) => Promise<boolean>;
   pks?: string[];
-  currentSort?: DataGridSort;
+  currentSort?: Sort;
   // eslint-disable-next-line react/no-unused-prop-types
-  defaultSort?: DataGridSort;
+  defaultSort?: Sort;
   currentFilter?: Filter;
-  onChangeSort?: (sort: DataGridSort) => void;
+  onChangeSort?: (sort: Sort) => void;
   className?: string;
   onChangeFilter?: (filter: Filter) => void;
 }
