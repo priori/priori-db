@@ -50,12 +50,12 @@ export function DataGridUpdateInfoDialog({
               pendingRowsUpdate > 1 ? 's' : ''
             } pending `
           : pendingInserts > 0
-          ? `${pendingInserts} pending row${
-              pendingInserts > 1 ? 's' : ''
-            } insert${pendingInserts > 1 ? 's' : ''}`
-          : `${pendingRowsUpdate} pending row${
-              pendingRowsUpdate > 1 ? 's' : ''
-            } update`}{' '}
+            ? `${pendingInserts} pending row${
+                pendingInserts > 1 ? 's' : ''
+              } insert${pendingInserts > 1 ? 's' : ''}`
+            : `${pendingRowsUpdate} pending row${
+                pendingRowsUpdate > 1 ? 's' : ''
+              } update`}{' '}
         ({totalChanges} value
         {totalChanges > 1 ? 's' : ''})
         {fail ? (

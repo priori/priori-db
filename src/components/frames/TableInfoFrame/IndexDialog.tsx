@@ -147,13 +147,13 @@ export function IndexDialog({
                     method: e.target.value,
                   }
                 : form.unique
-                ? {
-                    unique: form.unique,
-                    cols: form.cols,
-                  }
-                : {
-                    cols: form.cols,
-                  },
+                  ? {
+                      unique: form.unique,
+                      cols: form.cols,
+                    }
+                  : {
+                      cols: form.cols,
+                    },
             );
           }}
           style={

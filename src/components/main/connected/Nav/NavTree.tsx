@@ -139,8 +139,8 @@ export function NavTree({
                         t.type === 'VIEW'
                           ? ' view'
                           : t.type === 'MATERIALIZED VIEW'
-                          ? ' mview'
-                          : ''
+                            ? ' mview'
+                            : ''
                       }${
                         focused?.type === 'table' &&
                         focused.schema === schema.name &&

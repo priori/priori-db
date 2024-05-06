@@ -72,22 +72,22 @@ export interface SchemaInfoFrameProps extends AbstractTabProps<'schemainfo'> {
 export type FrameProps0<T extends FrameType> = T extends 'query'
   ? QueryFrameProps
   : T extends 'table'
-  ? TableFrameProps
-  : T extends 'newtable'
-  ? NewTableFrameProps
-  : T extends 'tableinfo'
-  ? TableInfoFrameProps
-  : T extends 'schemainfo'
-  ? SchemaInfoFrameProps
-  : T extends 'sequence'
-  ? SequenceFrameProps
-  : T extends 'function'
-  ? FunctionFrameProps
-  : T extends 'domain'
-  ? DomainFrameProps
-  : T extends 'role'
-  ? RoleFrameProps
-  : never;
+    ? TableFrameProps
+    : T extends 'newtable'
+      ? NewTableFrameProps
+      : T extends 'tableinfo'
+        ? TableInfoFrameProps
+        : T extends 'schemainfo'
+          ? SchemaInfoFrameProps
+          : T extends 'sequence'
+            ? SequenceFrameProps
+            : T extends 'function'
+              ? FunctionFrameProps
+              : T extends 'domain'
+                ? DomainFrameProps
+                : T extends 'role'
+                  ? RoleFrameProps
+                  : never;
 
 export type FrameProps = FrameProps0<FrameType>;
 

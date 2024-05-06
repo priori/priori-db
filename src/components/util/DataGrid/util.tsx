@@ -6,12 +6,12 @@ export function getValString(val: unknown) {
   return val === null
     ? 'null'
     : val === undefined
-    ? ''
-    : val instanceof Date
-    ? val.toLocaleString()
-    : typeof val === 'object'
-    ? JSON.stringify(val)
-    : `${val}`;
+      ? ''
+      : val instanceof Date
+        ? val.toLocaleString()
+        : typeof val === 'object'
+          ? JSON.stringify(val)
+          : `${val}`;
 }
 
 // const navWidth = 250,
@@ -28,12 +28,12 @@ export function getType(val: unknown) {
   return val === null
     ? 'null'
     : typeof val === 'boolean' ||
-      typeof val === 'string' ||
-      typeof val === 'number'
-    ? typeof val
-    : val instanceof Date
-    ? 'date'
-    : undefined;
+        typeof val === 'string' ||
+        typeof val === 'number'
+      ? typeof val
+      : val instanceof Date
+        ? 'date'
+        : undefined;
 }
 
 export function cellClassName(

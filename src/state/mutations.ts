@@ -788,15 +788,15 @@ export function changeSchema(current: AppState, uid: number, schema: string) {
             props: { ...t.props, schema },
           }
         : tab.props.uid === uid &&
-          (t.props.type === 'sequence' ||
-            t.props.type === 'domain' ||
-            t.props.type === 'function')
-        ? {
-            ...t,
-            title: `${schema}.${t.props.name}`,
-            props: { ...t.props, schema },
-          }
-        : t,
+            (t.props.type === 'sequence' ||
+              t.props.type === 'domain' ||
+              t.props.type === 'function')
+          ? {
+              ...t,
+              title: `${schema}.${t.props.name}`,
+              props: { ...t.props, schema },
+            }
+          : t,
     ),
   };
 }
@@ -827,39 +827,40 @@ export function renameSchema(current: AppState, uid: number, name: string) {
             props: { ...t.props, schema: name },
           }
         : t.props.type === 'function' && t.props.schema === tab.props.schema
-        ? {
-            ...t,
-            title: `${t.props.schema}.${t.props.name}`,
-            props: {
-              ...t.props,
-              schema: name,
-            },
-          }
-        : (t.props.type === 'sequence' || t.props.type === 'domain') &&
-          t.props.schema === tab.props.schema
-        ? {
-            ...t,
-            title: `${name}.${t.props.name}`,
-            props: { ...t.props, schema: name },
-          }
-        : t.props.type === 'schemainfo' && t.props.schema === tab.props.schema
-        ? {
-            ...t,
-            title: `${name} info`,
-            props: {
-              ...t.props,
-              schema: name,
-            },
-          }
-        : 'schema' in t.props && t.props.schema === tab.props.schema
-        ? {
-            ...t,
-            props: {
-              ...t.props,
-              schema: name,
-            },
-          }
-        : t,
+          ? {
+              ...t,
+              title: `${t.props.schema}.${t.props.name}`,
+              props: {
+                ...t.props,
+                schema: name,
+              },
+            }
+          : (t.props.type === 'sequence' || t.props.type === 'domain') &&
+              t.props.schema === tab.props.schema
+            ? {
+                ...t,
+                title: `${name}.${t.props.name}`,
+                props: { ...t.props, schema: name },
+              }
+            : t.props.type === 'schemainfo' &&
+                t.props.schema === tab.props.schema
+              ? {
+                  ...t,
+                  title: `${name} info`,
+                  props: {
+                    ...t.props,
+                    schema: name,
+                  },
+                }
+              : 'schema' in t.props && t.props.schema === tab.props.schema
+                ? {
+                    ...t,
+                    props: {
+                      ...t.props,
+                      schema: name,
+                    },
+                  }
+                : t,
     ),
   };
   return newState;
@@ -880,39 +881,39 @@ export function renameEntity(curret: AppState, uid: number, name: string) {
             props: { ...t.props, name },
           }
         : (t.props.type === 'table' || t.props.type === 'tableinfo') &&
-          (tab.props.type === 'table' || tab.props.type === 'tableinfo') &&
-          t.props.schema === tab.props.schema &&
-          t.props.table === tab.props.table
-        ? {
-            ...t,
-            title: `${t.props.schema}.${name}${
-              t.props.type === 'tableinfo' ? ' info' : ''
-            }`,
-            props: { ...t.props, table: name },
-          }
-        : tab.props.uid === uid && t.props.type === 'function'
-        ? {
-            ...t,
-            title: `${t.props.schema}.${name}${t.props.name.substring(
-              t.props.name.lastIndexOf('('),
-              t.props.name.length,
-            )}`,
-            props: {
-              ...t.props,
-              name: `${name}${t.props.name.substring(
-                t.props.name.lastIndexOf('('),
-                t.props.name.length,
-              )}`,
-            },
-          }
-        : tab.props.uid === uid &&
-          (t.props.type === 'sequence' || t.props.type === 'domain')
-        ? {
-            ...t,
-            title: `${t.props.schema}.${name}`,
-            props: { ...t.props, name },
-          }
-        : t,
+            (tab.props.type === 'table' || tab.props.type === 'tableinfo') &&
+            t.props.schema === tab.props.schema &&
+            t.props.table === tab.props.table
+          ? {
+              ...t,
+              title: `${t.props.schema}.${name}${
+                t.props.type === 'tableinfo' ? ' info' : ''
+              }`,
+              props: { ...t.props, table: name },
+            }
+          : tab.props.uid === uid && t.props.type === 'function'
+            ? {
+                ...t,
+                title: `${t.props.schema}.${name}${t.props.name.substring(
+                  t.props.name.lastIndexOf('('),
+                  t.props.name.length,
+                )}`,
+                props: {
+                  ...t.props,
+                  name: `${name}${t.props.name.substring(
+                    t.props.name.lastIndexOf('('),
+                    t.props.name.length,
+                  )}`,
+                },
+              }
+            : tab.props.uid === uid &&
+                (t.props.type === 'sequence' || t.props.type === 'domain')
+              ? {
+                  ...t,
+                  title: `${t.props.schema}.${name}`,
+                  props: { ...t.props, name },
+                }
+              : t,
     ),
   };
 }

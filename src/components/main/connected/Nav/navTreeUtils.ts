@@ -215,8 +215,8 @@ export function useNavTree(
       e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)
         ? +1
         : e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)
-        ? -1
-        : undefined;
+          ? -1
+          : undefined;
     const right = e.key === 'ArrowRight';
     const left = e.key === 'ArrowLeft';
     if (focused.type === 'roles') {

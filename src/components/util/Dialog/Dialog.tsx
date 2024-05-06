@@ -47,19 +47,19 @@ function positionRelativeTo(
     h + 2 * safeMargin <= containerHeight
       ? containerRect.top + safeMargin
       : top0 + h > containerBottom - safeMargin &&
-        h + 2 * safeMargin <= containerHeight
-      ? containerBottom - h - safeMargin
-      : top0;
+          h + 2 * safeMargin <= containerHeight
+        ? containerBottom - h - safeMargin
+        : top0;
   const left =
     w + 2 * safeMargin > containerWidth
       ? w < containerWidth
         ? containerRect.left + containerWidth / 2 - w / 2
         : document.documentElement.offsetWidth / 2 - w / 2
       : left0 < containerRect.left + safeMargin
-      ? containerRect.left + safeMargin
-      : left0 + w > containerRight - safeMargin
-      ? containerRight - w - safeMargin
-      : left0;
+        ? containerRect.left + safeMargin
+        : left0 + w > containerRight - safeMargin
+          ? containerRight - w - safeMargin
+          : left0;
   el.style.top = `${top}px`;
   el.style.left = `${left}px`;
 }

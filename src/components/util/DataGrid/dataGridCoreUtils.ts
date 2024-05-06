@@ -115,8 +115,8 @@ export function useDataGridCore(props: DataGridCoreProps) {
     (pendingRowsUpdate || pendingInserts
       ? 130
       : props.onChangeFilter || props.onChangeSort || props.onUpdate
-      ? 68
-      : 0);
+        ? 68
+        : 0);
 
   const totalChanges = Object.keys(state.update).reduce(
     (a, b) => a + Object.keys(state.update[b]).length,
@@ -349,14 +349,14 @@ export function useDataGridCore(props: DataGridCoreProps) {
       state.active.colIndex + direction === props.result.fields.length
         ? 0
         : state.active.colIndex + direction === -1
-        ? props.result.fields.length - 1
-        : state.active.colIndex + direction;
+          ? props.result.fields.length - 1
+          : state.active.colIndex + direction;
     const rowIndex =
       state.active.colIndex + direction === props.result.fields.length
         ? state.active.rowIndex + 1
         : state.active.colIndex + direction === -1
-        ? state.active.rowIndex - 1
-        : state.active.rowIndex;
+          ? state.active.rowIndex - 1
+          : state.active.rowIndex;
     if (rowIndex >= 0 && rowIndex < props.result.rows.length + extraRows) {
       setState((s) => {
         const newEditing =
@@ -412,8 +412,8 @@ export function useDataGridCore(props: DataGridCoreProps) {
         s.active.rowIndex + y < props.result.rows.length
           ? false
           : editing === undefined
-          ? s.editing
-          : s.editing;
+            ? s.editing
+            : s.editing;
       if (!newEditing && s.editing) {
         elRef.current?.focus();
       }
@@ -423,46 +423,46 @@ export function useDataGridCore(props: DataGridCoreProps) {
         selection: !selection
           ? undefined
           : !state.selection
-          ? {
-              colIndex: [
-                Math.min(s.active.colIndex + x, s.active.colIndex),
-                Math.max(s.active.colIndex + x, s.active.colIndex),
-              ],
-              rowIndex: [
-                Math.min(s.active.rowIndex + y, s.active.rowIndex),
-                Math.max(s.active.rowIndex + y, s.active.rowIndex),
-              ],
-            }
-          : {
-              colIndex: [
-                Math.min(
-                  s.active.colIndex + x,
-                  state.selection.colIndex[0] === s.active.colIndex
-                    ? state.selection.colIndex[1]
-                    : state.selection.colIndex[0],
-                ),
-                Math.max(
-                  s.active.colIndex + x,
-                  state.selection.colIndex[0] === s.active.colIndex
-                    ? state.selection.colIndex[1]
-                    : state.selection.colIndex[0],
-                ),
-              ],
-              rowIndex: [
-                Math.min(
-                  s.active.rowIndex + y,
-                  state.selection.rowIndex[0] === s.active.rowIndex
-                    ? state.selection.rowIndex[1]
-                    : state.selection.rowIndex[0],
-                ),
-                Math.max(
-                  s.active.rowIndex + y,
-                  state.selection.rowIndex[0] === s.active.rowIndex
-                    ? state.selection.rowIndex[1]
-                    : state.selection.rowIndex[0],
-                ),
-              ],
-            },
+            ? {
+                colIndex: [
+                  Math.min(s.active.colIndex + x, s.active.colIndex),
+                  Math.max(s.active.colIndex + x, s.active.colIndex),
+                ],
+                rowIndex: [
+                  Math.min(s.active.rowIndex + y, s.active.rowIndex),
+                  Math.max(s.active.rowIndex + y, s.active.rowIndex),
+                ],
+              }
+            : {
+                colIndex: [
+                  Math.min(
+                    s.active.colIndex + x,
+                    state.selection.colIndex[0] === s.active.colIndex
+                      ? state.selection.colIndex[1]
+                      : state.selection.colIndex[0],
+                  ),
+                  Math.max(
+                    s.active.colIndex + x,
+                    state.selection.colIndex[0] === s.active.colIndex
+                      ? state.selection.colIndex[1]
+                      : state.selection.colIndex[0],
+                  ),
+                ],
+                rowIndex: [
+                  Math.min(
+                    s.active.rowIndex + y,
+                    state.selection.rowIndex[0] === s.active.rowIndex
+                      ? state.selection.rowIndex[1]
+                      : state.selection.rowIndex[0],
+                  ),
+                  Math.max(
+                    s.active.rowIndex + y,
+                    state.selection.rowIndex[0] === s.active.rowIndex
+                      ? state.selection.rowIndex[1]
+                      : state.selection.rowIndex[0],
+                  ),
+                ],
+              },
         active: {
           colIndex: s.active.colIndex + x,
           rowIndex: s.active.rowIndex + y,

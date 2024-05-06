@@ -88,11 +88,11 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
           currentTab && typeof currentTab.width === 'number'
             ? currentTab.width
             : !t.keep &&
-              this.state.tabs[index] &&
-              this.state.tabs[index].keep === false &&
-              typeof this.state.tabs[index].width === 'number'
-            ? this.state.tabs[index].width
-            : 0,
+                this.state.tabs[index] &&
+                this.state.tabs[index].keep === false &&
+                typeof this.state.tabs[index].width === 'number'
+              ? this.state.tabs[index].width
+              : 0,
       };
     });
     this.setState((state) => ({

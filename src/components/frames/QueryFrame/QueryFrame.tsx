@@ -169,11 +169,11 @@ export function QueryFrame({ uid }: { uid: number }) {
               | (CopyStreamQuery & { fields: undefined })
               | (CopyToStreamQuery & { fields: undefined }))
           : stdInMode
-          ? ((await db.query(from(query))) as unknown as
-              | QueryArrayResult
-              | (CopyStreamQuery & { fields: undefined })
-              | (CopyToStreamQuery & { fields: undefined }))
-          : await db.query(query, []);
+            ? ((await db.query(from(query))) as unknown as
+                | QueryArrayResult
+                | (CopyStreamQuery & { fields: undefined })
+                | (CopyToStreamQuery & { fields: undefined }))
+            : await db.query(query, []);
 
         if (stdoutMode)
           await pipeline(
@@ -433,8 +433,8 @@ export function QueryFrame({ uid }: { uid: number }) {
           topHeight + inc < minHeight1
             ? minHeight2
             : topHeight + inc > maxHeight
-            ? maxHeight
-            : topHeight + inc,
+              ? maxHeight
+              : topHeight + inc,
         );
         if (topHeight + inc < minHeight2) return minHeight2 - topHeight;
         if (topHeight + inc > maxHeight) return maxHeight - topHeight;
@@ -452,8 +452,8 @@ export function QueryFrame({ uid }: { uid: number }) {
         topHeight + inc2 < minHeight1
           ? minHeight2
           : topHeight + inc2 > maxHeight
-          ? maxHeight
-          : topHeight + inc2,
+            ? maxHeight
+            : topHeight + inc2,
       );
     }
     setTimeout(() => {

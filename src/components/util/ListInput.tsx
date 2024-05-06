@@ -17,6 +17,7 @@ export interface ListInputProps<Entry> {
   itemClass?: string | undefined;
   style?: CSSProperties;
 }
+
 export class ListInput<Entry extends object> extends Component<
   ListInputProps<Entry>,
   never
