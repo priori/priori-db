@@ -13,24 +13,26 @@
     background: #ddd;
   }
 }
-.connections--edit-button,
-.connections--add-button {
+button.connections--edit-button,
+button.connections--add-button {
   position: fixed;
-  bottom: 8px;
-  font-size: 20px;
+  bottom: 12px;
+  font-size: 32px;
   vertical-align: middle;
-  border-radius: 30px;
-  width: 40px;
-  height: 40px;
+  border-radius: 40px;
+  width: 60px;
+  height: 60px;
+  line-height: 44px;
   text-align: center;
-  background: rgba(100, 100, 100, 0.5);
+  background: rgba(100, 100, 100, 0.25);
+  transition: 0.2s all;
 }
 
 .connections--add-button {
   right: 10px;
 }
 .connections--edit-button {
-  right: 61px;
+  right: 77px;
 }
 .connections--edit-button:hover,
 .connections--add-button:hover {
@@ -117,7 +119,7 @@
   width: 50px;
   font-size: 27px;
 }
-.connections--edit-button2:hover {
+button.connections--edit-button2:hover {
   background: #fff;
   color: black;
 }
@@ -144,9 +146,10 @@
 }
 .base {
   padding: 20px;
-  border-bottom: 1px solid #f9f9f9;
-  background: #fcfcfc;
-  color: #888;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  color: #444;
+  cursor: pointer;
 }
 .base.base--default {
   color: #000;
@@ -161,11 +164,14 @@
     margin-right: -5px;
   }
 }
+.base.base--default.selected {
+  background: white;
+}
 .base:last-of-type {
   border-bottom: 0;
 }
 .base:hover {
-  background: #fff;
+  background: #f8f8f8;
   color: black;
 }
 
@@ -188,7 +194,6 @@
 }
 .new-connection input:focus {
   padding: 3px;
-  border: 2px solid #029 !important;
 }
 .new-connection button {
   padding: 7px;

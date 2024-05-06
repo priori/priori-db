@@ -46,11 +46,19 @@
   padding: 5px;
   display: block;
   width: 100%;
+  &:focus {
+    padding: 4px;
+  }
 }
 .columns-form-column select {
   padding: 4px;
   width: 190px;
   border-color: #ccc;
+  outline: none;
+  &:focus {
+    padding: 3px;
+    border: 2px solid #ccc;
+  }
 }
 
 .columns-form-column-notnull,
@@ -68,6 +76,9 @@
 
 .input-form-field input {
   padding: 5px;
+  &:focus {
+    padding: 4px;
+  }
 }
 body > .list-input-item {
   background: white;

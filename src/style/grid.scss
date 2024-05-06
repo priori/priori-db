@@ -405,7 +405,7 @@ th.desc.sortable:hover::before {
 
 .grid .fa-sort,
 .grid .fa-filter,
-.grid .fa-plus {
+.grid > div > .fa-plus {
   position: absolute;
   bottom: 10px;
   font-size: 43px;
@@ -419,7 +419,7 @@ th.desc.sortable:hover::before {
   z-index: 3;
 }
 .grid .fa-sort:not(.disabled),
-.grid .fa-plus:not(.disabled),
+.grid > div > .fa-plus:not(.disabled),
 .grid .fa-filter:not(.disabled) {
   &:hover {
     background: #1976d2;

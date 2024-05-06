@@ -20,10 +20,12 @@ button {
   border: none;
   outline: none;
   font-weight: bold;
-  color: rgba(0, 0, 0, 0.8);
+  color: #555;
+  cursor: pointer;
 }
 button:not([disabled]):hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: #f0f0f0;
+  color: #000;
 }
 button:focus {
   color: #018;
@@ -34,7 +36,13 @@ input {
   outline: none;
 }
 input:focus {
-  border: solid 1px #029 !important;
+  border: solid 2px #1976d2 !important;
+  padding: 9px;
+  box-shadow:
+    0 1px #1976d2,
+    0 -1px #1976d2,
+    1px 0 #1976d2,
+    -1px 0 #1976d2;
 }
 
 button.cancel {

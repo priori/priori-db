@@ -167,6 +167,7 @@
 .table-info-frame__actions {
   button {
     margin-right: 3px;
+    min-width: 90px;
   }
   line-height: 45px;
   margin-bottom: 22px;
@@ -268,9 +269,20 @@ div.comment {
   display: block;
   width: 100%;
   margin-bottom: 17px;
+  outline: none;
+  &:focus {
+    padding: 9px;
+    border: 2px #1976d2 solid;
+    box-shadow:
+      0 1px #1976d2,
+      0 -1px #1976d2,
+      1px 0 #1976d2,
+      -1px 0 #1976d2;
+  }
 }
 button[disabled] {
   opacity: 0.33;
+  cursor: default;
 }
 
 .dialog-error {
@@ -319,10 +331,22 @@ body div.frame.role div.dialog-form {
   }
   select {
     padding-left: 7px;
+    &:focus {
+      padding-left: 6px;
+    }
   }
   textarea {
     padding: 5px;
     margin-bottom: 0;
+    &:focus {
+      padding: 4px;
+      border: 2px #1976d2 solid !important;
+      box-shadow:
+        0 1px #1976d2,
+        0 -1px #1976d2,
+        1px 0 #1976d2,
+        -1px 0 #1976d2;
+    }
   }
   div[tabindex] {
     outline: none;

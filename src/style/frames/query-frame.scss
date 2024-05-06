@@ -230,7 +230,6 @@ button.query-tab--stdout {
 .pid--running {
   top: 33px;
   right: 70px;
-  transition: all 0.5s;
 }
 
 .query-tab .fa-star {
@@ -381,6 +380,7 @@ button.query-frame--apply2 {
   cursor: pointer;
   &:hover {
     background: #31ad4a !important;
+    color: white;
     // box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
   }
   .fa-play {
@@ -437,4 +437,13 @@ button.query-tab--save-stdout {
   width: 100%;
   margin-left: 0;
   margin-right: 0;
+}
+
+div.CodeMirror-linenumber {
+  color: #ccc;
+  font-size: 11px;
+}
+div.CodeMirror-gutters {
+  background-color: white !important;
+  border-right: 1px solid #ddd;
 }

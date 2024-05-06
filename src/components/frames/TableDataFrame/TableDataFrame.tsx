@@ -52,7 +52,10 @@ export function TableDataFrame(props: TableFrameProps): JSX.Element {
     (status === 'starting' && (
       <div className="table-frame--loading">
         <div>
-          <i className="fa fa-circle-o-notch" />
+          <i
+            className="fa fa-circle-o-notch fa-spin"
+            style={{ fontSize: 62 }}
+          />
         </div>
       </div>
     )) || <div />

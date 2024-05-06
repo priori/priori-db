@@ -8,7 +8,7 @@ div.nav {
   top: 40px;
   bottom: 0;
   width: 250px;
-  background: #f8f8f8;
+  background: #f4f4f4;
   display: flex;
   flex-direction: column;
   .nav-tree {
@@ -29,11 +29,12 @@ div.nav {
     position: absolute;
     bottom: 3px;
     right: 20px;
-    font-size: 22px;
+    font-size: 26px;
     padding: 4px;
     opacity: 0.5;
     z-index: 2;
     outline: none;
+    cursor: pointer;
   }
   .new-schema:hover {
     opacity: 1;
@@ -193,11 +194,11 @@ div.nav {
     text-align: center;
   }
   .more:hover {
-    background: #dfdfdf;
+    background: #dadada;
   }
   .more.focused {
     color: #04b;
-    background: #dfdfdf;
+    background: #dadada;
   }
   .table-name,
   .sequence-name,
@@ -247,7 +248,7 @@ div.nav {
     }
     &.open {
       color: #04b;
-      background: #eee;
+      background: rgba(0, 0, 0, 0.04);
     }
     &.open:hover {
       background: #ddd;
@@ -334,18 +335,15 @@ div.nav {
 }
 .nav input {
   border: 0;
-  padding: 4px 0 3px 9px;
+  padding: 4px 1px 3px 9px;
   line-height: 12px;
-  position: relative;
-  z-index: 3;
   width: 100%;
   position: relative;
-  z-index: 3;
+  z-index: 11;
   font-size: 12px;
   background-color: transparent;
   &:focus {
-    border: solid 2px #06c !important;
-    padding: 2px 0 1px 7px;
+    padding: 2px 0 1px 8px;
     background: white;
   }
   &:focus:after {
@@ -365,6 +363,7 @@ div.nav {
     top: 3px;
     color: #999;
     font-size: 14px;
+    z-index: 5;
   }
   input + .fa-close {
     z-index: 3;
