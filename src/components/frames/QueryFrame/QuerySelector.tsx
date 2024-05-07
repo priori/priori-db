@@ -1,6 +1,7 @@
+import { ConnectionConfiguration } from 'db/Connection';
 import React, { useMemo, useState } from 'react';
 import { currentState } from 'state/state';
-import { browserDb } from 'util/browserDb';
+import { browserDb, listConnectionConfigurations } from 'util/browserDb';
 import { equals } from 'util/equals';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
@@ -148,25 +149,42 @@ function QuerySelector0({
   style?: React.CSSProperties;
 }) {
   const appState = currentState();
-  const [configIndex, set] = useState(() =>
-    appState.passwords.findIndex(
-      (p) =>
-        appState.password &&
-        p.user === appState.password.user &&
-        p.host === appState.password.host &&
-        p.port === appState.password.port &&
-        p.database === appState.password.database,
-    ),
+  if (!appState.currentConnectionConfiguration)
+    throw new Error('No connection configuration');
+  const configsService = useService(() => listConnectionConfigurations(), []);
+  const [state, setState] = useState<null | number>(null);
+  const config =
+    state === -1
+      ? null
+      : state !== null
+        ? configsService.lastValidData![state]
+        : appState.currentConnectionConfiguration;
+  const configs = configsService.lastValidData
+    ? configsService.lastValidData
+    : [appState.currentConnectionConfiguration];
+  const configValue = configs.findIndex(
+    (c) =>
+      config &&
+      c.database === config.database &&
+      c.host === config.host &&
+      c.port === config.port &&
+      c.user === config.user,
   );
-  const config = appState.passwords[configIndex] ?? null;
+
+  function onChange(value: number) {
+    setState(value);
+  }
+
   const service = useService(
     () =>
       Promise.all([
         browserDb.query(
           `SELECT query.* FROM query
+          WHERE trim(sql) != ''
+
         ${
           config
-            ? `WHERE
+            ? ` AND
           execution_id IN ( SELECT id FROM execution WHERE
           execution.user = $1 AND
           execution.host = $2 AND
@@ -223,6 +241,7 @@ function QuerySelector0({
 
     [config],
   );
+
   const queries = useMemo(() => {
     const qs = !service.lastValidData
       ? null
@@ -303,11 +322,11 @@ function QuerySelector0({
           style={{ background: 'white', border: '1px solid #ddd' }}
         />
         <select
-          value={configIndex}
-          onChange={(e) => set(parseInt(e.target.value, 10))}
+          value={configValue}
+          onChange={(e) => onChange(parseInt(e.target.value, 10))}
         >
           <option value="-1" />
-          {appState.passwords.map((p, i) => (
+          {configs.map((p, i) => (
             <option value={i} key={i}>{`${p.user}@${p.host}${
               p.port !== 5432 ? `:${p.port}` : ''
             }/${p.database}`}</option>

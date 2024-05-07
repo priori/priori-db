@@ -2,32 +2,6 @@ import { assert } from 'util/assert';
 import { ConnectionConfiguration } from 'db/pgpass';
 import { AppState, FrameProps, NavSchema, Tab, Tab0, Type } from 'types';
 
-export function setBases(current: AppState, bases: string[]) {
-  return {
-    ...current,
-    // editConnection: undefined,
-    editConnections: false,
-    newConnection: false,
-    bases,
-  };
-}
-
-export function editingAll(current: AppState) {
-  return {
-    ...current,
-    editConnections: !current.editConnections,
-    connectionError: undefined,
-  };
-}
-
-export function newConf(current: AppState) {
-  return {
-    ...current,
-    newConnection: true,
-    connectionError: undefined,
-  };
-}
-
 export function cancelAskToCloseWindow(current: AppState) {
   return {
     ...current,
@@ -40,13 +14,6 @@ export function askToCloseWindow(current: AppState) {
     ...current,
     askToCloseWindow: true,
   } as AppState;
-}
-
-export function setConnectionError(current: AppState, err: Error) {
-  return {
-    ...current,
-    connectionError: err,
-  };
 }
 
 export function activateTab(current: AppState, c: Tab) {
@@ -535,20 +502,6 @@ export function closeTab(current: AppState, f: number | FrameProps) {
   };
 }
 
-export function closeConnectionError(current: AppState) {
-  return {
-    ...current,
-    connectionError: undefined,
-  };
-}
-
-export function setConnection(
-  current: AppState,
-  password: ConnectionConfiguration,
-) {
-  return { ...current, password };
-}
-
 export function newQueryTabInTheEnd(current: AppState) {
   return newFrame(
     current,
@@ -577,23 +530,9 @@ export function newQueryTab(current: AppState) {
   }));
 }
 
-export function addConnectionConfiguration(
-  current: AppState,
-  conf: ConnectionConfiguration,
-  index?: number,
-) {
-  const passwords =
-    typeof index === 'number'
-      ? current.passwords.map((c, i) => (i === index ? conf : c))
-      : [...current.passwords, conf];
-  return {
-    ...current,
-    passwords,
-  };
-}
-
 export function connected(
   current: AppState,
+  currentConnectionConfiguration: ConnectionConfiguration,
   database: string,
   schemas: {
     name: string;
@@ -610,7 +549,7 @@ export function connected(
     isUser: boolean;
   }[],
 ) {
-  const c = current.password as ConnectionConfiguration;
+  const c = currentConnectionConfiguration;
   return {
     ...current,
     connected: true,
@@ -621,6 +560,7 @@ export function connected(
       sequencesOpen: false,
       functionsOpen: false,
     })),
+    currentConnectionConfiguration,
     title: `${c.user}@${c.host}${
       c.port !== 5432 ? `:${c.port}` : ''
     }/${database}`,
@@ -640,72 +580,6 @@ export function toggleSchema(current: AppState, name: string) {
           }
         : s,
     ),
-  };
-}
-
-export function connectionSaved(current: AppState) {
-  return {
-    ...current,
-    newConnection: false,
-    editConnection: undefined,
-    editConnections: false,
-    connectionError: undefined,
-  };
-}
-
-export function cancelSelectedConnection(current: AppState) {
-  return { ...current, password: undefined, bases: undefined };
-}
-
-export function cancelConnection(current: AppState) {
-  return {
-    ...current,
-    newConnection: false,
-    editConnection: undefined,
-    editConnections: false,
-    connectionError: undefined,
-  };
-}
-
-export function editConnection(
-  current: AppState,
-  con: ConnectionConfiguration,
-  index: number,
-) {
-  return {
-    ...current,
-    connectionError: undefined,
-    editConnection: {
-      connection: con,
-      index,
-    },
-  };
-}
-
-export function editConnectionSelected(current: AppState) {
-  const { password } = current;
-  if (password) {
-    const index = current.passwords.findIndex(
-      (p) =>
-        p.host === password.host &&
-        p.port === password.port &&
-        p.database === password.database &&
-        p.user === password.user &&
-        p.host === password.host &&
-        p.password === password.password,
-    );
-    return editConnection(current, password, index);
-  }
-  return current;
-}
-
-export function removeConnection(current: AppState, index: number) {
-  return {
-    ...current,
-    passwords: current.passwords.filter((_, i) => i !== index),
-    editConnection: undefined,
-    editConnections: false,
-    connectionError: undefined,
   };
 }
 

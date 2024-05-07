@@ -1,10 +1,9 @@
 import { assert } from 'util/assert';
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { listDatabases } from 'db/Connection';
+import { ConnectionConfiguration, listDatabases } from 'db/Connection';
 import { useState } from 'react';
 import { grantError } from 'util/errors';
 import { useEvent } from 'util/useEvent';
-import { ConnectionConfiguration } from '../../../db/pgpass';
 
 export interface NewConectionState {
   port?: string;
@@ -12,25 +11,25 @@ export interface NewConectionState {
   user?: string;
   password?: string;
   host?: string;
+  requireSsl?: boolean;
 }
 interface NewConnectionProps {
   connection: undefined | ConnectionConfiguration;
   onRemove: undefined | (() => void);
   onCancel: undefined | (() => void);
-  onSubmit: (c: ConnectionConfiguration) => void;
-  onSave: (c: ConnectionConfiguration) => void;
+  onSaveAndConnect: (c: ConnectionConfiguration) => void;
+  onJustSave: (c: ConnectionConfiguration) => void;
 }
-export function NewConnection(props: NewConnectionProps) {
+export function ConnectionConfigurationForm(props: NewConnectionProps) {
   const { connection } = props;
-
   const [state, setState] = useState({
     port: connection ? `${connection.port}` : '',
     host: connection ? connection.host : '',
     database: connection ? connection.database : '',
     user: connection ? connection.user : '',
     password: connection ? connection.password : '',
+    requireSsl: connection ? connection.requireSsl : false,
   } as NewConectionState);
-
   const [removeConfirmation, setRemoveConfirmation] = useState(false);
   const [testResult, setTestResult] = useState(
     null as null | Error | true | 'pending',
@@ -53,23 +52,27 @@ export function NewConnection(props: NewConnectionProps) {
 
   function save() {
     const { database, host, port, user, password } = state;
-    props.onSave({
+    props.onJustSave({
+      ...(connection?.id ? { id: connection.id } : {}),
       database: database || 'postgres',
       host: host || 'localhost',
       port: (port && parseInt(port, 10)) || 5432,
       user: user || 'postgres',
       password: password || '',
+      requireSsl: state.requireSsl,
     } as ConnectionConfiguration);
   }
 
-  function submit() {
+  function saveAndConnect() {
     const { database, host, port, user, password } = state;
-    props.onSubmit({
+    props.onSaveAndConnect({
+      ...(connection?.id ? { id: connection.id } : {}),
       database: database || 'postgres',
       host: host || 'localhost',
       port: (port && parseInt(port, 10)) || 5432,
       user: user || 'postgres',
       password: password || '',
+      requireSsl: state.requireSsl,
     } as ConnectionConfiguration);
   }
 
@@ -82,6 +85,7 @@ export function NewConnection(props: NewConnectionProps) {
       port: (port && parseInt(port, 10)) || 5432,
       user: user || 'postgres',
       password: password || '',
+      requireSsl: state.requireSsl,
     })
       .then(() => {
         setTestResult(true);
@@ -103,18 +107,54 @@ export function NewConnection(props: NewConnectionProps) {
         }
       />
       <br />
-      Port:{' '}
-      <input
-        placeholder="5432"
-        defaultValue={connection ? connection.port : ''}
-        onChange={(e) =>
-          setState((state2) => ({
-            ...state2,
-            port: (e.target as HTMLInputElement).value,
-          }))
-        }
-      />
-      <br />
+      <div style={{ display: 'flex', width: 176 }}>
+        <div style={{ flex: 1, paddingTop: 3 }}>
+          <i
+            className={
+              state.requireSsl ? 'fa fa-check-square-o' : 'fa fa-square-o'
+            }
+            onClick={() => {
+              setState((state2) => ({
+                ...state2,
+                requireSsl: !state2.requireSsl,
+              }));
+            }}
+            style={{
+              width: 20,
+              float: 'left',
+              fontSize: 25,
+              marginRight: 8,
+            }}
+          />
+          <span
+            style={{ lineHeight: 1.1 }}
+            onClick={() => {
+              setState((state2) => ({
+                ...state2,
+                requireSsl: !state2.requireSsl,
+              }));
+            }}
+          >
+            Require
+            <br />
+            SSL
+          </span>{' '}
+        </div>
+        <div>
+          Port: <br />
+          <input
+            placeholder="5432"
+            style={{ width: 50, marginBottom: 0 }}
+            defaultValue={connection ? connection.port : ''}
+            onChange={(e) =>
+              setState((state2) => ({
+                ...state2,
+                port: (e.target as HTMLInputElement).value,
+              }))
+            }
+          />
+        </div>
+      </div>
       Database:{' '}
       <input
         placeholder="postgres"
@@ -170,7 +210,7 @@ export function NewConnection(props: NewConnectionProps) {
         ) : null}
       </div>
       <div style={{ marginTop: '4px', marginBottom: '4px' }}>
-        <button onClick={() => submit()} type="button">
+        <button onClick={() => saveAndConnect()} type="button">
           <i className="fa fa-chain" /> Save &amp; Connect
         </button>{' '}
         {props.onCancel ? (

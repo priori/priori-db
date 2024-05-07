@@ -1,4 +1,4 @@
-import { ConnectionConfiguration } from './db/pgpass';
+import { ConnectionConfiguration } from 'db/Connection';
 
 export type FrameType =
   | 'newtable'
@@ -127,25 +127,16 @@ export interface Tab0<T extends FrameType> {
 export type Tab = Tab0<FrameType>;
 
 export interface AppState {
-  connectionError?: Error;
   uidCounter: number;
-  newConnection: boolean;
-  editConnections: boolean;
   newSchema: boolean;
-  editConnection?: {
-    index: number;
-    connection: ConnectionConfiguration;
-  };
   askToCloseWindow: boolean;
-  bases?: string[];
-  passwords: ConnectionConfiguration[];
   connected: boolean;
-  password?: ConnectionConfiguration;
-  schemas?: NavSchema[];
   tabs: Tab[];
   tabsOpenOrder: number[];
   title: string;
   errors: Error[];
+  currentConnectionConfiguration?: ConnectionConfiguration;
+  schemas?: NavSchema[];
   roles?: {
     name: string;
     isUser: boolean;

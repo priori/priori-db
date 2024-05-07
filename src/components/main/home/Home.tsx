@@ -1,110 +1,188 @@
 import { useEffect, useState } from 'react';
+import { useService } from 'util/useService';
 import {
-  connect,
-  open,
-  newConnection,
-  cancelConnection,
-  saveConnection,
-  editConnection,
-  removeConnection,
-  cancelSelectedConnection,
-  closeConnectionError,
-  newConf,
-  editingAll,
-  editConnectionSelected,
-} from '../../../state/actions';
+  deleteConnectionConfiguration,
+  insertConnectionConfiguration,
+  listConnectionConfigurations,
+  updateConnectionConfiguration,
+} from 'util/browserDb';
+import { ConnectionConfiguration, listDatabases } from 'db/Connection';
+import { connect } from 'state/actions';
+import { grantError } from 'util/errors';
 import { AppState } from '../../../types';
-import { ConnectionConfiguration } from '../../../db/pgpass';
-import { NewConnection } from './Configuration';
+import { ConnectionConfigurationForm } from './ConnectionConfigurationForm';
 import { Errors } from '../Errors';
 
 export function Home(props: AppState) {
-  const [connecting, setConnecting] = useState(false);
+  const service = useService(() => listConnectionConfigurations(), []);
+
+  const [state, setState] = useState({
+    connecting: false,
+    newConnection: false,
+    editConnection: null as null | ConnectionConfiguration,
+    openConnection: null as null | ConnectionConfiguration,
+    editConnections: false,
+    error: null as null | Error,
+  });
+
+  const basesService = useService<string[] | null>(
+    () =>
+      state.openConnection
+        ? listDatabases(state.openConnection)
+        : Promise.resolve(null),
+    [state.openConnection],
+  );
+
   useEffect(() => {
-    if (props.connectionError && connecting) {
-      setConnecting(false);
-    }
-  }, [props.connectionError, connecting]);
-  if (props.newConnection || props.passwords.length === 0) {
+    if (basesService?.error)
+      setState((s) => ({ ...s, error: basesService.error }));
+  }, [basesService?.error]);
+
+  const error = state?.error;
+
+  const listingBases =
+    basesService.status === 'reloading' || basesService.status === 'starting';
+
+  const connectionConfigurations = service.lastValidData;
+
+  if (state.newConnection || connectionConfigurations?.length === 0) {
     return (
-      <div>
+      <div style={{ animation: 'show 1s' }}>
         <Errors errors={props.errors} />
-        <div className="connection-error">
-          {props.connectionError && props.connectionError.message}
-        </div>
-        <NewConnection
+        <ConnectionConfigurationForm
           connection={undefined}
-          onSave={saveConnection}
           onRemove={undefined}
           onCancel={
-            props.passwords.length === 0 ? undefined : () => cancelConnection()
+            state.newConnection
+              ? () => {
+                  setState((s) => ({
+                    ...s,
+                    newConnection: false,
+                    editConnections: false,
+                  }));
+                }
+              : undefined
           }
-          onSubmit={newConnection}
+          onJustSave={async (c) => {
+            await insertConnectionConfiguration(c);
+            setState((s) => ({
+              ...s,
+              newConnection: false,
+              editConnections: false,
+            }));
+            service.reload();
+          }}
+          onSaveAndConnect={async (c) => {
+            service.reload();
+            await insertConnectionConfiguration(c);
+            setState((s) => ({
+              ...s,
+              openConnection: c,
+              newConnection: false,
+              editConnections: false,
+            }));
+          }}
         />
       </div>
     );
   }
-  if (props.editConnection) {
-    const { index } = props.editConnection;
+  if (state.editConnection) {
     return (
-      <div>
+      <div style={{ animation: 'show 1s' }}>
         <Errors errors={props.errors} />
-        <div className="connection-error">
-          {props.connectionError && props.connectionError.message}
-        </div>
-        <NewConnection
-          connection={props.editConnection.connection}
-          onSave={(e: ConnectionConfiguration) => {
-            saveConnection(e, index);
+        <ConnectionConfigurationForm
+          key={state.editConnection.id}
+          connection={state.editConnection}
+          onJustSave={async (e: ConnectionConfiguration) => {
+            await updateConnectionConfiguration(e);
+            service.reload();
+            setState((s) => ({
+              ...s,
+              editConnection: null,
+              newConnection: false,
+              editConnections: false,
+            }));
           }}
-          onCancel={
-            props.passwords.length === 0 ? undefined : () => cancelConnection()
-          }
-          onSubmit={(e: ConnectionConfiguration) => newConnection(e, index)}
-          onRemove={() => removeConnection(index)}
+          onCancel={() => {
+            setState((s) => ({
+              ...s,
+              editConnection: null,
+              newConnection: false,
+              editConnections: false,
+            }));
+          }}
+          onSaveAndConnect={async (e: ConnectionConfiguration) => {
+            await updateConnectionConfiguration(e);
+            await service.reload();
+            setState((s) => ({
+              ...s,
+              editConnection: null,
+              newConnection: false,
+              openConnection: e,
+              editConnections: false,
+            }));
+          }}
+          onRemove={async () => {
+            await deleteConnectionConfiguration(state.editConnection!.id!);
+            await service.reload();
+            setState((s) => ({
+              ...s,
+              editConnection: null,
+              newConnection: false,
+              editConnections: false,
+            }));
+          }}
         />
       </div>
     );
   }
   return (
-    <div>
+    <div style={{ animation: 'show 1s' }}>
       <Errors errors={props.errors} />
-      {props.connectionError ? (
+      {error ? (
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            right: 0,
             left: 0,
+            right: 0,
             bottom: 0,
-            background: 'rgba(256,256,256,.5)',
+            top: 0,
+            background: 'rgba(235, 235, 235, 0.65)',
+            backdropFilter: 'blur(0.75px)',
             zIndex: 1,
           }}
         >
           <div
             style={{
-              padding: '20px',
+              padding: '30px 20px',
               background: 'white',
-              boxShadow: '0 1px 3px rgba(0,0,0,.4)',
+              boxShadow: '0 4px 40px rgba(0, 0, 0, 0.35)',
               maxWidth: '500px',
               color: '#d33',
               margin: '20px auto',
+              textAlign: 'center',
             }}
           >
-            {typeof props.connectionError === 'string'
-              ? props.connectionError
-              : props.connectionError.message ||
-                JSON.stringify(props.connectionError)}{' '}
+            <span style={{ userSelect: 'text' }}>{error.message}</span>{' '}
             <button
               style={{ marginTop: '5px' }}
-              onClick={() => closeConnectionError()}
+              onClick={() => {
+                setState((s) => ({ ...s, error: null, openConnection: null }));
+              }}
               type="button"
             >
               Close
             </button>{' '}
             <button
               style={{ marginTop: '5px' }}
-              onClick={() => editConnectionSelected()}
+              onClick={() => {
+                setState((s) => ({
+                  ...s,
+                  error: null,
+                  openConnection: null,
+                  editConnection: s.openConnection,
+                }));
+              }}
               type="button"
             >
               Edit
@@ -112,28 +190,50 @@ export function Home(props: AppState) {
           </div>
         </div>
       ) : null}
-      {props.passwords && props.passwords.length ? (
+      {connectionConfigurations?.length ? (
         <div className="connections">
-          {props.passwords.map((p, i) => (
+          {connectionConfigurations.map((p, i) => (
             <div
               className={`connection${
-                props.editConnections ? ' connection--editing' : ''
+                state.editConnections ? ' connection--editing' : ''
               }`}
-              onClick={() => {
-                if (props.editConnections) editConnection(p, i);
-                else open(p);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') {
-                  if (props.editConnections) editConnection(p, i);
-                  else open(p);
-                }
-              }}
+              onClick={
+                listingBases
+                  ? undefined
+                  : () => {
+                      if (state.editConnections)
+                        setState((s) => ({ ...s, editConnection: p }));
+                      else {
+                        setState((s) => ({ ...s, openConnection: p }));
+                      }
+                      if (document.activeElement instanceof HTMLElement)
+                        document.activeElement.blur();
+                    }
+              }
+              onKeyDown={
+                listingBases
+                  ? undefined
+                  : (e) => {
+                      if (
+                        e.key === ' ' ||
+                        e.key === 'Enter' ||
+                        e.key === 'Space'
+                      ) {
+                        if (state.editConnections)
+                          setState((s) => ({ ...s, editConnection: p }));
+                        else {
+                          setState((s) => ({ ...s, openConnection: p }));
+                        }
+                        if (document.activeElement instanceof HTMLElement)
+                          document.activeElement.blur();
+                      }
+                    }
+              }
               role="button"
               tabIndex={0}
               key={i}
             >
-              {props.editConnections ? <i className="fa fa-pencil" /> : null}
+              {state.editConnections ? <i className="fa fa-pencil" /> : null}
               <span className="connection--user">{p.user}</span>@
               <span className="connection--host">{p.host}</span>
               <span
@@ -154,13 +254,39 @@ export function Home(props: AppState) {
           ))}
         </div>
       ) : null}
-      {props.bases ? (
+      {basesService.lastValidData ? (
         <div
           className="bases-wrapper"
-          onClick={connecting ? undefined : () => cancelSelectedConnection()}
+          style={
+            state.connecting
+              ? {
+                  filter: 'blur(0.5px) brightness(99%) grayscale(0.5)',
+                }
+              : undefined
+          }
+          onClick={
+            state.connecting
+              ? undefined
+              : () => {
+                  setState((s) => ({
+                    ...s,
+                    openConnection: null,
+                  }));
+                }
+          }
         >
           <button
-            onClick={connecting ? undefined : () => editConnectionSelected()}
+            onClick={
+              state.connecting
+                ? undefined
+                : () => {
+                    setState((s) => ({
+                      ...s,
+                      editConnection: state.openConnection,
+                      openConnection: null,
+                    }));
+                  }
+            }
             className="connections--edit-button2"
             type="button"
           >
@@ -168,36 +294,55 @@ export function Home(props: AppState) {
           </button>
           <div className="bases">
             <div className="bases-inner-wrapper">
-              {props.bases.map((b) => (
+              {basesService.lastValidData.map((b) => (
                 <div
                   className={`base${
-                    b === props.password?.database ? ' base--default' : ''
-                  }`}
+                    b === state.openConnection?.database ? ' base--default' : ''
+                  }${state.connecting ? ' selected' : ''}`}
                   key={b}
                   tabIndex={0}
                   role="button"
-                  style={connecting ? { color: 'rgba(0,0,0,.3)' } : undefined}
+                  style={
+                    state.connecting ? { color: 'rgba(0,0,0,.3)' } : undefined
+                  }
                   onKeyDown={
-                    connecting
+                    state.connecting
                       ? undefined
-                      : (e) => {
+                      : async (e) => {
                           if (
                             e.key === ' ' ||
                             e.key === 'Enter' ||
                             e.key === 'Space'
                           ) {
                             e.stopPropagation();
-                            connect(b);
+                            try {
+                              setState((s) => ({ ...s, connecting: true }));
+                              await connect(state.openConnection!, b);
+                            } catch (err) {
+                              setState((s) => ({
+                                ...s,
+                                connecting: false,
+                                error: grantError(err),
+                              }));
+                            }
                           }
                         }
                   }
                   onClick={
-                    connecting
+                    state.connecting
                       ? undefined
-                      : (e) => {
-                          setConnecting(true);
+                      : async (e) => {
                           e.stopPropagation();
-                          connect(b);
+                          try {
+                            setState((s) => ({ ...s, connecting: true }));
+                            await connect(state.openConnection!, b);
+                          } catch (err) {
+                            setState((s) => ({
+                              ...s,
+                              connecting: false,
+                              error: grantError(err),
+                            }));
+                          }
                         }
                   }
                 >
@@ -207,21 +352,88 @@ export function Home(props: AppState) {
             </div>
           </div>
         </div>
+      ) : listingBases ? (
+        <div className="bases-wrapper">
+          <div
+            style={{
+              position: 'fixed',
+              color: '#777',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              opacity: 0,
+              animation: '0.6s 0.2s show forwards',
+            }}
+          >
+            <i
+              className="fa fa-circle-o-notch fa-spin"
+              style={{ fontSize: 62 }}
+            />
+          </div>
+        </div>
       ) : undefined}
       <button
-        onClick={() => editingAll()}
+        onClick={
+          listingBases
+            ? undefined
+            : () => {
+                setState({
+                  ...state,
+                  editConnections: !state.editConnections,
+                });
+              }
+        }
         type="button"
         className="connections--edit-button"
       >
         <i className="fa fa-pencil" />
       </button>
       <button
-        onClick={() => newConf()}
+        onClick={
+          listingBases
+            ? undefined
+            : () => {
+                setState({
+                  ...state,
+                  editConnections: false,
+                  newConnection: true,
+                });
+              }
+        }
         type="button"
         className="connections--add-button"
       >
         <i className="fa fa-plus" />
       </button>
+      {state.connecting ? (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1,
+          }}
+        >
+          <div
+            style={{
+              position: 'fixed',
+              color: '#777',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              opacity: 0,
+              animation: '0.6s 0.2s show forwards',
+            }}
+          >
+            <i
+              className="fa fa-circle-o-notch fa-spin"
+              style={{ fontSize: 62 }}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -2,7 +2,6 @@ import pg, { QueryArrayResult, QueryResult } from 'pg';
 import { assert } from 'util/assert';
 import { grantError } from 'util/errors';
 import hls from 'util/hotLoadSafe';
-import { ConnectionConfiguration } from './pgpass';
 import { exclusives } from './ExclusiveConnection';
 import { DB } from './DB';
 
@@ -11,21 +10,43 @@ pg.types.setTypeParser(1114, (val) => val);
 pg.types.setTypeParser(1184, (val) => val);
 pg.types.setTypeParser(1186, (val) => val);
 
+export interface ConnectionConfiguration {
+  id?: number;
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
+  requireSsl?: boolean;
+}
+
 export async function connect(c: ConnectionConfiguration, db?: string) {
   assert(!hls.pool);
   const database =
     db ||
     (c.database && c.database !== '*' ? c.database : 'postgres') ||
     undefined;
-  const config = {
-    user: c.user,
-    database,
-    password: c.password,
-    host: c.host,
-    port: c.port,
-    allowExitOnIdle: false,
-  };
-  const p = new pg.Pool(config);
+  const p = new pg.Pool(
+    c.requireSsl
+      ? ({
+          user: c.user,
+          database,
+          password: c.password,
+          host: c.host,
+          port: c.port,
+          allowExitOnIdle: false,
+          ssl: {},
+          sslmode: 'require',
+        } as pg.PoolConfig)
+      : {
+          user: c.user,
+          database,
+          password: c.password,
+          host: c.host,
+          port: c.port,
+          allowExitOnIdle: false,
+        },
+  );
   hls.pool = p;
   try {
     const client = await p.connect();
@@ -55,18 +76,31 @@ export function openConnection() {
 export async function listFromConfiguration(
   c: ConnectionConfiguration,
   query: string,
+  args?: (number | string | boolean | null)[] | undefined,
 ) {
-  const client = new pg.Client({
-    user: c.user,
-    database: c.database && c.database !== '*' ? c.database : 'postgres',
-    password: c.password,
-    host: c.host,
-    port: c.port,
-  });
+  const client = new pg.Client(
+    c.requireSsl
+      ? ({
+          user: c.user,
+          database: c.database && c.database !== '*' ? c.database : 'postgres',
+          password: c.password,
+          host: c.host,
+          port: c.port,
+          ssl: {},
+          sslmode: 'require',
+        } as pg.ClientConfig)
+      : {
+          user: c.user,
+          database: c.database && c.database !== '*' ? c.database : 'postgres',
+          password: c.password,
+          host: c.host,
+          port: c.port,
+        },
+  );
   try {
     await client.connect();
     try {
-      return await client.query(query, []);
+      return await client.query(query, args ?? []);
     } catch (err2) {
       try {
         client.end();
@@ -166,8 +200,10 @@ export async function listDatabases(c: ConnectionConfiguration) {
   const res = await listFromConfiguration(
     c,
     `SELECT datname as name
-        FROM pg_database
-        WHERE datistemplate = false;`,
+    FROM pg_database
+    WHERE datistemplate = false
+    ORDER BY datname != $1, datname`,
+    [c.database],
   );
   return res.rows.map((r) => (r as { name: string }).name) as string[];
 }

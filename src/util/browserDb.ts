@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { ConnectionConfiguration } from 'db/Connection';
+
 let db: any = null;
 if (!db) db = (window as any).openDatabase('PrioriDB', '1.0', 'Priori DB', 0);
 function query(sqlQuery: string, params: (string | null | number | boolean)[]) {
@@ -270,6 +272,48 @@ export async function updateQuery(
       WHERE id = ?
     `,
     [time, resultLength, id],
+  );
+}
+
+export async function listConnectionConfigurations(): Promise<
+  ConnectionConfiguration[]
+> {
+  if (!localStorage.getItem('connectionConfigurations'))
+    localStorage.setItem('connectionConfigurations', JSON.stringify([]));
+
+  return JSON.parse(
+    localStorage.getItem('connectionConfigurations') || '[]',
+  ) as ConnectionConfiguration[];
+}
+
+export async function insertConnectionConfiguration(
+  c: ConnectionConfiguration,
+) {
+  if (c.id) throw new Error('id should not be set');
+  const cs = await listConnectionConfigurations();
+  const newId = Math.max(...cs.map((cc) => cc.id || 0), 0) + 1;
+  localStorage.setItem(
+    'connectionConfigurations',
+    JSON.stringify([...cs, { ...c, id: newId }]),
+  );
+}
+
+export async function deleteConnectionConfiguration(id: number) {
+  const cs = await listConnectionConfigurations();
+  localStorage.setItem(
+    'connectionConfigurations',
+    JSON.stringify(cs.filter((cc) => cc.id !== id)),
+  );
+}
+
+export async function updateConnectionConfiguration(
+  c: ConnectionConfiguration,
+) {
+  if (!c.id) throw new Error('id is required');
+  const cs = await listConnectionConfigurations();
+  localStorage.setItem(
+    'connectionConfigurations',
+    JSON.stringify(cs.map((cc) => (cc.id === c.id ? c : cc))),
   );
 }
 

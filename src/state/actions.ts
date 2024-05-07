@@ -1,10 +1,11 @@
 import { assert } from 'util/assert';
 import { useEffect } from 'react';
 import { grantError } from 'util/errors';
-import { sortBy } from 'util/sort';
 import { updateConnection } from 'util/browserDb';
-import { ConnectionConfiguration, savePasswords } from '../db/pgpass';
-import { connect as dbConnect, listDatabases } from '../db/Connection';
+import {
+  connect as dbConnect,
+  ConnectionConfiguration,
+} from '../db/Connection';
 import state, { currentState } from './state';
 import { DB } from '../db/DB';
 import { FrameProps } from '../types';
@@ -13,13 +14,9 @@ export const {
   openFunctions,
   openDomains,
   openSequences,
-  newConf,
   askToCloseWindow,
   cancelAskToCloseWindow,
-  editingAll,
-  editConnectionSelected,
   updateTabText,
-  closeConnectionError,
   previewSchemaInfo,
   keepSchemaInfo,
   previewTableInfo,
@@ -29,9 +26,6 @@ export const {
   nextTab,
   prevTab,
   activateTab,
-  editConnection,
-  cancelConnection,
-  cancelSelectedConnection,
   newSchema,
   updateHeaderTabsDisplayOrder,
   newQueryTab,
@@ -55,34 +49,6 @@ export const {
   previewRole,
   renameSchema,
 } = state;
-
-export async function open(c: ConnectionConfiguration) {
-  state.setConnection(c);
-  try {
-    const res = await listDatabases(c);
-    state.setBases(sortBy(res, (a) => (a === c.database ? null : a)));
-  } catch (err) {
-    state.setConnectionError(grantError(err));
-  }
-}
-
-export async function newConnection(
-  conf: ConnectionConfiguration,
-  index?: number,
-): Promise<void> {
-  removeError();
-  try {
-    const res = await listDatabases(conf);
-    state.addConnectionConfiguration(conf, index);
-    savePasswords(currentState().passwords);
-    state.setConnection(conf);
-    state.setBases(sortBy(res, (a) => (a === conf.database ? null : a)));
-  } catch (err0) {
-    const err = grantError(err0);
-    state.setConnectionError(err);
-    throw err;
-  }
-}
 
 export async function reloadNav() {
   const newSchemas = await DB.listAll();
@@ -127,28 +93,19 @@ export function askToCloseCurrent() {
   }
 }
 
-export async function connect(s: string) {
-  const { password } = currentState();
-  assert(password);
+export async function connect(conf: ConnectionConfiguration, database: string) {
   try {
-    await dbConnect(password, s);
-    await updateConnection(
-      password.host,
-      password.port,
-      password.user,
-      password.database,
-    );
+    await dbConnect(conf, database);
+    await updateConnection(conf.host, conf.port, conf.user, conf.database);
     try {
       const schemas = await DB.listAll();
       const roles = await DB.listRoles();
-      state.connected(s, schemas, roles);
+      state.connected(conf, database, schemas, roles);
     } catch (err) {
-      state.setConnectionError(grantError(err));
+      throw grantError(err);
     }
   } catch (err0) {
-    const err = grantError(err0);
-    state.setConnectionError(err);
-    throw err;
+    throw grantError(err0);
   }
 }
 
@@ -167,18 +124,6 @@ export function openSchema(name: string) {
   const schema = s.schemas.find((c) => c.name === name);
   assert(schema);
   state.toggleSchema(name);
-}
-
-export function saveConnection(con: ConnectionConfiguration, index?: number) {
-  state.addConnectionConfiguration(con, index);
-  savePasswords(currentState().passwords);
-  state.connectionSaved();
-}
-
-export function removeConnection(index: number) {
-  state.removeConnection(index);
-  savePasswords(currentState().passwords);
-  state.connectionSaved();
 }
 
 export function newTable(schema: string) {
