@@ -5,10 +5,12 @@ const closeNow = () => {
   state = 'close';
   window.close();
 };
+
 const reloadNow = () => {
   state = 'close';
   window.location.reload();
 };
+
 export function useWindowCloseConfirm(fn: (f: () => void) => void) {
   useEffect(() => {
     const listener = (e: BeforeUnloadEvent) => {
@@ -20,4 +22,9 @@ export function useWindowCloseConfirm(fn: (f: () => void) => void) {
     window.addEventListener(`beforeunload`, listener);
     return () => window.removeEventListener(`beforeunload`, listener);
   }, [fn]);
+}
+
+export function forceClose() {
+  state = 'close';
+  window.close();
 }

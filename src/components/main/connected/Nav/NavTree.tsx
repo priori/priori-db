@@ -1,5 +1,4 @@
 import { NavSchema } from 'types';
-import { grantScrollVisibility } from 'main/util';
 import {
   newTable,
   openSchema,
@@ -25,6 +24,16 @@ import {
 } from '../../../../state/actions';
 import { height, useNavTree } from './navTreeUtils';
 import { Tabs } from './navUtils';
+
+function grantScrollVisibility(el: HTMLDivElement | null) {
+  if (el) {
+    el.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    });
+  }
+}
 
 export function NavTree({
   schemas,

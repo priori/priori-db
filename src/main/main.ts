@@ -1,31 +1,25 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
+/* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 
-/**
- * This module executes inside of electron's main process. You can start
- * electron renderer process from here and communicate with the other processes
- * through IPC.
- *
- * When running `npm run build` or `npm run build:main`, this file is compiled to
- * `./src/main.js` using webpack. This gives us some performance wins.
- */
 import { app, BrowserWindow, shell, Menu, dialog, ipcMain } from 'electron';
 // import { autoUpdater } from 'electron-updater';
-// import log from 'electron-log';
-import { resolveHtmlPath } from './util';
+import { URL } from 'url';
+import path from 'path';
 
-// export default class AppUpdater {
-//   constructor() {
-//     log.transports.file.level = 'info';
-//     autoUpdater.logger = log;
-//     autoUpdater.checkForUpdatesAndNotify();
-//   }
-// }
+let resolveHtmlPath: (htmlFileName: string) => string;
 
-// ipcMain.on('ipc-example', async (event, arg) => {
-//   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-//   console.log(msgTemplate(arg));
-//   event.reply('ipc-example', msgTemplate('pong'));
-// });
+if (process.env.NODE_ENV === 'development') {
+  const port = process.env.PORT || 1212;
+  resolveHtmlPath = (htmlFileName: string) => {
+    const url = new URL(`http://localhost:${port}`);
+    url.pathname = htmlFileName;
+    return url.href;
+  };
+} else {
+  resolveHtmlPath = (htmlFileName: string) => {
+    return `file://${path.resolve(__dirname, '../renderer/', htmlFileName)}`;
+  };
+}
 
 async function openAny() {
   const { canceled, filePaths } = await dialog.showOpenDialog({});
@@ -101,9 +95,6 @@ const createWindow = async () => {
     webPreferences: {
       nodeIntegration: true, // opt out to node integration
       contextIsolation: false, // opt out to node integration
-      // opt out to node integration preload: app.isPackaged
-      // opt out to node integration ? path.join(__dirname, 'preload.js')
-      // opt out to node integration : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
   window.setMenu(null);
@@ -122,17 +113,14 @@ const createWindow = async () => {
   });
 
   window.on('closed', () => {
-    // window = null;
     windowsCount -= 1;
   });
 
-  // Open urls in the user's browser
   window.webContents.setWindowOpenHandler((edata) => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
 
-  // Remove this if your app does not use auto updates
   // new AppUpdater();
 };
 
@@ -146,15 +134,34 @@ localShortcut.register('CommandOrControl+N', () => {
   createWindow();
 });
 localShortcut.register('F5', () => {});
-/**
- * Add event listeners...
- */
 
 app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
-  // after all windows have been closed
   if (process.platform !== 'darwin') {
     app.quit();
+  }
+});
+
+app.on('before-quit', (e) => {
+  if (process.platform === 'darwin' && windowsCount > 0) {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win?.isVisible()) {
+      e.preventDefault();
+      win.show();
+      win.webContents.send('close');
+    } else {
+      const answer = !!dialog.showMessageBoxSync({
+        type: 'question',
+        buttons: ['Yes', 'No'],
+        message: `You have ${windowsCount} window${windowsCount > 1 ? 's' : ''} open.\nAre you sure you want to quit?\n${windowsCount > 1 ? 'All windows' : 'The window'} will be closed and pending changes will be lost.`,
+      });
+      if (answer) {
+        e.preventDefault();
+      } else {
+        BrowserWindow.getAllWindows().forEach((w) => {
+          w.webContents.send('force-close');
+        });
+      }
+    }
   }
 });
 
@@ -175,8 +182,6 @@ app
       app.dock.setMenu(dockMenu);
     }
     app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
       if (windowsCount === 0) createWindow();
     });
     ipcMain.handle('dialog:openAny', openAny);

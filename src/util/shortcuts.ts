@@ -8,7 +8,6 @@ export function useShortcuts({
   prevTab,
   closeTab,
   newTab,
-  newWindow,
   f11,
   save,
   open,
@@ -18,7 +17,6 @@ export function useShortcuts({
   prevTab?: () => void;
   closeTab?: () => void;
   newTab?: () => void;
-  newWindow?: () => void;
   f11?: () => void;
   f5?: () => void;
   save?: () => void | false;
@@ -70,15 +68,13 @@ export function useShortcuts({
       (e.key === 't' || e.key === 'T')
     ) {
       if (newTab) newTab();
-    } else if (
-      (e.ctrlKey || (isIOS && e.metaKey)) &&
-      (e.key === 'n' || e.key === 'N')
-    ) {
-      if (newWindow) newWindow();
-      // electron.ipcRenderer.send('newWindow')
     } else if (e.key === 'F11') {
       if (f11) f11();
-      // } else if ( e.altKey && e.key == 'F4' ) {
+    } else if (
+      (isIOS && (e.key === 'q' || e.key === 'Q') && e.metaKey) ||
+      (e.altKey && e.key === 'F4')
+    ) {
+      window.close();
     }
   });
   useEffect(() => {

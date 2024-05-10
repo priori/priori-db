@@ -9,6 +9,8 @@ import {
 import { ConnectionConfiguration, listDatabases } from 'db/Connection';
 import { connect } from 'state/actions';
 import { grantError } from 'util/errors';
+import { useShortcuts } from 'util/shortcuts';
+import { useEventListener } from 'util/useEventListener';
 import { AppState } from '../../../types';
 import { ConnectionConfigurationForm } from './ConnectionConfigurationForm';
 import { Errors } from '../Errors';
@@ -23,6 +25,12 @@ export function Home(props: AppState) {
     openConnection: null as null | ConnectionConfiguration,
     editConnections: false,
     error: null as null | Error,
+  });
+
+  useShortcuts({
+    closeTab() {
+      window.close();
+    },
   });
 
   const basesService = useService<string[] | null>(
@@ -44,6 +52,12 @@ export function Home(props: AppState) {
     basesService.status === 'reloading' || basesService.status === 'starting';
 
   const connectionConfigurations = service.lastValidData;
+
+  useEventListener(window, 'keydown', (e) => {
+    if (e.key === 'Escape') {
+      setState((s) => ({ ...s, error: null, openConnection: null }));
+    }
+  });
 
   if (state.newConnection || connectionConfigurations?.length === 0) {
     return (

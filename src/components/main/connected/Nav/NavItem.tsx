@@ -14,7 +14,6 @@ import {
 } from 'state/actions';
 import { useEvent } from 'util/useEvent';
 import { assert } from 'util/assert';
-import { grantScrollVisibility } from 'main/util';
 import { Entity } from './Nav';
 
 const icons = {
@@ -27,6 +26,16 @@ const icons = {
   SCHEMA: 'fa fa-database',
   FUNCTION: 'function-icon',
 } as const;
+
+function grantScrollVisibility(el: HTMLDivElement | null) {
+  if (el) {
+    el.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    });
+  }
+}
 
 export function NavItem({
   entity,
