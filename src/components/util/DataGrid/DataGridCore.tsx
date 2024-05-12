@@ -1,10 +1,10 @@
+import { Filter, Sort } from 'db/util';
 import { FieldDef } from 'pg';
 import { DataGridActiveCell } from './DataGridActiveCell';
 import { DataGridTable } from './DataGridTable';
 import { DataGridThead } from './DataGridThead';
-import { DataGridSort } from './DataGrid';
 import { DataGridSortDialog } from './DataGridSortDialog';
-import { DataGridFilterDialog, Filter } from './DataGridFilterDialog';
+import { DataGridFilterDialog } from './DataGridFilterDialog';
 import { useDataGridCore } from './dataGridCoreUtils';
 import { DataGridUpdateInfoDialog } from './DataGridUpdateInfo';
 
@@ -29,8 +29,8 @@ export interface DataGridCoreProps {
   }) => Promise<boolean>;
   pks?: string[];
   currentFilter?: Filter;
-  currentSort?: DataGridSort;
-  onChangeSort?: (sort: DataGridSort) => void;
+  currentSort?: Sort;
+  onChangeSort?: (sort: Sort) => void;
   onChangeFilter?: (filter: Filter) => void;
 }
 

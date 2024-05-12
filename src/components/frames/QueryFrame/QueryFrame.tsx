@@ -56,7 +56,7 @@ interface QueryFrameState {
     | {
         rows: SimpleValue[][];
         fields: FieldDef[];
-        rowCount: number;
+        rowCount: number | null;
         fetchMoreRows?: () => Promise<{
           rows: SimpleValue[][];
           fields: FieldDef[];

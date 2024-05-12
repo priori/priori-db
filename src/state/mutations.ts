@@ -1,6 +1,6 @@
 import { assert } from 'util/assert';
-import { ConnectionConfiguration } from 'db/pgpass';
 import { AppState, FrameProps, NavSchema, Tab, Tab0, Type } from 'types';
+import { ConnectionConfiguration } from 'db/Connection';
 
 export function cancelAskToCloseWindow(current: AppState) {
   return {

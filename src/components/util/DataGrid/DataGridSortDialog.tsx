@@ -1,12 +1,12 @@
+import { Sort } from 'db/util';
 import { useState } from 'react';
 import { equals } from 'util/equals';
 import { Dialog } from '../Dialog/Dialog';
-import { DataGridSort } from './DataGrid';
 
 interface DataGridSortDialogProps {
   fields: { name: string }[];
-  currentSort?: DataGridSort;
-  onChangeSort: (sort: DataGridSort) => void;
+  currentSort?: Sort;
+  onChangeSort: (sort: Sort) => void;
   onClose: () => void;
 }
 

@@ -1,4 +1,3 @@
-import { ConnectionConfiguration } from 'db/Connection';
 import React, { useMemo, useState } from 'react';
 import { currentState } from 'state/state';
 import { browserDb, listConnectionConfigurations } from 'util/browserDb';
