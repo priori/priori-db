@@ -10,6 +10,7 @@ import {
   extraTableTab,
 } from '../../../state/actions';
 import { Tab } from '../../../types';
+import { equals } from 'util/equals';
 
 export interface TabsHeaderProps {
   tabs: Tab[];
@@ -117,7 +118,23 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
   }
 
   UNSAFE_componentWillReceiveProps(next: TabsHeaderProps) {
-    if (this.state.sorting) this.applySort();
+    if ((this.props, equals(next, this.props))) return;
+    if (
+      this.state.sorting &&
+      !equals(
+        {
+          tabs: this.props.tabs.map((t) => t.props.uid),
+          left: this.props.left,
+          onActiveTabMouseDown: this.props.onActiveTabMouseDown,
+        },
+        {
+          tabs: next.tabs.map((t) => t.props.uid),
+          left: next.left,
+          onActiveTabMouseDown: next.onActiveTabMouseDown,
+        },
+      )
+    )
+      this.applySort();
     const tabs = next.tabs.map((t, index) => {
       const currentTab = this.state.tabs.find(
         (t2) => t2.props.uid === t.props.uid,
