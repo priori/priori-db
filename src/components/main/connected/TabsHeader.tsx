@@ -39,6 +39,47 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
     }
   }
 
+  static statusRender(t: Tab) {
+    if (!t.status) return null;
+    return (
+      <span
+        style={{
+          position: 'relative',
+          fontSize: 14,
+          top: -1,
+          left: -25,
+          color: 'rgba(0,0,0,.2)',
+        }}
+      >
+        {t.status === 'running' ? (
+          <i
+            className="fa fa-circle-o-notch fa-spin fa-3x fa-fw"
+            style={{
+              display: 'inline-block',
+              fontSize: 'inherit',
+            }}
+          />
+        ) : t.status === 'success' ? (
+          <i
+            className="fa fa-check"
+            style={{
+              display: 'inline-block',
+              fontSize: 'inherit',
+            }}
+          />
+        ) : t.status === 'error' ? (
+          <i
+            className="fa fa-exclamation-triangle"
+            style={{
+              display: 'inline-block',
+              fontSize: 'inherit',
+            }}
+          />
+        ) : null}
+      </span>
+    );
+  }
+
   prevEl: HTMLInputElement | null = null;
 
   constructor(props: TabsHeaderProps) {
@@ -136,7 +177,8 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
   blurInput(input: HTMLInputElement) {
     const { editing } = this.state;
     assert(editing);
-    updateTabText(editing.props.uid, input.value);
+    if (input.value || editing.title)
+      updateTabText(editing.props.uid, input.value);
     this.setState((state) => ({
       ...state,
       editing: null,
@@ -235,7 +277,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
                 <span
                   className={`tabs-header__tab${
                     t.active ? ' tabs-header__tab--active' : ''
-                  }`}
+                  }${!t.title ? ' tabs-header__tab--empty' : ''}`}
                   key={t.keep ? t.props.uid : -index}
                   onMouseDown={(e) => {
                     if (this.state.editing !== t) {
@@ -249,31 +291,34 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
                   style={{ width }}
                 >
                   {this.state.editing === t ? (
-                    <input
-                      className="tabs-header__input"
-                      type="text"
-                      defaultValue={t.title}
-                      ref={(el: HTMLInputElement | null) => {
-                        if (el) {
-                          el.focus();
-                          el.setSelectionRange(0, t.title.length);
+                    <span style={{ flex: 1 }}>
+                      <input
+                        className="tabs-header__input"
+                        type="text"
+                        defaultValue={t.title ?? ''}
+                        ref={(el: HTMLInputElement | null) => {
+                          if (el) {
+                            el.focus();
+                            el.setSelectionRange(0, (t.title ?? '').length);
+                          }
+                          this.prevEl = el;
+                        }}
+                        onKeyDown={this.onInputKeyDown}
+                        onBlur={(e) =>
+                          this.blurInput(e.target as HTMLInputElement)
                         }
-                        this.prevEl = el;
-                      }}
-                      onKeyDown={this.onInputKeyDown}
-                      onBlur={(e) =>
-                        this.blurInput(e.target as HTMLInputElement)
-                      }
-                    />
+                      />
+                    </span>
                   ) : (
                     <span
                       className={`tabs-header__tab-name ${
                         t.keep ? '' : ' tabs-header__tab-name--preview'
                       }`}
                     >
-                      {t.title}
+                      {t.title || t.title2}
                     </span>
                   )}
+                  {TabsHeader.statusRender(t)}
                   {this.state.editing === t ? (
                     <i className="tabs-header__close fa fa-close" />
                   ) : (
@@ -307,7 +352,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
             <span
               className={`tabs-header__tab${
                 t.active ? ' tabs-header__tab--active' : ''
-              }${t.keep ? '' : ' preview'}`}
+              }${t.keep ? '' : ' preview'}${!t.title ? ' tabs-header__tab--empty' : ''}`}
               key={t.keep ? t.props.uid : -index}
               style={{ width, position: 'absolute', left: t.left }}
             >
@@ -316,8 +361,9 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
                   t.keep ? '' : ' tabs-header__tab-name--preview'
                 }`}
               >
-                {t.title}
+                {t.title || t.title2}
               </span>
+              {TabsHeader.statusRender(t)}
               <i className="tabs-header__close fa fa-close" />
             </span>
           ))}

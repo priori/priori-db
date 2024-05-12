@@ -3,7 +3,7 @@ import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { assert } from 'util/assert';
 import { useEvent } from 'util/useEvent';
 import { FieldDef, QueryArrayResult } from 'pg';
-import { closeTabNow, showError } from 'state/actions';
+import { closeTabNow, showError, updateTab } from 'state/actions';
 import { DB } from 'db/DB';
 import { CopyStreamQuery, CopyToStreamQuery, from, to } from 'pg-copy-streams';
 import {
@@ -146,15 +146,27 @@ export function QueryFrame({ uid }: { uid: number }) {
         cursorEnd: { line: number; ch: number };
       } = null,
     ) => {
-      setState((state2) => ({ ...state2, running: true, resetNotices: true }));
-      const title = currentState().tabs.find((t) => t.props.uid === uid)?.title;
+      updateTab(
+        uid,
+        'running',
+        query.trim().replace(/\s+/g, ' ').substring(0, 100),
+      );
+
+      setState((state2) => ({
+        ...state2,
+        running: true,
+        resetNotices: true,
+      }));
+      const tabTitle = currentState().tabs.find(
+        (t) => t.props.uid === uid,
+      )?.title;
       const id = !saveQuery
         ? undefined
         : await insertQuery(
             query,
             uid,
             saveQuery,
-            title === 'New Query' ? null : title || null,
+            tabTitle === 'New Query' ? null : tabTitle || null,
           );
       const start = new Date().getTime();
       try {
@@ -174,6 +186,8 @@ export function QueryFrame({ uid }: { uid: number }) {
                 | (CopyStreamQuery & { fields: undefined })
                 | (CopyToStreamQuery & { fields: undefined }))
             : await db.query(query, []);
+
+        updateTab(uid, 'success');
 
         if (stdoutMode)
           await pipeline(
@@ -227,6 +241,7 @@ export function QueryFrame({ uid }: { uid: number }) {
           }));
         }
       } catch (err: unknown) {
+        updateTab(uid, 'error');
         const time = new Date().getTime() - start;
         if (id) updateFailedQuery(id, time);
         if (isMounted())

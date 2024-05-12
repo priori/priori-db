@@ -66,12 +66,14 @@ i.tabs-header__plus {
   margin-right: 17px;
   text-overflow: ellipsis;
   padding: 1px 7px;
+  flex: 1;
 }
 .tabs-header__tab {
   position: relative;
   color: #444;
   overflow: hidden;
   margin-left: -1px;
+  display: flex;
 }
 .tabs-header__tab:hover {
   background: #bbb;
@@ -88,10 +90,25 @@ i.tabs-header__plus {
 input.tabs-header__input {
   padding: 3px !important;
   margin-top: 5px;
-  margin-left: 10px;
+  margin-left: 7px;
   max-width: calc(100% - 37px);
   width: 100%;
   &:focus {
     padding: 2px !important;
   }
+}
+.tabs-header__tab--empty .tabs-header__tab-name {
+  opacity: 0.2;
+}
+.tabs-header__tab .fa-exclamation-triangle {
+  color: rgba(150, 0, 0, 0.33);
+}
+.tabs-header__tab--active .fa-exclamation-triangle {
+  color: rgba(190, 0, 0, 0.9);
+}
+.tabs-header__tab--active .fa-check {
+  color: #0a0;
+}
+.tabs-header__tab .fa-check {
+  color: #484;
 }

@@ -33,7 +33,10 @@ export interface RoleFrameProps extends AbstractTabProps<'role'> {
   readonly name: string;
 }
 
-export type QueryFrameProps = AbstractTabProps<'query'>;
+export interface QueryFrameProps extends AbstractTabProps<'query'> {
+  readonly title2?: string;
+  readonly status?: 'running' | 'error' | 'success';
+}
 
 export interface TableFrameProps extends AbstractTabProps<'table'> {
   readonly table: string;
@@ -119,10 +122,12 @@ export interface NavSchema {
 }
 
 export interface Tab0<T extends FrameType> {
-  readonly title: string;
+  readonly title?: string;
   readonly active: boolean;
   readonly keep: boolean;
   readonly props: FrameProps0<T>;
+  readonly title2?: string;
+  readonly status?: 'running' | 'error' | 'success';
 }
 export type Tab = Tab0<FrameType>;
 

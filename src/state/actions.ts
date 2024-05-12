@@ -11,6 +11,7 @@ import { DB } from '../db/DB';
 import { FrameProps } from '../types';
 
 export const {
+  updateTab,
   openFunctions,
   openDomains,
   openSequences,

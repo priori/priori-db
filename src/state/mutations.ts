@@ -502,11 +502,27 @@ export function closeTab(current: AppState, f: number | FrameProps) {
   };
 }
 
+export function updateTab(
+  current: AppState,
+  uid: number,
+  status: 'running' | 'error' | 'success',
+  title2?: string,
+) {
+  return {
+    ...current,
+    tabs: current.tabs.map((tab) =>
+      tab.props.uid === uid
+        ? { ...tab, title2: title2 === undefined ? tab.title2 : title2, status }
+        : tab,
+    ),
+  };
+}
+
 export function newQueryTabInTheEnd(current: AppState) {
   return newFrame(
     current,
     (uid) => ({
-      title: 'New Query',
+      title2: 'New Query',
       keep: true,
       props: {
         uid,
@@ -520,7 +536,7 @@ export function newQueryTabInTheEnd(current: AppState) {
 
 export function newQueryTab(current: AppState) {
   return newFrame(current, (uid) => ({
-    title: 'New Query',
+    title2: 'New Query',
     keep: true,
     props: {
       uid,
