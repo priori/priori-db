@@ -257,7 +257,10 @@ button.query-tab--stdout {
     margin-top: 10px;
   }
   input {
-    padding: 4px;
+    padding: 5px;
+    &:focus {
+      padding: 4px;
+    }
   }
   .app-content & button {
     box-shadow: 0 0;

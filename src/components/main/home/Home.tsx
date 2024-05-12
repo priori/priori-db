@@ -61,7 +61,7 @@ export function Home(props: AppState) {
 
   if (state.newConnection || connectionConfigurations?.length === 0) {
     return (
-      <div style={{ animation: 'show 1s' }}>
+      <div>
         <Errors errors={props.errors} />
         <ConnectionConfigurationForm
           connection={undefined}
@@ -165,6 +165,9 @@ export function Home(props: AppState) {
             backdropFilter: 'blur(0.75px)',
             zIndex: 1,
           }}
+          onClick={() =>
+            setState((s) => ({ ...s, error: null, openConnection: null }))
+          }
         >
           <div
             style={{
@@ -289,24 +292,24 @@ export function Home(props: AppState) {
                 }
           }
         >
-          <button
-            onClick={
-              state.connecting
-                ? undefined
-                : () => {
-                    setState((s) => ({
-                      ...s,
-                      editConnection: state.openConnection,
-                      openConnection: null,
-                    }));
-                  }
-            }
-            className="connections--edit-button2"
-            type="button"
-          >
-            <i className="fa fa-pencil" />
-          </button>
           <div className="bases">
+            <button
+              onClick={
+                state.connecting
+                  ? undefined
+                  : () => {
+                      setState((s) => ({
+                        ...s,
+                        editConnection: state.openConnection,
+                        openConnection: null,
+                      }));
+                    }
+              }
+              className="connections--edit-button2"
+              type="button"
+            >
+              <i className="fa fa-pencil" />
+            </button>
             <div className="bases-inner-wrapper">
               {basesService.lastValidData.map((b) => (
                 <div
@@ -373,7 +376,7 @@ export function Home(props: AppState) {
               position: 'fixed',
               color: '#777',
               left: '50%',
-              top: '50%',
+              top: 'calc(50% - 40px)',
               transform: 'translate(-50%, -50%)',
               opacity: 0,
               animation: '0.6s 0.2s show forwards',
@@ -435,7 +438,7 @@ export function Home(props: AppState) {
               position: 'fixed',
               color: '#777',
               left: '50%',
-              top: '50%',
+              top: 'calc(50% - 40px)',
               transform: 'translate(-50%, -50%)',
               opacity: 0,
               animation: '0.6s 0.2s show forwards',

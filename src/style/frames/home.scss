@@ -3,6 +3,7 @@
   border-collapse: collapse;
   width: 100%;
   margin-left: -1px;
+  overflow: visible;
   & > * > tr > td,
   & > * > tr > th {
     border: solid 1px #bbb;
@@ -15,7 +16,6 @@
 }
 button.connections--edit-button,
 button.connections--add-button {
-  position: fixed;
   bottom: 12px;
   font-size: 32px;
   vertical-align: middle;
@@ -26,6 +26,8 @@ button.connections--add-button {
   text-align: center;
   background: rgba(100, 100, 100, 0.25);
   transition: 0.2s all;
+  position: absolute;
+  bottom: 7px;
 }
 
 .connections--add-button {
@@ -38,14 +40,22 @@ button.connections--add-button {
 .connections--add-button:hover {
   background: rgba(100, 100, 100, 0.8);
 }
-.connections {
-  border-top: 1px solid #ddd;
-}
 .connection {
   font-size: 15px;
   padding: 8px 12px 8px 28px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   word-break: break-all;
+  height: 38px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.connection:last-of-type {
+  margin-bottom: 80px;
+}
+.connection:first-of-type {
+  border-top: 1px solid #ddd;
 }
 .connection:hover {
   background: #eee;
@@ -90,34 +100,27 @@ button.connections--add-button {
   position: relative;
   top: 2px;
 }
-.bases-wrapper {
-  z-index: 1;
-}
 .bases-inner-wrapper {
   max-height: 100%;
   overflow: auto;
   box-shadow: 0 4px 40px rgba(0, 0, 0, 0.35);
 }
 .connections {
-  border-top: 1px solid #ddd;
-  overflow: auto;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
 .connections--edit-button2 {
-  position: fixed;
   left: 50%;
   margin-left: 220px;
-  top: 20px;
   background: #f9f9f9;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  border-radius: 25px;
-  height: 50px;
-  width: 50px;
   font-size: 27px;
+  position: absolute;
+  border-radius: 30px;
+  height: 60px;
+  width: 60px;
+  background: white;
+  &:hover {
+    background: #f8f8f8;
+  }
 }
 button.connections--edit-button2:hover {
   background: #fff;
@@ -132,14 +135,17 @@ button.connections--edit-button2:hover {
   top: 0;
   background: rgba(235, 235, 235, 0.65);
   backdrop-filter: blur(0.75px);
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: safe center;
+  overflow-y: scroll;
+  padding: 28px 0;
 }
 .bases {
-  position: absolute;
-  left: 50%;
-  margin-left: -200px;
-  top: 20px;
-  bottom: 20px;
   width: 400px;
+  margin-left: 0;
+  padding-bottom: 80px;
 }
 .bases-inner-wrapper {
   box-shadow: 0 4px 40px rgba(0, 0, 0, 0.35);
@@ -191,6 +197,7 @@ button.connections--edit-button2:hover {
   font-size: 16px;
   margin-bottom: 10px;
   margin-top: 4px;
+  width: 100%;
 }
 .new-connection input:focus {
   padding: 3px;
@@ -241,13 +248,52 @@ button.connections--edit-button2:hover {
   font-size: 13px;
   line-height: 1.3em;
   margin-top: -2px;
-  height: 30px;
-  overflow: visible;
+  user-select: text;
+  position: absolute;
+  left: 57px;
+  padding: 4px;
+  height: 36px;
+  margin-top: -3px;
+
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+
+  &:hover {
+    -webkit-line-clamp: unset;
+    height: auto;
+    background: white;
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.12);
+  }
 }
 .connection-test-success {
-  margin-top: 6px;
   color: #071;
   font-size: 22px;
   margin-top: 3px;
   letter-spacing: -1.5px;
+}
+.connection-test-pending {
+  font-size: 22px;
+  padding-top: 3px;
+  color: #444;
+}
+
+body:has(.connections) {
+  background: #ddd;
+}
+#root:has(.connections) {
+  max-width: 800px;
+  position: relative;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  & > div {
+    height: 100vh;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: safe center;
+  }
 }

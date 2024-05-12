@@ -94,7 +94,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
   }
 
   return (
-    <div className="new-connection">
+    <div className="new-connection" style={{ fontSize: 15 }}>
       Host:{' '}
       <input
         placeholder="localhost"
@@ -107,7 +107,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
         }
       />
       <br />
-      <div style={{ display: 'flex', width: 176 }}>
+      <div style={{ display: 'flex', width: '100%' }}>
         <div style={{ flex: 1, paddingTop: 3 }}>
           <i
             className={
@@ -120,14 +120,13 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
               }));
             }}
             style={{
-              width: 20,
+              width: 28,
               float: 'left',
               fontSize: 25,
-              marginRight: 8,
             }}
           />
           <span
-            style={{ lineHeight: 1.1 }}
+            style={{ lineHeight: 1.1, fontSize: 16 }}
             onClick={() => {
               setState((state2) => ({
                 ...state2,
@@ -204,9 +203,17 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
             OK <i className="fa fa-check" />
           </strong>
         ) : testResult instanceof Error ? (
-          <span className="connection-test-error">{testResult.message}</span>
+          <span className="connection-test-error">
+            <i
+              className="fa fa-exclamation-triangle"
+              style={{ marginRight: 5 }}
+            />
+            {testResult.message}
+          </span>
         ) : testResult ? (
-          <span className="connection-test-pending" />
+          <span className="connection-test-pending">
+            <i className="fa fa-circle-o-notch fa-spin" />
+          </span>
         ) : null}
       </div>
       <div style={{ marginTop: '4px', marginBottom: '4px' }}>
