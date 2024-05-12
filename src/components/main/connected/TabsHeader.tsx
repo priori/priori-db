@@ -1,5 +1,6 @@
 import { assert } from 'util/assert';
 import { Component, KeyboardEventHandler } from 'react';
+import { equals } from 'util/equals';
 import {
   activateTab,
   updateHeaderTabsDisplayOrder,
@@ -10,7 +11,6 @@ import {
   extraTableTab,
 } from '../../../state/actions';
 import { Tab } from '../../../types';
-import { equals } from 'util/equals';
 
 export interface TabsHeaderProps {
   tabs: Tab[];
