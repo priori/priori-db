@@ -24,7 +24,6 @@
     "removeComments": false,
     "preserveConstEnums": true,
     "noImplicitAny": true,
-    "suppressImplicitAnyIndexErrors": true,
     "strictNullChecks": true,
     "noImplicitThis": true,
     "importHelpers": true,
