@@ -16,6 +16,7 @@ export function TableDataFrame(props: TableFrameProps): JSX.Element {
     onChangeSort,
     dataStatus,
     onChangeFilter,
+    onTouch,
   } = useTableDataFrame(props);
 
   return (
@@ -39,6 +40,7 @@ export function TableDataFrame(props: TableFrameProps): JSX.Element {
         onChangeSort={onChangeSort}
         result={dataResult}
         emptyTable="Empty Table"
+        onTouch={onTouch}
       />
     )) ||
     (error?.message && (

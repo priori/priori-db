@@ -32,6 +32,8 @@ export interface DataGridCoreProps {
   currentSort?: Sort;
   onChangeSort?: (sort: Sort) => void;
   onChangeFilter?: (filter: Filter) => void;
+  // eslint-disable-next-line react/no-unused-prop-types
+  onTouch?: () => void;
 }
 
 export interface DataGridState {
@@ -46,6 +48,7 @@ export interface DataGridState {
   updateFail?: Error;
   updateRunning?: boolean;
   fetchingNewRows?: boolean;
+  touched: boolean;
 }
 
 export function DataGridCore(props: DataGridCoreProps) {

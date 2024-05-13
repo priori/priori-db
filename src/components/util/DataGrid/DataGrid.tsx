@@ -31,6 +31,7 @@ export interface GridProps {
   onChangeSort?: (sort: Sort) => void;
   className?: string;
   onChangeFilter?: (filter: Filter) => void;
+  onTouch?: () => void;
 }
 
 export const DataGrid = memo(
@@ -55,6 +56,7 @@ export const DataGrid = memo(
               onChangeSort={props.onChangeSort}
               onChangeFilter={props.onChangeFilter}
               fetchMoreRows={props.fetchMoreRows}
+              onTouch={props.onTouch}
             />
           )}
         />

@@ -76,7 +76,17 @@ export function useTableDataFrame(props: TableFrameProps) {
   );
 
   const onChangeFilter = useEvent((f: Filter) => {
+    keepTabOpen(props.uid);
     setFilter(f);
+  });
+
+  const onTouch = useEvent(() => {
+    keepTabOpen(props.uid);
+  });
+
+  const onChangeSort = useEvent((s: Sort) => {
+    setSort(s);
+    keepTabOpen(props.uid);
   });
 
   useTab({
@@ -88,6 +98,7 @@ export function useTableDataFrame(props: TableFrameProps) {
   return {
     onScroll,
     onUpdate,
+    onTouch,
     pks: pks.lastValidData ?? undefined,
     dataResult: dataService.lastValidData?.result,
     error: dataService.error,
@@ -96,7 +107,7 @@ export function useTableDataFrame(props: TableFrameProps) {
     defaultSort: defaultSort as Sort | undefined,
     currentSort: dataService.lastValidData?.currentSort as Sort | undefined,
     dataStatus: dataService.status,
-    onChangeSort: setSort,
+    onChangeSort,
     onChangeFilter,
   };
 }

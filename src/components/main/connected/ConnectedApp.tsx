@@ -21,6 +21,7 @@ import {
   newQueryTab,
   nextTab,
   prevTab,
+  keepTabOpen,
 } from '../../../state/actions';
 import { Frame } from './Frame';
 import { CloseConfirmation } from './CloseConfirmation';
@@ -205,6 +206,12 @@ export function ConnectedApp({ state }: { state: AppState }) {
     }
   });
 
+  const onDoubleClick = useEvent(() => {
+    if (active !== undefined) {
+      keepTabOpen(active);
+    }
+  });
+
   const onFocus = useEvent((e: React.FocusEvent<HTMLDivElement>) => {
     if (e.currentTarget !== e.target) return;
     const el = e.target;
@@ -314,6 +321,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
               onBlurCapture={onBlurCapture}
               onFocus={onFocus}
               tabIndex={0}
+              onDoubleClick={onDoubleClick}
               ref={
                 refFuncs[t.props.uid] ||
                 (refFuncs[t.props.uid] = (el) => {

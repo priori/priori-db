@@ -50,6 +50,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     editing: false,
     update: {},
     fetchingNewRows: false,
+    touched: false,
   });
 
   const scrollRef = useRef({ left: 0, top: 0 });
@@ -77,6 +78,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         update: {},
         active: undefined,
         selection: undefined,
+        touched: state.touched,
       };
       resultRef.current = props.result;
       scrollRef.current = { left: 0, top: 0 };
@@ -751,8 +753,12 @@ export function useDataGridCore(props: DataGridCoreProps) {
       ) {
         e.preventDefault();
         e.stopPropagation();
+        if (!state.touched && props.onTouch) {
+          props.onTouch();
+        }
         setState((s) => ({
           ...s,
+          touched: true,
           editing: 2,
           update: s.active
             ? {
@@ -875,6 +881,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       state.update?.[state.active.rowIndex]?.[state.active.colIndex] === value
     )
       return;
+    console.log('change2');
     setState((s) => ({
       ...s,
       update: s.active
