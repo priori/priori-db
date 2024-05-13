@@ -32,8 +32,9 @@ button:focus {
   background: rgba(0, 0, 0, 0.15);
 }
 input {
-  border: solid 1px rgba(0, 0, 0, 0.2);
+  border: solid 1px rgba(0, 0, 0, 0.13);
   outline: none;
+  border-radius: 3px;
 }
 input:focus {
   border: solid 2px #1976d2 !important;
@@ -43,17 +44,6 @@ input:focus {
     0 -1px #1976d2,
     1px 0 #1976d2,
     -1px 0 #1976d2;
-}
-
-button.cancel {
-  background: rgba(0, 0, 0, 0.04);
-}
-button.cancel:hover {
-  background: rgba(0, 0, 0, 0.2);
-}
-button.cancel:focus {
-  color: #018;
-  background: rgba(0, 0, 0, 0.15);
 }
 
 @keyframes scale-up-center {
