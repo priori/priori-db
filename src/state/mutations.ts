@@ -551,7 +551,6 @@ export function connected(
     isUser: boolean;
   }[],
 ) {
-  const c = currentConnectionConfiguration;
   return {
     ...current,
     connected: true,
@@ -563,9 +562,7 @@ export function connected(
       functionsOpen: false,
     })),
     currentConnectionConfiguration,
-    title: `${c.user}@${c.host}${
-      c.port !== 5432 ? `:${c.port}` : ''
-    }/${database}`,
+    database,
     roles,
   } as AppState;
 }

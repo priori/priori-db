@@ -69,6 +69,7 @@ export function useTab(conf0: UseTabConfiguration) {
 export function ConnectedApp({ state }: { state: AppState }) {
   assert(state.connected);
   assert(state.schemas);
+  assert(state.currentConnectionConfiguration);
 
   const [close, setClose] = React.useState<{ func: () => void } | null>(null);
 
@@ -253,6 +254,12 @@ export function ConnectedApp({ state }: { state: AppState }) {
     }
   });
 
+  const { database } = state;
+  const c = state.currentConnectionConfiguration;
+  const title = `${c.user}@${c.host}${
+    c.port !== 5432 ? `:${c.port}` : ''
+  }/${database}`;
+
   return (
     <div>
       <Errors errors={state.errors} />
@@ -261,7 +268,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
       )}
       <div className="header-and--nav">
         <div className="header" style={{ width: Math.max(leftWidth, 33) }}>
-          {state.title}
+          {title}
           <span
             className="header--menu"
             onMouseEnter={onHeaderMouseEnter}
@@ -280,7 +287,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
             />
             {hover && leftWidth <= 40 ? (
               <Nav
-                title={state.title}
+                title={title}
                 style={{ width: 225, height: 500, zIndex: 10 }}
                 schemas={state.schemas}
                 tabs={state.tabs}
