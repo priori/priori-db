@@ -133,7 +133,6 @@ export type Tab = Tab0<FrameType>;
 
 export interface AppState {
   uidCounter: number;
-  newSchema: boolean;
   askToCloseWindow: boolean;
   connected: boolean;
   tabs: Tab[];

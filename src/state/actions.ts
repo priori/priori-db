@@ -23,11 +23,9 @@ export const {
   previewTableInfo,
   keepTableInfo,
   removeError,
-  cancelCreateSchema,
   nextTab,
   prevTab,
   activateTab,
-  newSchema,
   updateHeaderTabsDisplayOrder,
   newQueryTab,
   newQueryTabInTheEnd,
@@ -58,7 +56,6 @@ export async function reloadNav() {
 }
 
 export function createSchema(name: string) {
-  cancelCreateSchema();
   DB.createSchema(name).then(
     () => {
       reloadNav();

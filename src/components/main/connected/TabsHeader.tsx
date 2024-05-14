@@ -279,11 +279,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
   render() {
     if (!this.state.sorting) {
       return (
-        <div
-          className="tabs-header"
-          tabIndex={0}
-          style={{ outline: 'none', left: this.props.left }}
-        >
+        <div className="tabs-header" style={{ left: this.props.left }}>
           <span
             className="tabs-header__tabs"
             onDoubleClick={TabsHeader.tabsDoubleClick}

@@ -369,20 +369,6 @@ export function updateTabText(current: AppState, uid: number, value: string) {
   };
 }
 
-export function newSchema(current: AppState) {
-  return {
-    ...current,
-    newSchema: true,
-  };
-}
-
-export function cancelCreateSchema(current: AppState) {
-  return {
-    ...current,
-    newSchema: false,
-  };
-}
-
 export function updateHeaderTabsDisplayOrder(
   current: AppState,
   sort: number[],

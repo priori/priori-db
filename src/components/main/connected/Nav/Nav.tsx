@@ -1,6 +1,7 @@
-import { useDeferredValue, useMemo, useRef } from 'react';
+import { NewSchemaForm } from 'components/util/NewSchemaForm';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { useEvent } from 'util/useEvent';
-import { newSchema, reloadNav } from '../../../../state/actions';
+import { createSchema, reloadNav } from '../../../../state/actions';
 import { NavSchema, Tab } from '../../../../types';
 import { NavSearch } from './NavSearch';
 import { NavTree } from './NavTree';
@@ -28,6 +29,48 @@ export type useDeferredValueFix<T> = (s: T, config: { timeoutMs: number }) => T;
 
 const isIOS = process?.platform === 'darwin';
 
+function NavNewSchema({ disabled }: { disabled?: boolean }) {
+  const [newSchemaOpen, setNewSchemaOpen] = useState<boolean>(false);
+  const onNewSchemaKeyDown = useEvent(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (disabled) return;
+      if (e.key === 'ArrowUp') {
+        const el = document.querySelector('.nav-tree');
+        if (el instanceof HTMLElement) el.focus();
+      }
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space')
+        setNewSchemaOpen(true);
+    },
+  );
+  const cancelCreateSchema = useEvent(() => {
+    setNewSchemaOpen(false);
+  });
+
+  const onCreateSchema = useEvent((name: string) => {
+    createSchema(name);
+    setNewSchemaOpen(false);
+  });
+  return (
+    <>
+      <span
+        className="new-schema"
+        onClick={() => setNewSchemaOpen(true)}
+        tabIndex={disabled ? -1 : 0}
+        role="button"
+        onKeyDown={onNewSchemaKeyDown}
+      >
+        <i className="fa fa-plus" />
+      </span>
+      {newSchemaOpen ? (
+        <NewSchemaForm
+          onCreateSchema={onCreateSchema}
+          onClose={cancelCreateSchema}
+        />
+      ) : null}
+    </>
+  );
+}
+
 export function Nav(props: {
   schemas: NavSchema[];
   tabs: Tab[];
@@ -52,22 +95,10 @@ export function Nav(props: {
     }
   });
 
-  const plusRef = useRef<HTMLSpanElement>(null);
-
-  const onNewSchemaKeyDown = useEvent(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (props.disabled) return;
-      if (e.key === 'ArrowUp') {
-        const el = document.querySelector('.nav-tree');
-        if (el instanceof HTMLElement) el.focus();
-      }
-      if (e.key === ' ' || e.key === 'Enter' || e.key === 'Space') newSchema();
-    },
-  );
-
   const onNavTreeBlur = useEvent((e: 'next' | 'prev' | 'up' | 'down') => {
     if (e === 'next' || e === 'down') {
-      plusRef.current?.focus();
+      const el = document.querySelector('.new-schema');
+      if (el instanceof HTMLElement) el.focus();
     } else if (e === 'up' || e === 'prev') {
       const el = document.querySelector('.nav--search input');
       if (el instanceof HTMLElement) el.focus();
@@ -103,23 +134,22 @@ export function Nav(props: {
           onBlur={onNavSearchBlur}
           disabled={props.disabled}
         />
-        <NavTree
-          schemas={props.schemas}
-          tabs={tabs2}
-          roles={props.roles}
-          onBlur={onNavTreeBlur}
-          disabled={props.disabled}
-        />
-        <span
-          className="new-schema"
-          onClick={newSchema}
-          ref={plusRef}
-          tabIndex={props.disabled ? -1 : 0}
-          role="button"
-          onKeyDown={onNewSchemaKeyDown}
+        <div
+          style={{
+            overflow: 'auto',
+            outline: 'none',
+            flex: 1,
+          }}
         >
-          <i className="fa fa-plus" />
-        </span>
+          <NavTree
+            schemas={props.schemas}
+            tabs={tabs2}
+            roles={props.roles}
+            onBlur={onNavTreeBlur}
+            disabled={props.disabled}
+          />
+        </div>
+        <NavNewSchema />
       </div>
     ),
     [
@@ -129,7 +159,6 @@ export function Nav(props: {
       onKeyDown,
       onNavSearchBlur,
       onNavTreeBlur,
-      onNewSchemaKeyDown,
       props.style,
       props.disabled,
       props.title,

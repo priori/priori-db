@@ -1,6 +1,5 @@
 /* eslint-disable no-return-assign */
 import * as React from 'react';
-import { NewSchemaForm } from 'components/util/NewSchemaForm';
 import { useEffect, useContext } from 'react';
 import { AppState, FrameType } from 'types';
 import { useWindowCloseConfirm } from 'util/useWindowCloseConfirm';
@@ -14,8 +13,6 @@ import { TabsHeader } from './TabsHeader';
 import {
   askToCloseWindow,
   cancelAskToCloseWindow,
-  cancelCreateSchema,
-  createSchema,
   useAskToClose,
   askToCloseCurrent,
   newQueryTab,
@@ -340,12 +337,6 @@ export function ConnectedApp({ state }: { state: AppState }) {
           ))}
         </TabsContext.Provider>
       </div>
-      {state.newSchema ? (
-        <NewSchemaForm
-          onCreateSchema={createSchema}
-          onClose={cancelCreateSchema}
-        />
-      ) : null}
     </div>
   );
 }
