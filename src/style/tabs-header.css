@@ -93,9 +93,9 @@ input.tabs-header__input {
   margin-left: 7px;
   max-width: calc(100% - 37px);
   width: 100%;
-  &:focus {
-    padding: 2px !important;
-  }
+}
+input.tabs-header__input:focus {
+  padding: 2px !important;
 }
 .tabs-header__tab--empty .tabs-header__tab-name {
   opacity: 0.2;
