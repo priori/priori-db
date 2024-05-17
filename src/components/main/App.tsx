@@ -2,6 +2,7 @@ import { useAppState } from 'state/state';
 import { useEventListener } from 'util/useEventListener';
 import { showError } from 'state/actions';
 import { grantError } from 'util/errors';
+import { useWindowDrag } from 'util/useWindowDrag';
 import { Home } from './home/Home';
 import { ConnectedApp } from './connected/ConnectedApp';
 
@@ -27,6 +28,7 @@ export function App() {
           ),
     );
   });
+  useWindowDrag();
   if (state.connected) return <ConnectedApp state={state} />;
   return <Home {...state} />;
 }

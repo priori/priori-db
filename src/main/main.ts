@@ -121,6 +121,14 @@ const createWindow = async () => {
     return { action: 'deny' };
   });
 
+  window.webContents.ipc.on(
+    'pos',
+    async (_: unknown, { x, y }: { x: number; y: number }) => {
+      window.setPosition(x, y);
+      window.setMovable(true);
+    },
+  );
+
   // new AppUpdater();
 };
 

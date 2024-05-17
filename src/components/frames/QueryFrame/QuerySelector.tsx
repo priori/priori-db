@@ -83,7 +83,11 @@ function QuerySelector0({
           type="text"
           readOnly
           disabled
-          style={{ background: 'white', border: '1px solid #ddd' }}
+          style={{
+            pointerEvents: 'none',
+            background: 'white',
+            border: '1px solid #ddd',
+          }}
         />
         <select value={configValue} onChange={onConfigsSelectChange}>
           <option value="-1" />
