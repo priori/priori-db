@@ -29,6 +29,10 @@
 }
 .notice .fa.fa-eye {
   right: 25px;
+  cursor: pointer;
+}
+.notice .fa.fa-close {
+  cursor: pointer;
 }
 .notice:hover .fa {
   color: #999;

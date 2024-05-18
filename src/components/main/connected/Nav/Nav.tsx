@@ -134,13 +134,7 @@ export function Nav(props: {
           onBlur={onNavSearchBlur}
           disabled={props.disabled}
         />
-        <div
-          style={{
-            overflow: 'auto',
-            outline: 'none',
-            flex: 1,
-          }}
-        >
+        <div className="nav-tree--wrapper">
           <NavTree
             schemas={props.schemas}
             tabs={tabs2}

@@ -14,7 +14,6 @@
   position: absolute;
   right: 0;
   top: 0;
-  transition: width 0.5s;
   position: fixed;
   cursor: pointer;
   transition: all 0.2s;
@@ -58,6 +57,7 @@ i.tabs-header__plus {
     left 0.5s;
   padding-top: 4px;
   box-shadow: 1px 0px rgb(0 0 0 / 20%);
+  text-shadow: 0 -1px 0.3px rgba(255, 255, 255, 0.2);
 }
 .tabs-header__tab-name {
   white-space: nowrap;
@@ -83,9 +83,11 @@ i.tabs-header__plus {
   background: white;
   color: #000;
   z-index: 2;
-  transition: width 0.5s;
   border-color: white;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  transition:
+    width 0.5s,
+    box-shadow 0.5s;
 }
 input.tabs-header__input {
   padding: 3px !important;
@@ -98,7 +100,7 @@ input.tabs-header__input:focus {
   padding: 2px !important;
 }
 .tabs-header__tab--empty .tabs-header__tab-name {
-  opacity: 0.2;
+  color: rgba(0, 0, 0, 0.3);
 }
 .tabs-header__tab .fa-exclamation-triangle {
   color: rgba(150, 0, 0, 0.33);

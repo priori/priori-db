@@ -527,3 +527,28 @@ div.nav .nav-search--entity.focused.active span {
     opacity: 0.8;
   }
 }
+
+.header--menu div.nav {
+  border-radius: 15px;
+}
+.header--menu .header--title {
+  border-radius: 15px 15px 0 0;
+}
+.header--menu .nav::after {
+  content: '';
+  height: 10px;
+  width: 0;
+  position: absolute;
+  top: -18px;
+  z-index: 999;
+  left: 10px;
+  border-bottom: solid 10px #e4e4e4;
+  border-left: transparent 10px solid;
+  border-right: transparent 10px solid;
+  pointer-events: none;
+}
+.nav-tree--wrapper {
+  overflow: auto;
+  outline: none;
+  flex: 1 1 0%;
+}

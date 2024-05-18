@@ -29,6 +29,7 @@ table.table > * > th {
   right: 0;
   top: 0;
   background: rgba(256, 256, 256, 0.75);
+  backdrop-filter: blur(0.5px);
 }
 .new-schema-form > div {
   position: absolute;
