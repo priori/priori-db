@@ -45,6 +45,7 @@ export function QueryFrame({ uid }: { uid: number }) {
     stdOutFile,
     saved,
     onQuerySelectorSelect,
+    onDialogBlur,
   } = useQueryFrame({ uid });
 
   return (
@@ -427,16 +428,17 @@ export function QueryFrame({ uid }: { uid: number }) {
                   lineHeight: '1.5em',
                 }}
               >
-                Query returned successfully: {state.res.rowCount} row affected
+                Query returned successfully: {state.res.rowCount} row
+                {state.res.rowCount <= 1 ? '' : 's'} affected
                 {state.time === null ? undefined : (
                   <>, {state.time} ms execution time</>
                 )}
                 .
-                {state.stdoutResult ? (
+                {state.res.stdOutResult ? (
                   <div style={{ marginTop: '1em' }}>
                     Query result exported to file{' '}
                     <strong style={{ userSelect: 'text' }}>
-                      {state.stdoutResult}
+                      {state.res.stdOutResult}
                     </strong>
                   </div>
                 ) : null}

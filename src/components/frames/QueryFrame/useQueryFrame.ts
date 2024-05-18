@@ -2,10 +2,8 @@ import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { assert } from 'util/assert';
 import { useEvent } from 'util/useEvent';
-import { FieldDef, QueryArrayResult } from 'pg';
 import { closeTabNow, showError, updateTab } from 'state/actions';
 import { DB } from 'db/DB';
-import { CopyStreamQuery, CopyToStreamQuery, from, to } from 'pg-copy-streams';
 import {
   saveQuery as insertQuery,
   saveFavoriteQuery,
@@ -16,27 +14,15 @@ import { currentState } from 'state/state';
 import { useIsMounted } from 'util/hooks';
 import { ipcRenderer } from 'electron';
 import { grantError } from 'util/errors';
-import { createReadStream, createWriteStream, readFile, writeFile } from 'fs';
-import { pipeline } from 'node:stream/promises';
+import { readFile, writeFile } from 'fs';
 import { verticalResize } from 'util/resize';
 import { useEventListener } from 'util/useEventListener';
-import { SimpleValue } from 'db/Connection';
 import { useTab } from '../../main/connected/ConnectedApp';
 import { Editor } from '../../Editor';
-import { useExclusiveConnection } from '../../../db/ExclusiveConnection';
-
-function temToStdOut(query: string) {
-  return (
-    !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
-    !!query.match(/^([^']|'([^']|'')*')*to\s+stdout/gim)
-  );
-}
-function temFromStdIn(query: string) {
-  return (
-    !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
-    !!query.match(/^([^']|'([^']|'')*')*from\s+stdin/gim)
-  );
-}
+import {
+  QueryResult,
+  useExclusiveConnection,
+} from '../../../db/ExclusiveConnection';
 
 interface QFNoticeMessage extends NoticeMessage {
   fullView?: boolean | undefined;
@@ -47,24 +33,10 @@ interface QueryFrameState {
   openTransaction: boolean;
   notices: QFNoticeMessage[];
   resetNotices: boolean;
-  res:
-    | {
-        rows: SimpleValue[][];
-        fields: FieldDef[];
-        rowCount: number | null;
-        fetchMoreRows?: () => Promise<{
-          rows: SimpleValue[][];
-          fields: FieldDef[];
-          rowCount: number;
-        }>;
-      }
-    | (CopyToStreamQuery & { fields: undefined })
-    | (CopyStreamQuery & { fields: undefined })
-    | null;
+  res: QueryResult | null;
   time: null | number;
   clientPid: number | null;
   clientError: Error | null;
-  stdoutResult: null | string;
   error: {
     code: string;
     line: number;
@@ -106,7 +78,7 @@ export function useQueryFrame({ uid }: { uid: number }) {
     resetNotices: false,
     clientPid: null,
     clientError: null,
-    res: null,
+    res: null as QueryResult | null,
     time: null,
     error: null,
     freshTab: true,
@@ -145,7 +117,6 @@ export function useQueryFrame({ uid }: { uid: number }) {
         'running',
         query.trim().replace(/\s+/g, ' ').substring(0, 100),
       );
-
       setState((state2) => ({
         ...state2,
         running: true,
@@ -164,47 +135,14 @@ export function useQueryFrame({ uid }: { uid: number }) {
           );
       const start = new Date().getTime();
       try {
-        const stdoutMode = stdOutFile && temToStdOut(query);
-        const stdInMode = stdInFile && temFromStdIn(query);
-        if (stdoutMode && stdInMode)
-          throw new Error('Cannot use STDIN and STDOUT at the same time');
-
-        const res = stdoutMode
-          ? ((await db.query(to(query))) as unknown as
-              | QueryArrayResult
-              | (CopyStreamQuery & { fields: undefined })
-              | (CopyToStreamQuery & { fields: undefined }))
-          : stdInMode
-            ? ((await db.query(from(query))) as unknown as
-                | QueryArrayResult
-                | (CopyStreamQuery & { fields: undefined })
-                | (CopyToStreamQuery & { fields: undefined }))
-            : await db.query(query, []);
-
+        const res = await db.query(query, {
+          stdInFile,
+          stdOutFile,
+        });
         updateTab(uid, 'success');
 
-        if (stdoutMode)
-          await pipeline(
-            res as CopyToStreamQuery,
-            createWriteStream(stdOutFile),
-          );
-        if (stdInMode) {
-          const stream = res as CopyStreamQuery;
-          const fileStream = createReadStream(stdInFile);
-          fileStream.pipe(stream);
-          await new Promise((resolve, reject) => {
-            fileStream.on('error', reject);
-            stream.on('error', reject);
-            stream.on('finish', resolve);
-          });
-        }
-
         const time = new Date().getTime() - start;
-        const resLength = !('rows' in res)
-          ? undefined
-          : ((res as unknown as QueryArrayResult)?.rows?.length as
-              | number
-              | undefined);
+        const resLength = res?.rows?.length;
         if (id)
           updateQuery(
             id,
@@ -215,20 +153,16 @@ export function useQueryFrame({ uid }: { uid: number }) {
           ? false
           : await DB.inOpenTransaction(db.pid);
         if (isMounted()) {
-          if (stdoutMode) setStdOutFile(null);
-          if (stdInMode) setStdInFile(null);
+          if (res?.stdOutMode) setStdOutFile(null);
+          if (res?.stdInMode) setStdInFile(null);
           setState((state2) => ({
             ...state2,
             running: false,
             clientPid: db.pid || null,
             openTransaction,
             res,
-            stdoutResult: stdoutMode ? stdOutFile : null,
             notices:
-              (res as { fields?: { length?: number } })?.fields?.length ||
-              state2.resetNotices
-                ? []
-                : state2.notices,
+              res?.fields?.length || state2.resetNotices ? [] : state2.notices,
             resetNotices: false,
             time,
             error: null,
@@ -251,7 +185,6 @@ export function useQueryFrame({ uid }: { uid: number }) {
               position: number;
               message: string;
             },
-            stdoutResult: null,
             freshTab: false,
             clientError: state2.clientError,
             time: null,
@@ -544,7 +477,10 @@ export function useQueryFrame({ uid }: { uid: number }) {
     },
   );
 
-  const onDialogBlur = useEvent(() => setSaveDialogOpen(false));
+  const onDialogBlur = useEvent(() => {
+    if (saveDialogOpen) setSaveDialogOpen(false);
+    else if (openDialogOpen) setOpenDialogOpen(false);
+  });
 
   return {
     fetchMoreRows,

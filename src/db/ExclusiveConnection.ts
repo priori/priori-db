@@ -1,13 +1,34 @@
 import { assert } from 'util/assert';
-import { FieldDef, PoolClient } from 'pg';
+import { FieldDef, PoolClient, QueryArrayResult } from 'pg';
 import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { useEffect, useRef, useState } from 'react';
 import { useEvent } from 'util/useEvent';
-import { CopyStreamQuery, CopyToStreamQuery } from 'pg-copy-streams';
+import { CopyStreamQuery, CopyToStreamQuery, from, to } from 'pg-copy-streams';
 import { grantError } from 'util/errors';
 import PgCursor from 'pg-cursor';
+import { createReadStream, createWriteStream } from 'fs';
+import { pipeline } from 'node:stream/promises';
 import { openConnection, SimpleValue } from './Connection';
 import { DB } from './DB';
+
+export interface QueryResult {
+  rows: SimpleValue[][];
+  fields: FieldDef[];
+  rowCount: number;
+  stdOutResult?: string;
+  stdOutMode?: boolean;
+  stdInMode?: boolean;
+  fetchMoreRows?: () => Promise<{
+    rows: SimpleValue[][];
+    fields: FieldDef[];
+    rowCount: number;
+  }>;
+}
+
+interface QueryOptions {
+  stdOutFile?: string | null;
+  stdInFile?: string | null;
+}
 
 function isMultipleQueries(q: string) {
   let inString = false;
@@ -23,6 +44,19 @@ function isMultipleQueries(q: string) {
   return false;
 }
 
+function temToStdOut(query: string) {
+  return (
+    !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
+    !!query.match(/^([^']|'([^']|'')*')*to\s+stdout/gim)
+  );
+}
+function temFromStdIn(query: string) {
+  return (
+    !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
+    !!query.match(/^([^']|'([^']|'')*')*from\s+stdin/gim)
+  );
+}
+
 const fetchSize = 500;
 
 class ExclusiveConnection {
@@ -31,18 +65,10 @@ class ExclusiveConnection {
   public pid: number | undefined;
 
   pending: {
-    resolve: (
-      r:
-        | {
-            rows: SimpleValue[][];
-            fields: FieldDef[];
-            rowCount: number;
-          }
-        | CopyStreamQuery,
-    ) => void;
+    resolve: (r: QueryResult) => void;
     reject: (e: unknown) => void;
-    query: string | CopyToStreamQuery | CopyStreamQuery;
-    args?: Array<string | number | null | boolean>;
+    query: string;
+    ops?: QueryOptions;
   }[] = [];
 
   listener: (n: NoticeMessage) => void;
@@ -67,48 +93,72 @@ class ExclusiveConnection {
 
   lastCursor: PgCursor | null = null;
 
-  async query(
-    q: string,
-    args: (number | string | boolean | null)[] | undefined,
-  ): Promise<{
-    rows: SimpleValue[][];
-    fields: FieldDef[];
-    rowCount: number;
-    fetchMoreRows?: () => Promise<{
-      rows: SimpleValue[][];
-      fields: FieldDef[];
-      rowCount: number;
-    }>;
-  }>;
-
-  async query(q: CopyToStreamQuery): Promise<CopyToStreamQuery>;
-
-  async query(q: CopyStreamQuery): Promise<CopyStreamQuery>;
-
-  async query(
-    q: string | CopyToStreamQuery | CopyStreamQuery,
-    args?: (number | string | boolean | null)[],
-  ) {
+  async query(q: string, ops?: QueryOptions): Promise<QueryResult> {
     if (this.lastCursor) {
       await this.lastCursor.close();
       this.lastCursor = null;
     }
     if (this.db) {
-      if (q && !(typeof q === 'string')) {
-        const r = this.db.query(q);
-        return Promise.resolve(r as CopyToStreamQuery | CopyStreamQuery);
+      const stdOutMode = ops?.stdOutFile && temToStdOut(q);
+      const stdInMode = ops?.stdInFile && temFromStdIn(q);
+      if (stdOutMode && stdInMode)
+        throw new Error('Cannot use STDIN and STDOUT at the same time');
+      if (stdOutMode || stdInMode) {
+        const res = stdOutMode
+          ? ((await this.db.query(to(q))) as unknown as
+              | QueryArrayResult
+              | (CopyStreamQuery & { fields: undefined })
+              | (CopyToStreamQuery & { fields: undefined }))
+          : ((await this.db.query(from(q))) as unknown as
+              | QueryArrayResult
+              | (CopyStreamQuery & { fields: undefined })
+              | (CopyToStreamQuery & { fields: undefined }));
+
+        if (stdOutMode && ops?.stdOutFile)
+          await pipeline(
+            res as CopyToStreamQuery,
+            createWriteStream(ops.stdOutFile),
+          );
+        if (stdInMode && ops?.stdInFile) {
+          const stream = res as CopyStreamQuery;
+          const fileStream = createReadStream(ops.stdInFile);
+          fileStream.pipe(stream);
+          await new Promise((resolve, reject) => {
+            fileStream.on('error', reject);
+            stream.on('error', reject);
+            stream.on('finish', resolve);
+          });
+        }
+        return {
+          ...(stdOutMode
+            ? {
+                stdOutResult: ops.stdOutFile as string,
+                stdOutMode: true,
+              }
+            : {}),
+          ...(stdInMode
+            ? {
+                stdInMode: true,
+              }
+            : {}),
+          rows: [],
+          fields: [],
+          rowCount: res.rowCount || 0,
+        };
       }
       if (isMultipleQueries(q)) {
-        const res = this.db.query({
+        const res2 = await this.db.query({
           text: q as string,
           rowMode: 'array',
-          values: args,
+          values: [],
         });
-        return res;
+        return {
+          rows: res2.rows,
+          fields: res2.fields as FieldDef[],
+          rowCount: res2.rowCount || 0,
+        };
       }
-      const c = this.db.query(
-        new PgCursor(q as string, args, { rowMode: 'array' }),
-      );
+      const c = this.db.query(new PgCursor(q, [], { rowMode: 'array' }));
       this.lastCursor = c;
       if ('state' in c && c.state === 'error') {
         await c.close();
@@ -170,7 +220,7 @@ class ExclusiveConnection {
         resolve,
         reject,
         query: q,
-        args,
+        ops,
       });
       if (this.pending.length === 1) this.openConnection();
     });
@@ -203,22 +253,11 @@ class ExclusiveConnection {
     }
     for (const e of pending) {
       assert(!!this.db);
-      if (e.query && !(typeof e.query === 'string')) {
-        try {
-          const ret: CopyStreamQuery = (await this.db.query(
-            e.query,
-          )) as unknown as CopyStreamQuery;
-          e.resolve(ret);
-        } catch (err) {
-          e.reject(err);
-        }
-      } else {
-        try {
-          const ret = await this.query(e.query as string, e.args);
-          e.resolve(ret);
-        } catch (err) {
-          e.reject(err);
-        }
+      try {
+        const ret = await this.query(e.query, e.ops);
+        e.resolve(ret);
+      } catch (err) {
+        e.reject(err);
       }
     }
   }
