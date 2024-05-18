@@ -91,12 +91,10 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
     if (width > 220) width = 220;
     width += 1;
     const tabs = props.tabs
-      ? props.tabs.map((t) => {
-          return {
-            ...t,
-            width,
-          };
-        })
+      ? props.tabs.map((t) => ({
+          ...t,
+          width,
+        }))
       : [];
 
     this.state = {
@@ -337,6 +335,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
                   ) : (
                     <i
                       className="tabs-header__close fa fa-close"
+                      onMouseDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         askToCloseTab(t.props);
                         e.stopPropagation();
