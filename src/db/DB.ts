@@ -1762,8 +1762,19 @@ export const DB = {
   },
 
   async dropFunction(schema: string, name: string, cascade = false) {
+    const isProcedure = (
+      await first(
+        `SELECT prokind = 'p' is_procedure
+        FROM pg_proc
+        WHERE
+          pg_proc.proname || '('||oidvectortypes(proargtypes)||')' = $2 AND
+          pronamespace = $1::regnamespace
+        `,
+        [schema, name],
+      )
+    ).is_procedure;
     await query(
-      `DROP FUNCTION ${label(schema)}.${name} ${cascade ? 'CASCADE' : ''}`,
+      `DROP ${isProcedure ? 'PROCEDURE' : 'FUNCTION'} ${label(schema)}.${name} ${cascade ? 'CASCADE' : ''}`,
     );
   },
 

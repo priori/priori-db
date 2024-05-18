@@ -192,6 +192,11 @@ export function FunctionFrame(props: FunctionFrameProps) {
     [service.lastValidData?.privileges],
   );
 
+  const isProcedure = useMemo(() => {
+    if (!info) return undefined;
+    return info.pgProc.prokind === 'p';
+  }, [info]);
+
   return (
     <div>
       <h1>
@@ -233,46 +238,53 @@ export function FunctionFrame(props: FunctionFrameProps) {
             onUpdate={onChangeSchema}
           />
         ) : null}
-        <button
-          type="button"
-          onClick={
-            state.dropCascadeConfirmation || state.dropConfirmation
-              ? undefined
-              : drop
-          }
-        >
-          Drop Function <i className="fa fa-close" />
-        </button>{' '}
-        {state.dropCascadeConfirmation || state.dropConfirmation ? (
-          <Dialog
-            onBlur={noClick}
-            relativeTo={
-              state.dropCascadeConfirmation ? 'nextSibling' : 'previousSibling'
-            }
-          >
-            {state.dropCascadeConfirmation
-              ? 'Do you really want to drop cascade this function?'
-              : 'Do you really want to drop this function?'}
-            <div>
-              <button type="button" onClick={yesClick}>
-                Yes
-              </button>{' '}
-              <button type="button" onClick={noClick}>
-                No
-              </button>
-            </div>
-          </Dialog>
-        ) : null}
-        <button
-          type="button"
-          onClick={
-            state.dropCascadeConfirmation || state.dropConfirmation
-              ? undefined
-              : dropCascade
-          }
-        >
-          Drop Cascade <i className="fa fa-warning" />
-        </button>
+        {isProcedure === undefined ? null : (
+          <>
+            <button
+              type="button"
+              onClick={
+                state.dropCascadeConfirmation || state.dropConfirmation
+                  ? undefined
+                  : drop
+              }
+            >
+              Drop {isProcedure ? 'Procedure' : 'Function'}{' '}
+              <i className="fa fa-close" />
+            </button>{' '}
+            {state.dropCascadeConfirmation || state.dropConfirmation ? (
+              <Dialog
+                onBlur={noClick}
+                relativeTo={
+                  state.dropCascadeConfirmation
+                    ? 'nextSibling'
+                    : 'previousSibling'
+                }
+              >
+                {state.dropCascadeConfirmation
+                  ? 'Do you really want to drop cascade this function?'
+                  : 'Do you really want to drop this function?'}
+                <div>
+                  <button type="button" onClick={yesClick}>
+                    Yes
+                  </button>{' '}
+                  <button type="button" onClick={noClick}>
+                    No
+                  </button>
+                </div>
+              </Dialog>
+            ) : null}
+            <button
+              type="button"
+              onClick={
+                state.dropCascadeConfirmation || state.dropConfirmation
+                  ? undefined
+                  : dropCascade
+              }
+            >
+              Drop Cascade <i className="fa fa-warning" />
+            </button>
+          </>
+        )}
       </div>
       {info?.definition ? <div className="view">{info.definition}</div> : null}
       {info?.comment || state.editComment ? (
