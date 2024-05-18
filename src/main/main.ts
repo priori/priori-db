@@ -102,14 +102,7 @@ const createWindow = async () => {
   window.loadURL(resolveHtmlPath('index.html'));
 
   window.on('ready-to-show', () => {
-    if (!window) {
-      throw new Error('"mainWindow" is not defined');
-    }
-    if (process.env.START_MINIMIZED) {
-      window.minimize();
-    } else {
-      window.show();
-    }
+    window.show();
   });
 
   window.on('closed', () => {
