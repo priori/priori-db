@@ -1,4 +1,4 @@
-import { FieldDef } from 'pg';
+import { QueryResultDataField } from 'db/Connection';
 import React from 'react';
 import { equals } from 'util/equals';
 import { cellClassName, getType, getValString } from './util';
@@ -15,7 +15,7 @@ interface DataGridTableProps {
     | undefined;
   gridContentTableTop: string;
   gridContentTableWidth: number | undefined;
-  fields: FieldDef[];
+  fields: QueryResultDataField[];
   finalWidths: number[];
   update: { [k: number]: { [k: number]: string | null } };
 }

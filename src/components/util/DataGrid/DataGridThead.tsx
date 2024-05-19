@@ -1,10 +1,10 @@
 import { Sort } from 'db/util';
-import { FieldDef } from 'pg';
+import { QueryResultDataField } from 'db/Connection';
 import React from 'react';
 import { equals } from 'util/equals';
 
 interface DataGridTheadProps {
-  fields: FieldDef[];
+  fields: QueryResultDataField[];
   colsWidths: number[];
   pks?: string[];
   onChangeSort?: (sort: Sort) => void;

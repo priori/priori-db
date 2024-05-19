@@ -4,9 +4,8 @@ import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { DB } from 'db/DB';
 import { useState } from 'react';
-import { QueryArrayResult } from 'pg';
 import { Filter, Sort } from 'db/util';
-import { SimpleValue } from '../../../db/Connection';
+import { QueryResultData } from 'db/Connection';
 import { TableFrameProps } from '../../../types';
 
 export function useTableDataFrame(props: TableFrameProps) {
@@ -27,7 +26,7 @@ export function useTableDataFrame(props: TableFrameProps) {
   const dataService = useService(async () => {
     if (!sortReady)
       return new Promise<{
-        result: QueryArrayResult<SimpleValue[]>;
+        result: QueryResultData;
         currentSort: Sort;
         currentFilter?: Filter;
       }>(() => {});

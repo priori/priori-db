@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { FieldDef } from 'pg';
 import { useEvent } from 'util/useEvent';
 import { horizontalResize } from 'util/resize';
 import { assert } from 'util/assert';
 import { equals } from 'util/equals';
+import { QueryResultDataField } from 'db/Connection';
 import {
   getValString,
   headerHeight,
@@ -85,7 +85,7 @@ export function useGridColsSizes({
 }: {
   result: {
     rows: any[];
-    fields: FieldDef[];
+    fields: QueryResultDataField[];
   };
   extraRows: number;
   width: number;

@@ -1,5 +1,5 @@
 import { Filter, Sort } from 'db/util';
-import { FieldDef } from 'pg';
+import { QueryResultDataField } from 'db/Connection';
 import { DataGridActiveCell } from './DataGridActiveCell';
 import { DataGridTable } from './DataGridTable';
 import { DataGridThead } from './DataGridThead';
@@ -11,7 +11,7 @@ import { DataGridUpdateInfoDialog } from './DataGridUpdateInfo';
 export interface DataGridCoreProps {
   result: {
     rows: any[];
-    fields: FieldDef[];
+    fields: QueryResultDataField[];
   };
   fetchMoreRows?: () => void;
   width: number;

@@ -1,7 +1,7 @@
-import { FieldDef } from 'pg';
 import { CSSProperties, memo } from 'react';
 import { equals } from 'util/equals';
 import { Filter, Sort } from 'db/util';
+import { QueryResultDataField } from 'db/Connection';
 import { SizeControlledArea } from '../SizeControlledArea';
 import { DataGridCore } from './DataGridCore';
 
@@ -11,7 +11,7 @@ export interface GridProps {
   result:
     | {
         rows: any[];
-        fields: FieldDef[];
+        fields: QueryResultDataField[];
       }
     | undefined;
   onScroll?: (() => void) | undefined;

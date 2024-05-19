@@ -1,5 +1,11 @@
 import { grantError } from 'util/errors';
-import { list, first, query, openConnection } from './Connection';
+import {
+  list,
+  first,
+  query,
+  openConnection,
+  QueryResultData,
+} from './Connection';
 import {
   EntityType,
   SequencePrivileges,
@@ -49,7 +55,7 @@ export const DB = {
     table: string;
     sort: Sort | null;
     filter: Filter | undefined;
-  }) {
+  }): Promise<QueryResultData> {
     const { where, params } = filter
       ? buildWhere(filter)
       : { where: '', params: [] };
@@ -65,7 +71,11 @@ export const DB = {
             .join(', ')} `
         : ''
     }LIMIT 1000`;
-    return query(sql, params, true);
+    const result = await query(sql, params, true);
+    return {
+      rows: result.rows,
+      fields: result.fields,
+    };
   },
 
   async createTable(newTable: {

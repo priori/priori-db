@@ -1,4 +1,4 @@
-import pg, { QueryArrayResult, QueryResult } from 'pg';
+import pg from 'pg';
 import { assert } from 'util/assert';
 import { grantError } from 'util/errors';
 import hls from 'util/hotLoadSafe';
@@ -122,24 +122,31 @@ export type SimpleValue =
   | { [key: string]: SimpleValue }
   | SimpleValue[];
 
+export interface QueryResultDataField {
+  name: string;
+}
+
+export interface QueryResultData {
+  rows: SimpleValue[][];
+  fields: QueryResultDataField[];
+}
+
 export async function query(
   q: string,
   args?: (number | string | boolean | null)[],
-): Promise<QueryResult<{ [key: string]: SimpleValue }>>;
+): Promise<{ rows: { [key: string]: SimpleValue }[] }>;
 
 export async function query(
   q: string,
   args: (number | string | boolean | null)[] | undefined,
   arrayRowMode: true,
-): Promise<QueryArrayResult<SimpleValue[]>>;
+): Promise<QueryResultData>;
 
 export async function query(
   q: string,
   args?: Array<string | null | number | boolean>,
   arrayRowMode?: true,
-): Promise<
-  QueryResult<{ [key: string]: SimpleValue }> | QueryArrayResult<SimpleValue[]>
-> {
+): Promise<{ rows: { [key: string]: SimpleValue }[] } | QueryResultData> {
   const p = hls.pool;
   assert(p);
   if (arrayRowMode)
