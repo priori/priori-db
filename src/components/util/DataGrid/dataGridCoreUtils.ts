@@ -881,7 +881,6 @@ export function useDataGridCore(props: DataGridCoreProps) {
       state.update?.[state.active.rowIndex]?.[state.active.colIndex] === value
     )
       return;
-    console.log('change2');
     setState((s) => ({
       ...s,
       update: s.active

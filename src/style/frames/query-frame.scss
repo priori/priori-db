@@ -17,7 +17,6 @@
 .not-grid-result::-webkit-scrollbar-thumb:hover {
   background-color: #bbb;
 }
-
 .notice {
   position: relative;
 }
@@ -44,12 +43,19 @@
   clear: both;
   padding-top: 5px;
   font-size: 12px;
+  display: flex;
+  gap: 2px 18px;
+  flex-wrap: wrap;
+  user-select: text;
 }
-.notice-details span {
-  margin-right: 17px;
-  white-space: nowrap;
+.notice-details > span {
+  white-space: pre-wrap;
 }
-
+.notice--value {
+  font-family: 'Inconsolata';
+  line-height: 1.3em;
+  white-space: pre-wrap;
+}
 .query-tab button.query-tab--execute {
   position: absolute;
   right: 60px;
@@ -89,7 +95,6 @@ button.query-tab--stdout {
   padding: 5px !important;
   font-size: 14px;
 }
-
 .query-tab .mensagem {
   position: absolute;
   margin-top: -36px;
@@ -100,9 +105,6 @@ button.query-tab--stdout {
   z-index: 2;
   padding: 5px;
 }
-// .query-tab .mensagem.error {
-//   color: #d22;
-// }
 .query-tab .client-error {
   color: #d22;
   position: absolute;
@@ -127,7 +129,6 @@ button.query-tab--stdout {
 .running span:hover {
   background: #ccc;
 }
-
 .notices {
   padding: 10px;
 }
@@ -151,12 +152,13 @@ button.query-tab--stdout {
   padding: 6px 9px;
   font-size: 12px;
 }
-
+.notice-message {
+  user-select: text;
+}
 .pid {
   position: absolute;
   right: 15px;
   top: 8px;
-
   background: #ddd;
   font-size: 12px;
   padding: 2px 4px 1px 4px;
@@ -164,7 +166,6 @@ button.query-tab--stdout {
   font-weight: bold;
   cursor: default;
   z-index: 2;
-
   opacity: 0;
   animation: opacity 0.3s;
   animation-delay: 0.3s;
@@ -173,7 +174,6 @@ button.query-tab--stdout {
     color: #03a;
   }
 }
-
 @keyframes opacity {
   0% {
     opacity: 0;
@@ -182,7 +182,6 @@ button.query-tab--stdout {
     opacity: 1;
   }
 }
-
 .running {
   opacity: 0;
   animation: opacity 1.5s;
@@ -199,7 +198,6 @@ button.query-tab--stdout {
     color: #25c;
   }
 }
-
 .query-tab .error {
   font-size: 20px;
   padding: 10px 0 0 15px;
@@ -214,7 +212,6 @@ button.query-tab--stdout {
   position: relative;
   top: -2px;
 }
-
 .favorite {
   position: absolute;
   z-index: 4;
@@ -235,7 +232,6 @@ button.query-tab--stdout {
   top: 33px;
   right: 70px;
 }
-
 .query-tab .fa-star {
   font-size: 28px;
   color: #26d;
@@ -281,7 +277,6 @@ button.query-tab--stdout {
   position: absolute;
   cursor: ns-resize;
 }
-
 .query-tab {
   display: flex;
   flex-direction: column;
@@ -293,7 +288,6 @@ button.query-tab--stdout {
   flex: 1;
   position: relative;
 }
-
 .query-frame--animating-top-height .CodeMirror,
 .query-frame--top-area.query-frame--animating-top-height,
 .query-frame--animating-top-height .editor {
@@ -388,7 +382,6 @@ button.query-frame--apply2 {
   &:hover {
     background: #31ad4a !important;
     color: white;
-    // box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
   }
   .fa-play {
     font-size: 13px;
@@ -445,7 +438,6 @@ button.query-tab--save-stdout {
   margin-left: 0;
   margin-right: 0;
 }
-
 div.CodeMirror-linenumber {
   color: #ccc;
   font-size: 11px;

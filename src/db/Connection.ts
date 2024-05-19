@@ -2,7 +2,7 @@ import pg, { QueryArrayResult, QueryResult } from 'pg';
 import { assert } from 'util/assert';
 import { grantError } from 'util/errors';
 import hls from 'util/hotLoadSafe';
-import { exclusives } from './ExclusiveConnection';
+import { QueryExecutor } from './QueryExecutor';
 import { DB } from './DB';
 
 pg.types.setTypeParser(1082, (val) => val);
@@ -168,23 +168,14 @@ export async function first(
 }
 
 export async function hasOpenConnection() {
-  if (!hls.pool || exclusives.length === 0) return false;
-  const pids = exclusives
-    .map((ac) => ac.pid)
-    .filter((pid) => typeof pid === 'number') as number[];
+  if (!hls.pool || QueryExecutor.pids().length === 0) return false;
+  const pids = QueryExecutor.pids();
   return DB.existsSomePendingProcess(...pids);
 }
 
 export async function closeAll() {
   try {
-    await Promise.all(
-      exclusives
-        .filter((ac) => ac.pid)
-        .map(async (ac) => {
-          await ac.stopRunningQuery();
-          await ac.db?.release(true);
-        }),
-    );
+    await QueryExecutor.destroyAll();
     await hls.pool?.end();
   } catch (err) {
     try {

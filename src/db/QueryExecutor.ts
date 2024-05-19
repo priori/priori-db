@@ -1,8 +1,5 @@
 import { assert } from 'util/assert';
 import { FieldDef, PoolClient, QueryArrayResult } from 'pg';
-import { NoticeMessage } from 'pg-protocol/dist/messages';
-import { useEffect, useRef, useState } from 'react';
-import { useEvent } from 'util/useEvent';
 import { CopyStreamQuery, CopyToStreamQuery, from, to } from 'pg-copy-streams';
 import { grantError } from 'util/errors';
 import PgCursor from 'pg-cursor';
@@ -23,6 +20,12 @@ export interface QueryResult {
     fields: FieldDef[];
     rowCount: number;
   }>;
+}
+
+export interface Notice {
+  readonly message: string | undefined;
+  readonly type: string | undefined;
+  values: { [key: string]: string | undefined };
 }
 
 interface QueryOptions {
@@ -50,6 +53,7 @@ function temToStdOut(query: string) {
     !!query.match(/^([^']|'([^']|'')*')*to\s+stdout/gim)
   );
 }
+
 function temFromStdIn(query: string) {
   return (
     !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
@@ -59,39 +63,74 @@ function temFromStdIn(query: string) {
 
 const fetchSize = 500;
 
-class ExclusiveConnection {
-  db: PoolClient | null = null;
+export class QueryExecutor {
+  private db: PoolClient | null = null;
 
-  public pid: number | undefined;
+  private pid: number | undefined;
 
-  pending: {
+  private pending: {
     resolve: (r: QueryResult) => void;
     reject: (e: unknown) => void;
     query: string;
     ops?: QueryOptions;
   }[] = [];
 
-  listener: (n: NoticeMessage) => void;
+  private onNotice: (n: Notice) => void;
 
-  onPid: (pid: number | null) => void;
+  private onPid: (pid: number | null) => void;
 
-  onError: (err: Error) => void;
+  private onError: (err: Error) => void;
+
+  private static instances = [] as QueryExecutor[];
+
+  static destroyAll() {
+    return Promise.all(
+      QueryExecutor.instances
+        .filter((ac) => ac.pid)
+        .map(async (ac) => {
+          await ac.stopRunningQuery();
+          await ac.db?.release(true);
+        }),
+    );
+  }
+
+  static pids() {
+    return this.instances
+      .map((ac) => ac.pid)
+      .filter((pid) => typeof pid === 'number') as number[];
+  }
 
   constructor(
-    onNotice: (n: NoticeMessage) => void,
+    onNotice: (n: Notice) => void,
     onPid: (pid: number | null) => void,
     onError: (e: Error) => void,
   ) {
-    this.listener = onNotice;
+    this.onNotice = onNotice;
     this.onPid = onPid;
     this.onError = onError;
+    QueryExecutor.instances.push(this);
   }
 
   async stopRunningQuery(): Promise<void> {
     if (this.pid) await DB.cancelBackend(this.pid);
   }
 
-  lastCursor: PgCursor | null = null;
+  destroy() {
+    if (this.pid) {
+      this.stopRunningQuery().then(() => {
+        QueryExecutor.instances.splice(
+          QueryExecutor.instances.indexOf(this),
+          1,
+        );
+        this.db?.release(true);
+      });
+      return;
+    }
+    QueryExecutor.instances.splice(QueryExecutor.instances.indexOf(this), 1);
+    this.db?.release(true);
+  }
+
+  private lastCursor: PgCursor | null = null;
 
   async query(q: string, ops?: QueryOptions): Promise<QueryResult> {
     if (this.lastCursor) {
@@ -238,7 +277,21 @@ class ExclusiveConnection {
       this.pid = pid as number;
       this.onPid(this.pid);
       this.db = db;
-      this.db.on('notice', this.listener);
+      this.db.on('notice', (n) => {
+        const values: { [key: string]: string | undefined } = {};
+        for (const k of Object.keys(n) as (keyof typeof n)[]) {
+          if (k !== 'message' && k !== 'severity' && k !== 'name') {
+            if (typeof n[k] === 'string') values[k] = n[k] as string;
+            else if (typeof n[k] === 'number')
+              values[k] = (n[k] as number).toString();
+          }
+        }
+        this.onNotice({
+          message: n.message,
+          type: n.severity,
+          values,
+        });
+      });
       this.db.on('error', (err) => {
         this.onPid(null);
         this.onError(err);
@@ -261,45 +314,4 @@ class ExclusiveConnection {
       }
     }
   }
-}
-
-export const exclusives = [] as ExclusiveConnection[];
-export function useExclusiveConnection(
-  onNotice: (a: NoticeMessage) => void,
-  onPid: (pid: number | null) => void,
-  onClientError: (e: Error) => void,
-): [ExclusiveConnection, () => void] {
-  const onNotice2 = useEvent(onNotice);
-  const onPid2 = useEvent(onPid);
-  const onClientError2 = useEvent(onClientError);
-  const [client, setClient] = useState(
-    () => new ExclusiveConnection(onNotice2, onPid2, onClientError2),
-  );
-  const destroy = useEvent(() => {
-    if (client.pid) {
-      client.stopRunningQuery().then(() => {
-        exclusives.splice(exclusives.indexOf(client), 1);
-        client.db?.release(true);
-      });
-      return;
-    }
-    exclusives.splice(exclusives.indexOf(client), 1);
-    client.db?.release(true);
-  });
-  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (timeout.current) clearTimeout(timeout.current);
-    else exclusives.push(client);
-    return () => {
-      timeout.current = setTimeout(destroy, 10);
-    };
-  }, [client, destroy]);
-  return [
-    client,
-    useEvent(() => {
-      setClient(
-        () => new ExclusiveConnection(onNotice2, onPid2, onClientError2),
-      );
-    }),
-  ];
 }

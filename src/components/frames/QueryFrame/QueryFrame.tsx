@@ -22,11 +22,10 @@ export function QueryFrame({ uid }: { uid: number }) {
     hasPid,
     execute,
     editorRef,
-    state,
-    removeNotice,
     onOpenNewConnectionClick,
     onRollbackClick,
-    fullViewNotice,
+    onOpenNotice,
+    onRemoveNotice,
     onFavoriteSave,
     onEditorChange,
     onStdOutFileClick,
@@ -46,6 +45,14 @@ export function QueryFrame({ uid }: { uid: number }) {
     saved,
     onQuerySelectorSelect,
     onDialogBlur,
+    running0,
+    time,
+    isFresh,
+    res,
+    connectionError,
+    pid,
+    error,
+    notices,
   } = useQueryFrame({ uid });
 
   return (
@@ -73,8 +80,7 @@ export function QueryFrame({ uid }: { uid: number }) {
               animation: 'show 0.3s forwards',
             }}
           >
-            {hasPid ||
-            (state.res && state.res.fields && state.res.fields.length) ? (
+            {hasPid || (res && res.fields && res.fields.length) ? (
               <span
                 className="query-frame--mensagem2"
                 style={popup ? { opacity: 0.3 } : undefined}
@@ -82,26 +88,26 @@ export function QueryFrame({ uid }: { uid: number }) {
                 {hasPid ? (
                   <div style={{ marginBottom: 3 }}>
                     <span className="pid2">
-                      {state.clientPid} <i className="fa fa-link" />
+                      {pid} <i className="fa fa-link" />
                     </span>
                   </div>
                 ) : null}
-                {state.res && state.res.fields && state.res.fields.length ? (
-                  state.res.fetchMoreRows ? (
+                {res && res.fields && res.fields.length ? (
+                  res.fetchMoreRows ? (
                     <>
-                      {state.res.rows.length} row
-                      {state.res.rows.length > 1 ? 's' : ''} fetched
-                      {state.time === null ? undefined : (
-                        <>, {state.time} ms execution time</>
+                      {res.rows.length} row
+                      {res.rows.length > 1 ? 's' : ''} fetched
+                      {time === null ? undefined : (
+                        <>, {time} ms execution time</>
                       )}
                       .
                     </>
                   ) : (
                     <>
-                      Query returned {state.res.rows.length} row
-                      {state.res.rows.length > 1 ? 's' : ''}
-                      {state.time === null ? undefined : (
-                        <>, {state.time} ms execution time</>
+                      Query returned {res.rows.length} row
+                      {res.rows.length > 1 ? 's' : ''}
+                      {time === null ? undefined : (
+                        <>, {time} ms execution time</>
                       )}
                     </>
                   )
@@ -220,29 +226,26 @@ export function QueryFrame({ uid }: { uid: number }) {
             </Dialog>
           ) : null}
 
-          {state.clientError ? (
+          {connectionError ? (
             <span className="client-error">
-              {state.clientError.message} <i className="fa fa-unlink" />
+              {connectionError.message} <i className="fa fa-unlink" />
             </span>
           ) : null}
 
-          {state.res && state.res.fields && state.res.fields.length ? (
+          {res && res.fields && res.fields.length ? (
             <span className="mensagem">
-              {state.res.fetchMoreRows ? (
+              {res.fetchMoreRows ? (
                 <>
-                  {state.res.rows.length} row
-                  {state.res.rows.length > 1 ? 's' : ''} fetched
+                  {res.rows.length} row
+                  {res.rows.length > 1 ? 's' : ''} fetched
                 </>
               ) : (
                 <>
-                  Query returned {state.res.rows.length} row
-                  {state.res.rows.length > 1 ? 's' : ''}
+                  Query returned {res.rows.length} row
+                  {res.rows.length > 1 ? 's' : ''}
                 </>
               )}
-              {state.time === null ? undefined : (
-                <>, {state.time} ms execution time</>
-              )}
-              .
+              {time === null ? undefined : <>, {time} ms execution time</>}.
             </span>
           ) : undefined}
 
@@ -270,7 +273,7 @@ export function QueryFrame({ uid }: { uid: number }) {
             </button>
           ) : null}
 
-          {state.running ? (
+          {running0 ? (
             <button type="button" disabled className="query-tab--execute">
               Execute <i className="fa fa-play" />
             </button>
@@ -301,7 +304,7 @@ export function QueryFrame({ uid }: { uid: number }) {
 
           {hasPid ? (
             <div className={`pid${running ? ' pid--running' : ''}`}>
-              {state.clientPid} <i className="fa fa-link" />
+              {pid} <i className="fa fa-link" />
             </div>
           ) : null}
         </div>
@@ -360,33 +363,32 @@ export function QueryFrame({ uid }: { uid: number }) {
         onMouseDown={onResizeHelperMouseDown}
       />
       <div className="query-frame--bottom-area">
-        {state.error ? (
+        {error ? (
           <div className="error">
-            {state.error.code ? `#${state.error.code}` : ''}{' '}
-            {state.error.message}{' '}
-            {state.error.code === '25P02' ? (
+            {error.code ? `#${error.code}` : ''} {error.message}{' '}
+            {error.code === '25P02' ? (
               <button type="button" onClick={onRollbackClick}>
                 Rollback transaction
               </button>
-            ) : (state.clientError || state.error) && !state.clientPid ? (
+            ) : (connectionError || error) && !pid ? (
               <button type="button" onClick={onOpenNewConnectionClick}>
                 Open new connection
               </button>
             ) : null}
-            {typeof state.error.line === 'number' &&
-              typeof state.error.position === 'number' && (
+            {typeof error.line === 'number' &&
+              typeof error.position === 'number' && (
                 <div>
-                  Line: {state.error.line} Character: {state.error.position}
+                  Line: {error.line} Character: {error.position}
                 </div>
               )}
           </div>
-        ) : state.res && state.res.fields && state.res.fields.length ? (
-          state.notices.length ? (
+        ) : res && res.fields && res.fields.length ? (
+          notices.length ? (
             <div>
               <Notices
-                notices={state.notices}
-                onFullViewNotice={fullViewNotice}
-                onRemoveNotice={removeNotice}
+                notices={notices}
+                onOpenNotice={onOpenNotice}
+                onRemoveNotice={onRemoveNotice}
               />
               <DataGrid
                 style={{
@@ -397,7 +399,7 @@ export function QueryFrame({ uid }: { uid: number }) {
                   right: 0,
                 }}
                 fetchMoreRows={fetchMoreRows}
-                result={state.res}
+                result={res}
               />
             </div>
           ) : (
@@ -410,17 +412,17 @@ export function QueryFrame({ uid }: { uid: number }) {
                 right: 0,
               }}
               fetchMoreRows={fetchMoreRows}
-              result={state.res}
+              result={res}
             />
           )
-        ) : state.res || state.notices?.length ? (
+        ) : res || notices?.length ? (
           <div className="not-grid-result" style={{ top: 0 }}>
             <Notices
-              notices={state.notices}
-              onFullViewNotice={fullViewNotice}
-              onRemoveNotice={removeNotice}
+              notices={notices}
+              onOpenNotice={onOpenNotice}
+              onRemoveNotice={onRemoveNotice}
             />
-            {state.res && 'rowCount' in state.res && state.res.rowCount ? (
+            {res && 'rowCount' in res && res.rowCount ? (
               <div
                 style={{
                   fontSize: '20px',
@@ -428,22 +430,19 @@ export function QueryFrame({ uid }: { uid: number }) {
                   lineHeight: '1.5em',
                 }}
               >
-                Query returned successfully: {state.res.rowCount} row
-                {state.res.rowCount <= 1 ? '' : 's'} affected
-                {state.time === null ? undefined : (
-                  <>, {state.time} ms execution time</>
-                )}
-                .
-                {state.res.stdOutResult ? (
+                Query returned successfully: {res.rowCount} row
+                {res.rowCount <= 1 ? '' : 's'} affected
+                {time === null ? undefined : <>, {time} ms execution time</>}.
+                {res.stdOutResult ? (
                   <div style={{ marginTop: '1em' }}>
                     Query result exported to file{' '}
                     <strong style={{ userSelect: 'text' }}>
-                      {state.res.stdOutResult}
+                      {res.stdOutResult}
                     </strong>
                   </div>
                 ) : null}
               </div>
-            ) : state.res ? (
+            ) : res ? (
               <div
                 style={{
                   fontSize: '20px',
@@ -451,11 +450,11 @@ export function QueryFrame({ uid }: { uid: number }) {
                   lineHeight: '1.5em',
                 }}
               >
-                Query returned successfully with no result in {state.time} msec.
+                Query returned successfully with no result in {time} msec.
               </div>
             ) : undefined}
           </div>
-        ) : state.freshTab ? (
+        ) : isFresh ? (
           <QuerySelector style={{ top: 1 }} onSelect={onQuerySelectorSelect} />
         ) : null}
       </div>

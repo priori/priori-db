@@ -1,30 +1,39 @@
-import { NoticeMessage } from 'pg-protocol/dist/messages';
+import React from 'react';
+import { QueryExecutorNoticeMessage } from './useQueryExecutor';
 
-interface QFNoticeMessage extends NoticeMessage {
-  fullView?: boolean | undefined;
+function label(k: string) {
+  return (
+    k[0].toUpperCase() +
+    k.substring(1).replace(/[A-Z]/g, (v) => ` ${v.toUpperCase()}`)
+  );
 }
 
 export function Notices({
   notices,
   onRemoveNotice,
-  onFullViewNotice,
+  onOpenNotice,
 }: {
-  notices: QFNoticeMessage[];
-  onRemoveNotice: (n: NoticeMessage) => void;
-  onFullViewNotice: (n: NoticeMessage) => void;
+  notices: QueryExecutorNoticeMessage[];
+  onRemoveNotice: (n: QueryExecutorNoticeMessage) => void;
+  onOpenNotice: (n: QueryExecutorNoticeMessage) => void;
 }) {
   if (notices.length === 0) return null;
   return (
     <div className="notices">
       {notices.map((n, i) => (
-        <div className={`notice${n.fullView ? ' full-view' : ''}`} key={i}>
-          <span className="notice-type">{n.name}</span>
+        <div className="notice" key={i}>
+          <span className="notice-type">{n.type}</span>
           <span className="notice-message">{n.message}</span>
-          {n.fullView ? (
+          {n.open ? (
             <div className="notice-details">
-              <span>Line: {n.line}</span> <span>File: {n.file}</span>{' '}
-              <span>Code: {n.code}</span> <span>Severity: {n.severity}</span>{' '}
-              <span>Routine: {n.routine}</span>
+              {Object.keys(n.values).map((k) => (
+                <React.Fragment key={k}>
+                  <span>
+                    <strong>{label(k)}:</strong>{' '}
+                    <span className="notice--value">{n.values[k]}</span>
+                  </span>
+                </React.Fragment>
+              ))}
             </div>
           ) : null}
           <i
@@ -45,9 +54,9 @@ export function Notices({
             aria-label="View notice"
             onKeyDown={(e) => {
               if (e.key === ' ' || e.key === 'Space' || e.key === 'Enter')
-                onFullViewNotice(n);
+                onOpenNotice(n);
             }}
-            onClick={() => onFullViewNotice(n)}
+            onClick={() => onOpenNotice(n)}
           />
         </div>
       ))}

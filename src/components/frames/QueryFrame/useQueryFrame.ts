@@ -1,9 +1,7 @@
 import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
-import { NoticeMessage } from 'pg-protocol/dist/messages';
 import { assert } from 'util/assert';
 import { useEvent } from 'util/useEvent';
 import { closeTabNow, showError, updateTab } from 'state/actions';
-import { DB } from 'db/DB';
 import {
   saveQuery as insertQuery,
   saveFavoriteQuery,
@@ -20,31 +18,9 @@ import { useEventListener } from 'util/useEventListener';
 import { useTab } from '../../main/connected/ConnectedApp';
 import { Editor } from '../../Editor';
 import {
-  QueryResult,
-  useExclusiveConnection,
-} from '../../../db/ExclusiveConnection';
-
-interface QFNoticeMessage extends NoticeMessage {
-  fullView?: boolean | undefined;
-}
-
-interface QueryFrameState {
-  running: boolean;
-  openTransaction: boolean;
-  notices: QFNoticeMessage[];
-  resetNotices: boolean;
-  res: QueryResult | null;
-  time: null | number;
-  clientPid: number | null;
-  clientError: Error | null;
-  error: {
-    code: string;
-    line: number;
-    position: number;
-    message: string;
-  } | null;
-  freshTab: boolean;
-}
+  QueryExecutorNoticeMessage,
+  useQueryExecutor,
+} from './useQueryExecutor';
 
 function useDelayTrue(value: boolean, delay: number) {
   const [state, setState] = useState(value);
@@ -71,37 +47,31 @@ function useFreshTrue(value: boolean, delay: number) {
 let resizeIndicatorEl: HTMLDivElement | null = null;
 export function useQueryFrame({ uid }: { uid: number }) {
   const editorRef: MutableRefObject<Editor | null> = useRef(null);
-
-  const [state, setState] = useState({
-    running: false,
-    notices: [] as NoticeMessage[],
-    resetNotices: false,
-    clientPid: null,
-    clientError: null,
-    res: null as QueryResult | null,
-    time: null,
-    error: null,
-    freshTab: true,
-  } as QueryFrameState);
-
-  const [db, restart] = useExclusiveConnection(
-    (notice) => {
-      setState((state2) => ({
-        ...state2,
-        resetNotices: false,
-        notices: state2.resetNotices ? [notice] : [...state2.notices, notice],
-      }));
-    },
-    (pid) => {
-      setState((state2) => ({ ...state2, clientPid: pid }));
-    },
-    (clientError) => setState((state2) => ({ ...state2, clientError })),
-  );
-
   const isMounted = useIsMounted();
-
   const [stdInFile, setStdInFile] = useState<string | null>(null);
   const [stdOutFile, setStdOutFile] = useState<string | null>(null);
+  const queryIdRef = useRef<number | null>(null);
+  const queryExecutor = useQueryExecutor({
+    onSuccess(res) {
+      const id = queryIdRef.current;
+      if (id)
+        updateQuery(
+          id,
+          res.time,
+          typeof res.length === 'number' ? res.length : null,
+        );
+      updateTab(uid, 'success');
+      if (isMounted()) {
+        if (res?.stdOutMode) setStdOutFile(null);
+        if (res?.stdInMode) setStdInFile(null);
+      }
+    },
+    onError(_, time) {
+      const id = queryIdRef.current;
+      updateTab(uid, 'error');
+      if (id) updateFailedQuery(id, time);
+    },
+  });
 
   const executeQuery = useEvent(
     async (
@@ -115,87 +85,28 @@ export function useQueryFrame({ uid }: { uid: number }) {
       updateTab(
         uid,
         'running',
-        query.trim().replace(/\s+/g, ' ').substring(0, 100),
+        query.trim().replace(/\s+/g, ' ').substring(0, 100) || undefined,
       );
-      setState((state2) => ({
-        ...state2,
-        running: true,
-        resetNotices: true,
-      }));
       const tabTitle = currentState().tabs.find(
         (t) => t.props.uid === uid,
       )?.title;
-      const id = !saveQuery
-        ? undefined
+      queryIdRef.current = !saveQuery
+        ? null
         : await insertQuery(
             query,
             uid,
             saveQuery,
             tabTitle === 'New Query' ? null : tabTitle || null,
           );
-      const start = new Date().getTime();
-      try {
-        const res = await db.query(query, {
-          stdInFile,
-          stdOutFile,
-        });
-        updateTab(uid, 'success');
-
-        const time = new Date().getTime() - start;
-        const resLength = res?.rows?.length;
-        if (id)
-          updateQuery(
-            id,
-            time,
-            typeof resLength === 'number' ? resLength : null,
-          );
-        const openTransaction = !db.pid
-          ? false
-          : await DB.inOpenTransaction(db.pid);
-        if (isMounted()) {
-          if (res?.stdOutMode) setStdOutFile(null);
-          if (res?.stdInMode) setStdInFile(null);
-          setState((state2) => ({
-            ...state2,
-            running: false,
-            clientPid: db.pid || null,
-            openTransaction,
-            res,
-            notices:
-              res?.fields?.length || state2.resetNotices ? [] : state2.notices,
-            resetNotices: false,
-            time,
-            error: null,
-          }));
-        }
-      } catch (err: unknown) {
-        updateTab(uid, 'error');
-        const time = new Date().getTime() - start;
-        if (id) updateFailedQuery(id, time);
-        if (isMounted())
-          setState((state2) => ({
-            clientPid: state2.clientPid,
-            running: false,
-            openTransaction: false,
-            notices: state2.resetNotices ? [] : state2.notices,
-            resetNotices: false,
-            error: err as {
-              code: string;
-              line: number;
-              position: number;
-              message: string;
-            },
-            freshTab: false,
-            clientError: state2.clientError,
-            time: null,
-            res: null,
-          }));
-      }
+      queryExecutor.query(query, {
+        stdInFile,
+        stdOutFile,
+      });
     },
   );
 
   const execute = useEvent(async () => {
-    if (state.running) return;
+    if (queryExecutor.running) return;
     const editor = editorRef.current;
     assert(editor);
     const query = editor.getQuery();
@@ -206,7 +117,7 @@ export function useQueryFrame({ uid }: { uid: number }) {
   const [closeConfirm2, setCloseConfirm2] = useState(false);
 
   const yesClick = useEvent(async () => {
-    await db.stopRunningQuery();
+    await queryExecutor.stopRunningQuery();
     closeTabNow(uid);
   });
 
@@ -229,11 +140,11 @@ export function useQueryFrame({ uid }: { uid: number }) {
       setSaveDialogOpen(true);
     },
     onClose() {
-      if (state.running) {
+      if (queryExecutor.running) {
         setCloseConfirm(true);
         return false;
       }
-      if (state.openTransaction) {
+      if (queryExecutor.openTransaction) {
         setCloseConfirm2(true);
         return false;
       }
@@ -242,46 +153,23 @@ export function useQueryFrame({ uid }: { uid: number }) {
   });
 
   const cancel = useEvent(() => {
-    db.stopRunningQuery();
+    queryExecutor.stopRunningQuery();
   });
 
   const onCancelKeyDown = useEvent((e: React.KeyboardEvent) => {
     if (e.key === ' ' || e.key === 'Space' || e.key === 'Enter') cancel();
   });
 
-  const removeNotice = useEvent((n: NoticeMessage) => {
-    setState((state2) => ({
-      ...state2,
-      notices: state2.notices.filter((n2) => n2 !== n),
-    }));
+  const onRemoveNotice = useEvent((n: QueryExecutorNoticeMessage) => {
+    queryExecutor.removeNotice(n);
   });
 
   const onOpenNewConnectionClick = useEvent(() => {
-    setState({
-      running: false,
-      notices: [] as NoticeMessage[],
-      resetNotices: false,
-      clientPid: null,
-      clientError: null,
-      res: null,
-      time: null,
-      error: null,
-      freshTab: false,
-    } as QueryFrameState);
-    restart();
+    queryExecutor.openNewConnection();
   });
 
   const onRollbackClick = useEvent(() => {
     executeQuery('ROLLBACK');
-  });
-
-  const fullViewNotice = useEvent((n: NoticeMessage) => {
-    setState((state2) => ({
-      ...state2,
-      notices: state2.notices.map((n2) =>
-        n2 === n ? { ...n2, message: n2.message, fullView: !n2.fullView } : n2,
-      ),
-    }));
   });
 
   const [saved, setSaved] = useState(false);
@@ -335,8 +223,8 @@ export function useQueryFrame({ uid }: { uid: number }) {
       });
   });
 
-  const running = useDelayTrue(state.running, 200);
-  const hasPid = useDelayTrue(!!state.clientPid, 200);
+  const running = useDelayTrue(queryExecutor.running, 200);
+  const hasPid = useDelayTrue(!!queryExecutor.pid, 200);
 
   const [topHeightState, setTopHeightState] = useState(300);
   const topHeight = topHeightState;
@@ -445,27 +333,7 @@ export function useQueryFrame({ uid }: { uid: number }) {
     setPopup(null);
   });
 
-  const fetching = useRef(false);
-  const fetchMoreRows0 = useEvent(async () => {
-    if (
-      !state.res ||
-      !('fetchMoreRows' in state.res && state.res.fetchMoreRows) ||
-      fetching.current
-    )
-      return;
-    fetching.current = true;
-    const res2 = await state.res.fetchMoreRows();
-    fetching.current = false;
-    setState((state2) => ({
-      ...state2,
-      res: res2,
-      time: null,
-    }));
-  });
-  const fetchMoreRows =
-    state.res && 'fetchMoreRows' in state.res && state.res.fetchMoreRows
-      ? fetchMoreRows0
-      : undefined;
+  const { fetchMoreRows } = queryExecutor;
 
   const onQuerySelectorSelect = useEvent(
     (editorState: {
@@ -480,6 +348,20 @@ export function useQueryFrame({ uid }: { uid: number }) {
   const onDialogBlur = useEvent(() => {
     if (saveDialogOpen) setSaveDialogOpen(false);
     else if (openDialogOpen) setOpenDialogOpen(false);
+  });
+
+  const {
+    time,
+    isFresh,
+    result: res,
+    connectionError,
+    pid,
+    error,
+    notices,
+  } = queryExecutor;
+
+  const onOpenNotice = useEvent((n: QueryExecutorNoticeMessage) => {
+    queryExecutor.openNotice(n);
   });
 
   return {
@@ -497,11 +379,10 @@ export function useQueryFrame({ uid }: { uid: number }) {
     hasPid,
     execute,
     editorRef,
-    state,
-    removeNotice,
+    onRemoveNotice,
     onOpenNewConnectionClick,
     onRollbackClick,
-    fullViewNotice,
+    onOpenNotice,
     onFavoriteSave,
     onEditorChange,
     onStdOutFileClick,
@@ -521,5 +402,13 @@ export function useQueryFrame({ uid }: { uid: number }) {
     stdOutFile,
     onQuerySelectorSelect,
     onDialogBlur,
+    running0: queryExecutor.running,
+    time,
+    isFresh,
+    res,
+    connectionError,
+    pid,
+    error,
+    notices,
   };
 }
