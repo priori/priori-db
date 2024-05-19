@@ -64,7 +64,7 @@ function ValueListInput({
             className="fa fa-close"
             onClick={() => {
               if (i === values.length) return;
-              onChange(values.filter((v, vi) => vi !== i));
+              onChange(values.filter((_, vi) => vi !== i));
             }}
           />
         </span>

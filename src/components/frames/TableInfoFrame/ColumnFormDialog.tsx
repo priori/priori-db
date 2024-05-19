@@ -90,7 +90,6 @@ export function ColumnFormDialog({
         />
         <div style={{ display: 'flex', width: 250 }}>
           <select
-            placeholder="Type"
             disabled={fieldsDisabled}
             value={form.type}
             onChange={(e) => {
@@ -114,7 +113,7 @@ export function ColumnFormDialog({
             }}
             style={!form.type ? { color: '#777' } : undefined}
           >
-            <option value="" style={{ color: '#ccc' }}>
+            <option value="" style={{ color: '#ccc' }} disabled hidden>
               Type
             </option>
             {lastValidData?.map((t) => (

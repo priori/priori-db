@@ -138,7 +138,6 @@ export function IndexDialog({
           </div>
         ) : null}
         <select
-          placeholder="Method"
           onChange={(e) => {
             setForm(
               e.target.value
@@ -161,8 +160,9 @@ export function IndexDialog({
               ? { color: '#777', marginBottom: 0 }
               : { marginBottom: 0 }
           }
+          value={form.method || ''}
         >
-          <option value="" style={{ color: '#ccc' }}>
+          <option value="" style={{ color: '#ccc' }} disabled hidden>
             Method
           </option>
           <option value="btree">btree</option>

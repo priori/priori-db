@@ -11,8 +11,6 @@ let current: AppState = hls.current || {
   connected: false,
   tabs: [],
   tabsOpenOrder: [],
-  title: '',
-  newSchema: false,
   errors: [],
 };
 

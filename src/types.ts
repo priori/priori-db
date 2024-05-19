@@ -137,7 +137,7 @@ export interface AppState {
   connected: boolean;
   tabs: Tab[];
   tabsOpenOrder: number[];
-  database: string;
+  database?: string;
   errors: Error[];
   currentConnectionConfiguration?: ConnectionConfiguration;
   schemas?: NavSchema[];

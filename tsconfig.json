@@ -20,14 +20,14 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "outDir": "release/app/dist",
-
     "removeComments": false,
     "preserveConstEnums": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noImplicitThis": true,
     "importHelpers": true,
-    "noEmitHelpers": true
+    "noEmitHelpers": true,
+    "skipLibCheck": true
   },
   "exclude": ["test", "release/build", "release/app/dist", ".erb/dll"],
   "formatCodeOptions": {
