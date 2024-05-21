@@ -11,19 +11,6 @@ export type FrameType =
   | 'domain'
   | 'role';
 
-export interface Type {
-  name: string;
-  elemoid: number;
-  length: number;
-  type: string;
-  oid: number;
-  nspname: string;
-  isdup: boolean;
-  is_collatable: boolean;
-  allowLength: boolean;
-  allowPrecision: boolean;
-}
-
 export interface AbstractTabProps<T extends FrameType> {
   readonly type: T;
   readonly uid: number;
@@ -60,7 +47,6 @@ export interface FunctionFrameProps extends AbstractTabProps<'function'> {
 
 export interface NewTableFrameProps extends AbstractTabProps<'newtable'> {
   readonly schema: string;
-  readonly types: Type[];
 }
 
 export interface TableInfoFrameProps extends AbstractTabProps<'tableinfo'> {

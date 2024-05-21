@@ -47,6 +47,7 @@ export const {
   keepOpenRole,
   previewRole,
   renameSchema,
+  newTable,
 } = state;
 
 export async function reloadNav() {
@@ -122,12 +123,6 @@ export function openSchema(name: string) {
   const schema = s.schemas.find((c) => c.name === name);
   assert(schema);
   state.toggleSchema(name);
-}
-
-export function newTable(schema: string) {
-  DB.types().then((types) => {
-    state.newTable(schema, types);
-  });
 }
 
 export function fullView(name: string) {

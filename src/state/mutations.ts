@@ -1,5 +1,5 @@
 import { assert } from 'util/assert';
-import { AppState, FrameProps, NavSchema, Tab, Tab0, Type } from 'types';
+import { AppState, FrameProps, NavSchema, Tab, Tab0 } from 'types';
 import { ConnectionConfiguration } from 'db/Connection';
 
 export function cancelAskToCloseWindow(current: AppState) {
@@ -398,7 +398,7 @@ export function closeFullView(current: AppState, name: string) {
   };
 }
 
-export function newTable(current: AppState, schema: string, types: Type[]) {
+export function newTable(current: AppState, schema: string) {
   return newFrame(current, (uid) => ({
     title: 'Nova Tabela',
     active: true,
@@ -407,7 +407,6 @@ export function newTable(current: AppState, schema: string, types: Type[]) {
       uid,
       type: 'newtable',
       schema,
-      types,
     },
   }));
 }

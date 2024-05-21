@@ -6,13 +6,14 @@ import {
   openConnection,
   QueryResultData,
 } from './Connection';
-import {
-  EntityType,
-  SequencePrivileges,
-  TablePrivileges,
-  Type,
-} from '../types';
+import { EntityType, SequencePrivileges, TablePrivileges } from '../types';
 import { buildWhere, Filter, Sort } from './util';
+
+export interface TableColumnType {
+  name: string;
+  allowLength: boolean;
+  allowPrecision: boolean;
+}
 
 function schemaCompare(a: string, b: string, publics: string[]) {
   const aPublic = publics.includes(a);
@@ -87,7 +88,7 @@ export const DB = {
     like?: string;
     columns: {
       name: string;
-      type: Type | null;
+      type: TableColumnType | null;
       length: string;
       precision: string;
       notNull: boolean;
@@ -712,7 +713,7 @@ export const DB = {
         ...type,
         allowLength,
         allowPrecision: type.name === 'numeric' || type.name === 'numeric[]',
-      } as Type;
+      } as TableColumnType;
     });
   },
 

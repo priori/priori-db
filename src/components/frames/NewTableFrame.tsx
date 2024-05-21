@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { DB } from 'db/DB';
-import { NewTableFrameProps, Type } from '../../types';
+import { DB, TableColumnType } from 'db/DB';
+import { useService } from 'util/useService';
+import { NewTableFrameProps } from '../../types';
 import { ListInput } from '../util/ListInput';
 import { closeThisAndReloadNav, showError } from '../../state/actions';
 
 export interface ColumnNewTable {
   name: string;
-  type: Type | null;
+  type: TableColumnType | null;
   length: string;
   precision: string;
   notNull: boolean;
@@ -55,6 +56,9 @@ export function NewTableFrame(props: NewTableFrameProps) {
       columns: [],
     },
   } as { constraintsOpen: boolean; newTable: NewTable });
+
+  const typesService = useService(() => DB.types(), []);
+  const types = typesService.lastValidData || [];
 
   function save() {
     DB.createTable(state.newTable).then(
@@ -106,7 +110,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
               set({
                 ...c,
                 type:
-                  props.types.find(
+                  types.find(
                     (t) => t.name === (e.target as HTMLSelectElement).value,
                   ) || null,
               })
@@ -114,7 +118,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
           >
             {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
             <option value="" />
-            {props.types.map((type) => (
+            {types.map((type) => (
               <option key={type.name} value={type.name}>
                 {type.name}
               </option>
@@ -219,6 +223,8 @@ export function NewTableFrame(props: NewTableFrameProps) {
       </div>
     );
   };
+
+  if (!types) return <div style={{ width: '720px' }} />;
 
   return (
     <div style={{ width: '720px' }}>
