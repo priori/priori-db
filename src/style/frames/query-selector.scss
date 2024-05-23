@@ -135,12 +135,17 @@
   margin-right: 5px;
 }
 .query-selector > h1 {
-  font-size: 12px;
-  padding: 2px 6px;
+  font-size: 16px;
+  padding: 5px 6px;
   margin: 0;
   background: white;
   border: 1px solid #ddd;
   border-right: 0;
+  line-height: 1em;
+  color: #444;
+  letter-spacing: 0.3px;
+  font-weight: 700;
+  font-family: system-ui;
   &:first-of-type {
     border-top: 0;
   }

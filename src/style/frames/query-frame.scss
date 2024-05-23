@@ -135,6 +135,9 @@ button.query-tab--stdout {
 .notice-type {
   background: #ed0;
   margin-right: 8px;
+  font-weight: bold;
+  font-size: 11px;
+  font-family: system-ui;
 }
 .notice {
   clear: both;
@@ -154,6 +157,13 @@ button.query-tab--stdout {
 }
 .notice-message {
   user-select: text;
+}
+.notice--info .notice-type {
+  background: #ccc;
+}
+.notice--warning .notice-type {
+  color: #b00;
+  background: #ed0;
 }
 .pid {
   position: absolute;

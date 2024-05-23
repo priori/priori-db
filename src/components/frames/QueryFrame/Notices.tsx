@@ -21,7 +21,10 @@ export function Notices({
   return (
     <div className="notices">
       {notices.map((n, i) => (
-        <div className="notice" key={i}>
+        <div
+          className={`notice${n.type ? ` notice--${n.type.toLocaleLowerCase()}` : ''}`}
+          key={i}
+        >
           <span className="notice-type">{n.type}</span>
           <span className="notice-message">{n.message}</span>
           {n.open ? (
