@@ -11,6 +11,19 @@ const noOverlaySelector = '.tabs-header, .frame';
 const dragExceptionSelector =
   '.grid > div, .grid-content--table-wrapper-outer, .empty-table, .empty-table *';
 
+let extraTop: number | undefined;
+if (window.navigator.userAgent.indexOf('Linux') !== -1) {
+  setTimeout(() => {
+    const initialScreenY = window.screenY;
+    const aux = initialScreenY + 1;
+    window.moveTo(window.screenX, aux);
+    setTimeout(() => {
+      extraTop = aux - window.screenY;
+      window.moveTo(window.screenX, initialScreenY + extraTop);
+    }, 10);
+  }, 500);
+}
+
 export function useWindowDrag() {
   const lastPosRef = useRef<{
     win: { x: number; y: number };
@@ -66,7 +79,7 @@ export function useWindowDrag() {
     if (!lastPos) return;
     const pos = {
       x: lastPos.win.x + e.screenX - lastPos.mouse.x,
-      y: lastPos.win.y + e.screenY - lastPos.mouse.y,
+      y: lastPos.win.y + e.screenY - lastPos.mouse.y + (extraTop || 0),
     };
     // window.moveTo(pos.x, pos.y);
     electron.ipcRenderer.send('pos', pos);
