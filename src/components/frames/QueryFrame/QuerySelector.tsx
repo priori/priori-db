@@ -89,7 +89,11 @@ function QuerySelector0({
             border: '1px solid #ddd',
           }}
         />
-        <select value={configValue} onChange={onConfigsSelectChange}>
+        <select
+          value={configValue}
+          onChange={onConfigsSelectChange}
+          style={{ width: 300 }}
+        >
           <option value="-1" />
           {configs.map((p, i) => (
             <option value={i} key={i}>{`${p.user}@${p.host}${

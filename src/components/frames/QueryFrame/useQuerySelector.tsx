@@ -1,6 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { currentState } from 'state/state';
-import { browserDb, listConnectionConfigurations } from 'util/browserDb';
+import { showError } from 'state/actions';
+import {
+  favorites,
+  lastQueries,
+  listConnectionConfigurations,
+} from 'util/browserDb/actions';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 
@@ -33,23 +38,6 @@ export function onPaginationClick(e: React.MouseEvent) {
   e.preventDefault();
   e.stopPropagation();
 }
-
-type ExecutedQueryEntry = {
-  execution_id: number;
-  tab_uid: number;
-  id: number;
-  sql: string;
-  created_at: number;
-  editor_content: string;
-  editor_cursor_start_line: number;
-  editor_cursor_end_line: number;
-  editor_cursor_start_char: number;
-  editor_cursor_end_char: number;
-  tab_title: string;
-  execution_time: number;
-  result_length: number;
-  success: number | null | boolean;
-};
 
 export type ExecutedQuery = {
   id: number;
@@ -131,70 +119,17 @@ export function useQuerySelector() {
 
   const service = useService(
     () =>
-      Promise.all([
-        browserDb.query(
-          `SELECT query.* FROM query
-          WHERE trim(sql) != ''
-
-        ${
-          config
-            ? ` AND
-          execution_id IN ( SELECT id FROM execution WHERE
-          execution.user = $1 AND
-          execution.host = $2 AND
-          execution.port = $3 AND
-          execution.database = $4) `
-            : ''
-        }
-        ORDER BY created_at DESC`,
-          config
-            ? [config.user, config.host, config.port, config.database]
-            : [],
-        ) as Promise<ExecutedQueryEntry[]>,
-
-        browserDb.query(
-          `SELECT
-            favorite_query.id,
-            favorite_query.sql,
-            favorite_query.title,
-            favorite_query.created_at,
-            editor_content,
-            editor_cursor_start_line,
-            editor_cursor_end_line,
-            editor_cursor_start_char,
-            editor_cursor_end_char
-        FROM favorite_query
-        ${
-          config
-            ? `WHERE
-        execution_id IN ( SELECT id FROM execution WHERE
-          execution.user = $1 AND
-          execution.host = $2 AND
-          execution.port = $3 AND
-          execution.database = $4) `
-            : ''
-        }
-        ORDER BY title ASC`,
-          config
-            ? [config.user, config.host, config.port, config.database]
-            : [],
-        ) as Promise<
-          {
-            id: number;
-            sql: string;
-            title: string;
-            created_at: number;
-            editor_content: string;
-            editor_cursor_start_line: number;
-            editor_cursor_end_line: number;
-            editor_cursor_start_char: number;
-            editor_cursor_end_char: number;
-          }[]
-        >,
-      ]).then(([queries, favorites]) => ({ queries, favorites })),
-
+      Promise.all([lastQueries(config), favorites(config)]).then(
+        // eslint-disable-next-line no-shadow
+        ([queries, favorites]) => ({ queries, favorites }),
+      ),
     [config],
   );
+  useEffect(() => {
+    if (service.error) {
+      showError(service.error);
+    }
+  }, [service.error]);
 
   const queries0 = useMemo(() => {
     const qs = !service.lastValidData
@@ -211,8 +146,7 @@ export function useQuerySelector() {
                 createdAt: new Date(q.created_at),
                 executionTime: q.execution_time,
                 resultLength: q.result_length,
-                success:
-                  q.success === 1 ? true : q.success === 0 ? false : null,
+                success: q.success ?? null,
                 editorState: {
                   content: q.editor_content,
                   cursorStart: {

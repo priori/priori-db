@@ -11,7 +11,7 @@ pg.types.setTypeParser(1184, (val) => val);
 pg.types.setTypeParser(1186, (val) => val);
 
 export interface ConnectionConfiguration {
-  id?: number;
+  id: number;
   host: string;
   port: number;
   database: string;
@@ -74,7 +74,7 @@ export function openConnection() {
 }
 
 export async function listFromConfiguration(
-  c: ConnectionConfiguration,
+  c: Omit<ConnectionConfiguration, 'id'> | ConnectionConfiguration,
   query: string,
   args?: (number | string | boolean | null)[] | undefined,
 ) {
@@ -194,7 +194,9 @@ export async function closeAll() {
   }
 }
 
-export async function listDatabases(c: ConnectionConfiguration) {
+export async function listDatabases(
+  c: Omit<ConnectionConfiguration, 'id'> | ConnectionConfiguration,
+) {
   const res = await listFromConfiguration(
     c,
     `SELECT datname as name

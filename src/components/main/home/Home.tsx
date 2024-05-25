@@ -5,7 +5,7 @@ import {
   insertConnectionConfiguration,
   listConnectionConfigurations,
   updateConnectionConfiguration,
-} from 'util/browserDb';
+} from 'util/browserDb/actions';
 import { ConnectionConfiguration, listDatabases } from 'db/Connection';
 import { connect } from 'state/actions';
 import { grantError } from 'util/errors';

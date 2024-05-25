@@ -6,8 +6,8 @@ import {
   saveQuery as insertQuery,
   saveFavoriteQuery,
   updateFailedQuery,
-  updateQuery,
-} from 'util/browserDb';
+  updateSuccessQuery,
+} from 'util/browserDb/actions';
 import { currentState } from 'state/state';
 import { useIsMounted } from 'util/hooks';
 import { ipcRenderer } from 'electron';
@@ -55,7 +55,7 @@ export function useQueryFrame({ uid }: { uid: number }) {
     onSuccess(res) {
       const id = queryIdRef.current;
       if (id)
-        updateQuery(
+        updateSuccessQuery(
           id,
           res.time,
           typeof res.length === 'number' ? res.length : null,
@@ -97,6 +97,7 @@ export function useQueryFrame({ uid }: { uid: number }) {
             uid,
             saveQuery,
             tabTitle === 'New Query' ? null : tabTitle || null,
+            currentState().currentConnectionConfiguration!,
           );
       queryExecutor.query(query, {
         stdInFile,
@@ -178,7 +179,12 @@ export function useQueryFrame({ uid }: { uid: number }) {
     if (!editorRef.current || !name) return;
     const sql = editorRef.current.getQuery();
     if (!sql) return;
-    await saveFavoriteQuery(sql, name, editorRef.current.getEditorState());
+    await saveFavoriteQuery(
+      sql,
+      name,
+      editorRef.current.getEditorState(),
+      currentState().currentConnectionConfiguration!,
+    );
     setSaved(true);
   });
 

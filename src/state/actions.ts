@@ -1,7 +1,7 @@
 import { assert } from 'util/assert';
 import { useEffect } from 'react';
 import { grantError } from 'util/errors';
-import { updateConnection } from 'util/browserDb';
+import { updateConnection } from 'util/browserDb/actions';
 import {
   connect as dbConnect,
   ConnectionConfiguration,
