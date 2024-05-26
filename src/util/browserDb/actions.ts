@@ -151,7 +151,7 @@ export async function saveQuery(
     const group = await queryGroup.get(queryGroupId);
     assert(group, 'queryGroup not found');
     const lastQueryId = await query.add({
-      queryGroupId: tabId,
+      queryGroupId,
       version: group.size + 1,
       sql,
       createdAt,
