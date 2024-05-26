@@ -254,6 +254,12 @@ export function ConnectedApp({ state }: { state: AppState }) {
     }
   });
 
+  const onEmptyDoubleClick = useEvent(() => {
+    if (tabs.length === 0) {
+      newQueryTab();
+    }
+  });
+
   const { database } = state;
   const c = state.currentConnectionConfiguration;
   const title = `${c.user}@${c.host}${
@@ -316,7 +322,11 @@ export function ConnectedApp({ state }: { state: AppState }) {
           onMouseDown={onResizeMouseDown}
         />
       ) : null}
-      <div className="app-content" style={{ left: leftWidth }}>
+      <div
+        className="app-content"
+        style={{ left: leftWidth }}
+        onDoubleClick={onEmptyDoubleClick}
+      >
         <TabsContext.Provider value={tabsConfigurations}>
           {tabs.map((t) => (
             <div

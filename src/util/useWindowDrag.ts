@@ -6,7 +6,7 @@ const dontDragSelector =
   'a, button, input, textarea, [tabindex]:not(.frame), select, .query-selector--query, .tabs-header__tab, .tabs-header__add, .header--menu, .favorite, .resize-helper, .query-frame--resize-helper, .bases-wrapper, .new-schema-form, .owner .fa-pencil';
 
 // for double click events to work
-const noOverlaySelector = '.tabs-header, .frame';
+const noOverlaySelector = '.tabs-header, .frame, .app-content';
 
 const dragExceptionSelector =
   '.grid > div, .grid-content--table-wrapper-outer, .empty-table, .empty-table *';
