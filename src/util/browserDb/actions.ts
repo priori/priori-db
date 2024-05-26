@@ -254,35 +254,27 @@ export async function updateSuccessQuery(
   });
 }
 
-export async function lastQueries(config?: ConnectionConfiguration | null) {
+export async function lastQueries(
+  config?: ConnectionConfiguration | null,
+  limit?: number,
+) {
   const connectionGroupId = config ? await getConnectionGroupId(config) : null;
-  return (
-    await transaction(({ queryGroup }) =>
-      connectionGroupId === null
-        ? queryGroup.index('queryCreatedAt').getAllDesc()
-        : queryGroup
-            .index('connectionGroupIdQueryCreatedAt')!
-            .getAllDesc(
-              IDBKeyRange.bound([connectionGroupId], [connectionGroupId, []]),
-            ),
-    )
-  ).map((q) => ({
-    id: q.lastQueryId,
-    sql: q.sql,
-    title: q.tabTitle,
-    execution_id: q.executionId,
-    tab_uid: q.id,
-    created_at: q.createdAt,
-    editor_content: q.editorState.content,
-    editor_cursor_start_line: q.editorState.cursorStart.line,
-    editor_cursor_end_line: q.editorState.cursorEnd.line,
-    editor_cursor_start_char: q.editorState.cursorStart.ch,
-    editor_cursor_end_char: q.editorState.cursorEnd.ch,
-    tab_title: q.tabTitle,
-    execution_time: q.executionTime,
-    result_length: q.resultLength,
-    success: q.success,
-  }));
+  return transaction(({ queryGroup }) =>
+    connectionGroupId === null
+      ? queryGroup.index('queryCreatedAt').getAllDesc(limit)
+      : queryGroup
+          .index('connectionGroupIdQueryCreatedAt')!
+          .getAllDesc(
+            IDBKeyRange.bound([connectionGroupId], [connectionGroupId, []]),
+            limit,
+          ),
+  );
+}
+
+export async function getQuery(groupId: number, v: number) {
+  return transaction(({ query }) =>
+    query.index('queryGroupIdVersion').get([groupId, v]),
+  );
 }
 
 export async function favorites(config?: ConnectionConfiguration | null) {

@@ -3,11 +3,13 @@ import { currentState } from 'state/state';
 import { showError } from 'state/actions';
 import {
   favorites,
+  getQuery,
   lastQueries,
   listConnectionConfigurations,
 } from 'util/browserDb/actions';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
+import { QueryGroupEntryIDB } from 'util/browserDb/entities';
 
 export function fDate(d: Date) {
   if (d.toLocaleDateString() === new Date().toLocaleDateString()) {
@@ -18,20 +20,6 @@ export function fDate(d: Date) {
     return `Yesterday ${d.toLocaleTimeString()}`;
   }
   return d.toLocaleString();
-}
-
-function groupBy<T, G>(
-  newGroup: (item: T) => G,
-  groupMatch: (g: G, item: T) => boolean,
-  insertInGroup: (g: G, item: T) => G,
-) {
-  return (acc: G[], item: T) => {
-    const group = acc.find((g) => groupMatch(g, item));
-    if (group) {
-      return acc.map((g) => (g === group ? insertInGroup(g, item) : g));
-    }
-    return [...acc, newGroup(item)];
-  };
 }
 
 export function onPaginationClick(e: React.MouseEvent) {
@@ -62,16 +50,10 @@ export type ExecutedQuery = {
   };
 };
 
-type ExecutedQueryGroup = {
-  tabId: number;
-  executionId: number;
-  queries: ExecutedQuery[];
-};
-
-export function useQuerySelectorGroup(queries: ExecutedQuery[]) {
+export function useQuerySelectorGroup(group: QueryGroupEntryIDB) {
   const [page, setPage] = useState(0);
   const prev = useEvent(() => {
-    if (page < queries.length - 1) {
+    if (page < group.size - 1) {
       setPage(page + 1);
     }
   });
@@ -80,10 +62,34 @@ export function useQuerySelectorGroup(queries: ExecutedQuery[]) {
       setPage(page - 1);
     }
   });
+  const initial = useMemo(
+    () => ({
+      title: group.tabTitle,
+      sql: group.sql,
+      createdAt: new Date(group.queryCreatedAt),
+      success: group.success,
+      editorState: group.editorState,
+    }),
+    [group],
+  );
+  const s = useService(
+    () =>
+      page === 0
+        ? Promise.resolve(initial)
+        : getQuery(group.id, group.size - page).then((q) => ({
+            title: q.tabTitle,
+            sql: q.sql,
+            createdAt: new Date(q.createdAt),
+            success: q.success,
+            editorState: q.editorState,
+          })),
+    [group, page],
+  );
   return {
     page,
     prev,
     next,
+    current: s.lastValidData || initial,
   };
 }
 
@@ -117,13 +123,15 @@ export function useQuerySelector() {
     },
   );
 
+  const [limit, setLimit] = useState(80);
+
   const service = useService(
     () =>
-      Promise.all([lastQueries(config), favorites(config)]).then(
+      Promise.all([lastQueries(config, limit), favorites(config)]).then(
         // eslint-disable-next-line no-shadow
         ([queries, favorites]) => ({ queries, favorites }),
       ),
-    [config],
+    [config, limit],
   );
   useEffect(() => {
     if (service.error) {
@@ -131,76 +139,14 @@ export function useQuerySelector() {
     }
   }, [service.error]);
 
-  const queries0 = useMemo(() => {
-    const qs = !service.lastValidData
-      ? null
-      : service.lastValidData?.queries
-          .map(
-            (q) =>
-              ({
-                id: q.id,
-                tabId: q.tab_uid,
-                executionId: q.execution_id,
-                sql: q.sql,
-                title: q.tab_title,
-                createdAt: new Date(q.created_at),
-                executionTime: q.execution_time,
-                resultLength: q.result_length,
-                success: q.success ?? null,
-                editorState: {
-                  content: q.editor_content,
-                  cursorStart: {
-                    line: q.editor_cursor_start_line,
-                    ch: q.editor_cursor_start_char,
-                  },
-                  cursorEnd: {
-                    line: q.editor_cursor_end_line,
-                    ch: q.editor_cursor_end_char,
-                  },
-                },
-              }) as ExecutedQuery,
-          )
-          .reduce(
-            groupBy<ExecutedQuery, ExecutedQueryGroup>(
-              (q) => ({
-                executionId: q.executionId,
-                tabId: q.tabId,
-                queries: [q],
-              }),
-              (g, item) =>
-                item.executionId === g.executionId && item.tabId === g.tabId,
-              (g, item) => ({ ...g, queries: [...g.queries, item] }),
-            ),
-            [] as ExecutedQueryGroup[],
-          );
-    if (qs) {
-      qs.forEach((g) => {
-        g.queries.sort((a, b) => {
-          if (a.createdAt > b.createdAt) {
-            return -1;
-          }
-          if (a.createdAt < b.createdAt) {
-            return 1;
-          }
-          return 0;
-        });
-      });
-    }
-    return qs;
-  }, [service.lastValidData]);
-
-  const [limit, setLimit] = useState(80);
-
-  const queries = useMemo(() => {
-    return queries0?.filter((_, i) => i < limit);
-  }, [queries0, limit]);
+  const queries = service.lastValidData?.queries;
 
   const onScroll = useEvent((e: React.UIEvent<HTMLDivElement>) => {
-    if (!queries0?.length) return;
+    if (!queries?.length) return;
     if (e.target instanceof HTMLElement) {
       const { scrollTop, scrollHeight, clientHeight } = e.target;
       if (scrollTop + clientHeight > scrollHeight - 100) {
-        if (limit < queries0.length) setLimit(limit + 100);
+        if (limit === queries.length) setLimit(limit + 100);
       }
     }
   });

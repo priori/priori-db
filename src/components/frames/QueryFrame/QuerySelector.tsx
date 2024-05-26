@@ -1,7 +1,7 @@
 import React from 'react';
+import { QueryGroupEntryIDB } from 'util/browserDb/entities';
 import { equals } from 'util/equals';
 import {
-  ExecutedQuery,
   fDate,
   onPaginationClick,
   useQuerySelector,
@@ -9,47 +9,46 @@ import {
 } from './useQuerySelector';
 
 function Group({
-  queries,
+  group,
   onSelect,
 }: {
-  queries: ExecutedQuery[];
+  group: QueryGroupEntryIDB;
   onSelect: (state: {
     content: string;
     cursorStart: { line: number; ch: number };
     cursorEnd: { line: number; ch: number };
   }) => void;
 }) {
-  const { page, prev, next } = useQuerySelectorGroup(queries);
+  const { page, prev, next, current } = useQuerySelectorGroup(group);
 
   return (
     <div
       className="query-selector--query"
-      key={queries[page].id}
-      onClick={() => onSelect(queries[page].editorState)}
+      onClick={() => onSelect(current.editorState)}
     >
       <h1>
-        {queries[page].success === false ? <i className="fa fa-close" /> : null}
-        {queries[page].title ? <div>{queries[page].title}</div> : null}
-        {fDate(queries[page].createdAt)}
+        {current.success === false ? <i className="fa fa-close" /> : null}
+        {current.title ? <div>{current.title}</div> : null}
+        {fDate(current.createdAt)}
       </h1>
-      <div className="query-selector--sql">{queries[page].sql}</div>
+      <div className="query-selector--sql">{current.sql}</div>
       <div
         className="query-selector--pagination"
         onClick={onPaginationClick}
-        style={queries.length === 1 ? { opacity: 0.33 } : undefined}
+        style={group.size === 1 ? { opacity: 0.33 } : undefined}
       >
         <i
           className={`fa fa-chevron-left ${
-            page === queries.length - 1 ? 'disabled' : ''
+            page === group.size - 1 ? 'disabled' : ''
           }`}
           onClick={prev}
-          style={queries.length === 1 ? { visibility: 'hidden' } : {}}
+          style={group.size === 1 ? { visibility: 'hidden' } : {}}
         />{' '}
-        {queries.length - page}/{queries.length}{' '}
+        {group.size - page}/{group.size}{' '}
         <i
           onClick={next}
           className={`fa fa-chevron-right ${page === 0 ? 'disabled' : ''}`}
-          style={queries.length === 1 ? { visibility: 'hidden' } : undefined}
+          style={group.size === 1 ? { visibility: 'hidden' } : undefined}
         />{' '}
       </div>
     </div>
@@ -138,11 +137,7 @@ function QuerySelector0({
       {favorites?.length ? <h1>Last Executed Queries</h1> : null}
       <div className="query-selector--queries">
         {queries?.map((g) => (
-          <Group
-            key={g.queries[0].id}
-            queries={g.queries}
-            onSelect={onSelect}
-          />
+          <Group key={g.id} group={g} onSelect={onSelect} />
         ))}
       </div>
     </div>
