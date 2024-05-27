@@ -186,6 +186,7 @@ export function useQueryFrame({ uid }: { uid: number }) {
       editorRef.current.getEditorState(),
       currentState().currentConnectionConfiguration!,
     );
+    if (saveDialogOpen) setSaveDialogOpen(false);
     setSaved(true);
   });
 

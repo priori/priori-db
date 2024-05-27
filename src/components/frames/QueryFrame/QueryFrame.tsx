@@ -1,10 +1,92 @@
 import { Dialog } from 'components/util/Dialog/Dialog';
+import { useRef, useState } from 'react';
 import { EditorQuerySelectorGroup, QuerySelector } from './QuerySelector';
 import { Editor } from '../../Editor';
 import { DataGrid } from '../../util/DataGrid/DataGrid';
 import { Notices } from './Notices';
 import { FavoriteControl } from './FavoriteControl';
 import { useQueryFrame } from './useQueryFrame';
+
+function focus(input: HTMLInputElement | null) {
+  if (input) {
+    input.focus();
+  }
+}
+
+function AddToFavoritesDialogButton({
+  onEnter,
+}: {
+  onEnter: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState('');
+  const divRef = useRef<HTMLDivElement>(null);
+  if (open) {
+    return (
+      <div style={{ marginTop: 15, display: 'flex' }} ref={divRef}>
+        <input
+          type="text"
+          style={{ height: 33, marginBottom: 0 }}
+          ref={focus}
+          onChange={(e) => setValue(e.target.value)}
+          value={value}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+              onEnter(e.target.value);
+            }
+          }}
+          onBlur={() => {
+            if (divRef.current)
+              setTimeout(() => {
+                if (!divRef.current?.contains(document.activeElement)) {
+                  setOpen(false);
+                }
+              }, 1);
+          }}
+        />{' '}
+        <button
+          onBlur={() => {
+            if (divRef.current)
+              setTimeout(() => {
+                if (!divRef.current?.contains(document.activeElement)) {
+                  setOpen(false);
+                }
+              }, 1);
+          }}
+          style={{
+            padding: 0,
+            height: 33,
+            marginTop: 0,
+            marginRight: 0,
+            marginBottom: 0,
+            width: 70,
+          }}
+          type="button"
+          disabled={!value}
+          onClick={() => {
+            if (value) {
+              onEnter(value);
+              setOpen(false);
+            }
+          }}
+        >
+          Ok
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button
+      className="query-tab--save-stdout"
+      type="button"
+      onClick={() => {
+        setOpen(true);
+      }}
+    >
+      Add SQL query to favorites
+    </button>
+  );
+}
 
 export function QueryFrame({ uid }: { uid: number }) {
   const {
@@ -189,14 +271,6 @@ export function QueryFrame({ uid }: { uid: number }) {
             onChange={onEditorChange}
             height={popup ? popup.height : topHeight}
           />
-          {selectedGroup ? (
-            <EditorQuerySelectorGroup
-              key={`${selectedGroup.queryGroup.id}-${selectedGroup.page}`}
-              group={selectedGroup.queryGroup}
-              page={selectedGroup.page}
-              onSelect={onQuerySelectorSelect}
-            />
-          ) : null}
           {saveDialogOpen ? (
             <Dialog relativeTo="previousSibling" onBlur={onDialogBlur}>
               <button
@@ -206,7 +280,9 @@ export function QueryFrame({ uid }: { uid: number }) {
               >
                 Save SQL query to a file (.sql)
               </button>
+              <AddToFavoritesDialogButton onEnter={onFavoriteSave} />
               <button
+                style={{ marginTop: 15 }}
                 className="query-tab--save-stdout"
                 type="button"
                 onClick={onStdOutFileClick}
@@ -215,7 +291,6 @@ export function QueryFrame({ uid }: { uid: number }) {
               </button>
             </Dialog>
           ) : null}
-
           {openDialogOpen ? (
             <Dialog relativeTo="previousSibling" onBlur={onDialogBlur}>
               <button
@@ -233,14 +308,20 @@ export function QueryFrame({ uid }: { uid: number }) {
                 Import data from a file (PostgreSQL STDIN)
               </button>
             </Dialog>
+          ) : null}{' '}
+          {selectedGroup ? (
+            <EditorQuerySelectorGroup
+              key={`${selectedGroup.queryGroup.id}-${selectedGroup.page}`}
+              group={selectedGroup.queryGroup}
+              page={selectedGroup.page}
+              onSelect={onQuerySelectorSelect}
+            />
           ) : null}
-
           {connectionError ? (
             <span className="client-error">
               {connectionError.message} <i className="fa fa-unlink" />
             </span>
           ) : null}
-
           {res && res.fields && res.fields.length ? (
             <span className="mensagem">
               {res.fetchMoreRows ? (
@@ -257,9 +338,7 @@ export function QueryFrame({ uid }: { uid: number }) {
               {time === null ? undefined : <>, {time} ms execution time</>}.
             </span>
           ) : undefined}
-
           {/* <span className="mensagem error"></span> */}
-
           {stdOutFile ? (
             <button
               type="button"
@@ -270,7 +349,6 @@ export function QueryFrame({ uid }: { uid: number }) {
               STDOUT <i className="fa fa-file-o" />
             </button>
           ) : null}
-
           {stdInFile ? (
             <button
               type="button"
@@ -281,7 +359,6 @@ export function QueryFrame({ uid }: { uid: number }) {
               STDIN <i className="fa fa-file-o" />
             </button>
           ) : null}
-
           {running0 ? (
             <button type="button" disabled className="query-tab--execute">
               Execute <i className="fa fa-play" />
@@ -296,7 +373,6 @@ export function QueryFrame({ uid }: { uid: number }) {
               Execute <i className="fa fa-play" />
             </button>
           )}
-
           {running ? (
             <div className="running">
               <i className="fa fa-circle-o-notch fa-spin fa-3x fa-fw" />
@@ -310,7 +386,6 @@ export function QueryFrame({ uid }: { uid: number }) {
               </span>
             </div>
           ) : null}
-
           {hasPid ? (
             <div className={`pid${running ? ' pid--running' : ''}`}>
               {pid} <i className="fa fa-link" />
