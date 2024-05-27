@@ -299,7 +299,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
                     }
                   }}
                   onDoubleClick={() => this.onDoubleClick(t)}
-                  style={{ width }}
+                  style={{ width, zIndex: 9 }}
                 >
                   {this.state.editing === t ? (
                     <span style={{ flex: 1 }}>
@@ -358,45 +358,54 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
 
     const { tabs, width } = this.calculate();
     return (
-      <div className="tabs-header" style={{ left: this.props.left }}>
-        <span className="tabs-header__tabs">
-          {tabs.map((t, index) => (
-            <span
-              className={`tabs-header__tab${
-                t.active ? ' tabs-header__tab--active' : ''
-              }${t.keep ? '' : ' preview'}${!t.title ? ' tabs-header__tab--empty' : ''}`}
-              key={t.keep ? t.props.uid : -index}
-              style={{ width, position: 'absolute', left: t.left }}
-            >
-              <span
-                className={`tabs-header__tab-name ${
-                  t.keep ? '' : ' tabs-header__tab-name--preview'
-                }`}
-              >
-                {t.title || t.title2}
-              </span>
-              {TabsHeader.statusRender(t)}
-              <i className="tabs-header__close fa fa-close" />
-            </span>
-          ))}
-        </span>
-        <span
-          className="tabs-header__add"
-          onClick={() => newQueryTabInTheEnd()}
+      <>
+        <div
+          className="tabs-header"
+          style={{ left: this.props.left, zIndex: 8 }}
         >
-          <i className="tabs-header__plus fa fa-plus" />
-        </span>
+          <span className="tabs-header__tabs" style={{ zIndex: 8 }}>
+            {tabs.map((t, index) => (
+              <span
+                className={`tabs-header__tab${
+                  t.active ? ' tabs-header__tab--active' : ''
+                }${t.keep ? '' : ' preview'}${!t.title ? ' tabs-header__tab--empty' : ''}`}
+                key={t.keep ? t.props.uid : -index}
+                style={{
+                  width,
+                  position: 'absolute',
+                  left: t.left,
+                }}
+              >
+                <span
+                  className={`tabs-header__tab-name ${
+                    t.keep ? '' : ' tabs-header__tab-name--preview'
+                  }`}
+                >
+                  {t.title || t.title2}
+                </span>
+                {TabsHeader.statusRender(t)}
+                <i className="tabs-header__close fa fa-close" />
+              </span>
+            ))}
+          </span>
+          <span
+            className="tabs-header__add"
+            onClick={() => newQueryTabInTheEnd()}
+          >
+            <i className="tabs-header__plus fa fa-plus" />
+          </span>
+        </div>
         <div
           style={{
-            position: 'fixed',
+            position: 'absolute',
             top: 0,
             left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 1000,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 7,
           }}
         />
-      </div>
+      </>
     );
   }
 }
