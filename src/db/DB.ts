@@ -717,8 +717,20 @@ export const DB = {
     });
   },
 
+  cachedV: undefined as undefined | number | null,
+  async v() {
+    if (this.cachedV === undefined) {
+      const r = await first('SELECT version() "version"');
+      if (r && r.version && typeof r.version === 'string') {
+        this.cachedV = parseInt(r.version.split(' ')[1].split('.')[0], 10);
+      }
+    }
+    return this.cachedV;
+  },
+
   async listCols(schemaName: string, tableName: string) {
     const regclass = `'${label(schemaName)}.${label(tableName)}'::regclass`;
+    const v = await this.v();
     const res = await list(
       `
       SELECT
@@ -726,11 +738,17 @@ export const DB = {
         a.attnotnull OR ((t.typtype = 'd'::"char") AND t.typnotnull) not_null,
         pg_catalog.format_type(a.atttypid, null) data_type,
         (
+          ${
+            v && v >= 12
+              ? `
           CASE
               WHEN (a.attgenerated = ''::"char")
               THEN pg_get_expr(ad.adbin, ad.adrelid)
               ELSE NULL::text
           END
+          `
+              : 'pg_get_expr(ad.adbin, ad.adrelid)'
+          }
         ) || '' column_default,
         i.indisprimary IS NOT NULL is_primary,
 
