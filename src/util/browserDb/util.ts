@@ -100,7 +100,7 @@ function createStoreHelper<T extends { id: number }>(
       return ret[0] || null;
     },
     remove: (id: number) => {
-      toPromise(s.delete(id));
+      return toPromise(s.delete(id));
     },
     put: async (v: T) => {
       if (!v.id) return Promise.reject(new Error('id is required'));
