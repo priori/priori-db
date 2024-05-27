@@ -1,5 +1,5 @@
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { QuerySelector } from './QuerySelector';
+import { EditorQuerySelectorGroup, QuerySelector } from './QuerySelector';
 import { Editor } from '../../Editor';
 import { DataGrid } from '../../util/DataGrid/DataGrid';
 import { Notices } from './Notices';
@@ -53,6 +53,7 @@ export function QueryFrame({ uid }: { uid: number }) {
     pid,
     error,
     notices,
+    selectedGroup,
   } = useQueryFrame({ uid });
 
   return (
@@ -188,6 +189,14 @@ export function QueryFrame({ uid }: { uid: number }) {
             onChange={onEditorChange}
             height={popup ? popup.height : topHeight}
           />
+          {selectedGroup ? (
+            <EditorQuerySelectorGroup
+              key={`${selectedGroup.queryGroup.id}-${selectedGroup.page}`}
+              group={selectedGroup.queryGroup}
+              page={selectedGroup.page}
+              onSelect={onQuerySelectorSelect}
+            />
+          ) : null}
           {saveDialogOpen ? (
             <Dialog relativeTo="previousSibling" onBlur={onDialogBlur}>
               <button

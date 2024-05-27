@@ -18,6 +18,7 @@
   column-gap: 1px;
   row-gap: 1px;
   background: #e4e4e4;
+  padding-right: 1px;
 }
 .query-selector--queries:not(:empty) {
   border-bottom: 1px solid #e4e4e4;
@@ -148,5 +149,22 @@
   font-family: system-ui;
   &:first-of-type {
     border-top: 0;
+  }
+}
+
+.query-selector--query.selected {
+  border: 2px solid black;
+  margin-left: -1px;
+  margin-right: -1px;
+  margin-top: -1px;
+  height: 142px;
+  margin-bottom: -1px;
+  z-index: 1;
+  padding: 5px;
+  background: #fcfcfc;
+  .query-selector--pagination {
+    background: #fcfcfc;
+    bottom: 1px;
+    right: -1px;
   }
 }

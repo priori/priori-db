@@ -25,7 +25,7 @@ function isSameEditorState(state: EditorState, state2: EditorState) {
 }
 export interface EditorProps {
   height: number;
-  onChange?: () => void;
+  onChange?: (contentChanged: boolean) => void;
 }
 export class Editor extends Component<EditorProps, never> {
   editor: any = null;
@@ -91,14 +91,16 @@ export class Editor extends Component<EditorProps, never> {
     this.editor.on('change', () => {
       const v = this.getEditorState();
       if (isSameEditorState(v, prev)) return;
+      const contentChanged = v.content !== prev.content;
       prev = v;
-      if (this.props.onChange) this.props.onChange();
+      if (this.props.onChange) this.props.onChange(contentChanged);
     });
     this.editor.on('cursorActivity', () => {
       const v = this.getEditorState();
       if (isSameEditorState(v, prev)) return;
+      const contentChanged = v.content !== prev.content;
       prev = v;
-      if (this.props.onChange) this.props.onChange();
+      if (this.props.onChange) this.props.onChange(contentChanged);
     });
     // var charWidth = editor.defaultCharWidth(), basePadding = 4;
     // editor.on("renderLine", function(cm:any, line:any, elt:any) {

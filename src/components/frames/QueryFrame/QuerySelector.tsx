@@ -2,29 +2,41 @@ import React from 'react';
 import { QueryGroupEntryIDB } from 'util/browserDb/entities';
 import { equals } from 'util/equals';
 import {
+  EditorQuerySelectorGroupProps,
   fDate,
   onPaginationClick,
+  useEditorQuerySelectorGroup,
   useQuerySelector,
   useQuerySelectorGroup,
 } from './useQuerySelector';
 
-function Group({
-  group,
-  onSelect,
-}: {
+export type QuerySelectorGroupProps = {
   group: QueryGroupEntryIDB;
+  selected: boolean;
   onSelect: (state: {
     content: string;
     cursorStart: { line: number; ch: number };
     cursorEnd: { line: number; ch: number };
+    queryGroup: QueryGroupEntryIDB;
+    page: number;
   }) => void;
-}) {
-  const { page, prev, next, current } = useQuerySelectorGroup(group);
+};
+
+function QuerySelectorGroup0(props: QuerySelectorGroupProps) {
+  const { page, prev, next, current } = useQuerySelectorGroup(props);
+  const { group } = props;
 
   return (
     <div
-      className="query-selector--query"
-      onClick={() => onSelect(current.editorState)}
+      className={`query-selector--query${props.selected ? ' selected' : ''}`}
+      onClick={() => {
+        if ('fastSelection' in props) return;
+        props.onSelect({
+          ...current.editorState,
+          page: current.page,
+          queryGroup: group,
+        });
+      }}
     >
       <h1>
         {current.success === false ? <i className="fa fa-close" /> : null}
@@ -55,15 +67,82 @@ function Group({
   );
 }
 
+export const QuerySelectorGroup = React.memo(
+  QuerySelectorGroup0,
+  (a, b) =>
+    a.group.id === b.group.id &&
+    a.onSelect === b.onSelect &&
+    a.selected === b.selected,
+);
+
+export function EditorQuerySelectorGroup(props: EditorQuerySelectorGroupProps) {
+  const { page, prev, next, current } = useEditorQuerySelectorGroup(props);
+  const { group } = props;
+
+  return (
+    <div className="query-selector--query">
+      {current ? (
+        <>
+          <h1>
+            {current.success === false ? <i className="fa fa-close" /> : null}
+            {current.title ? <div>{current.title}</div> : null}
+            {fDate(current.createdAt)}
+          </h1>
+          <div className="query-selector--sql">{current.sql}</div>
+        </>
+      ) : null}
+      <div
+        className="query-selector--pagination"
+        onClick={onPaginationClick}
+        style={{
+          ...(group.size >= 100
+            ? { fontSize: 25 }
+            : group.size < 10
+              ? { fontSize: 30, letterSpacing: 3 }
+              : {
+                  fontSize: 30,
+                }),
+        }}
+      >
+        <span style={group.size === 1 ? { opacity: 0.33 } : {}}>
+          <i
+            className={`fa fa-chevron-left ${
+              page === group.size - 1 ? 'disabled' : ''
+            }`}
+            onClick={prev}
+            style={group.size === 1 ? { visibility: 'hidden' } : {}}
+          />{' '}
+          {group.size - page}/{group.size}{' '}
+          <i
+            onClick={next}
+            className={`fa fa-chevron-right ${page === 0 ? 'disabled' : ''}`}
+            style={group.size === 1 ? { visibility: 'hidden' } : undefined}
+          />{' '}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function QuerySelector0({
   onSelect,
   style,
 }: {
-  onSelect: (state: {
-    content: string;
-    cursorStart: { line: number; ch: number };
-    cursorEnd: { line: number; ch: number };
-  }) => void;
+  onSelect: (
+    state:
+      | {
+          content: string;
+          cursorStart: { line: number; ch: number };
+          cursorEnd: { line: number; ch: number };
+          queryGroup: QueryGroupEntryIDB;
+          page: number;
+        }
+      | {
+          content: string;
+          cursorStart: { line: number; ch: number };
+          cursorEnd: { line: number; ch: number };
+        },
+  ) => void;
   style?: React.CSSProperties;
 }) {
   const {
@@ -73,7 +152,10 @@ function QuerySelector0({
     onScroll,
     configValue,
     onConfigsSelectChange,
-  } = useQuerySelector();
+    selected,
+    onGroupSelect,
+    onFavoriteClick,
+  } = useQuerySelector(onSelect);
 
   return (
     <div className="query-selector" style={style} onScroll={onScroll}>
@@ -110,20 +192,10 @@ function QuerySelector0({
       <div className="query-selector--favorites">
         {favorites?.map((q) => (
           <div
-            className="query-selector--query"
+            className={`query-selector--query ${selected && selected === `favorite${q.id}` ? ' selected' : ''}`}
             key={q.id}
             onClick={() => {
-              onSelect({
-                content: q.editor_content,
-                cursorStart: {
-                  line: q.editor_cursor_start_line,
-                  ch: q.editor_cursor_start_char,
-                },
-                cursorEnd: {
-                  line: q.editor_cursor_end_line,
-                  ch: q.editor_cursor_end_char,
-                },
-              });
+              onFavoriteClick(q);
             }}
           >
             <h1>
@@ -137,7 +209,12 @@ function QuerySelector0({
       {favorites?.length ? <h1>Last Executed Queries</h1> : null}
       <div className="query-selector--queries">
         {queries?.map((g) => (
-          <Group key={g.id} group={g} onSelect={onSelect} />
+          <QuerySelectorGroup
+            key={g.id}
+            group={g}
+            onSelect={onGroupSelect}
+            selected={!!selected && selected === `group${g.id}`}
+          />
         ))}
       </div>
     </div>

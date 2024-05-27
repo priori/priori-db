@@ -15,6 +15,7 @@ import { grantError } from 'util/errors';
 import { readFile, writeFile } from 'fs';
 import { verticalResize } from 'util/resize';
 import { useEventListener } from 'util/useEventListener';
+import { QueryGroupEntryIDB } from 'util/browserDb/entities';
 import { useTab } from '../../main/connected/ConnectedApp';
 import { Editor } from '../../Editor';
 import {
@@ -188,8 +189,43 @@ export function useQueryFrame({ uid }: { uid: number }) {
     setSaved(true);
   });
 
-  const onEditorChange = useEvent(() => {
-    if (saved) setSaved(false);
+  const [selectedGroup, setGroup] = useState<{
+    queryGroup: QueryGroupEntryIDB;
+    page: number;
+  } | null>(null);
+  const onQuerySelectorSelect = useEvent(
+    (
+      editorState:
+        | {
+            content: string;
+            cursorStart: { line: number; ch: number };
+            cursorEnd: { line: number; ch: number };
+            page: number;
+            queryGroup: QueryGroupEntryIDB;
+          }
+        | {
+            content: string;
+            cursorStart: { line: number; ch: number };
+            cursorEnd: { line: number; ch: number };
+          },
+    ) => {
+      editorRef.current?.setEditorState({ ...editorState });
+      if ('queryGroup' in editorState) {
+        setGroup({
+          queryGroup: editorState.queryGroup,
+          page: editorState.page,
+        });
+      } else {
+        setGroup(null);
+      }
+    },
+  );
+
+  const onEditorChange = useEvent((contentChanged: boolean) => {
+    if (saved) {
+      setSaved(false);
+    }
+    if (selectedGroup && contentChanged) setGroup(null);
   });
 
   const onStdOutFileClick = useEvent(async () => {
@@ -341,16 +377,6 @@ export function useQueryFrame({ uid }: { uid: number }) {
 
   const { fetchMoreRows } = queryExecutor;
 
-  const onQuerySelectorSelect = useEvent(
-    (editorState: {
-      content: string;
-      cursorStart: { line: number; ch: number };
-      cursorEnd: { line: number; ch: number };
-    }) => {
-      editorRef.current?.setEditorState({ ...editorState });
-    },
-  );
-
   const onDialogBlur = useEvent(() => {
     if (saveDialogOpen) setSaveDialogOpen(false);
     else if (openDialogOpen) setOpenDialogOpen(false);
@@ -416,5 +442,6 @@ export function useQueryFrame({ uid }: { uid: number }) {
     pid,
     error,
     notices,
+    selectedGroup,
   };
 }

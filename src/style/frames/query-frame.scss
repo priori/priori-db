@@ -456,3 +456,49 @@ div.CodeMirror-gutters {
   background-color: white !important;
   border-right: 1px solid #ddd;
 }
+
+.query-frame--code-editor-area .query-selector--query {
+  position: absolute;
+  z-index: 1;
+  border: 1px solid #eee;
+  top: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(1px);
+  right: 55px;
+  top: 8px;
+  width: 160px;
+  z-index: 3;
+  cursor: default;
+  h1 {
+    font-size: 19px;
+  }
+  .query-selector--sql {
+    font-family: 'Inconsolata', monospace;
+    font-size: 11px;
+    line-height: 11px;
+    color: #555;
+    word-break: break-word;
+    margin-top: 8px;
+    height: 33px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+  .query-selector--pagination {
+    padding: 7px;
+    bottom: 0;
+    background: transparent;
+    .fa-chevron-left,
+    .fa-chevron-right {
+      font-size: inherit;
+    }
+  }
+  &:hover {
+    background: rgba(255, 255, 255, 0.9);
+  }
+  &:hover .query-selector--pagination {
+    /* background: rgba(255, 255, 255, 0.9); */
+    background: transparent;
+  }
+}
