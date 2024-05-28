@@ -47,6 +47,13 @@ function useFreshTrue(value: boolean, delay: number) {
 
 let resizeIndicatorEl: HTMLDivElement | null = null;
 export function useQueryFrame({ uid }: { uid: number }) {
+  const [favoriteDialogOpen, setOpenFav] = useState(false);
+  const [queryDialogOpen, setOpenQueryDialog] = useState(false);
+  const [openingQuery, setOpeningQuery] = useState(false);
+  const [selectedGroup, setGroup] = useState<{
+    queryGroup: QueryGroupEntryIDB;
+    page: number;
+  } | null>(null);
   const editorRef: MutableRefObject<Editor | null> = useRef(null);
   const isMounted = useIsMounted();
   const [stdInFile, setStdInFile] = useState<string | null>(null);
@@ -108,6 +115,8 @@ export function useQueryFrame({ uid }: { uid: number }) {
   );
 
   const execute = useEvent(async () => {
+    if (selectedGroup) setGroup(null);
+    if (openingQuery) setOpeningQuery(false);
     if (queryExecutor.running) return;
     const editor = editorRef.current;
     assert(editor);
@@ -190,10 +199,23 @@ export function useQueryFrame({ uid }: { uid: number }) {
     setSaved(true);
   });
 
-  const [selectedGroup, setGroup] = useState<{
-    queryGroup: QueryGroupEntryIDB;
-    page: number;
-  } | null>(null);
+  const onQueryOpen = useEvent(
+    (editorState: {
+      content: string;
+      cursorStart: { line: number; ch: number };
+      cursorEnd: { line: number; ch: number };
+      page: number;
+      queryGroup: QueryGroupEntryIDB;
+    }) => {
+      setOpeningQuery(true);
+      editorRef.current?.setEditorState({ ...editorState }, 'push');
+      setGroup({
+        queryGroup: editorState.queryGroup,
+        page: editorState.page,
+      });
+    },
+  );
+
   const onQuerySelectorSelect = useEvent(
     (
       editorState:
@@ -210,7 +232,16 @@ export function useQueryFrame({ uid }: { uid: number }) {
             cursorEnd: { line: number; ch: number };
           },
     ) => {
-      editorRef.current?.setEditorState({ ...editorState });
+      if (openingQuery) {
+        assert('queryGroup' in editorState);
+        editorRef.current?.setEditorState({ ...editorState }, 'replace');
+        setGroup({
+          queryGroup: editorState.queryGroup,
+          page: editorState.page,
+        });
+        return;
+      }
+      editorRef.current?.setEditorState({ ...editorState }, 'clear');
       if ('queryGroup' in editorState) {
         setGroup({
           queryGroup: editorState.queryGroup,
@@ -225,6 +256,9 @@ export function useQueryFrame({ uid }: { uid: number }) {
   const onEditorChange = useEvent((contentChanged: boolean) => {
     if (saved) {
       setSaved(false);
+    }
+    if (openingQuery && contentChanged && !selectedGroup) {
+      setOpeningQuery(false);
     }
     if (selectedGroup && contentChanged) setGroup(null);
   });
@@ -397,6 +431,40 @@ export function useQueryFrame({ uid }: { uid: number }) {
     queryExecutor.openNotice(n);
   });
 
+  const onOpenFavorite = useEvent(
+    (f: {
+      id: number;
+      sql: string;
+      title: string;
+      created_at: number;
+      editor_content: string;
+      editor_cursor_start_line: number;
+      editor_cursor_end_line: number;
+      editor_cursor_start_char: number;
+      editor_cursor_end_char: number;
+    }) => {
+      editorRef.current?.setEditorState(
+        {
+          content: f.editor_content,
+          cursorStart: {
+            line: f.editor_cursor_start_line,
+            ch: f.editor_cursor_start_char,
+          },
+          cursorEnd: {
+            line: f.editor_cursor_end_line,
+            ch: f.editor_cursor_end_char,
+          },
+        },
+        'push',
+      );
+      setOpenFav(false);
+    },
+  );
+  const onOpenRecentQueryClick = useEvent(() => setOpenQueryDialog(true));
+  const onFavoriteDialogBlur = useEvent(() => setOpenFav(false));
+  const onOpenFavoriteClick = useEvent(() => setOpenFav(true));
+  const onOpenRecentDialogBlur = useEvent(() => setOpenQueryDialog(false));
+
   return {
     fetchMoreRows,
     popup: popup as { right: number; height: number } | false,
@@ -444,5 +512,14 @@ export function useQueryFrame({ uid }: { uid: number }) {
     error,
     notices,
     selectedGroup,
+    favoriteDialogOpen,
+    queryDialogOpen,
+    setOpenQueryDialog,
+    onOpenFavorite,
+    onQueryOpen,
+    onOpenRecentQueryClick,
+    onOpenFavoriteClick,
+    onFavoriteDialogBlur,
+    onOpenRecentDialogBlur,
   };
 }

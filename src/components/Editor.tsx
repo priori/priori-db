@@ -58,11 +58,23 @@ export class Editor extends Component<EditorProps, never> {
     this.editor.setValue(query);
   }
 
+  // lastHistory: any = null;
+
   // eslint-disable-next-line react/no-unused-class-component-methods
-  setEditorState({ content, cursorStart, cursorEnd }: EditorState) {
+  setEditorState(
+    { content, cursorStart, cursorEnd }: EditorState,
+    historyPolicity: 'clear' | 'replace' | 'push',
+  ) {
+    if (historyPolicity === 'replace') {
+      // this.editor.setHistory(this.lastHistory);
+      this.editor.undo();
+    }
+    // if (historyPolicity === 'push') {
+    //   this.lastHistory = this.editor.getHistory();
+    // }
     this.editor.setValue(content);
     this.editor.setSelection(cursorStart, cursorEnd);
-    this.editor.clearHistory();
+    if (historyPolicity === 'clear') this.editor.clearHistory();
     this.editor.getInputField().focus();
   }
 

@@ -80,7 +80,7 @@ export function EditorQuerySelectorGroup(props: EditorQuerySelectorGroupProps) {
   const { group } = props;
 
   return (
-    <div className="query-selector--query">
+    <div className="query-selector--query" style={props.style}>
       {current ? (
         <>
           <h1>

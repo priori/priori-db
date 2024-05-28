@@ -108,6 +108,7 @@ export type EditorQuerySelectorGroupProps = {
     page: number;
   }) => void;
   page: number;
+  style: React.CSSProperties | undefined;
 };
 
 let cache: QueryEntryIDB | null = null;

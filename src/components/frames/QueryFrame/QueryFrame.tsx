@@ -6,10 +6,14 @@ import { DataGrid } from '../../util/DataGrid/DataGrid';
 import { Notices } from './Notices';
 import { FavoriteControl } from './FavoriteControl';
 import { useQueryFrame } from './useQueryFrame';
+import { OpenFavoriteDialog } from './OpenFavoriteDialog';
+import { OpenRecentQueryDialog } from './OpenRecentQueryDialog';
 
-function focus(input: HTMLInputElement | null) {
+function focus(input: HTMLInputElement | HTMLButtonElement | null) {
   if (input) {
-    input.focus();
+    setTimeout(() => {
+      input.focus();
+    }, 1);
   }
 }
 
@@ -136,6 +140,14 @@ export function QueryFrame({ uid }: { uid: number }) {
     error,
     notices,
     selectedGroup,
+    favoriteDialogOpen,
+    queryDialogOpen,
+    onOpenFavoriteClick,
+    onOpenRecentQueryClick,
+    onQueryOpen,
+    onOpenFavorite,
+    onFavoriteDialogBlur,
+    onOpenRecentDialogBlur,
   } = useQueryFrame({ uid });
 
   return (
@@ -277,6 +289,7 @@ export function QueryFrame({ uid }: { uid: number }) {
                 onClick={onSaveSqlQueryToFileClick}
                 className="query-tab--save-sql"
                 type="button"
+                ref={focus}
               >
                 Save SQL query to a file (.sql)
               </button>
@@ -294,11 +307,26 @@ export function QueryFrame({ uid }: { uid: number }) {
           {openDialogOpen ? (
             <Dialog relativeTo="previousSibling" onBlur={onDialogBlur}>
               <button
+                ref={focus}
                 type="button"
                 className="query-tab--save-sql"
                 onClick={onOpenSqlQueryFileClick}
               >
                 Open SQL query from a file (.sql)
+              </button>
+              <button
+                type="button"
+                className="query-tab--save-sql"
+                onClick={onOpenFavoriteClick}
+              >
+                Open Favorite
+              </button>
+              <button
+                type="button"
+                className="query-tab--save-sql"
+                onClick={onOpenRecentQueryClick}
+              >
+                Open Recent Query
               </button>
               <button
                 type="button"
@@ -311,6 +339,7 @@ export function QueryFrame({ uid }: { uid: number }) {
           ) : null}{' '}
           {selectedGroup ? (
             <EditorQuerySelectorGroup
+              style={pid ? { right: 73 } : undefined}
               key={`${selectedGroup.queryGroup.id}-${selectedGroup.page}`}
               group={selectedGroup.queryGroup}
               page={selectedGroup.page}
@@ -441,6 +470,18 @@ export function QueryFrame({ uid }: { uid: number }) {
           <i className="fa fa-chevron-down" />
         </button>
       </div>
+      {queryDialogOpen ? (
+        <OpenRecentQueryDialog
+          onBlur={onOpenRecentDialogBlur}
+          onOpen={onQueryOpen}
+        />
+      ) : null}
+      {favoriteDialogOpen ? (
+        <OpenFavoriteDialog
+          onBlur={onFavoriteDialogBlur}
+          onOpen={onOpenFavorite}
+        />
+      ) : null}
       <div
         className="query-frame--resize-helper"
         style={{ top: topHeight }}
