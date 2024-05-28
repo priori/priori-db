@@ -183,6 +183,9 @@ function QuerySelector0({
           ))}
         </select>
       </div>
+      <div className="query-selector--sticky-helper">
+        <div />
+      </div>
       {favorites?.length ? (
         <h1>
           <i className="fa fa-star" />
