@@ -183,9 +183,11 @@ function QuerySelector0({
           ))}
         </select>
       </div>
-      <div className="query-selector--sticky-helper">
-        <div />
-      </div>
+      {favorites?.length || queries?.length ? (
+        <div className="query-selector--sticky-helper">
+          <div />
+        </div>
+      ) : null}
       {favorites?.length ? (
         <h1>
           <i className="fa fa-star" />
@@ -209,7 +211,11 @@ function QuerySelector0({
           </div>
         ))}
       </div>
-      {favorites?.length ? <h1>Last Executed Queries</h1> : null}
+      {queries?.length ? (
+        <h1 style={favorites?.length ? undefined : { marginTop: -2 }}>
+          Last Executed Queries
+        </h1>
+      ) : null}
       <div className="query-selector--queries">
         {queries?.map((g) => (
           <QuerySelectorGroup
