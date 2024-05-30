@@ -217,6 +217,9 @@ div.nav {
     height: 20px;
   }
 
+  .nav-tree {
+    outline: none;
+  }
   .schema-name:hover,
   .group-name:hover,
   .nav-tree:focus .schema-name.focused {
