@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { DB } from 'db/DB';
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { first } from 'db/Connection';
 import { useService } from 'util/useService';
 import { currentState } from 'state/state';
 import { useIsMounted } from 'util/hooks';
@@ -18,32 +17,10 @@ import {
 import { SchemaPrivilegesDialog } from './SchemaPrivilegesDialog';
 
 export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
-  const service = useService(async () => {
-    const [pgNamesspace, owner, privileges] = await Promise.all([
-      first(
-        `select "ns".*
-        from pg_namespace "ns"
-        where "nspname" = $1`,
-        [props.schema],
-      ),
-      first(
-        `select
-          r."rolname" as "owner",
-          obj_description(ns.oid) "comment"
-        from "pg_namespace" ns
-        join "pg_roles" r on ns."nspowner" = r."oid"
-        where "nspname" = $1
-      `,
-        [props.schema],
-      ) as Promise<{ owner: string; comment: string }>,
-      DB.schemaPrivileges(props.schema),
-    ]);
-    return {
-      pgNamesspace,
-      ...owner,
-      privileges,
-    };
-  }, [props.schema]);
+  const service = useService(
+    async () => DB.schema(props.schema),
+    [props.schema],
+  );
 
   const privileges = service?.lastValidData?.privileges;
 

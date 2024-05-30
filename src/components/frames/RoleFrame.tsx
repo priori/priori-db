@@ -10,7 +10,6 @@ import { useService } from 'util/useService';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
-import { first } from 'db/Connection';
 import { DB } from 'db/DB';
 import { closeTab, reloadNav, renameEntity, showError } from 'state/actions';
 import { useIsMounted } from 'util/hooks';
@@ -128,79 +127,7 @@ function TypeDialog({
 export function RoleFrame(props: RoleFrameProps) {
   const { name } = props;
 
-  const service = useService(async () => {
-    const [role, info, user, privileges] = await Promise.all([
-      first(
-        `
-        SELECT * FROM pg_roles WHERE rolname = $1
-      `,
-        [props.name],
-      ),
-      first(
-        `
-        SELECT description AS comment
-        FROM pg_roles r
-        JOIN pg_shdescription c ON c.objoid = r.oid
-        WHERE rolname = $1;
-      `,
-        [props.name],
-      ),
-      first(
-        `
-        SELECT *
-        FROM pg_user
-        WHERE
-          usename = $1
-      `,
-        [props.name],
-      ),
-      DB.rolePrivileges(props.name),
-    ]);
-
-    return { role, info, user, privileges } as {
-      role: {
-        [k: string]: string | number | null | boolean;
-      };
-      info: {
-        definition: string;
-        comment: string;
-      };
-      user: {
-        [k: string]: string | number | null | boolean;
-      };
-      privileges: {
-        tables: {
-          schema: string;
-          table: string;
-          privileges: TablePrivileges;
-        }[];
-        schemas: {
-          name: string;
-          privileges: {
-            usage: boolean;
-            create: boolean;
-          };
-        }[];
-        functions: {
-          schema: string;
-          name: string;
-        }[];
-        sequences: {
-          schema: string;
-          name: string;
-          privileges: {
-            usage: boolean;
-            update: boolean;
-            select: boolean;
-          };
-        }[];
-        types: {
-          schema: string;
-          name: string;
-        }[];
-      };
-    };
-  }, [props.name]);
+  const service = useService(() => DB.role(props.name), [props.name]);
 
   const { schemas } = currentState();
   const currentSchemas = useMemo(

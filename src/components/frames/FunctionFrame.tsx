@@ -10,7 +10,6 @@ import React, { useMemo, useState } from 'react';
 import { FunctionFrameProps } from 'types';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
-import { first } from 'db/Connection';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
@@ -24,38 +23,10 @@ export function FunctionFrame(props: FunctionFrameProps) {
     props.name.lastIndexOf('(') > 0
       ? props.name.substring(0, props.name.lastIndexOf('('))
       : props.name;
-  const service = useService(async () => {
-    const [info, privileges] = await Promise.all([
-      first(
-        `
-          SELECT
-            pg_get_functiondef(oid) definition,
-            obj_description(oid) "comment",
-            pg_proc.proowner::regrole "owner",
-            pg_proc.*
-          FROM pg_proc
-          WHERE
-            pg_proc.proname || '('||oidvectortypes(proargtypes)||')' = $2 AND
-            pronamespace = $1::regnamespace
-        `,
-        [props.schema, props.name],
-      ),
-      DB.functionsPrivileges(props.schema, props.name),
-    ]);
-    const comment = info.comment as string;
-    const definition = info.definition as string;
-    const owner = info.owner as string;
-    delete (info as any).comment;
-    delete (info as any).definition;
-    delete (info as any).owner;
-    return {
-      pgProc: info,
-      comment,
-      definition,
-      privileges,
-      owner,
-    };
-  }, [props.schema, props.name]);
+  const service = useService(
+    () => DB.function(props.schema, props.name),
+    [props.schema, props.name],
+  );
 
   const info = service?.lastValidData;
 

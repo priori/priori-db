@@ -39,7 +39,196 @@ function str(s: string) {
   return `'${s.replace(/'/g, "''").replace(/\\/g, '\\\\')}'`;
 }
 
+interface DomainFrameInfo {
+  type: {
+    [k: string]: string | number | null | boolean;
+  };
+  comment: string | null;
+  privileges: string[];
+  owner: string;
+  hideInternalRoles: true;
+}
+
+type SequenceInfo = {
+  type: {
+    [key: string]: string | number | boolean | null;
+  };
+  lastValue: number | string | null;
+  comment: string | null;
+  owner: string;
+  privileges: { roleName: string; privileges: SequencePrivileges }[];
+};
+
 export const DB = {
+  async function(schema: string, name: string) {
+    const [info, privileges] = await Promise.all([
+      first(
+        `
+          SELECT
+            pg_get_functiondef(oid) definition,
+            obj_description(oid) "comment",
+            pg_proc.proowner::regrole "owner",
+            pg_proc.*
+          FROM pg_proc
+          WHERE
+            pg_proc.proname || '('||oidvectortypes(proargtypes)||')' = $2 AND
+            pronamespace = $1::regnamespace
+        `,
+        [schema, name],
+      ),
+      DB.functionsPrivileges(schema, name),
+    ]);
+    const comment = info.comment as string;
+    const definition = info.definition as string;
+    const owner = info.owner as string;
+    delete (info as any).comment;
+    delete (info as any).definition;
+    delete (info as any).owner;
+    return {
+      pgProc: info,
+      comment,
+      definition,
+      privileges,
+      owner,
+    };
+  },
+
+  async role(name: string) {
+    const [role, info, user, privileges] = await Promise.all([
+      first(
+        `
+        SELECT * FROM pg_roles WHERE rolname = $1
+      `,
+        [name],
+      ),
+      first(
+        `
+        SELECT description AS comment
+        FROM pg_roles r
+        JOIN pg_shdescription c ON c.objoid = r.oid
+        WHERE rolname = $1;
+      `,
+        [name],
+      ),
+      first(
+        `
+        SELECT *
+        FROM pg_user
+        WHERE
+          usename = $1
+      `,
+        [name],
+      ),
+      DB.rolePrivileges(name),
+    ]);
+
+    return { role, info, user, privileges } as {
+      role: {
+        [k: string]: string | number | null | boolean;
+      };
+      info: {
+        definition: string;
+        comment: string;
+      };
+      user: {
+        [k: string]: string | number | null | boolean;
+      };
+      privileges: {
+        tables: {
+          schema: string;
+          table: string;
+          privileges: TablePrivileges;
+        }[];
+        schemas: {
+          name: string;
+          privileges: {
+            usage: boolean;
+            create: boolean;
+          };
+        }[];
+        functions: {
+          schema: string;
+          name: string;
+        }[];
+        sequences: {
+          schema: string;
+          name: string;
+          privileges: {
+            usage: boolean;
+            update: boolean;
+            select: boolean;
+          };
+        }[];
+        types: {
+          schema: string;
+          name: string;
+        }[];
+      };
+    };
+  },
+
+  async schema(name: string) {
+    const [pgNamesspace, owner, privileges] = await Promise.all([
+      first(
+        `select "ns".*
+        from pg_namespace "ns"
+        where "nspname" = $1`,
+        [name],
+      ),
+      first(
+        `select
+          r."rolname" as "owner",
+          obj_description(ns.oid) "comment"
+        from "pg_namespace" ns
+        join "pg_roles" r on ns."nspowner" = r."oid"
+        where "nspname" = $1
+      `,
+        [name],
+      ) as Promise<{ owner: string; comment: string }>,
+      DB.schemaPrivileges(name),
+    ]);
+    return {
+      pgNamesspace,
+      ...owner,
+      privileges,
+    };
+  },
+  async sequence(schema: string, name: string) {
+    const [type, lastValue, comment, privileges] = await Promise.all([
+      DB.pgClass(schema, name),
+      DB.lastValue(schema, name),
+      first(
+        `SELECT obj_description(oid) "comment",
+          pg_class.relowner::regrole "owner"
+          FROM pg_class
+          WHERE relname = $1 AND relnamespace = $2::regnamespace`,
+        [name, schema],
+      ) as Promise<{ comment: string | null }> as Promise<{
+        comment: string | null;
+        owner: string;
+      }>,
+      DB.sequencePrivileges(schema, name),
+    ]);
+    return { type, lastValue, ...comment, privileges } as SequenceInfo;
+  },
+
+  async domain(schema: string, name: string) {
+    const [type, comment, privileges] = await Promise.all([
+      DB.pgType(schema, name),
+      first(
+        `SELECT
+            obj_description(pg_type.oid) "comment",
+            typowner::regrole "owner"
+          FROM pg_type
+          JOIN pg_namespace n ON n.oid = typnamespace
+          WHERE nspname = $1 AND pg_type.typname = $2`,
+        [schema, name],
+      ) as Promise<{ comment: string | null; owner: string }>,
+      DB.domainPrivileges(schema, name),
+    ]);
+    return { type, ...comment, privileges } as DomainFrameInfo;
+  },
+
   async updateSchemaComment(schema: string, comment: string) {
     await query(`
       COMMENT ON SCHEMA ${label(schema)} IS ${str(comment)}

@@ -11,41 +11,18 @@ import { DomainFrameProps } from 'types';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { first } from 'db/Connection';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
 import { currentState } from 'state/state';
 import { useIsMounted } from 'util/hooks';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 
-interface DomainFrameServiceState {
-  type: {
-    [k: string]: string | number | null | boolean;
-  };
-  comment: string | null;
-  privileges: string[];
-  owner: string;
-  hideInternalRoles: true;
-}
-
 export function DomainFrame(props: DomainFrameProps) {
   const { roles } = currentState();
-  const service = useService(async () => {
-    const [type, comment, privileges] = await Promise.all([
-      DB.pgType(props.schema, props.name),
-      first(
-        `SELECT
-            obj_description(pg_type.oid) "comment",
-            typowner::regrole "owner"
-          FROM pg_type
-          JOIN pg_namespace n ON n.oid = typnamespace
-          WHERE nspname = $1 AND pg_type.typname = $2`,
-        [props.schema, props.name],
-      ) as Promise<{ comment: string | null; owner: string }>,
-      DB.domainPrivileges(props.schema, props.name),
-    ]);
-    return { type, ...comment, privileges } as DomainFrameServiceState;
-  }, [props.schema, props.name]);
+  const service = useService(
+    () => DB.domain(props.schema, props.name),
+    [props.schema, props.name],
+  );
 
   const [state, set] = useState({
     dropCascadeConfirmation: false,

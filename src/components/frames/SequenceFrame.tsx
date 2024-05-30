@@ -12,7 +12,6 @@ import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { first } from 'db/Connection';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
@@ -22,35 +21,11 @@ import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 import { SequencePrivilegesDialog } from './SequencePrivilegesDialog';
 import { TdCheck } from './TableInfoFrame/TableInfoFrame';
 
-type SequenceFrameState = {
-  type: {
-    [key: string]: string | number | boolean | null;
-  };
-  lastValue: number | string | null;
-  comment: string | null;
-  owner: string;
-  privileges: { roleName: string; privileges: SequencePrivileges }[];
-};
-
 export function SequenceFrame(props: SequenceFrameProps) {
-  const service = useService(async () => {
-    const [type, lastValue, comment, privileges] = await Promise.all([
-      DB.pgClass(props.schema, props.name),
-      DB.lastValue(props.schema, props.name),
-      first(
-        `SELECT obj_description(oid) "comment",
-          pg_class.relowner::regrole "owner"
-          FROM pg_class
-          WHERE relname = $1 AND relnamespace = $2::regnamespace`,
-        [props.name, props.schema],
-      ) as Promise<{ comment: string | null }> as Promise<{
-        comment: string | null;
-        owner: string;
-      }>,
-      DB.sequencePrivileges(props.schema, props.name),
-    ]);
-    return { type, lastValue, ...comment, privileges } as SequenceFrameState;
-  }, [props.schema, props.name]);
+  const service = useService(
+    async () => DB.sequence(props.schema, props.name),
+    [props.schema, props.name],
+  );
 
   const privileges = service.lastValidData?.privileges;
 
