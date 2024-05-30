@@ -13,8 +13,6 @@ import {
   DomainFrameInfo,
   Filter,
   Notice,
-  operators2,
-  operators3,
   QueryResultData,
   SequenceInfo,
   Sort,
@@ -43,7 +41,7 @@ function schemaCompare(a: string, b: string, publics: string[]) {
           : a.localeCompare(b);
 }
 
-export function label(s: string) {
+function label(s: string) {
   return `"${s.replaceAll('"', '""')}"`;
 }
 
@@ -54,11 +52,39 @@ function str(s: string) {
 //   return `'${s.replace(/'/g, "''")}'`;
 // }
 
-export function wrapWithParentheses(s: string) {
+function wrapWithParentheses(s: string) {
   return `(${s})`;
 }
 
-export function buildWhere(filter: Filter): {
+const simpleFilterOperators = {
+  eq: '=',
+  ne: '!=',
+  gt: '>',
+  gte: '>=',
+  lt: '<',
+  lte: '<=',
+  like: 'LIKE',
+  nlike: 'NOT LIKE',
+  ilike: 'ILIKE',
+  nilike: 'NOT ILIKE',
+  similar: 'SIMILAR TO',
+  nsimilar: 'NOT SIMILAR TO',
+};
+
+const filterOperatorsFuncs = {
+  posix: (n: string, v: string) => `regexp_like(${label(n)}, ${v})`,
+  nposix: (n: string, v: string | null) =>
+    `NOT regexp_like(${label(n)}, ${v}))`,
+  posixi: (n: string, v: string | null) => `regexp_ilike(${label(n)}, ${v}))`,
+  nposixi: (n: string, v: string | null) =>
+    `NOT regexp_ilike(${label(n)}, ${v}))`,
+  between: (n: string, v: string, v2: string) =>
+    `${label(n)} BETWEEN ${v} AND ${v2}`,
+  nbetween: (n: string, v: string, v2: string) =>
+    `${label(n)} NOT BETWEEN ${v} AND ${v2}`,
+};
+
+function buildWhere(filter: Filter): {
   where: string;
   params: (string | null)[];
 } {
@@ -72,9 +98,11 @@ export function buildWhere(filter: Filter): {
               .map((ands) =>
                 ands
                   .map((f) =>
-                    f.operator in operators2
+                    f.operator in simpleFilterOperators
                       ? `${f.field ? label(f.field) : '"???"'} ${
-                          operators2[f.operator as keyof typeof operators2]
+                          simpleFilterOperators[
+                            f.operator as keyof typeof simpleFilterOperators
+                          ]
                         } ${
                           f.sql && f.value
                             ? wrapWithParentheses(f.value ?? '')
@@ -84,9 +112,11 @@ export function buildWhere(filter: Filter): {
                                 ? 'NULL'
                                 : str((f as { value: string }).value)
                         }`
-                      : f.operator in operators3
+                      : f.operator in filterOperatorsFuncs
                         ? (f.sql && !f.value ? '-- ' : '') +
-                          operators3[f.operator as keyof typeof operators3](
+                          filterOperatorsFuncs[
+                            f.operator as keyof typeof filterOperatorsFuncs
+                          ](
                             f.field,
                             f.sql
                               ? f.value
@@ -126,6 +156,69 @@ export function buildWhere(filter: Filter): {
               .replace(/\nAND --/g, '\n-- AND '),
     params: [],
   };
+}
+
+function buildFilterWhere(filter: Filter): string {
+  if ('type' in filter) return filter.where;
+  if (filter.length === 1 && filter[0].length === 0) return '';
+  const parts = filter.map((ands) =>
+    ands
+      .map((f) =>
+        f.operator in simpleFilterOperators
+          ? `${f.field ? label(f.field) : '"???"'} ${
+              simpleFilterOperators[
+                f.operator as keyof typeof simpleFilterOperators
+              ]
+            } ${
+              f.sql && f.value
+                ? wrapWithParentheses(f.value ?? '')
+                : f.sql
+                  ? '<<SQL>>'
+                  : (f as { value: string | null }).value === null
+                    ? 'NULL'
+                    : str((f as { value: string }).value)
+            }`
+          : f.operator in filterOperatorsFuncs
+            ? (f.sql && !f.value ? '-- ' : '') +
+              filterOperatorsFuncs[
+                f.operator as keyof typeof filterOperatorsFuncs
+              ](
+                f.field,
+                f.sql
+                  ? f.value
+                    ? wrapWithParentheses(f.value)
+                    : '<<SQL>>'
+                  : (f as { value: string | null }).value === null
+                    ? 'NULL'
+                    : str((f as { value: string }).value),
+                'sql2' in f && f.sql2
+                  ? f.value2
+                    ? wrapWithParentheses(f.value2)
+                    : '<<SQL>>'
+                  : (f as { value2: string | null }).value2 === null
+                    ? 'NULL'
+                    : str((f as { value2: string }).value2),
+              )
+            : f.operator === 'in' || f.operator === 'nin'
+              ? `${f.field ? label(f.field) : '???'} ${
+                  f.operator === 'in' ? 'IN' : 'NOT IN'
+                } (${(f as { values: string[] }).values.map(str).join(', ')})`
+              : f.field
+                ? /* --  */ `${label(f.field)} ???`
+                : /* --  */ `???${
+                    (f as { value?: string | null }).value === null
+                      ? ' null'
+                      : (f as { value?: string }).value
+                        ? ` ${str((f as { value: string }).value)}`
+                        : ''
+                  }`,
+      )
+      .filter((v) => v),
+  );
+  return parts
+    .map((p) => p.join('\nAND ') || '  ??')
+    .join('\nOR\n')
+    .replace(/\nAND --/g, '\n-- AND ');
 }
 
 export const DB = {
@@ -2190,11 +2283,17 @@ export const DB = {
         REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(role)}
       `);
   },
+
   hasOpenConnection,
+
   closeAll,
+
   listDatabases,
+
   openConnection,
+
   connect,
+
   newQueryExecutor(
     onNotice: (n: Notice) => void,
     onPid: (pid: number | null) => void,
@@ -2202,4 +2301,6 @@ export const DB = {
   ): PgQueryExecutor {
     return new PgQueryExecutor(onNotice, onPid, onError);
   },
+
+  buildFilterWhere,
 };

@@ -69,7 +69,7 @@ export interface QueryExecutor {
   destroy(): void;
 }
 
-export const operators = {
+export const operatorsLabels = {
   eq: '=',
   ne: '≠',
   gt: '>',
@@ -92,21 +92,6 @@ export const operators = {
   nin: 'NOT IN',
   between: 'BETWEEN',
   nbetween: 'NOT BETWEEN',
-};
-
-export const operators2 = {
-  eq: '=',
-  ne: '!=',
-  gt: '>',
-  gte: '>=',
-  lt: '<',
-  lte: '<=',
-  like: 'LIKE',
-  nlike: 'NOT LIKE',
-  ilike: 'ILIKE',
-  nilike: 'NOT ILIKE',
-  similar: 'SIMILAR TO',
-  nsimilar: 'NOT SIMILAR TO',
 };
 
 export type Filter =
@@ -161,17 +146,3 @@ export type Sort = {
 export function db() {
   return DB;
 }
-
-export const operators3 = {
-  posix: (n: string, v: string) => `regexp_like(${db().label(n)}, ${v})`,
-  nposix: (n: string, v: string | null) =>
-    `NOT regexp_like(${db().label(n)}, ${v}))`,
-  posixi: (n: string, v: string | null) =>
-    `regexp_ilike(${db().label(n)}, ${v}))`,
-  nposixi: (n: string, v: string | null) =>
-    `NOT regexp_ilike(${db().label(n)}, ${v}))`,
-  between: (n: string, v: string, v2: string) =>
-    `${db().label(n)} BETWEEN ${v} AND ${v2}`,
-  nbetween: (n: string, v: string, v2: string) =>
-    `${db().label(n)} NOT BETWEEN ${v} AND ${v2}`,
-};

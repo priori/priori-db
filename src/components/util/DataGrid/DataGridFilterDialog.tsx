@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Filter, operators, operators2, operators3, db } from 'db/db';
+import { Filter, operatorsLabels, db } from 'db/db';
 import { Dialog } from '../Dialog/Dialog';
 
 function ValueListInput({
@@ -117,65 +117,6 @@ function fit() {
   setTimeout(() => {
     window.dispatchEvent(new Event('resize'));
   }, 10);
-}
-
-function buildSql(filter: Filter): string {
-  if ('type' in filter) return filter.where;
-  if (filter.length === 1 && filter[0].length === 0) return '';
-  const parts = filter.map((ands) =>
-    ands
-      .map((f) =>
-        f.operator in operators2
-          ? `${f.field ? db().label(f.field) : '"???"'} ${
-              operators2[f.operator as keyof typeof operators2]
-            } ${
-              f.sql && f.value
-                ? db().wrapWithParentheses(f.value ?? '')
-                : f.sql
-                  ? '<<SQL>>'
-                  : (f as { value: string | null }).value === null
-                    ? 'NULL'
-                    : db().str((f as { value: string }).value)
-            }`
-          : f.operator in operators3
-            ? (f.sql && !f.value ? '-- ' : '') +
-              operators3[f.operator as keyof typeof operators3](
-                f.field,
-                f.sql
-                  ? f.value
-                    ? db().wrapWithParentheses(f.value)
-                    : '<<SQL>>'
-                  : (f as { value: string | null }).value === null
-                    ? 'NULL'
-                    : db().str((f as { value: string }).value),
-                'sql2' in f && f.sql2
-                  ? f.value2
-                    ? db().wrapWithParentheses(f.value2)
-                    : '<<SQL>>'
-                  : (f as { value2: string | null }).value2 === null
-                    ? 'NULL'
-                    : db().str((f as { value2: string }).value2),
-              )
-            : f.operator === 'in' || f.operator === 'nin'
-              ? `${f.field ? db().label(f.field) : '???'} ${
-                  f.operator === 'in' ? 'IN' : 'NOT IN'
-                } (${(f as { values: string[] }).values.map(db().str).join(', ')})`
-              : f.field
-                ? /* --  */ `${db().label(f.field)} ???`
-                : /* --  */ `???${
-                    (f as { value?: string | null }).value === null
-                      ? ' null'
-                      : (f as { value?: string }).value
-                        ? ` ${db().str((f as { value: string }).value)}`
-                        : ''
-                  }`,
-      )
-      .filter((v) => v),
-  );
-  return parts
-    .map((p) => p.join('\nAND ') || '  ??')
-    .join('\nOR\n')
-    .replace(/\nAND --/g, '\n-- AND ');
 }
 
 export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
@@ -298,7 +239,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
           <div style={{ position: 'relative', marginBottom: 15 }}>
             <textarea
               className="data-grid-filter-dialog--sql-where"
-              value={buildSql(filter)}
+              value={db().buildFilterWhere(filter)}
               readOnly
             />
             <button
@@ -308,12 +249,12 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                 !('type' in filter) &&
                 filter.length === 1 &&
                 filter[0].length === 0 &&
-                buildSql(filter)
+                db().buildFilterWhere(filter)
                   ? { opacity: 0.14 }
                   : undefined
               }
               onClick={() => {
-                setEditQuery(buildSql(filter));
+                setEditQuery(db().buildFilterWhere(filter));
               }}
             >
               Edit <i className="fa fa-pencil" />
@@ -394,8 +335,8 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                       style={{
                         width: 185,
                         fontSize:
-                          operators[
-                            formField?.operator as keyof typeof operators
+                          operatorsLabels[
+                            formField?.operator as keyof typeof operatorsLabels
                           ]?.length > 17
                             ? 11
                             : undefined,
@@ -428,7 +369,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                           }
                                         : {
                                             operator: e.target.value as
-                                              | keyof typeof operators
+                                              | keyof typeof operatorsLabels
                                               | '',
                                             field: '',
                                             value: '',
@@ -493,7 +434,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                               field: f.field,
                                               sql: formField.sql,
                                               operator: e.target.value as
-                                                | keyof typeof operators
+                                                | keyof typeof operatorsLabels
                                                 | '',
                                               value:
                                                 (f as { value?: string | null })
@@ -507,7 +448,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                             } as {
                                               field: string;
                                               operator:
-                                                | keyof typeof operators
+                                                | keyof typeof operatorsLabels
                                                 | '';
                                               value: string | null;
                                               sql?: boolean;
@@ -521,9 +462,13 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                       }}
                     >
                       {formField?.operator ? null : <option value="" />}
-                      {Object.keys(operators).map((operator) => (
+                      {Object.keys(operatorsLabels).map((operator) => (
                         <option key={operator} value={operator}>
-                          {operators[operator as keyof typeof operators]}
+                          {
+                            operatorsLabels[
+                              operator as keyof typeof operatorsLabels
+                            ]
+                          }
                         </option>
                       ))}
                     </select>
