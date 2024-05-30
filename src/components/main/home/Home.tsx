@@ -6,12 +6,12 @@ import {
   listConnectionConfigurations,
   updateConnectionConfiguration,
 } from 'util/browserDb/actions';
-import { ConnectionConfiguration, listDatabases } from 'db/Connection';
+import { listDatabases } from 'db/Connection';
 import { connect } from 'state/actions';
 import { grantError } from 'util/errors';
 import { useShortcuts } from 'util/shortcuts';
 import { useEventListener } from 'util/useEventListener';
-import { AppState } from '../../../types';
+import { AppState, ConnectionConfiguration } from '../../../types';
 import { ConnectionConfigurationForm } from './ConnectionConfigurationForm';
 import { Errors } from '../Errors';
 

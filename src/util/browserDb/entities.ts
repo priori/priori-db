@@ -1,4 +1,4 @@
-import { ConnectionConfiguration } from 'db/Connection';
+import { ConnectionConfiguration } from 'types';
 import { migrate, oldWebSqlData } from './migration';
 import { openIndexedDb, Store, transaction0 } from './util';
 

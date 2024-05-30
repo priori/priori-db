@@ -2,13 +2,10 @@ import { assert } from 'util/assert';
 import { useEffect } from 'react';
 import { grantError } from 'util/errors';
 import { updateConnection } from 'util/browserDb/actions';
-import {
-  connect as dbConnect,
-  ConnectionConfiguration,
-} from '../db/Connection';
+import { connect as dbConnect } from '../db/Connection';
 import state, { currentState } from './state';
 import { DB } from '../db/DB';
-import { FrameProps } from '../types';
+import { ConnectionConfiguration, FrameProps } from '../types';
 
 export const {
   updateTab,

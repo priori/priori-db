@@ -2,6 +2,7 @@ import pg from 'pg';
 import { assert } from 'util/assert';
 import { grantError } from 'util/errors';
 import hls from 'util/hotLoadSafe';
+import { ConnectionConfiguration } from 'types';
 import { QueryExecutor } from './QueryExecutor';
 import { DB } from './DB';
 
@@ -9,16 +10,6 @@ pg.types.setTypeParser(1082, (val) => val);
 pg.types.setTypeParser(1114, (val) => val);
 pg.types.setTypeParser(1184, (val) => val);
 pg.types.setTypeParser(1186, (val) => val);
-
-export interface ConnectionConfiguration {
-  id: number;
-  host: string;
-  port: number;
-  database: string;
-  user: string;
-  password: string;
-  requireSsl?: boolean;
-}
 
 export async function connect(c: ConnectionConfiguration, db?: string) {
   assert(!hls.pool);

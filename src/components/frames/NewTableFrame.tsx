@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { DB, TableColumnType } from 'db/DB';
+import { DB } from 'db/DB';
 import { useService } from 'util/useService';
-import { NewTableFrameProps } from '../../types';
+import { NewTableFrameProps, TableColumnType } from '../../types';
 import { ListInput } from '../util/ListInput';
 import { closeThisAndReloadNav, showError } from '../../state/actions';
 

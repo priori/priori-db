@@ -1,6 +1,12 @@
 import { assert } from 'util/assert';
-import { AppState, FrameProps, NavSchema, Tab, Tab0 } from 'types';
-import { ConnectionConfiguration } from 'db/Connection';
+import {
+  AppState,
+  ConnectionConfiguration,
+  FrameProps,
+  NavSchema,
+  Tab,
+  Tab0,
+} from 'types';
 
 export function cancelAskToCloseWindow(current: AppState) {
   return {

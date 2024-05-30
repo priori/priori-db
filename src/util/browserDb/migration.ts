@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { ConnectionConfiguration } from 'db/Connection';
+import { ConnectionConfiguration } from 'types';
 import { Stores } from './entities';
 
 let oldDb: any = null;

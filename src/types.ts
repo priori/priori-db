@@ -1,5 +1,3 @@
-import { ConnectionConfiguration } from 'db/Connection';
-
 export type FrameType =
   | 'newtable'
   | 'table'
@@ -117,6 +115,16 @@ export interface Tab0<T extends FrameType> {
 }
 export type Tab = Tab0<FrameType>;
 
+export interface ConnectionConfiguration {
+  id: number;
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
+  requireSsl?: boolean;
+}
+
 export interface AppState {
   uidCounter: number;
   askToCloseWindow: boolean;
@@ -131,6 +139,12 @@ export interface AppState {
     name: string;
     isUser: boolean;
   }[];
+}
+
+export interface TableColumnType {
+  name: string;
+  allowLength: boolean;
+  allowPrecision: boolean;
 }
 
 export type TablePrivileges = {

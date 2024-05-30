@@ -1,9 +1,10 @@
 import { assert } from 'util/assert';
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { ConnectionConfiguration, listDatabases } from 'db/Connection';
+import { listDatabases } from 'db/Connection';
 import { useState } from 'react';
 import { grantError } from 'util/errors';
 import { useEvent } from 'util/useEvent';
+import { ConnectionConfiguration } from 'types';
 
 export interface NewConectionState {
   port?: string;

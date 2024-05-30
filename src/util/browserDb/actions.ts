@@ -1,4 +1,4 @@
-import { ConnectionConfiguration } from 'db/Connection';
+import { ConnectionConfiguration } from 'types';
 import { assert } from '../assert';
 import { ConnectionGroupEntryIDB, transaction } from './entities';
 
