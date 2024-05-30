@@ -1,5 +1,4 @@
-import { DB } from 'db/DB';
-import { QueryExecutor, Notice, QueryResult } from 'db/QueryExecutor';
+import { db, Notice, QueryResult } from 'db/db';
 import { useEffect, useRef, useState } from 'react';
 import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
@@ -71,8 +70,8 @@ export function useQueryExecutor({
     setState((state2) => ({ ...state2, connectionError: e }));
   });
 
-  const [queryExecutor, setClient] = useState(
-    () => new QueryExecutor(onNotice, onPid, onConnectionError),
+  const [queryExecutor, setClient] = useState(() =>
+    db().newQueryExecutor(onNotice, onPid, onConnectionError),
   );
   const clientQuery = useEvent(queryExecutor.query.bind(queryExecutor));
   const destroy = useEvent(queryExecutor.destroy.bind(queryExecutor));
@@ -81,7 +80,7 @@ export function useQueryExecutor({
   );
 
   const reset = useEvent(() => {
-    setClient(() => new QueryExecutor(onNotice, onPid, onConnectionError));
+    setClient(() => db().newQueryExecutor(onNotice, onPid, onConnectionError));
   });
 
   const isMounted = useIsMounted();
@@ -106,7 +105,7 @@ export function useQueryExecutor({
         const resLength = res?.rows?.length;
         const openTransaction = !pidRef.current
           ? false
-          : await DB.inOpenTransaction(pidRef.current);
+          : await db().inOpenTransaction(pidRef.current);
         if (isMounted()) {
           setState((state2) => ({
             ...state2,

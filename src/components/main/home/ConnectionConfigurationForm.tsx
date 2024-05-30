@@ -1,10 +1,10 @@
 import { assert } from 'util/assert';
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { listDatabases } from 'db/Connection';
 import { useState } from 'react';
 import { grantError } from 'util/errors';
 import { useEvent } from 'util/useEvent';
 import { ConnectionConfiguration } from 'types';
+import { db } from 'db/db';
 
 export interface NewConectionState {
   port?: string;
@@ -81,14 +81,15 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
     if (ev.target instanceof HTMLButtonElement) ev.target.blur();
     const { database, host, port, user, password } = state;
     setTestResult('pending');
-    listDatabases({
-      database: database || 'postgres',
-      host: host || 'localhost',
-      port: (port && parseInt(port, 10)) || 5432,
-      user: user || 'postgres',
-      password: password || '',
-      requireSsl: state.requireSsl,
-    })
+    db()
+      .listDatabases({
+        database: database || 'postgres',
+        host: host || 'localhost',
+        port: (port && parseInt(port, 10)) || 5432,
+        user: user || 'postgres',
+        password: password || '',
+        requireSsl: state.requireSsl,
+      })
       .then(() => {
         setTestResult(true);
       })

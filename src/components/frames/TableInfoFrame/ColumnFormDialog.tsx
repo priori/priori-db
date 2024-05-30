@@ -5,7 +5,7 @@ import { useIsMounted } from 'util/hooks';
 import { grantError } from 'util/errors';
 import { showError } from 'state/actions';
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { DB } from '../../../db/DB';
+import { db } from 'db/db';
 
 export interface ColumnForm {
   name: string;
@@ -33,7 +33,7 @@ export function ColumnFormDialog({
       : { name: '', type: '', notNull: false, comment: null },
   );
   const [error, setError] = useState<Error | null>(null);
-  const { lastValidData } = useService(() => DB.types(), []);
+  const { lastValidData } = useService(() => db().types(), []);
   const [executing, setExecuting] = useState(false);
   const onBlur = useEvent(() => {
     if (executing) return;

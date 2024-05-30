@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import { label } from 'db/DB';
-import {
-  Filter,
-  operators,
-  operators2,
-  operators3,
-  str,
-  wrapWithParentheses,
-} from 'db/util';
+import { Filter, operators, operators2, operators3, db } from 'db/db';
 import { Dialog } from '../Dialog/Dialog';
 
 function ValueListInput({
@@ -134,16 +126,16 @@ function buildSql(filter: Filter): string {
     ands
       .map((f) =>
         f.operator in operators2
-          ? `${f.field ? label(f.field) : '"???"'} ${
+          ? `${f.field ? db().label(f.field) : '"???"'} ${
               operators2[f.operator as keyof typeof operators2]
             } ${
               f.sql && f.value
-                ? wrapWithParentheses(f.value ?? '')
+                ? db().wrapWithParentheses(f.value ?? '')
                 : f.sql
                   ? '<<SQL>>'
                   : (f as { value: string | null }).value === null
                     ? 'NULL'
-                    : str((f as { value: string }).value)
+                    : db().str((f as { value: string }).value)
             }`
           : f.operator in operators3
             ? (f.sql && !f.value ? '-- ' : '') +
@@ -151,30 +143,30 @@ function buildSql(filter: Filter): string {
                 f.field,
                 f.sql
                   ? f.value
-                    ? wrapWithParentheses(f.value)
+                    ? db().wrapWithParentheses(f.value)
                     : '<<SQL>>'
                   : (f as { value: string | null }).value === null
                     ? 'NULL'
-                    : str((f as { value: string }).value),
+                    : db().str((f as { value: string }).value),
                 'sql2' in f && f.sql2
                   ? f.value2
-                    ? wrapWithParentheses(f.value2)
+                    ? db().wrapWithParentheses(f.value2)
                     : '<<SQL>>'
                   : (f as { value2: string | null }).value2 === null
                     ? 'NULL'
-                    : str((f as { value2: string }).value2),
+                    : db().str((f as { value2: string }).value2),
               )
             : f.operator === 'in' || f.operator === 'nin'
-              ? `${f.field ? label(f.field) : '???'} ${
+              ? `${f.field ? db().label(f.field) : '???'} ${
                   f.operator === 'in' ? 'IN' : 'NOT IN'
-                } (${(f as { values: string[] }).values.map(str).join(', ')})`
+                } (${(f as { values: string[] }).values.map(db().str).join(', ')})`
               : f.field
-                ? /* --  */ `${label(f.field)} ???`
+                ? /* --  */ `${db().label(f.field)} ???`
                 : /* --  */ `???${
                     (f as { value?: string | null }).value === null
                       ? ' null'
                       : (f as { value?: string }).value
-                        ? ` ${str((f as { value: string }).value)}`
+                        ? ` ${db().str((f as { value: string }).value)}`
                         : ''
                   }`,
       )

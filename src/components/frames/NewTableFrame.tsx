@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DB } from 'db/DB';
+import { db } from 'db/db';
 import { useService } from 'util/useService';
 import { NewTableFrameProps, TableColumnType } from '../../types';
 import { ListInput } from '../util/ListInput';
@@ -57,18 +57,20 @@ export function NewTableFrame(props: NewTableFrameProps) {
     },
   } as { constraintsOpen: boolean; newTable: NewTable });
 
-  const typesService = useService(() => DB.types(), []);
+  const typesService = useService(() => db().types(), []);
   const types = typesService.lastValidData || [];
 
   function save() {
-    DB.createTable(state.newTable).then(
-      () => {
-        closeThisAndReloadNav(props.uid);
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .createTable(state.newTable)
+      .then(
+        () => {
+          closeThisAndReloadNav(props.uid);
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   }
 
   const newEntry = () => {

@@ -1,7 +1,6 @@
 import { CSSProperties, memo } from 'react';
 import { equals } from 'util/equals';
-import { Filter, Sort } from 'db/util';
-import { QueryResultDataField } from 'db/Connection';
+import { Filter, Sort, QueryResultDataField } from 'db/db';
 import { SizeControlledArea } from '../SizeControlledArea';
 import { DataGridCore } from './DataGridCore';
 

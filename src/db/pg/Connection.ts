@@ -3,8 +3,9 @@ import { assert } from 'util/assert';
 import { grantError } from 'util/errors';
 import hls from 'util/hotLoadSafe';
 import { ConnectionConfiguration } from 'types';
-import { QueryExecutor } from './QueryExecutor';
+import { QueryResultData, SimpleValue } from 'db/db';
 import { DB } from './DB';
+import { PgQueryExecutor } from './QueryExecutor';
 
 pg.types.setTypeParser(1082, (val) => val);
 pg.types.setTypeParser(1114, (val) => val);
@@ -105,23 +106,6 @@ export async function listFromConfiguration(
   }
 }
 
-export type SimpleValue =
-  | number
-  | string
-  | boolean
-  | null
-  | { [key: string]: SimpleValue }
-  | SimpleValue[];
-
-export interface QueryResultDataField {
-  name: string;
-}
-
-export interface QueryResultData {
-  rows: SimpleValue[][];
-  fields: QueryResultDataField[];
-}
-
 export async function query(
   q: string,
   args?: (number | string | boolean | null)[],
@@ -166,14 +150,14 @@ export async function first(
 }
 
 export async function hasOpenConnection() {
-  if (!hls.pool || QueryExecutor.pids().length === 0) return false;
-  const pids = QueryExecutor.pids();
+  if (!hls.pool || PgQueryExecutor.pids().length === 0) return false;
+  const pids = PgQueryExecutor.pids();
   return DB.existsSomePendingProcess(...pids);
 }
 
 export async function closeAll() {
   try {
-    await QueryExecutor.destroyAll();
+    await PgQueryExecutor.destroyAll();
     await hls.pool?.end();
   } catch (err) {
     try {

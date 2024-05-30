@@ -1,5 +1,4 @@
-import { Filter, Sort } from 'db/util';
-import { QueryResultDataField } from 'db/Connection';
+import { Filter, Sort, QueryResultDataField } from 'db/db';
 import { DataGridActiveCell } from './DataGridActiveCell';
 import { DataGridTable } from './DataGridTable';
 import { DataGridThead } from './DataGridThead';

@@ -5,7 +5,7 @@ import {
   changeSchema,
   showError,
 } from 'state/actions';
-import { DB } from 'db/DB';
+import { db } from 'db/db';
 import React, { useMemo, useState } from 'react';
 import { FunctionFrameProps } from 'types';
 import { useEvent } from 'util/useEvent';
@@ -24,7 +24,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
       ? props.name.substring(0, props.name.lastIndexOf('('))
       : props.name;
   const service = useService(
-    () => DB.function(props.schema, props.name),
+    () => db().function(props.schema, props.name),
     [props.schema, props.name],
   );
 
@@ -60,50 +60,40 @@ export function FunctionFrame(props: FunctionFrameProps) {
 
   const yesClick = useEvent(() => {
     if (state.dropCascadeConfirmation)
-      DB.dropFunction(props.schema, props.name, true).then(
-        () => {
-          setTimeout(() => closeTab(props), 10);
-          reloadNav();
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+      db()
+        .dropFunction(props.schema, props.name, true)
+        .then(
+          () => {
+            setTimeout(() => closeTab(props), 10);
+            reloadNav();
+          },
+          (err) => {
+            showError(err);
+          },
+        );
     else
-      DB.dropFunction(props.schema, props.name).then(
-        () => {
-          setTimeout(() => closeTab(props), 10);
-          reloadNav();
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+      db()
+        .dropFunction(props.schema, props.name)
+        .then(
+          () => {
+            setTimeout(() => closeTab(props), 10);
+            reloadNav();
+          },
+          (err) => {
+            showError(err);
+          },
+        );
   });
 
   const revokeYesClick = useEvent(() => {
-    DB.revokeFunction(props.schema, props.name, state.revoke).then(
-      () => {
-        service.reload();
-        set({
-          ...state,
-          revoke: '',
-        });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
-  });
-
-  const grantClick = useEvent(() => {
-    if (typeof state.grant === 'string')
-      DB.grantFunction(props.schema, props.name, state.grant).then(
+    db()
+      .revokeFunction(props.schema, props.name, state.revoke)
+      .then(
         () => {
           service.reload();
           set({
             ...state,
-            grant: false,
+            revoke: '',
           });
         },
         (err) => {
@@ -112,8 +102,26 @@ export function FunctionFrame(props: FunctionFrameProps) {
       );
   });
 
+  const grantClick = useEvent(() => {
+    if (typeof state.grant === 'string')
+      db()
+        .grantFunction(props.schema, props.name, state.grant)
+        .then(
+          () => {
+            service.reload();
+            set({
+              ...state,
+              grant: false,
+            });
+          },
+          (err) => {
+            showError(err);
+          },
+        );
+  });
+
   const onUpdateComment = useEvent(async (text: string) => {
-    await DB.updateFunction(props.schema, name, { comment: text });
+    await db().updateFunction(props.schema, name, { comment: text });
     await service.reload();
     set({ ...state, editComment: false });
   });
@@ -127,14 +135,14 @@ export function FunctionFrame(props: FunctionFrameProps) {
   });
 
   const onRename = useEvent(async (newName: string) => {
-    await DB.updateFunction(props.schema, name, { name: newName });
+    await db().updateFunction(props.schema, name, { name: newName });
     renameEntity(props.uid, newName);
     reloadNav();
     set({ ...state, rename: false });
   });
 
   const onChangeSchema = useEvent(async (schema: string) => {
-    await DB.updateFunction(props.schema, name, { schema });
+    await db().updateFunction(props.schema, name, { schema });
     changeSchema(props.uid, schema);
     reloadNav();
     set({ ...state, changeSchema: false });
@@ -143,17 +151,19 @@ export function FunctionFrame(props: FunctionFrameProps) {
   const isMounted = useIsMounted();
 
   const saveOwner = useEvent(() => {
-    DB.alterFuncOwner(props.schema, props.name, state.editOwner as string).then(
-      () => {
-        if (!isMounted()) return;
-        service.reload();
-        if (!isMounted()) return;
-        set({ ...state, editOwner: false });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .alterFuncOwner(props.schema, props.name, state.editOwner as string)
+      .then(
+        () => {
+          if (!isMounted()) return;
+          service.reload();
+          if (!isMounted()) return;
+          set({ ...state, editOwner: false });
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   });
 
   const internalRoles = useMemo(

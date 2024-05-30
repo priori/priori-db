@@ -1,26 +1,26 @@
+import { Comment } from 'components/util/Comment';
+import { Dialog } from 'components/util/Dialog/Dialog';
+import { RenameDialog } from 'components/util/Dialog/RenameDialog';
+import { db } from 'db/db';
+import React, { useMemo, useState } from 'react';
 import {
-  showError,
+  changeSchema,
   closeTab,
   reloadNav,
   renameEntity,
-  changeSchema,
+  showError,
 } from 'state/actions';
-import { DB } from 'db/DB';
-import React, { useMemo, useState } from 'react';
+import { currentState } from 'state/state';
 import { DomainFrameProps } from 'types';
+import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
-import { Dialog } from 'components/util/Dialog/Dialog';
-import { RenameDialog } from 'components/util/Dialog/RenameDialog';
-import { Comment } from 'components/util/Comment';
-import { currentState } from 'state/state';
-import { useIsMounted } from 'util/hooks';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 
 export function DomainFrame(props: DomainFrameProps) {
   const { roles } = currentState();
   const service = useService(
-    () => DB.domain(props.schema, props.name),
+    () => db().domain(props.schema, props.name),
     [props.schema, props.name],
   );
 
@@ -54,25 +54,29 @@ export function DomainFrame(props: DomainFrameProps) {
 
   const yesClick = useEvent(() => {
     if (state.dropCascadeConfirmation)
-      DB.dropDomain(props.schema, props.name, true).then(
-        () => {
-          setTimeout(() => closeTab(props), 10);
-          reloadNav();
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+      db()
+        .dropDomain(props.schema, props.name, true)
+        .then(
+          () => {
+            setTimeout(() => closeTab(props), 10);
+            reloadNav();
+          },
+          (err) => {
+            showError(err);
+          },
+        );
     else
-      DB.dropDomain(props.schema, props.name).then(
-        () => {
-          setTimeout(() => closeTab(props), 10);
-          reloadNav();
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+      db()
+        .dropDomain(props.schema, props.name)
+        .then(
+          () => {
+            setTimeout(() => closeTab(props), 10);
+            reloadNav();
+          },
+          (err) => {
+            showError(err);
+          },
+        );
   });
 
   const noClick = useEvent(() => {
@@ -84,48 +88,34 @@ export function DomainFrame(props: DomainFrameProps) {
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await DB.updateDomain(props.schema, props.name, { comment: text });
+    await db().updateDomain(props.schema, props.name, { comment: text });
     await service.reload();
     set({ ...state, editComment: false });
   });
 
   const onRename = useEvent(async (name: string) => {
-    await DB.updateDomain(props.schema, props.name, { name });
+    await db().updateDomain(props.schema, props.name, { name });
     renameEntity(props.uid, name);
     reloadNav();
     set({ ...state, rename: false });
   });
 
   const onChangeSchema = useEvent(async (schema: string) => {
-    await DB.updateDomain(props.schema, props.name, { schema });
+    await db().updateDomain(props.schema, props.name, { schema });
     changeSchema(props.uid, schema);
     reloadNav();
     set({ ...state, changeSchema: false });
   });
 
   const revokeYesClick = useEvent(() => {
-    DB.revokeDomain(props.schema, props.name, state.revoke).then(
-      () => {
-        service.reload();
-        set({
-          ...state,
-          revoke: '',
-        });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
-  });
-
-  const grantClick = useEvent(() => {
-    if (typeof state.grant === 'string')
-      DB.grantDomain(props.schema, props.name, state.grant).then(
+    db()
+      .revokeDomain(props.schema, props.name, state.revoke)
+      .then(
         () => {
           service.reload();
           set({
             ...state,
-            grant: false,
+            revoke: '',
           });
         },
         (err) => {
@@ -133,20 +123,40 @@ export function DomainFrame(props: DomainFrameProps) {
         },
       );
   });
+
+  const grantClick = useEvent(() => {
+    if (typeof state.grant === 'string')
+      db()
+        .grantDomain(props.schema, props.name, state.grant)
+        .then(
+          () => {
+            service.reload();
+            set({
+              ...state,
+              grant: false,
+            });
+          },
+          (err) => {
+            showError(err);
+          },
+        );
+  });
   const isMounted = useIsMounted();
   const owner = service.lastValidData?.owner;
   const saveOwner = useEvent(() => {
-    DB.alterTypeOwner(props.schema, props.name, state.editOwner as string).then(
-      () => {
-        if (!isMounted()) return;
-        service.reload();
-        if (!isMounted()) return;
-        set({ ...state, editOwner: false });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .alterTypeOwner(props.schema, props.name, state.editOwner as string)
+      .then(
+        () => {
+          if (!isMounted()) return;
+          service.reload();
+          if (!isMounted()) return;
+          set({ ...state, editOwner: false });
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   });
 
   const internalRoles = useMemo(

@@ -1,4 +1,4 @@
-import { Sort } from 'db/util';
+import { Sort } from 'db/db';
 import { useState } from 'react';
 import { equals } from 'util/equals';
 import { Dialog } from '../Dialog/Dialog';

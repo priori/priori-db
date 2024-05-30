@@ -10,7 +10,7 @@ import { useService } from 'util/useService';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
-import { DB } from 'db/DB';
+import { db } from 'db/db';
 import { closeTab, reloadNav, renameEntity, showError } from 'state/actions';
 import { useIsMounted } from 'util/hooks';
 import { currentState } from 'state/state';
@@ -127,7 +127,7 @@ function TypeDialog({
 export function RoleFrame(props: RoleFrameProps) {
   const { name } = props;
 
-  const service = useService(() => DB.role(props.name), [props.name]);
+  const service = useService(() => db().role(props.name), [props.name]);
 
   const { schemas } = currentState();
   const currentSchemas = useMemo(
@@ -180,19 +180,21 @@ export function RoleFrame(props: RoleFrameProps) {
   });
 
   const yesClick = useEvent(() => {
-    DB.dropRole(props.name).then(
-      () => {
-        setTimeout(() => closeTab(props), 10);
-        reloadNav();
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .dropRole(props.name)
+      .then(
+        () => {
+          setTimeout(() => closeTab(props), 10);
+          reloadNav();
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await DB.updateRoleComment(props.name, text);
+    await db().updateRoleComment(props.name, text);
     await service.reload();
     set({ ...state, editComment: false });
   });
@@ -205,7 +207,7 @@ export function RoleFrame(props: RoleFrameProps) {
   });
 
   const onRename = useEvent(async (newName: string) => {
-    await DB.renameRole(name, newName);
+    await db().renameRole(name, newName);
     renameEntity(props.uid, newName);
     reloadNav();
     set({ ...state, rename: false });
@@ -215,7 +217,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const grantTable = useEvent(
     async (schema: string, table: string, privileges: TablePrivileges) => {
-      await DB.updatePrivileges(schema, table, props.name, privileges);
+      await db().updatePrivileges(schema, table, props.name, privileges);
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
@@ -225,7 +227,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const grantSchema = useEvent(
     async (schema: string, privileges: SchemaPrivileges) => {
-      await DB.updateSchemaPrivileges(schema, props.name, privileges);
+      await db().updateSchemaPrivileges(schema, props.name, privileges);
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
@@ -235,7 +237,12 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const grantSequence = useEvent(
     async (schema: string, table: string, privileges: SequencePrivileges) => {
-      await DB.updateSequencePrivileges(schema, table, props.name, privileges);
+      await db().updateSequencePrivileges(
+        schema,
+        table,
+        props.name,
+        privileges,
+      );
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
@@ -250,7 +257,7 @@ export function RoleFrame(props: RoleFrameProps) {
       current: SequencePrivileges,
       update: SequencePrivileges,
     ) => {
-      await DB.updateSequencePrivileges(schema, table, props.name, {
+      await db().updateSequencePrivileges(schema, table, props.name, {
         update: update.update === current.update ? undefined : update.update,
         select: update.select === current.select ? undefined : update.select,
         usage: update.usage === current.usage ? undefined : update.usage,
@@ -268,7 +275,7 @@ export function RoleFrame(props: RoleFrameProps) {
       curr: SchemaPrivileges,
       update: SchemaPrivileges,
     ) => {
-      await DB.updateSchemaPrivileges(schema, props.name, {
+      await db().updateSchemaPrivileges(schema, props.name, {
         create: update.create === curr.create ? undefined : update.create,
         usage: update.usage === curr.usage ? undefined : update.usage,
       });
@@ -286,7 +293,7 @@ export function RoleFrame(props: RoleFrameProps) {
       curr: TablePrivileges,
       update: TablePrivileges,
     ) => {
-      await DB.updatePrivileges(schema, table, props.name, {
+      await db().updatePrivileges(schema, table, props.name, {
         update: update.update === curr.update ? undefined : update.update,
         select: update.select === curr.select ? undefined : update.select,
         insert: update.insert === curr.insert ? undefined : update.insert,
@@ -306,72 +313,76 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const revokeFunctionYesClick = useEvent(() => {
     if (!state.revokeFunction) return;
-    DB.revokeFunction(
-      state.revokeFunction.schema,
-      state.revokeFunction.function,
-      props.name,
-    ).then(
-      () => {
-        service.reload();
-        set({
-          ...state,
-          revokeFunction: null,
-        });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .revokeFunction(
+        state.revokeFunction.schema,
+        state.revokeFunction.function,
+        props.name,
+      )
+      .then(
+        () => {
+          service.reload();
+          set({
+            ...state,
+            revokeFunction: null,
+          });
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   });
 
   const revokeTypeYesClick = useEvent(() => {
     if (!state.revokeType) return;
-    DB.revokeDomain(
-      state.revokeType.schema,
-      state.revokeType.type,
-      props.name,
-    ).then(
-      () => {
-        service.reload();
-        set({
-          ...state,
-          revokeType: null,
-        });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .revokeDomain(state.revokeType.schema, state.revokeType.type, props.name)
+      .then(
+        () => {
+          service.reload();
+          set({
+            ...state,
+            revokeType: null,
+          });
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   });
 
   const newFunctionPrivilegeSave = useEvent((schema: string, fName: string) => {
-    DB.grantFunction(schema, fName, props.name).then(
-      () => {
-        service.reload();
-        set({
-          ...state,
-          newFunctionPrivilege: false,
-        });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .grantFunction(schema, fName, props.name)
+      .then(
+        () => {
+          service.reload();
+          set({
+            ...state,
+            newFunctionPrivilege: false,
+          });
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   });
 
   const newTypePrivilegeSave = useEvent((schema: string, tName: string) => {
-    DB.grantDomain(schema, tName, props.name).then(
-      () => {
-        service.reload();
-        set({
-          ...state,
-          newTypePrivilege: false,
-        });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .grantDomain(schema, tName, props.name)
+      .then(
+        () => {
+          service.reload();
+          set({
+            ...state,
+            newTypePrivilege: false,
+          });
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   });
 
   const privilegesSizes = useMemo(

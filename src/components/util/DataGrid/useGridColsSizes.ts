@@ -3,7 +3,7 @@ import { useEvent } from 'util/useEvent';
 import { horizontalResize } from 'util/resize';
 import { assert } from 'util/assert';
 import { equals } from 'util/equals';
-import { QueryResultDataField } from 'db/Connection';
+import { QueryResultDataField } from 'db/db';
 import {
   getValString,
   headerHeight,

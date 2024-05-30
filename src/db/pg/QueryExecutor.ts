@@ -1,37 +1,20 @@
 import { assert } from 'util/assert';
-import { FieldDef, PoolClient, QueryArrayResult } from 'pg';
+import { PoolClient, QueryArrayResult } from 'pg';
 import { CopyStreamQuery, CopyToStreamQuery, from, to } from 'pg-copy-streams';
 import { grantError } from 'util/errors';
 import PgCursor from 'pg-cursor';
 import { createReadStream, createWriteStream } from 'fs';
 import { pipeline } from 'node:stream/promises';
-import { openConnection, SimpleValue } from './Connection';
+import {
+  Notice,
+  QueryExecutor,
+  QueryOptions,
+  QueryResultDataField,
+  QueryResult,
+  SimpleValue,
+} from 'db/db';
+import { openConnection } from './Connection';
 import { DB } from './DB';
-
-export interface QueryResult {
-  rows: SimpleValue[][];
-  fields: FieldDef[];
-  rowCount: number;
-  stdOutResult?: string;
-  stdOutMode?: boolean;
-  stdInMode?: boolean;
-  fetchMoreRows?: () => Promise<{
-    rows: SimpleValue[][];
-    fields: FieldDef[];
-    rowCount: number;
-  }>;
-}
-
-export interface Notice {
-  readonly message: string | undefined;
-  readonly type: string | undefined;
-  values: { [key: string]: string | undefined };
-}
-
-interface QueryOptions {
-  stdOutFile?: string | null;
-  stdInFile?: string | null;
-}
 
 function isMultipleQueries(q: string) {
   let inString = false;
@@ -63,7 +46,7 @@ function hasFromStdIn(query: string) {
 
 const fetchSize = 500;
 
-export class QueryExecutor {
+export class PgQueryExecutor implements QueryExecutor {
   private db: PoolClient | null = null;
 
   private pid: number | undefined;
@@ -81,11 +64,11 @@ export class QueryExecutor {
 
   private onError: (err: Error) => void;
 
-  private static instances = [] as QueryExecutor[];
+  private static instances = [] as PgQueryExecutor[];
 
   static destroyAll() {
     return Promise.all(
-      QueryExecutor.instances
+      PgQueryExecutor.instances
         .filter((ac) => ac.pid)
         .map(async (ac) => {
           await ac.stopRunningQuery();
@@ -108,7 +91,7 @@ export class QueryExecutor {
     this.onNotice = onNotice;
     this.onPid = onPid;
     this.onError = onError;
-    QueryExecutor.instances.push(this);
+    PgQueryExecutor.instances.push(this);
   }
 
   async stopRunningQuery(): Promise<void> {
@@ -118,15 +101,18 @@ export class QueryExecutor {
   destroy() {
     if (this.pid) {
       this.stopRunningQuery().then(() => {
-        QueryExecutor.instances.splice(
-          QueryExecutor.instances.indexOf(this),
+        PgQueryExecutor.instances.splice(
+          PgQueryExecutor.instances.indexOf(this),
           1,
         );
         this.db?.release(true);
       });
       return;
     }
-    QueryExecutor.instances.splice(QueryExecutor.instances.indexOf(this), 1);
+    PgQueryExecutor.instances.splice(
+      PgQueryExecutor.instances.indexOf(this),
+      1,
+    );
     this.db?.release(true);
   }
 
@@ -193,7 +179,7 @@ export class QueryExecutor {
         });
         return {
           rows: res2.rows,
-          fields: res2.fields as FieldDef[],
+          fields: res2.fields as unknown as QueryResultDataField[],
           rowCount: res2.rowCount || 0,
         };
       }
@@ -215,7 +201,7 @@ export class QueryExecutor {
           const ret = {
             rows,
             // eslint-disable-next-line no-underscore-dangle
-            fields: (c as any)._result.fields as FieldDef[],
+            fields: (c as any)._result.fields as QueryResultDataField[],
             // eslint-disable-next-line no-underscore-dangle
             rowCount: (c as any)._result.rowCount,
             fetchMoreRows:
@@ -223,7 +209,7 @@ export class QueryExecutor {
                 ? () => {
                     return new Promise<{
                       rows: SimpleValue[][];
-                      fields: FieldDef[];
+                      fields: QueryResultDataField[];
                       rowCount: number;
                     }>((_resolve, _reject) => {
                       c.read(

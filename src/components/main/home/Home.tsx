@@ -1,19 +1,19 @@
+import { db } from 'db/db';
 import { useEffect, useState } from 'react';
-import { useService } from 'util/useService';
+import { connect } from 'state/actions';
 import {
   deleteConnectionConfiguration,
   insertConnectionConfiguration,
   listConnectionConfigurations,
   updateConnectionConfiguration,
 } from 'util/browserDb/actions';
-import { listDatabases } from 'db/Connection';
-import { connect } from 'state/actions';
 import { grantError } from 'util/errors';
 import { useShortcuts } from 'util/shortcuts';
 import { useEventListener } from 'util/useEventListener';
+import { useService } from 'util/useService';
 import { AppState, ConnectionConfiguration } from '../../../types';
-import { ConnectionConfigurationForm } from './ConnectionConfigurationForm';
 import { Errors } from '../Errors';
+import { ConnectionConfigurationForm } from './ConnectionConfigurationForm';
 
 export function Home(props: AppState) {
   const service = useService(() => listConnectionConfigurations(), []);
@@ -36,7 +36,7 @@ export function Home(props: AppState) {
   const basesService = useService<string[] | null>(
     () =>
       state.openConnection
-        ? listDatabases(state.openConnection)
+        ? db().listDatabases(state.openConnection)
         : Promise.resolve(null),
     [state.openConnection],
   );

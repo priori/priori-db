@@ -5,7 +5,7 @@ import {
   changeSchema,
   showError,
 } from 'state/actions';
-import { DB } from 'db/DB';
+import { db } from 'db/db';
 import { useMemo, useState } from 'react';
 import { SequenceFrameProps, SequencePrivileges } from 'types';
 import { useEvent } from 'util/useEvent';
@@ -23,7 +23,7 @@ import { TdCheck } from './TableInfoFrame/TableInfoFrame';
 
 export function SequenceFrame(props: SequenceFrameProps) {
   const service = useService(
-    async () => DB.sequence(props.schema, props.name),
+    async () => db().sequence(props.schema, props.name),
     [props.schema, props.name],
   );
 
@@ -66,25 +66,29 @@ export function SequenceFrame(props: SequenceFrameProps) {
 
   const yesClick = useEvent(() => {
     if (state.dropCascadeConfirmation)
-      DB.dropSequence(props.schema, props.name, true).then(
-        () => {
-          setTimeout(() => closeTab(props), 10);
-          reloadNav();
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+      db()
+        .dropSequence(props.schema, props.name, true)
+        .then(
+          () => {
+            setTimeout(() => closeTab(props), 10);
+            reloadNav();
+          },
+          (err) => {
+            showError(err);
+          },
+        );
     else
-      DB.dropSequence(props.schema, props.name).then(
-        () => {
-          setTimeout(() => closeTab(props), 10);
-          reloadNav();
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+      db()
+        .dropSequence(props.schema, props.name)
+        .then(
+          () => {
+            setTimeout(() => closeTab(props), 10);
+            reloadNav();
+          },
+          (err) => {
+            showError(err);
+          },
+        );
   });
 
   useTab({
@@ -102,27 +106,27 @@ export function SequenceFrame(props: SequenceFrameProps) {
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await DB.updateSequence(props.schema, props.name, { comment: text });
+    await db().updateSequence(props.schema, props.name, { comment: text });
     await service.reload();
     set({ ...state, editComment: false });
   });
 
   const onRename = useEvent(async (name: string) => {
-    await DB.updateSequence(props.schema, props.name, { name });
+    await db().updateSequence(props.schema, props.name, { name });
     renameEntity(props.uid, name);
     reloadNav();
     set({ ...state, rename: false });
   });
 
   const onUpdateCurrentValue = useEvent(async (value: string) => {
-    await DB.updateSequenceValue(props.schema, props.name, value);
+    await db().updateSequenceValue(props.schema, props.name, value);
     await service.reload();
     reloadNav();
     set({ ...state, updateValue: false });
   });
 
   const onChangeSchema = useEvent(async (schema: string) => {
-    await DB.updateSequence(props.schema, props.name, { schema });
+    await db().updateSequence(props.schema, props.name, { schema });
     changeSchema(props.uid, schema);
     reloadNav();
     set({ ...state, changeSchema: false });
@@ -132,26 +136,24 @@ export function SequenceFrame(props: SequenceFrameProps) {
   const { roles } = currentState();
   const owner = service.lastValidData?.owner;
   const saveOwner = useEvent(() => {
-    DB.alterSequenceOwner(
-      props.schema,
-      props.name,
-      state.editOwner as string,
-    ).then(
-      () => {
-        if (!isMounted()) return;
-        service.reload();
-        if (!isMounted()) return;
-        set({ ...state, editOwner: false });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .alterSequenceOwner(props.schema, props.name, state.editOwner as string)
+      .then(
+        () => {
+          if (!isMounted()) return;
+          service.reload();
+          if (!isMounted()) return;
+          set({ ...state, editOwner: false });
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   });
 
   const newPrivilege = useEvent(
     async (form: { role: string; privileges: SequencePrivileges }) => {
-      await DB.updateSequencePrivileges(
+      await db().updateSequencePrivileges(
         props.schema,
         props.name,
         form.role,
@@ -170,7 +172,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
       curr: SequencePrivileges,
       update: SequencePrivileges,
     ) => {
-      await DB.updateSequencePrivileges(props.schema, props.name, roleName, {
+      await db().updateSequencePrivileges(props.schema, props.name, roleName, {
         update: update.update === curr.update ? undefined : update.update,
         select: update.select === curr.select ? undefined : update.select,
         usage: update.usage === curr.usage ? undefined : update.usage,

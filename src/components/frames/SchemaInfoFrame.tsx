@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useEvent } from 'util/useEvent';
-import { DB } from 'db/DB';
+import { db } from 'db/db';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { useService } from 'util/useService';
 import { currentState } from 'state/state';
@@ -18,7 +18,7 @@ import { SchemaPrivilegesDialog } from './SchemaPrivilegesDialog';
 
 export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
   const service = useService(
-    async () => DB.schema(props.schema),
+    async () => db().schema(props.schema),
     [props.schema],
   );
 
@@ -63,25 +63,29 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
 
   const yesClick = useEvent(() => {
     if (state.dropCascadeConfirmation) {
-      DB.dropSchema(props.schema, true).then(
-        () => {
-          setTimeout(() => closeTab(props), 10);
-          reloadNav();
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+      db()
+        .dropSchema(props.schema, true)
+        .then(
+          () => {
+            setTimeout(() => closeTab(props), 10);
+            reloadNav();
+          },
+          (err) => {
+            showError(err);
+          },
+        );
     } else {
-      DB.dropSchema(props.schema).then(
-        () => {
-          setTimeout(() => closeTab(props), 10);
-          reloadNav();
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+      db()
+        .dropSchema(props.schema)
+        .then(
+          () => {
+            setTimeout(() => closeTab(props), 10);
+            reloadNav();
+          },
+          (err) => {
+            showError(err);
+          },
+        );
     }
   });
 
@@ -102,27 +106,29 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
   const { roles } = currentState();
   const isMounted = useIsMounted();
   const saveOwner = useEvent(() => {
-    DB.alterSchemaOwner(props.schema, state.editOwner as string).then(
-      () => {
-        if (!isMounted()) return;
-        service.reload();
-        if (!isMounted()) return;
-        set({ ...state, editOwner: false });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .alterSchemaOwner(props.schema, state.editOwner as string)
+      .then(
+        () => {
+          if (!isMounted()) return;
+          service.reload();
+          if (!isMounted()) return;
+          set({ ...state, editOwner: false });
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await DB.updateSchemaComment(props.schema, text);
+    await db().updateSchemaComment(props.schema, text);
     await service.reload();
     set({ ...state, editComment: false });
   });
 
   const onRename = useEvent(async (newName: string) => {
-    await DB.renameSchema(props.schema, newName);
+    await db().renameSchema(props.schema, newName);
     renameSchema(props.uid, newName);
     reloadNav();
     set({ ...state, rename: false });
@@ -130,7 +136,11 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
 
   const newPrivilege = useEvent(
     async (form: { role: string; privileges: SchemaPrivileges }) => {
-      await DB.updateSchemaPrivileges(props.schema, form.role, form.privileges);
+      await db().updateSchemaPrivileges(
+        props.schema,
+        form.role,
+        form.privileges,
+      );
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
@@ -144,7 +154,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
       curr: SchemaPrivileges,
       update: SchemaPrivileges,
     ) => {
-      await DB.updateSchemaPrivileges(props.schema, roleName, {
+      await db().updateSchemaPrivileges(props.schema, roleName, {
         create: update.create === curr.create ? undefined : update.create,
         usage: update.usage === curr.usage ? undefined : update.usage,
       });

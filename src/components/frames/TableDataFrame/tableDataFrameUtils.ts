@@ -2,10 +2,8 @@ import { keepTabOpen } from 'state/actions';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
-import { DB } from 'db/DB';
+import { db, Filter, Sort, QueryResultData } from 'db/db';
 import { useState } from 'react';
-import { Filter, Sort } from 'db/util';
-import { QueryResultData } from 'db/Connection';
 import { TableFrameProps } from '../../../types';
 
 export function useTableDataFrame(props: TableFrameProps) {
@@ -13,7 +11,7 @@ export function useTableDataFrame(props: TableFrameProps) {
   const [filter, setFilter] = useState<Filter | undefined>(undefined);
 
   const defaultSortService = useService(
-    () => DB.defaultSort(props.schema, props.table) as Promise<Sort>,
+    () => db().defaultSort(props.schema, props.table) as Promise<Sort>,
     [props.schema, props.table],
   );
 
@@ -31,7 +29,7 @@ export function useTableDataFrame(props: TableFrameProps) {
         currentFilter?: Filter;
       }>(() => {});
 
-    const result = await DB.select({
+    const result = await db().select({
       schema: props.schema,
       table: props.table,
       sort: selectedSort,
@@ -46,7 +44,7 @@ export function useTableDataFrame(props: TableFrameProps) {
   }, [props.schema, props.table, selectedSort, sortReady, filter]);
 
   const pks = useService(
-    () => DB.pks(props.schema, props.table),
+    () => db().pks(props.schema, props.table),
     [props.schema, props.table],
   );
 
@@ -68,7 +66,7 @@ export function useTableDataFrame(props: TableFrameProps) {
       if ((!pks.lastValidData || !pks.lastValidData.length) && updates.length) {
         throw new Error('Primay Keys not found for table!!');
       }
-      await DB.update(props.schema, props.table, updates, inserts);
+      await db().update(props.schema, props.table, updates, inserts);
       dataService.reload();
       return true;
     },

@@ -1,5 +1,4 @@
-import { Sort } from 'db/util';
-import { QueryResultDataField } from 'db/Connection';
+import { Sort, QueryResultDataField } from 'db/db';
 import React from 'react';
 import { equals } from 'util/equals';
 

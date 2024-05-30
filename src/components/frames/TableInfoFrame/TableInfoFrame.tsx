@@ -10,6 +10,7 @@ import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { useIsMounted } from 'util/hooks';
 import { assert } from 'util/assert';
 import { currentState } from 'state/state';
+import { db } from 'db/db';
 import { TableInfoFrameProps, TablePrivileges } from '../../../types';
 import {
   reloadNav,
@@ -18,7 +19,6 @@ import {
   changeSchema,
   showError,
 } from '../../../state/actions';
-import { DB } from '../../../db/DB';
 import { ChangeSchemaDialog } from '../../util/Dialog/ChangeSchemaDialog';
 import { ColumnForm, ColumnFormDialog } from './ColumnFormDialog';
 import { IndexForm, IndexDialog } from './IndexDialog';
@@ -113,15 +113,15 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       constraints,
       privileges,
     ] = await Promise.all([
-      DB.tableComment(props.schema, props.table),
-      DB.listCols(props.schema, props.table),
-      DB.listIndexes(props.schema, props.table),
-      DB.pgTable(props.schema, props.table),
-      DB.pgView(props.schema, props.table),
-      DB.pgMView(props.schema, props.table),
-      DB.pgType(props.schema, props.table),
-      DB.listConstrants(props.schema, props.table),
-      DB.tablePrivileges(props.schema, props.table),
+      db().tableComment(props.schema, props.table),
+      db().listCols(props.schema, props.table),
+      db().listIndexes(props.schema, props.table),
+      db().pgTable(props.schema, props.table),
+      db().pgView(props.schema, props.table),
+      db().pgMView(props.schema, props.table),
+      db().pgType(props.schema, props.table),
+      db().listConstrants(props.schema, props.table),
+      db().tablePrivileges(props.schema, props.table),
     ]);
     return {
       comment,
@@ -180,22 +180,22 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const onUpdateComment = useEvent(async (text: string) => {
     if (state.table)
-      await DB.updateTable(props.schema, props.table, { comment: text });
+      await db().updateTable(props.schema, props.table, { comment: text });
     else if (state.mView)
-      await DB.updateMView(props.schema, props.table, { comment: text });
+      await db().updateMView(props.schema, props.table, { comment: text });
     else if (state.view)
-      await DB.updateView(props.schema, props.table, { comment: text });
+      await db().updateView(props.schema, props.table, { comment: text });
     await service.reload();
     if (isMounted()) set({ ...edit, editComment: false });
   });
 
   const onChangeSchema = useEvent(async (schema: string) => {
     if (state.table)
-      await DB.updateTable(props.schema, props.table, { schema });
+      await db().updateTable(props.schema, props.table, { schema });
     else if (state.mView)
-      await DB.updateMView(props.schema, props.table, { schema });
+      await db().updateMView(props.schema, props.table, { schema });
     else if (state.view)
-      await DB.updateView(props.schema, props.table, { schema });
+      await db().updateView(props.schema, props.table, { schema });
     changeSchema(props.uid, schema);
     reloadNav();
     if (isMounted()) set({ ...edit, updateSchema: false });
@@ -219,25 +219,29 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const yesClick = useEvent(() => {
     if (edit.dropCascadeConfirmation)
-      DB.dropTable(props.schema, props.table, true).then(
-        () => {
-          setTimeout(() => closeTab(props), 10);
-          reloadNav();
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+      db()
+        .dropTable(props.schema, props.table, true)
+        .then(
+          () => {
+            setTimeout(() => closeTab(props), 10);
+            reloadNav();
+          },
+          (err) => {
+            showError(err);
+          },
+        );
     else
-      DB.dropTable(props.schema, props.table).then(
-        () => {
-          setTimeout(() => closeTab(props), 10);
-          reloadNav();
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+      db()
+        .dropTable(props.schema, props.table)
+        .then(
+          () => {
+            setTimeout(() => closeTab(props), 10);
+            reloadNav();
+          },
+          (err) => {
+            showError(err);
+          },
+        );
   });
 
   const noClick = useEvent(() => {
@@ -249,11 +253,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   });
 
   const onRename = useEvent(async (name: string) => {
-    if (state.table) await DB.updateTable(props.schema, props.table, { name });
+    if (state.table)
+      await db().updateTable(props.schema, props.table, { name });
     else if (state.mView)
-      await DB.updateMView(props.schema, props.table, { name });
+      await db().updateMView(props.schema, props.table, { name });
     else if (state.view)
-      await DB.updateView(props.schema, props.table, { name });
+      await db().updateView(props.schema, props.table, { name });
     renameEntity(props.uid, name);
     if (!isMounted()) return;
     await reloadNav();
@@ -262,7 +267,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   });
 
   const removeColumn = useEvent(async (col: string) => {
-    await DB.removeCol(props.schema, props.table, col);
+    await db().removeCol(props.schema, props.table, col);
     if (!isMounted()) return;
     await service.reload();
     if (!isMounted()) return;
@@ -270,7 +275,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   });
 
   const renameColumn = useEvent(async (col: string, newName: string) => {
-    await DB.renameColumn(props.schema, props.table, col, newName);
+    await db().renameColumn(props.schema, props.table, col, newName);
     if (!isMounted()) return;
     await service.reload();
     if (!isMounted()) return;
@@ -278,7 +283,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   });
 
   const renameIndex = useEvent(async (index: string, newName: string) => {
-    await DB.renameIndex(props.schema, props.table, index, newName);
+    await db().renameIndex(props.schema, props.table, index, newName);
     if (!isMounted()) return;
     await service.reload();
     if (!isMounted()) return;
@@ -286,7 +291,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   });
 
   const removeIndex = useEvent(async (name: string) => {
-    await DB.removeIndex(props.schema, props.table, name);
+    await db().removeIndex(props.schema, props.table, name);
     if (!isMounted()) return;
     await service.reload();
     if (!isMounted()) return;
@@ -295,7 +300,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const newPrivilege = useEvent(
     async (form: { role: string; privileges: TablePrivileges }) => {
-      await DB.updatePrivileges(
+      await db().updatePrivileges(
         props.schema,
         props.table,
         form.role,
@@ -314,7 +319,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       curr: TablePrivileges,
       update: TablePrivileges,
     ) => {
-      await DB.updatePrivileges(props.schema, props.table, roleName, {
+      await db().updatePrivileges(props.schema, props.table, roleName, {
         update: update.update === curr.update ? undefined : update.update,
         select: update.select === curr.select ? undefined : update.select,
         insert: update.insert === curr.insert ? undefined : update.insert,
@@ -333,7 +338,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   );
 
   const commentIndex = useEvent(async (index: string, comment: string) => {
-    await DB.commentIndex(props.schema, props.table, index, comment);
+    await db().commentIndex(props.schema, props.table, index, comment);
     if (!isMounted()) return;
     await service.reload();
     if (!isMounted()) return;
@@ -341,7 +346,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   });
 
   const commentColumn = useEvent(async (column: string, comment: string) => {
-    await DB.commentColumn(props.schema, props.table, column, comment);
+    await db().commentColumn(props.schema, props.table, column, comment);
     if (!isMounted()) return;
     await service.reload();
     if (!isMounted()) return;
@@ -349,7 +354,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   });
 
   const newColumn = useEvent(async (form: ColumnForm) => {
-    await DB.newColumn(props.schema, props.table, form);
+    await db().newColumn(props.schema, props.table, form);
     if (!isMounted()) return;
     await service.reload();
     if (!isMounted()) return;
@@ -357,7 +362,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   });
 
   const newIndex = useEvent(async (form: IndexForm) => {
-    await DB.newIndex(
+    await db().newIndex(
       props.schema,
       props.table,
       form.cols,
@@ -387,7 +392,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   }, [state.cols, edit.updateColumn]);
 
   const size = useService(
-    () => DB.tableSize(props.schema, props.table),
+    () => db().tableSize(props.schema, props.table),
     [props.schema, props.table],
   );
 
@@ -416,7 +421,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           ? form.comment || null
           : undefined,
     };
-    await DB.updateColumn(props.schema, props.table, updateColumn.name, update);
+    await db().updateColumn(
+      props.schema,
+      props.table,
+      updateColumn.name,
+      update,
+    );
     if (!isMounted()) return;
     await service.reload();
     if (!isMounted()) return;
@@ -426,21 +436,19 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   const owner = state?.table?.tableowner ?? state?.view?.viewowner;
 
   const saveOwner = useEvent(() => {
-    DB.alterTableOwner(
-      props.schema,
-      props.table,
-      edit.editOwner as string,
-    ).then(
-      () => {
-        if (!isMounted()) return;
-        service.reload();
-        if (!isMounted()) return;
-        set({ ...edit, editOwner: false });
-      },
-      (err) => {
-        showError(err);
-      },
-    );
+    db()
+      .alterTableOwner(props.schema, props.table, edit.editOwner as string)
+      .then(
+        () => {
+          if (!isMounted()) return;
+          service.reload();
+          if (!isMounted()) return;
+          set({ ...edit, editOwner: false });
+        },
+        (err) => {
+          showError(err);
+        },
+      );
   });
 
   const internalRoles = useMemo(

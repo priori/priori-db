@@ -2,9 +2,8 @@ import { assert } from 'util/assert';
 import { useEffect } from 'react';
 import { grantError } from 'util/errors';
 import { updateConnection } from 'util/browserDb/actions';
-import { connect as dbConnect } from '../db/Connection';
+import { db } from 'db/db';
 import state, { currentState } from './state';
-import { DB } from '../db/DB';
 import { ConnectionConfiguration, FrameProps } from '../types';
 
 export const {
@@ -48,20 +47,22 @@ export const {
 } = state;
 
 export async function reloadNav() {
-  const newSchemas = await DB.listAll();
-  const roles = await DB.listRoles();
+  const newSchemas = await db().listAll();
+  const roles = await db().listRoles();
   state.updateSchemasAndRoles(newSchemas, roles);
 }
 
 export function createSchema(name: string) {
-  DB.createSchema(name).then(
-    () => {
-      reloadNav();
-    },
-    (err) => {
-      showError(err);
-    },
-  );
+  db()
+    .createSchema(name)
+    .then(
+      () => {
+        reloadNav();
+      },
+      (err) => {
+        showError(err);
+      },
+    );
 }
 
 let askToCloseHandler: ((uid: number) => boolean) | undefined;
@@ -91,11 +92,11 @@ export function askToCloseCurrent() {
 
 export async function connect(conf: ConnectionConfiguration, database: string) {
   try {
-    await dbConnect(conf, database);
+    await db().connect(conf, database);
     await updateConnection(conf.host, conf.port, conf.user, conf.database);
     try {
-      const schemas = await DB.listAll();
-      const roles = await DB.listRoles();
+      const schemas = await db().listAll();
+      const roles = await db().listRoles();
       state.connected(conf, database, schemas, roles);
     } catch (err) {
       throw grantError(err);

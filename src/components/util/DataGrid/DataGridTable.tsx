@@ -1,4 +1,4 @@
-import { QueryResultDataField } from 'db/Connection';
+import { QueryResultDataField } from 'db/db';
 import React from 'react';
 import { equals } from 'util/equals';
 import { cellClassName, getType, getValString } from './util';

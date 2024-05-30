@@ -4,15 +4,28 @@ import {
   first,
   query,
   openConnection,
-  QueryResultData,
+  hasOpenConnection,
+  closeAll,
+  listDatabases,
+  connect,
 } from './Connection';
+import {
+  DomainFrameInfo,
+  Filter,
+  Notice,
+  operators2,
+  operators3,
+  QueryResultData,
+  SequenceInfo,
+  Sort,
+} from '../db';
 import {
   EntityType,
   SequencePrivileges,
   TableColumnType,
   TablePrivileges,
-} from '../types';
-import { buildWhere, Filter, Sort } from './util';
+} from '../../types';
+import { PgQueryExecutor } from './QueryExecutor';
 
 function schemaCompare(a: string, b: string, publics: string[]) {
   const aPublic = publics.includes(a);
@@ -37,28 +50,87 @@ export function label(s: string) {
 function str(s: string) {
   return `'${s.replace(/'/g, "''").replace(/\\/g, '\\\\')}'`;
 }
+// export function str(s: string) {
+//   return `'${s.replace(/'/g, "''")}'`;
+// }
 
-interface DomainFrameInfo {
-  type: {
-    [k: string]: string | number | null | boolean;
-  };
-  comment: string | null;
-  privileges: string[];
-  owner: string;
-  hideInternalRoles: true;
+export function wrapWithParentheses(s: string) {
+  return `(${s})`;
 }
 
-type SequenceInfo = {
-  type: {
-    [key: string]: string | number | boolean | null;
+export function buildWhere(filter: Filter): {
+  where: string;
+  params: (string | null)[];
+} {
+  return {
+    where:
+      'type' in filter
+        ? (filter.where as string)
+        : filter.length === 1 && filter[0].length === 0
+          ? ''
+          : filter
+              .map((ands) =>
+                ands
+                  .map((f) =>
+                    f.operator in operators2
+                      ? `${f.field ? label(f.field) : '"???"'} ${
+                          operators2[f.operator as keyof typeof operators2]
+                        } ${
+                          f.sql && f.value
+                            ? wrapWithParentheses(f.value ?? '')
+                            : f.sql
+                              ? '<<SQL>>'
+                              : (f as { value: string | null }).value === null
+                                ? 'NULL'
+                                : str((f as { value: string }).value)
+                        }`
+                      : f.operator in operators3
+                        ? (f.sql && !f.value ? '-- ' : '') +
+                          operators3[f.operator as keyof typeof operators3](
+                            f.field,
+                            f.sql
+                              ? f.value
+                                ? wrapWithParentheses(f.value)
+                                : '<<SQL>>'
+                              : (f as { value: string | null }).value === null
+                                ? 'NULL'
+                                : str((f as { value: string }).value),
+                            'sql2' in f && f.sql2
+                              ? f.value2
+                                ? wrapWithParentheses(f.value2)
+                                : '<<SQL>>'
+                              : (f as { value2: string | null }).value2 === null
+                                ? 'NULL'
+                                : str((f as { value2: string }).value2),
+                          )
+                        : f.operator === 'in' || f.operator === 'nin'
+                          ? `${f.field ? label(f.field) : '???'} ${
+                              f.operator === 'in' ? 'IN' : 'NOT IN'
+                            } (${(f as { values: string[] }).values
+                              .map(str)
+                              .join(', ')})`
+                          : f.field
+                            ? /* --  */ `${label(f.field)} ???`
+                            : /* --  */ `???${
+                                (f as { value?: string | null }).value === null
+                                  ? ' null'
+                                  : (f as { value?: string }).value
+                                    ? ` ${str((f as { value: string }).value)}`
+                                    : ''
+                              }`,
+                  )
+                  .filter((v) => v),
+              )
+              .map((p) => p.join('\nAND ') || '  ??')
+              .join('\nOR\n')
+              .replace(/\nAND --/g, '\n-- AND '),
+    params: [],
   };
-  lastValue: number | string | null;
-  comment: string | null;
-  owner: string;
-  privileges: { roleName: string; privileges: SequencePrivileges }[];
-};
+}
 
 export const DB = {
+  wrapWithParentheses,
+  str,
   async function(schema: string, name: string) {
     const [info, privileges] = await Promise.all([
       first(
@@ -192,6 +264,7 @@ export const DB = {
       privileges,
     };
   },
+
   async sequence(schema: string, name: string) {
     const [type, lastValue, comment, privileges] = await Promise.all([
       DB.pgClass(schema, name),
@@ -233,6 +306,8 @@ export const DB = {
       COMMENT ON SCHEMA ${label(schema)} IS ${str(comment)}
     `);
   },
+
+  label,
 
   async select({
     schema,
@@ -2114,5 +2189,17 @@ export const DB = {
       await query(`
         REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(role)}
       `);
+  },
+  hasOpenConnection,
+  closeAll,
+  listDatabases,
+  openConnection,
+  connect,
+  newQueryExecutor(
+    onNotice: (n: Notice) => void,
+    onPid: (pid: number | null) => void,
+    onError: (e: Error) => void,
+  ): PgQueryExecutor {
+    return new PgQueryExecutor(onNotice, onPid, onError);
   },
 };

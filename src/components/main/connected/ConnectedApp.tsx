@@ -1,29 +1,29 @@
 /* eslint-disable no-return-assign */
+import { db } from 'db/db';
 import * as React from 'react';
-import { useEffect, useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AppState, FrameType } from 'types';
-import { useWindowCloseConfirm } from 'util/useWindowCloseConfirm';
-import { hasOpenConnection } from 'db/Connection';
-import { useEvent } from 'util/useEvent';
 import { assert } from 'util/assert';
 import { fullScreen } from 'util/fullScreen';
 import { useShortcuts } from 'util/shortcuts';
-import { Nav } from './Nav/Nav';
-import { TabsHeader } from './TabsHeader';
+import { useEvent } from 'util/useEvent';
+import { useWindowCloseConfirm } from 'util/useWindowCloseConfirm';
 import {
+  askToCloseCurrent,
   askToCloseWindow,
   cancelAskToCloseWindow,
-  useAskToClose,
-  askToCloseCurrent,
+  keepTabOpen,
   newQueryTab,
   nextTab,
   prevTab,
-  keepTabOpen,
+  useAskToClose,
 } from '../../../state/actions';
-import { Frame } from './Frame';
-import { CloseConfirmation } from './CloseConfirmation';
 import { Errors } from '../Errors';
+import { CloseConfirmation } from './CloseConfirmation';
+import { Frame } from './Frame';
 import { useLeftArea } from './leftArea';
+import { Nav } from './Nav/Nav';
+import { TabsHeader } from './TabsHeader';
 
 const classNames: Record<FrameType, string> = {
   query: 'query-tab',
@@ -182,7 +182,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
   useWindowCloseConfirm(async (doit) => {
     // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, 100));
-    if (await hasOpenConnection()) {
+    if (await db().hasOpenConnection()) {
       setClose({ func: doit });
       askToCloseWindow();
     } else {

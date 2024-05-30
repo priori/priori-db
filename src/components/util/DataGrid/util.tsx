@@ -1,4 +1,4 @@
-import { SimpleValue } from 'db/Connection';
+import { SimpleValue } from 'db/db';
 import { renderToString } from 'react-dom/server';
 
 export const letterSize = 6;
