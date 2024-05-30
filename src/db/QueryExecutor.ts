@@ -47,17 +47,17 @@ function isMultipleQueries(q: string) {
   return false;
 }
 
-function temToStdOut(query: string) {
+function hasToStdOut(query: string) {
   return (
-    !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
-    !!query.match(/^([^']|'([^']|'')*')*to\s+stdout/gim)
+    !!query.match(/(?<!\n)^([^']|'([^']|'')*')*COPY\s+/gim) &&
+    !!query.match(/(?<!\n)^([^']|'([^']|'')*')*to\s+stdout/gim)
   );
 }
 
-function temFromStdIn(query: string) {
+function hasFromStdIn(query: string) {
   return (
-    !!query.match(/^([^']|'([^']|'')*')*COPY\s+/gim) &&
-    !!query.match(/^([^']|'([^']|'')*')*from\s+stdin/gim)
+    !!query.match(/(?<!\n)^([^']|'([^']|'')*')*COPY\s+/gim) &&
+    !!query.match(/(?<!\n)^([^']|'([^']|'')*')*from\s+stdin/gim)
   );
 }
 
@@ -89,7 +89,7 @@ export class QueryExecutor {
         .filter((ac) => ac.pid)
         .map(async (ac) => {
           await ac.stopRunningQuery();
-          await ac.db?.release(true);
+          return ac.db?.release(true);
         }),
     );
   }
@@ -138,8 +138,8 @@ export class QueryExecutor {
       this.lastCursor = null;
     }
     if (this.db) {
-      const stdOutMode = ops?.stdOutFile && temToStdOut(q);
-      const stdInMode = ops?.stdInFile && temFromStdIn(q);
+      const stdOutMode = ops?.stdOutFile && hasToStdOut(q);
+      const stdInMode = ops?.stdInFile && hasFromStdIn(q);
       if (stdOutMode && stdInMode)
         throw new Error('Cannot use STDIN and STDOUT at the same time');
       if (stdOutMode || stdInMode) {
