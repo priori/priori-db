@@ -257,8 +257,38 @@ export function oldWebSqlData() {
   return oldWebSqlDataP!;
 }
 
+async function migrate2(stores: Stores) {
+  const cs = await stores.connectionConfiguration.getAll();
+  for (const c of cs) {
+    if (!c.type) {
+      stores.connectionConfiguration.patch({ id: c.id, type: 'postgres' });
+    }
+  }
+  const conGroups = await stores.connectionGroup.getAll();
+  for (const c of conGroups) {
+    if (!c.type) {
+      stores.connectionGroup.patch({ id: c.id, type: 'postgres' });
+    }
+  }
+  const es = await stores.appExecution.getAll();
+  for (const e of es) {
+    if (Number.isNaN(e.port))
+      stores.appExecution.patch({
+        id: e.id,
+        port: e.host && e.user ? 5432 : undefined,
+      });
+    if (e.port === 5432 && !e.host && !e.user)
+      stores.appExecution.patch({ id: e.id, port: undefined });
+    if (!e.type && e.host && e.user)
+      stores.appExecution.patch({ id: e.id, type: 'postgres' });
+  }
+}
+
 export async function migrate(stores: Stores) {
-  if (!oldWebSqlDataP) return;
+  if (!oldWebSqlDataP) {
+    await migrate2(stores);
+    return;
+  }
   const { favorites, queries, executions } = await oldWebSqlDataP;
   oldWebSqlDataP = undefined;
   const count = await stores.connectionConfiguration.count();
@@ -306,6 +336,7 @@ export async function migrate(stores: Stores) {
             host,
             port,
             user,
+            type: 'postgres',
           }));
         for (const f of fs2) {
           await stores.favoriteQuery.add({
@@ -433,4 +464,5 @@ export async function migrate(stores: Stores) {
     }
     console.log('Migration complete');
   }
+  await migrate2(stores);
 }

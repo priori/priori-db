@@ -196,7 +196,7 @@ button.connections--edit-button2:hover {
   }
 }
 .new-connection__field {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   &:last-of-type {
     margin-bottom: 0;
   }
@@ -205,7 +205,7 @@ button.connections--edit-button2:hover {
   padding: 6px;
   font-size: 16px;
   width: 100%;
-  margin-top: 4px;
+  margin-top: 3px;
   &:focus {
     padding: 5px;
   }
@@ -222,6 +222,12 @@ button.connections--edit-button2:hover {
   &:focus {
     color: #018;
     background: rgba(0, 0, 0, 0.15);
+  }
+  &[disabled],
+  &[disabled]:active,
+  &[disabled]:focus {
+    background: #eee;
+    color: #000;
   }
 }
 
@@ -327,4 +333,89 @@ body:has(.connections) {
     flex-direction: column;
     justify-content: safe center;
   }
+}
+
+.new-connection__field-select {
+  display: flex;
+  overflow: hidden;
+  border-radius: 10px;
+  gap: 1px;
+  background: #ddd;
+  cursor: pointer;
+  margin-bottom: 18px;
+}
+
+.new-connection__field-option {
+  background: #eee;
+  flex: 1;
+  padding: 8px;
+  text-align: center;
+  color: #555;
+  outline: none;
+  &:hover {
+    background: #f0f0f0;
+    color: #000;
+  }
+  &:active {
+    background: #ddd;
+  }
+  &:focus-visible {
+    background: #ddd;
+    color: #018;
+  }
+}
+
+.new-connection__field-option--selected {
+  // background: #777;
+  background: #25b;
+  color: white;
+  &:hover,
+  &:active,
+  &:focus {
+    background: #25b;
+    color: white;
+  }
+  &:focus-visible {
+    color: #fe0;
+  }
+  &:after {
+    font-family: 'FontAwesome';
+    content: '\f00c';
+    display: inline-block;
+    position: absolute;
+    margin-left: 5px;
+  }
+}
+
+span.connection--user:before {
+  display: inline-block;
+  font-weight: bold;
+  background: #46b;
+  color: white;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 20px;
+  margin-right: 4px;
+  position: relative;
+  margin-top: -6px;
+  margin-bottom: -6px;
+  border: solid 2px orange;
+  background: transparent;
+  // box-shadow: -2px 2px orange;
+}
+.mysql span.connection--user:before {
+  content: 'my';
+  border-color: orange;
+  color: #46b;
+}
+
+.pg span.connection--user:before {
+  content: 'pg';
+  border-color: #46b;
+  color: #000;
 }

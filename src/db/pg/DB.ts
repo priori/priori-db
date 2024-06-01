@@ -3,11 +3,9 @@ import {
   list,
   first,
   query,
-  openConnection,
   hasOpenConnection,
   closeAll,
-  listDatabases,
-  connect,
+  openConnection,
 } from './Connection';
 import {
   DomainFrameInfo,
@@ -2287,12 +2285,6 @@ export const DB = {
   hasOpenConnection,
 
   closeAll,
-
-  listDatabases,
-
-  openConnection,
-
-  connect,
 
   newQueryExecutor(
     onNotice: (n: Notice) => void,

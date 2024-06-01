@@ -1,5 +1,9 @@
-import { SequencePrivileges } from 'types';
+import { ConnectionConfiguration, SequencePrivileges } from 'types';
 import { DB } from './pg/DB';
+import {
+  connect as pgConnect,
+  listDatabases as pgListDabases,
+} from './pg/Connection';
 
 export interface DomainFrameInfo {
   type: {
@@ -145,4 +149,16 @@ export type Sort = {
 
 export function db() {
   return DB;
+}
+
+export async function connect(c: ConnectionConfiguration, name: string) {
+  if (c.type === 'postgres') return pgConnect(c, name);
+  throw new Error('Unsupported database type');
+}
+
+export async function listDatabases(
+  c: Omit<ConnectionConfiguration, 'id'> | ConnectionConfiguration,
+) {
+  if (c.type === 'postgres') return pgListDabases(c);
+  throw new Error('Unsupported database type');
 }

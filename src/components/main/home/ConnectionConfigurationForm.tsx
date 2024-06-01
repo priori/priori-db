@@ -3,8 +3,8 @@ import { Dialog } from 'components/util/Dialog/Dialog';
 import { useState } from 'react';
 import { grantError } from 'util/errors';
 import { useEvent } from 'util/useEvent';
-import { ConnectionConfiguration } from 'types';
-import { db } from 'db/db';
+import { ConnectionConfiguration, ConnectionType } from 'types';
+import { listDatabases } from 'db/db';
 
 export interface NewConectionState {
   port?: string;
@@ -13,6 +13,7 @@ export interface NewConectionState {
   password?: string;
   host?: string;
   requireSsl?: boolean;
+  type?: ConnectionType | null;
 }
 interface NewConnectionProps {
   connection: undefined | ConnectionConfiguration;
@@ -30,6 +31,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
     user: connection ? connection.user : '',
     password: connection ? connection.password : '',
     requireSsl: connection ? connection.requireSsl : false,
+    type: connection ? connection.type : null,
   } as NewConectionState);
   const [removeConfirmation, setRemoveConfirmation] = useState(false);
   const [testResult, setTestResult] = useState(
@@ -52,44 +54,52 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
   }
 
   function save() {
-    const { database, host, port, user, password } = state;
+    const { database, host, user, password, type } = state;
+    const port = state.port ? parseInt(state.port, 10) : 5432;
+    if (!type || Number.isNaN(port)) return;
     props.onJustSave({
       ...(connection?.id ? { id: connection.id } : {}),
       database: database || 'postgres',
       host: host || 'localhost',
-      port: (port && parseInt(port, 10)) || 5432,
+      port,
       user: user || 'postgres',
       password: password || '',
-      requireSsl: state.requireSsl,
+      type,
+      requireSsl: !!state.requireSsl || undefined,
     } as ConnectionConfiguration);
   }
 
   function saveAndConnect() {
-    const { database, host, port, user, password } = state;
+    const { database, host, user, password, type, requireSsl } = state;
+    const port = state.port ? parseInt(state.port, 10) : 5432;
+    if (!type || Number.isNaN(port)) return;
     props.onSaveAndConnect({
       ...(connection?.id ? { id: connection.id } : {}),
       database: database || 'postgres',
       host: host || 'localhost',
-      port: (port && parseInt(port, 10)) || 5432,
+      port,
       user: user || 'postgres',
       password: password || '',
-      requireSsl: state.requireSsl,
+      type,
+      requireSsl: !!requireSsl || undefined,
     } as ConnectionConfiguration);
   }
 
   function onTestClick(ev: React.MouseEvent<HTMLButtonElement>) {
     if (ev.target instanceof HTMLButtonElement) ev.target.blur();
-    const { database, host, port, user, password } = state;
+    const { database, host, user, password, type, requireSsl } = state;
+    const port = state.port ? parseInt(state.port, 10) : 5432;
+    if (!type || Number.isNaN(port)) return;
     setTestResult('pending');
-    db()
-      .listDatabases({
-        database: database || 'postgres',
-        host: host || 'localhost',
-        port: (port && parseInt(port, 10)) || 5432,
-        user: user || 'postgres',
-        password: password || '',
-        requireSsl: state.requireSsl,
-      })
+    listDatabases({
+      database: database || 'postgres',
+      host: host || 'localhost',
+      port,
+      user: user || 'postgres',
+      password: password || '',
+      requireSsl: !!requireSsl || undefined,
+      type,
+    })
       .then(() => {
         setTestResult(true);
       })
@@ -99,6 +109,34 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
   return (
     <div className="new-connection">
       <div>
+        <div className="new-connection__field new-connection__field-select">
+          <div
+            className={`new-connection__field-option${state.type === 'postgres' ? ' new-connection__field-option--selected' : ''}`}
+            onClick={() =>
+              setState((state2) => ({ ...state2, type: 'postgres' }))
+            }
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                setState((state2) => ({ ...state2, type: 'postgres' }));
+              }
+            }}
+          >
+            Postgres
+          </div>
+          <div
+            className={`new-connection__field-option${state.type === 'mysql' ? ' new-connection__field-option--selected' : ''}`}
+            onClick={() => setState((state2) => ({ ...state2, type: 'mysql' }))}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                setState((state2) => ({ ...state2, type: 'mysql' }));
+              }
+            }}
+          >
+            MySQL
+          </div>
+        </div>
         <div className="new-connection__field">
           Host:{' '}
           <input
@@ -211,7 +249,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
           style={{ display: 'flex', paddingBottom: 5, position: 'relative' }}
         >
           <div style={{ marginRight: 10 }}>
-            <button type="button" onClick={onTestClick}>
+            <button type="button" onClick={onTestClick} disabled={!state.type}>
               Test...
             </button>{' '}
           </div>
@@ -233,8 +271,12 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
             </span>
           ) : null}
         </div>
-        <div style={{ marginTop: '4px', marginBottom: '4px' }}>
-          <button onClick={() => saveAndConnect()} type="button">
+        <div style={{ marginBottom: '4px' }}>
+          <button
+            onClick={() => saveAndConnect()}
+            type="button"
+            disabled={!state.type}
+          >
             <i className="fa fa-chain" /> Save &amp; Connect
           </button>{' '}
           {props.onCancel ? (
@@ -243,7 +285,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
             </button>
           ) : null}
         </div>
-        <button onClick={() => save()} type="button">
+        <button onClick={() => save()} type="button" disabled={!state.type}>
           <i className="fa fa-save" /> Just Save
         </button>{' '}
         {removeConfirmation ? (

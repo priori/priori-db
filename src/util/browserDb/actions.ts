@@ -1,4 +1,4 @@
-import { ConnectionConfiguration } from 'types';
+import { ConnectionConfiguration, ConnectionType } from 'types';
 import { assert } from '../assert';
 import { ConnectionGroupEntryIDB, transaction } from './entities';
 
@@ -12,6 +12,7 @@ export async function updateConnection(
   port: number,
   user: string,
   database: string,
+  type: ConnectionType,
 ) {
   transaction(async ({ appExecution }) =>
     appExecution.patch({
@@ -20,6 +21,7 @@ export async function updateConnection(
       port,
       user,
       database,
+      type,
     }),
   );
 }
@@ -39,7 +41,8 @@ async function getConnectionGroupId(cs: ConnectionConfiguration) {
       g2.database === cs.database &&
       g2.host === cs.host &&
       g2.user === cs.user &&
-      g2.port === cs.port,
+      g2.port === cs.port &&
+      g2.type === cs.type,
   );
   if (g) return g.id;
   const id = await transaction(({ connectionGroup }) =>
@@ -48,6 +51,7 @@ async function getConnectionGroupId(cs: ConnectionConfiguration) {
       host: cs.host,
       user: cs.user,
       port: cs.port,
+      type: cs.type,
     }),
   );
   connectionGroups.push({
@@ -56,6 +60,7 @@ async function getConnectionGroupId(cs: ConnectionConfiguration) {
     host: cs.host,
     user: cs.user,
     port: cs.port,
+    type: cs.type,
   });
   return id;
 }

@@ -2,7 +2,7 @@ import { assert } from 'util/assert';
 import { useEffect } from 'react';
 import { grantError } from 'util/errors';
 import { updateConnection } from 'util/browserDb/actions';
-import { db } from 'db/db';
+import { db, connect as dbConnect } from 'db/db';
 import state, { currentState } from './state';
 import { ConnectionConfiguration, FrameProps } from '../types';
 
@@ -92,8 +92,14 @@ export function askToCloseCurrent() {
 
 export async function connect(conf: ConnectionConfiguration, database: string) {
   try {
-    await db().connect(conf, database);
-    await updateConnection(conf.host, conf.port, conf.user, conf.database);
+    await dbConnect(conf, database);
+    await updateConnection(
+      conf.host,
+      conf.port,
+      conf.user,
+      conf.database,
+      conf.type,
+    );
     try {
       const schemas = await db().listAll();
       const roles = await db().listRoles();

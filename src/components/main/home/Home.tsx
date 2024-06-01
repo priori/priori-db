@@ -1,4 +1,4 @@
-import { db } from 'db/db';
+import { listDatabases } from 'db/db';
 import { useEffect, useState } from 'react';
 import { connect } from 'state/actions';
 import {
@@ -36,7 +36,7 @@ export function Home(props: AppState) {
   const basesService = useService<string[] | null>(
     () =>
       state.openConnection
-        ? db().listDatabases(state.openConnection)
+        ? listDatabases(state.openConnection)
         : Promise.resolve(null),
     [state.openConnection],
   );
@@ -213,7 +213,7 @@ export function Home(props: AppState) {
             <div
               className={`connection${
                 state.editConnections ? ' connection--editing' : ''
-              }`}
+              }${p.type === 'postgres' ? ' pg' : ' mysql'}`}
               onClick={
                 listingBases
                   ? undefined

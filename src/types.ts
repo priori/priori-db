@@ -115,6 +115,8 @@ export interface Tab0<T extends FrameType> {
 }
 export type Tab = Tab0<FrameType>;
 
+export type ConnectionType = 'postgres' | 'mysql';
+
 export interface ConnectionConfiguration {
   id: number;
   host: string;
@@ -122,6 +124,7 @@ export interface ConnectionConfiguration {
   database: string;
   user: string;
   password: string;
+  type: ConnectionType;
   requireSsl?: boolean;
 }
 

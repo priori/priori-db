@@ -110,8 +110,7 @@ function createStoreHelper<T extends { id: number }>(
       if (!v.id) return Promise.reject(new Error('id is required'));
       const old = (await toPromise(s.getAll(IDBKeyRange.only(v.id))))[0];
       if (!old) return Promise.reject(new Error('not found'));
-      for (const k in v)
-        if (v[k as keyof T] !== undefined) old[k] = v[k as keyof T];
+      for (const k in v) old[k] = v[k as keyof T];
       return toPromise(s.put(old));
     },
     count: () => {

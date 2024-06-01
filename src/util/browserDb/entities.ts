@@ -1,4 +1,4 @@
-import { ConnectionConfiguration } from 'types';
+import { ConnectionConfiguration, ConnectionType } from 'types';
 import { migrate, oldWebSqlData } from './migration';
 import { openIndexedDb, Store, transaction0 } from './util';
 
@@ -61,6 +61,7 @@ export interface AppExecutionEntryIDB {
   port?: number;
   host?: string;
   user?: string;
+  type?: ConnectionType;
   connectionGroupId?: number;
 }
 
@@ -70,6 +71,7 @@ export interface ConnectionGroupEntryIDB {
   port: number;
   host: string;
   user: string;
+  type: ConnectionType;
 }
 
 export const names = [
