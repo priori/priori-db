@@ -1,11 +1,17 @@
-import { ConnectionConfiguration, SequencePrivileges } from 'types';
-import { DB } from './pg/DB';
+import {
+  ConnectionConfiguration,
+  SequencePrivileges,
+  TablePrivileges,
+} from 'types';
+import hotLoadSafe from 'util/hotLoadSafe';
+import { DBInterface } from './DBInterface';
 import {
   connect as pgConnect,
   listDatabases as pgListDabases,
 } from './pg/Connection';
+import { DB } from './pg/DB';
 
-export interface DomainFrameInfo {
+export interface DomainInfo {
   type: {
     [k: string]: string | number | null | boolean;
   };
@@ -15,7 +21,7 @@ export interface DomainFrameInfo {
   hideInternalRoles: true;
 }
 
-export type SequenceInfo = {
+export interface SequenceInfo {
   type: {
     [key: string]: string | number | boolean | null;
   };
@@ -23,7 +29,68 @@ export type SequenceInfo = {
   comment: string | null;
   owner: string;
   privileges: { roleName: string; privileges: SequencePrivileges }[];
-};
+}
+
+export interface ColTableInfo {
+  column_name: string;
+  data_type: string;
+  column_default: string;
+  not_null: boolean | string;
+  comment: string | null;
+  length: number;
+  scale: number;
+  is_primary: boolean;
+}
+
+export interface TableInfo {
+  comment: string | null;
+  cols?: ColTableInfo[];
+  privileges?: {
+    roleName: string;
+    privileges: TablePrivileges;
+  }[];
+  indexes?: {
+    name: string;
+    definition: string;
+    comment: string | null;
+    type: string;
+    pk: boolean;
+    cols: string[];
+  }[];
+  table: {
+    tableowner: string;
+    tablespace: string;
+    hasindexes: boolean;
+    hasrules: boolean;
+    hastriggers: boolean;
+    rowsecurity: boolean;
+    uid: number;
+    view_definition: string | null;
+  } | null;
+  view: {
+    viewowner: string;
+    definition: string;
+  } | null;
+  mView: {
+    viewowner: string;
+    matviewowner: string;
+    tablespace: string;
+    hasindexes: boolean;
+    ispopulated: boolean;
+    definition: string;
+  } | null;
+  constraints:
+    | {
+        name: string;
+        type: string;
+        definition: string;
+        comment: string | null;
+      }[]
+    | null;
+  type: {
+    [k: string]: string | number | null | boolean;
+  };
+}
 
 export type SimpleValue =
   | number
@@ -147,12 +214,17 @@ export type Sort = {
   direction: 'asc' | 'desc';
 }[];
 
-export function db() {
-  return DB;
+export function db(): DBInterface {
+  if (hotLoadSafe.connectionType === 'postgres') return DB;
+  throw new Error('Unsupported database type');
 }
 
 export async function connect(c: ConnectionConfiguration, name: string) {
-  if (c.type === 'postgres') return pgConnect(c, name);
+  if (c.type === 'postgres') {
+    await pgConnect(c, name);
+    hotLoadSafe.connectionType = 'postgres';
+    return;
+  }
   throw new Error('Unsupported database type');
 }
 

@@ -14,7 +14,7 @@ import {
   SimpleValue,
 } from 'db/db';
 import { openConnection } from './Connection';
-import { DB } from './DB';
+import { cancelBackend } from './DB';
 
 function isMultipleQueries(q: string) {
   let inString = false;
@@ -95,7 +95,7 @@ export class PgQueryExecutor implements QueryExecutor {
   }
 
   async stopRunningQuery(): Promise<void> {
-    if (this.pid) await DB.cancelBackend(this.pid);
+    if (this.pid) await cancelBackend(this.pid);
   }
 
   destroy() {

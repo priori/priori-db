@@ -10,7 +10,7 @@ import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { useIsMounted } from 'util/hooks';
 import { assert } from 'util/assert';
 import { currentState } from 'state/state';
-import { db } from 'db/db';
+import { ColTableInfo, db } from 'db/db';
 import { TableInfoFrameProps, TablePrivileges } from '../../../types';
 import {
   reloadNav,
@@ -23,67 +23,6 @@ import { ChangeSchemaDialog } from '../../util/Dialog/ChangeSchemaDialog';
 import { ColumnForm, ColumnFormDialog } from './ColumnFormDialog';
 import { IndexForm, IndexDialog } from './IndexDialog';
 import { TablePrivilegesDialog } from './TablePrivilegesDialog';
-
-export interface ColTableInfo {
-  column_name: string;
-  data_type: string;
-  column_default: string;
-  not_null: boolean | string;
-  comment: string | null;
-  length: number;
-  scale: number;
-  is_primary: boolean;
-}
-
-export interface TableInfoFrameState {
-  comment: string | null;
-  cols?: ColTableInfo[];
-  privileges?: {
-    roleName: string;
-    privileges: TablePrivileges;
-  }[];
-  indexes?: {
-    name: string;
-    definition: string;
-    comment: string | null;
-    type: string;
-    pk: boolean;
-    cols: string[];
-  }[];
-  table: {
-    tableowner: string;
-    tablespace: string;
-    hasindexes: boolean;
-    hasrules: boolean;
-    hastriggers: boolean;
-    rowsecurity: boolean;
-    uid: number;
-    view_definition: string | null;
-  } | null;
-  view: {
-    viewowner: string;
-    definition: string;
-  } | null;
-  mView: {
-    viewowner: string;
-    matviewowner: string;
-    tablespace: string;
-    hasindexes: boolean;
-    ispopulated: boolean;
-    definition: string;
-  } | null;
-  constraints:
-    | {
-        name: string;
-        type: string;
-        definition: string;
-        comment: string | null;
-      }[]
-    | null;
-  type: {
-    [k: string]: string | number | null | boolean;
-  };
-}
 
 export function TdCheck({ checked }: { checked: boolean }) {
   return (
@@ -101,40 +40,10 @@ export function TdCheck({ checked }: { checked: boolean }) {
 }
 
 export function TableInfoFrame(props: TableInfoFrameProps) {
-  const service = useService(async () => {
-    const [
-      comment,
-      cols,
-      indexes,
-      table,
-      view,
-      mView,
-      type,
-      constraints,
-      privileges,
-    ] = await Promise.all([
-      db().tableComment(props.schema, props.table),
-      db().listCols(props.schema, props.table),
-      db().listIndexes(props.schema, props.table),
-      db().pgTable(props.schema, props.table),
-      db().pgView(props.schema, props.table),
-      db().pgMView(props.schema, props.table),
-      db().pgType(props.schema, props.table),
-      db().listConstrants(props.schema, props.table),
-      db().tablePrivileges(props.schema, props.table),
-    ]);
-    return {
-      comment,
-      cols,
-      indexes,
-      table,
-      view,
-      type,
-      mView,
-      constraints,
-      privileges,
-    } as TableInfoFrameState;
-  }, []);
+  const service = useService(
+    async () => db().tableInfo(props.schema, props.table),
+    [props.schema, props.table],
+  );
 
   useTab({
     f5() {

@@ -4,7 +4,7 @@ import { grantError } from 'util/errors';
 import hls from 'util/hotLoadSafe';
 import { ConnectionConfiguration } from 'types';
 import { QueryResultData, SimpleValue } from 'db/db';
-import { DB } from './DB';
+import { existsSomePendingProcess } from './DB';
 import { PgQueryExecutor } from './QueryExecutor';
 
 pg.types.setTypeParser(1082, (val) => val);
@@ -152,7 +152,7 @@ export async function first(
 export async function hasOpenConnection() {
   if (!hls.pool || PgQueryExecutor.pids().length === 0) return false;
   const pids = PgQueryExecutor.pids();
-  return DB.existsSomePendingProcess(...pids);
+  return existsSomePendingProcess(...pids);
 }
 
 export async function closeAll() {
