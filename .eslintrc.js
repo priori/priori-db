@@ -1,6 +1,6 @@
 module.exports = {
   extends: ['erb', 'plugin:@typescript-eslint/eslint-recommended'],
-  plugins: ['@typescript-eslint/eslint-plugin'],
+  plugins: ['@typescript-eslint'],
   rules: {
     'import/no-extraneous-dependencies': 'off',
     'import/no-unresolved': 'error',
@@ -40,11 +40,8 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': ['error'],
   },
   parserOptions: {
-    ecmaVersion: 2020,
+    ecmaVersion: 2022,
     sourceType: 'module',
-    project: './tsconfig.json',
-    tsconfigRootDir: __dirname,
-    createDefaultProgram: true,
   },
   settings: {
     'import/resolver': {

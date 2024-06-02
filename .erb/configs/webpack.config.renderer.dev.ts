@@ -11,15 +11,6 @@ import baseConfig from './webpack.config.base';
 import webpackPaths from './webpack.paths';
 import checkNodeEnv from '../scripts/check-node-env';
 
-export function assert(
-  condition: unknown,
-  message?: string
-): asserts condition {
-  if (!condition) {
-    throw new Error(message ?? 'Assertion failed');
-  }
-}
-
 // When an ESLint server is running, we can't set the NODE_ENV so we'll check if it's
 // at the dev webpack config is not accidentally run in a production environment
 if (process.env.NODE_ENV === 'production') {
@@ -28,22 +19,21 @@ if (process.env.NODE_ENV === 'production') {
 
 const port = process.env.PORT || 1212;
 const manifest = path.resolve(webpackPaths.dllPath, 'renderer.json');
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const requiredByDLLConfig = module.parent!.filename.includes(
-  'webpack.config.renderer.dev.dll'
-);
+const skipDLLs =
+  module.parent?.filename.includes('webpack.config.renderer.dev.dll') ||
+  module.parent?.filename.includes('webpack.config.eslint');
 
 /**
  * Warn if the DLL is not built
  */
 if (
-  !requiredByDLLConfig &&
+  !skipDLLs &&
   !(fs.existsSync(webpackPaths.dllPath) && fs.existsSync(manifest))
 ) {
   console.log(
     chalk.black.bgYellow.bold(
-      'The DLL files are missing. Sit back while we build them for you with "npm run build-dll"'
-    )
+      'The DLL files are missing. Sit back while we build them for you with "npm run build-dll"',
+    ),
   );
   execSync('npm run postinstall');
 }
@@ -53,7 +43,7 @@ const configuration: webpack.Configuration = {
 
   mode: 'development',
 
-  target: 'electron-renderer', // opt out to node integration ['web', 'electron-renderer'],
+  target: 'electron-renderer',
 
   entry: [
     `webpack-dev-server/client?http://localhost:${port}/dist`,
@@ -65,15 +55,12 @@ const configuration: webpack.Configuration = {
     path: webpackPaths.distRendererPath,
     publicPath: '/',
     filename: 'renderer.dev.js',
-    // opt out to node integration library: {
-    // opt out to node integration type: 'umd',
-    // opt out to node integration },
   },
 
   module: {
     rules: [
       {
-        test: /\.s?css$/,
+        test: /\.s?(c|a)ss$/,
         use: [
           'style-loader',
           {
@@ -100,13 +87,32 @@ const configuration: webpack.Configuration = {
       },
       // Images
       {
-        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        test: /\.(png|jpg|jpeg|gif)$/i,
         type: 'asset/resource',
+      },
+      // SVG
+      {
+        test: /\.svg$/,
+        use: [
+          {
+            loader: '@svgr/webpack',
+            options: {
+              prettier: false,
+              svgo: false,
+              svgoConfig: {
+                plugins: [{ removeViewBox: false }],
+              },
+              titleProp: true,
+              ref: true,
+            },
+          },
+          'file-loader',
+        ],
       },
     ],
   },
   plugins: [
-    ...(requiredByDLLConfig
+    ...(skipDLLs
       ? []
       : [
           new webpack.DllReferencePlugin({
@@ -138,7 +144,7 @@ const configuration: webpack.Configuration = {
       debug: true,
     }),
 
-    new ReactRefreshWebpackPlugin({ overlay: false }),
+    new ReactRefreshWebpackPlugin(),
 
     new HtmlWebpackPlugin({
       filename: path.join('index.html'),
@@ -171,30 +177,29 @@ const configuration: webpack.Configuration = {
     historyApiFallback: {
       verbose: true,
     },
-    client: {
-      overlay: false
-    },
     setupMiddlewares(middlewares) {
       console.log('Starting preload.js builder...');
       const preloadProcess = spawn('npm', ['run', 'start:preload'], {
         shell: true,
         stdio: 'inherit',
       })
-        .on('close', (code: number) => {
-          assert(code !== null && code !== undefined);
-          process.exit(code);
-        })
+        .on('close', (code: number) => process.exit(code!))
         .on('error', (spawnError) => console.error(spawnError));
 
       console.log('Starting Main Process...');
-      spawn('npm', ['run', 'start:main'], {
+      let args = ['run', 'start:main'];
+      if (process.env.MAIN_ARGS) {
+        args = args.concat(
+          ['--', ...process.env.MAIN_ARGS.matchAll(/"[^"]+"|[^\s"]+/g)].flat(),
+        );
+      }
+      spawn('npm', args, {
         shell: true,
         stdio: 'inherit',
       })
         .on('close', (code: number) => {
           preloadProcess.kill();
-          assert(code !== null && code !== undefined);
-          process.exit(code);
+          process.exit(code!);
         })
         .on('error', (spawnError) => console.error(spawnError));
       return middlewares;
