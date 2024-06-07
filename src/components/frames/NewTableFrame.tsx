@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { db } from 'db/db';
 import { useService } from 'util/useService';
+import { assert } from 'util/assert';
 import { NewTableFrameProps, TableColumnType } from '../../types';
 import { ListInput } from '../util/ListInput';
 import { closeThisAndReloadNav, showError } from '../../state/actions';
@@ -58,7 +59,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
   } as { constraintsOpen: boolean; newTable: NewTable });
 
   const typesService = useService(() => db().types(), []);
-  const types = typesService.lastValidData || [];
+  const types = typesService.lastValidData;
 
   function save() {
     db()
@@ -96,6 +97,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
     set: (e2: ColumnNewTable) => void,
     drop: (() => void) | null,
   ) => {
+    assert(types);
     return (
       <div className="columns-form-column">
         <div className="columns-form-column-name">
