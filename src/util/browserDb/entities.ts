@@ -121,14 +121,13 @@ export const openIndexedDbP = oldWebSqlData()
     return db;
   });
 
-export function transaction<R>(fn: (stores: Stores) => Promise<R>) {
-  return openIndexedDbP.then((idb) =>
-    transaction0<R, (typeof names)[number]>(
-      idb,
-      names as unknown as (typeof names)[number][],
-      fn as (stores: {
-        [k in (typeof names)[number]]: Store<unknown>;
-      }) => Promise<R>,
-    ),
+export async function transaction<R>(fn: (stores: Stores) => Promise<R>) {
+  const idb = await openIndexedDbP;
+  return transaction0<R, (typeof names)[number]>(
+    idb,
+    names as unknown as (typeof names)[number][],
+    fn as (stores: {
+      [k in (typeof names)[number]]: Store<unknown>;
+    }) => Promise<R>,
   );
 }
