@@ -1,13 +1,14 @@
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { useRef, useState } from 'react';
-import { EditorQuerySelectorGroup, QuerySelector } from './QuerySelector';
+import { currentState } from 'state/state';
 import { Editor } from '../../Editor';
 import { DataGrid } from '../../util/DataGrid/DataGrid';
-import { Notices } from './Notices';
 import { FavoriteControl } from './FavoriteControl';
-import { useQueryFrame } from './useQueryFrame';
+import { Notices } from './Notices';
 import { OpenFavoriteDialog } from './OpenFavoriteDialog';
 import { OpenRecentQueryDialog } from './OpenRecentQueryDialog';
+import { EditorQuerySelectorGroup, QuerySelector } from './QuerySelector';
+import { useQueryFrame } from './useQueryFrame';
 
 function focus(input: HTMLInputElement | HTMLButtonElement | null) {
   if (input) {
@@ -294,14 +295,17 @@ export function QueryFrame({ uid }: { uid: number }) {
                 Save SQL query to a file (.sql)
               </button>
               <AddToFavoritesDialogButton onEnter={onFavoriteSave} />
-              <button
-                style={{ marginTop: 15 }}
-                className="query-tab--save-stdout"
-                type="button"
-                onClick={onStdOutFileClick}
-              >
-                Export query response to a file (PostgreSQL STDOUT)
-              </button>
+              {currentState()?.currentConnectionConfiguration?.type ===
+              'postgres' ? (
+                <button
+                  style={{ marginTop: 15 }}
+                  className="query-tab--save-stdout"
+                  type="button"
+                  onClick={onStdOutFileClick}
+                >
+                  Export query response to a file (PostgreSQL STDOUT)
+                </button>
+              ) : null}
             </Dialog>
           ) : null}
           {openDialogOpen ? (
@@ -328,13 +332,16 @@ export function QueryFrame({ uid }: { uid: number }) {
               >
                 Open Recent Query
               </button>
-              <button
-                type="button"
-                className="query-tab--save-stdout"
-                onClick={onStdInFileClick}
-              >
-                Import data from a file (PostgreSQL STDIN)
-              </button>
+              {currentState()?.currentConnectionConfiguration?.type ===
+              'postgres' ? (
+                <button
+                  type="button"
+                  className="query-tab--save-stdout"
+                  onClick={onStdInFileClick}
+                >
+                  Import data from a file (PostgreSQL STDIN)
+                </button>
+              ) : null}
             </Dialog>
           ) : null}{' '}
           {selectedGroup ? (

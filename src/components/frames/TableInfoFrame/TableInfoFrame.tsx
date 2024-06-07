@@ -61,6 +61,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     mView: null,
     constraints: null,
     privileges: null,
+    subType: null,
   };
 
   const [edit, set] = useState({
@@ -88,23 +89,21 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   const isMounted = useIsMounted();
 
   const onUpdateComment = useEvent(async (text: string) => {
-    if (state.table)
-      await db().updateTable(props.schema, props.table, { comment: text });
-    else if (state.mView)
+    if (state.subType === 'mview')
       await db().updateMView(props.schema, props.table, { comment: text });
-    else if (state.view)
+    else if (state.subType === 'view')
       await db().updateView(props.schema, props.table, { comment: text });
+    else await db().updateTable(props.schema, props.table, { comment: text });
     await service.reload();
     if (isMounted()) set({ ...edit, editComment: false });
   });
 
   const onChangeSchema = useEvent(async (schema: string) => {
-    if (state.table)
-      await db().updateTable(props.schema, props.table, { schema });
-    else if (state.mView)
+    if (state.subType === 'mview')
       await db().updateMView(props.schema, props.table, { schema });
-    else if (state.view)
+    else if (state.subType === 'view')
       await db().updateView(props.schema, props.table, { schema });
+    else await db().updateTable(props.schema, props.table, { schema });
     changeSchema(props.uid, schema);
     reloadNav();
     if (isMounted()) set({ ...edit, updateSchema: false });
@@ -162,12 +161,11 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   });
 
   const onRename = useEvent(async (name: string) => {
-    if (state.table)
-      await db().updateTable(props.schema, props.table, { name });
-    else if (state.mView)
+    if (state.subType === 'mview')
       await db().updateMView(props.schema, props.table, { name });
-    else if (state.view)
+    else if (state.subType === 'view')
       await db().updateView(props.schema, props.table, { name });
+    else await db().updateTable(props.schema, props.table, { name });
     renameEntity(props.uid, name);
     if (!isMounted()) return;
     await reloadNav();
@@ -247,7 +245,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   );
 
   const commentIndex = useEvent(async (index: string, comment: string) => {
-    await db().commentIndex(props.schema, props.table, index, comment);
+    await db().commentIndex!(props.schema, props.table, index, comment);
     if (!isMounted()) return;
     await service.reload();
     if (!isMounted()) return;
@@ -424,7 +422,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
               : drop
           }
         >
-          Drop {state.view ? 'View' : state.table ? 'Table' : ''}{' '}
+          Drop{' '}
+          {state.subType === 'view' || state.subType === 'mview'
+            ? 'View'
+            : state.subType === 'table'
+              ? 'Table'
+              : ''}{' '}
           <i className="fa fa-close" />
         </button>{' '}
         {edit.dropCascadeConfirmation || edit.dropConfirmation ? (
@@ -471,7 +474,10 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       <div
         className="hd"
         title={
-          size.lastValidData?.size === 0 && state.view ? 'View' : undefined
+          size.lastValidData?.size === 0 &&
+          (state.subType === 'view' || state.subType === 'mview')
+            ? 'View'
+            : undefined
         }
         style={size.status === 'starting' ? { opacity: 0.3 } : undefined}
       >
@@ -555,7 +561,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                   <th>Length</th>
                   <th>Scale</th>
                   <th>Primary key</th>
-                  {state.table ? <th colSpan={2} /> : null}
+                  {state.subType === 'table' ? <th colSpan={2} /> : null}
                 </tr>
               </thead>
               <tbody>
@@ -676,7 +682,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         {col.scale || null}
                       </td>
                       <TdCheck checked={col.is_primary} />
-                      {state.table ? (
+                      {state.subType === 'table' ? (
                         <td
                           className="actions"
                           style={{
@@ -747,7 +753,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           )}
         </>
       ) : null}
-      {state.cols?.length && state.table ? (
+      {state.cols?.length && state.subType === 'table' ? (
         <div className="actions">
           <button
             type="button"
@@ -838,7 +844,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                       className={!index.comment ? 'actions' : undefined}
                     >
                       {index.comment}
-                      {index.comment ? (
+                      {index.comment && db().commentIndex ? (
                         <>
                           {' '}
                           <button
@@ -852,7 +858,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                             <i className="fa fa-pencil" />
                           </button>
                         </>
-                      ) : (
+                      ) : db().commentIndex ? (
                         <button
                           type="button"
                           className="simple-button"
@@ -862,7 +868,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         >
                           Create Comment <i className="fa fa-pencil" />
                         </button>
-                      )}
+                      ) : null}
                       {index.name === edit.commentIndex ? (
                         <InputDialog
                           type="textarea"

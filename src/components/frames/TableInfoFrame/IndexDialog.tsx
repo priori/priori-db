@@ -4,6 +4,8 @@ import { grantError } from 'util/errors';
 import { useEvent } from 'util/useEvent';
 import { showError } from 'state/actions';
 import { useIsMounted } from 'util/hooks';
+import { db } from 'db/db';
+import { useService } from 'util/useService';
 
 export interface IndexForm {
   method?: string | undefined;
@@ -50,6 +52,12 @@ export function IndexDialog({
       if (isMounted()) setExecuting(false);
     }
   });
+  const indexesTypesService = useService(
+    () =>
+      db().indexesTypes ? db().indexesTypes!() : Promise.resolve(undefined),
+    [],
+  );
+  const indexesTypes = indexesTypesService.lastValidData;
 
   const onChangeColNulls = useEvent((val: string, index: number) => {
     if (index >= form.cols.length) {
@@ -137,41 +145,42 @@ export function IndexDialog({
             </div>
           </div>
         ) : null}
-        <select
-          onChange={(e) => {
-            setForm(
-              e.target.value
-                ? {
-                    ...form,
-                    method: e.target.value,
-                  }
-                : form.unique
+        {db().indexesTypes ? (
+          <select
+            onChange={(e) => {
+              setForm(
+                e.target.value
                   ? {
-                      unique: form.unique,
-                      cols: form.cols,
+                      ...form,
+                      method: e.target.value,
                     }
-                  : {
-                      cols: form.cols,
-                    },
-            );
-          }}
-          style={
-            !form.method
-              ? { color: '#777', marginBottom: 0 }
-              : { marginBottom: 0 }
-          }
-          value={form.method || ''}
-        >
-          <option value="" style={{ color: '#ccc' }} disabled hidden>
-            Method
-          </option>
-          <option value="btree">btree</option>
-          <option value="hash">hash</option>
-          <option value="gist">gist</option>
-          <option value="spgist">spgist</option>
-          <option value="gin">gin</option>
-          <option value="brin">brin</option>
-        </select>
+                  : form.unique
+                    ? {
+                        unique: form.unique,
+                        cols: form.cols,
+                      }
+                    : {
+                        cols: form.cols,
+                      },
+              );
+            }}
+            style={
+              !form.method
+                ? { color: '#777', marginBottom: 0 }
+                : { marginBottom: 0 }
+            }
+            value={form.method || ''}
+          >
+            <option value="" style={{ color: '#ccc' }} disabled hidden>
+              Method
+            </option>
+            {indexesTypes?.map((t) => (
+              <option value={t} key={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        ) : null}
         <div
           tabIndex={0}
           onKeyDown={
@@ -228,15 +237,17 @@ export function IndexDialog({
               <option value="asc">ASC</option>
               <option value="desc">DESC</option>
             </select>
-            <select
-              style={{ flex: 1, marginLeft: '5px' }}
-              value={(col && col.nulls) || ''}
-              onChange={(e) => onChangeColNulls(e.target.value, index)}
-            >
-              <option value="" />
-              <option value="last">NULLS LAST</option>
-              <option value="first">NULLS FIRST</option>
-            </select>
+            {db().nullsLast ? (
+              <select
+                style={{ flex: 1, marginLeft: '5px' }}
+                value={(col && col.nulls) || ''}
+                onChange={(e) => onChangeColNulls(e.target.value, index)}
+              >
+                <option value="" />
+                <option value="last">NULLS LAST</option>
+                <option value="first">NULLS FIRST</option>
+              </select>
+            ) : null}
             {col === null ? (
               <span style={{ flex: 0.3 }} />
             ) : (

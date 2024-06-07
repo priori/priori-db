@@ -1463,6 +1463,7 @@ export const DB: DBInterface = {
       mView,
       constraints,
       privileges,
+      subType: mView ? 'mview' : view ? 'view' : 'table',
     } as TableInfo;
   },
 
@@ -2215,4 +2216,10 @@ export const DB: DBInterface = {
       `)) as { open: boolean }
     )?.open;
   },
+
+  async indexesTypes() {
+    return ['btree', 'hash', 'gist', 'spgist', 'gin', 'brin'];
+  },
+
+  nullsLast: true,
 };

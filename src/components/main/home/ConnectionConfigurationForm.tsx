@@ -55,8 +55,15 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
 
   function save() {
     const { database, host, user, password, type } = state;
-    const port = state.port ? parseInt(state.port, 10) : 5432;
+    const port = state.port
+      ? parseInt(state.port, 10)
+      : type === 'postgres'
+        ? 5432
+        : type === 'mysql'
+          ? 3306
+          : null;
     if (!type || Number.isNaN(port)) return;
+    assert(port);
     props.onJustSave({
       ...(connection?.id ? { id: connection.id } : {}),
       database: database || 'postgres',
@@ -71,8 +78,15 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
 
   function saveAndConnect() {
     const { database, host, user, password, type, requireSsl } = state;
-    const port = state.port ? parseInt(state.port, 10) : 5432;
+    const port = state.port
+      ? parseInt(state.port, 10)
+      : type === 'postgres'
+        ? 5432
+        : type === 'mysql'
+          ? 3306
+          : null;
     if (!type || Number.isNaN(port)) return;
+    assert(port);
     props.onSaveAndConnect({
       ...(connection?.id ? { id: connection.id } : {}),
       database: database || 'postgres',
@@ -88,8 +102,15 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
   function onTestClick(ev: React.MouseEvent<HTMLButtonElement>) {
     if (ev.target instanceof HTMLButtonElement) ev.target.blur();
     const { database, host, user, password, type, requireSsl } = state;
-    const port = state.port ? parseInt(state.port, 10) : 5432;
+    const port = state.port
+      ? parseInt(state.port, 10)
+      : type === 'postgres'
+        ? 5432
+        : type === 'mysql'
+          ? 3306
+          : null;
     if (!type || Number.isNaN(port)) return;
+    assert(port);
     setTestResult('pending');
     listDatabases({
       database: database || 'postgres',
@@ -191,7 +212,13 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
           <div>
             Port: <br />
             <input
-              placeholder="5432"
+              placeholder={
+                connection?.type === 'postgres'
+                  ? '5432'
+                  : connection?.type === 'mysql'
+                    ? '3306'
+                    : ''
+              }
               style={{ width: 70, marginBottom: 0 }}
               defaultValue={connection ? connection.port : ''}
               onChange={(e) =>

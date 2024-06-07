@@ -2,6 +2,7 @@ import {
   EntityType,
   Filter,
   Notice,
+  QueryExecutor,
   QueryResultData,
   SequencePrivileges,
   SimpleValue,
@@ -10,7 +11,6 @@ import {
   TablePrivileges,
 } from 'types';
 import { DomainInfo, SequenceInfo, TableInfo } from './db';
-import { PgQueryExecutor } from './pg/QueryExecutor';
 
 export interface DBInterface {
   function(
@@ -76,11 +76,13 @@ export interface DBInterface {
     comment: string;
     pgNamesspace: {
       [key: string]: SimpleValue;
-    };
+    } | null;
   }>;
   sequence(schema: string, name: string): Promise<SequenceInfo>;
   domain(schema: string, name: string): Promise<DomainInfo>;
-  updateSchemaComment(schema: string, comment: string): Promise<void>;
+  updateSchemaComment:
+    | null
+    | ((schema: string, comment: string) => Promise<void>);
   select({
     schema,
     table,
@@ -108,7 +110,7 @@ export interface DBInterface {
       primaryKey: boolean;
     }[];
   }): Promise<void>;
-  renameSchema(schema: string, name: string): Promise<void>;
+  renameSchema: null | ((schema: string, name: string) => Promise<void>);
   alterSchemaOwner(schema: string, owner: string): Promise<void>;
   alterTableOwner(schema: string, table: string, owner: string): Promise<void>;
   alterFuncOwner(schema: string, name: string, owner: string): Promise<void>;
@@ -181,24 +183,26 @@ export interface DBInterface {
   ): Promise<void>;
   removeCol(schema: string, table: string, col: string): Promise<void>;
   removeIndex(schema: string, _: string, index: string): Promise<void>;
-  commentIndex(
-    schema: string,
-    _: string,
-    index: string,
-    comment: string,
-  ): Promise<void>;
+  commentIndex:
+    | undefined
+    | ((
+        schema: string,
+        _: string,
+        index: string,
+        comment: string,
+      ) => Promise<void>);
   commentColumn(
     schema: string,
     table: string,
     col: string,
     comment: string,
   ): Promise<void>;
-  renameIndex(
+  renameIndex: (
     schema: string,
     _: string,
     index: string,
     newName: string,
-  ): Promise<void>;
+  ) => Promise<void>;
   renameColumn(
     schema: string,
     table: string,
@@ -322,7 +326,9 @@ export interface DBInterface {
     onNotice: (n: Notice) => void,
     onPid: (pid: number | null) => void,
     onError: (e: Error) => void,
-  ): PgQueryExecutor;
+  ): QueryExecutor;
   buildFilterWhere(filter: Filter): string;
   inOpenTransaction(id: number): Promise<boolean>;
+  indexesTypes: (() => Promise<string[]>) | undefined;
+  nullsLast: boolean;
 }

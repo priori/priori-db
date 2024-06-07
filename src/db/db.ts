@@ -10,6 +10,8 @@ import {
   listDatabases as pgListDabases,
 } from './pg/Connection';
 import { DB } from './pg/DB';
+import { mysqlConnect, mysqlListDatabases } from './mysql/mysql';
+import { mysqlDb } from './mysql/mysqlDb';
 
 export interface DomainInfo {
   type: {
@@ -37,13 +39,14 @@ export interface ColTableInfo {
   column_default: string;
   not_null: boolean | string;
   comment: string | null;
-  length: number;
-  scale: number;
+  length: number | null;
+  scale: number | null;
   is_primary: boolean;
 }
 
 export interface TableInfo {
   comment: string | null;
+  subType: 'table' | 'view' | 'mview';
   cols?: ColTableInfo[];
   privileges?: {
     roleName: string;
@@ -57,7 +60,7 @@ export interface TableInfo {
     pk: boolean;
     cols: string[];
   }[];
-  table: {
+  table: null | {
     tableowner: string;
     tablespace: string;
     hasindexes: boolean;
@@ -89,7 +92,7 @@ export interface TableInfo {
     | null;
   type: {
     [k: string]: string | number | null | boolean;
-  };
+  } | null;
 }
 
 export type SimpleValue =
@@ -216,6 +219,7 @@ export type Sort = {
 
 export function db(): DBInterface {
   if (hotLoadSafe.connectionType === 'postgres') return DB;
+  if (hotLoadSafe.connectionType === 'mysql') return mysqlDb;
   throw new Error('Unsupported database type');
 }
 
@@ -225,6 +229,11 @@ export async function connect(c: ConnectionConfiguration, name: string) {
     hotLoadSafe.connectionType = 'postgres';
     return;
   }
+  if (c.type === 'mysql') {
+    await mysqlConnect(c, name);
+    hotLoadSafe.connectionType = 'mysql';
+    return;
+  }
   throw new Error('Unsupported database type');
 }
 
@@ -232,5 +241,6 @@ export async function listDatabases(
   c: Omit<ConnectionConfiguration, 'id'> | ConnectionConfiguration,
 ) {
   if (c.type === 'postgres') return pgListDabases(c);
+  if (c.type === 'mysql') return mysqlListDatabases(c);
   throw new Error('Unsupported database type');
 }

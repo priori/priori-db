@@ -122,13 +122,13 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await db().updateSchemaComment(props.schema, text);
+    await db().updateSchemaComment!(props.schema, text);
     await service.reload();
     set({ ...state, editComment: false });
   });
 
   const onRename = useEvent(async (newName: string) => {
-    await db().renameSchema(props.schema, newName);
+    await db().renameSchema!(props.schema, newName);
     renameSchema(props.uid, newName);
     reloadNav();
     set({ ...state, rename: false });
@@ -177,15 +177,26 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
     <div>
       <h1>{props.schema}</h1>
       <div className="table-info-frame__actions">
-        <button
-          type="button"
-          onClick={() => set({ ...state, editComment: true })}
-        >
-          Comment <i className="fa fa-file-text-o" />
-        </button>{' '}
-        <button type="button" onClick={() => set({ ...state, rename: true })}>
-          Rename <i className="fa fa-pencil" />
-        </button>{' '}
+        {db().updateSchemaComment ? (
+          <>
+            <button
+              type="button"
+              onClick={() => set({ ...state, editComment: true })}
+            >
+              Comment <i className="fa fa-file-text-o" />
+            </button>{' '}
+          </>
+        ) : null}
+        {db().renameSchema ? (
+          <>
+            <button
+              type="button"
+              onClick={() => set({ ...state, rename: true })}
+            >
+              Rename <i className="fa fa-pencil" />
+            </button>{' '}
+          </>
+        ) : null}
         {state.rename ? (
           <RenameDialog
             relativeTo="previousSibling"
