@@ -459,3 +459,27 @@ body div.frame.role div.dialog-form {
   right: 20px;
 }
 */
+span.default-input:before {
+  content: 'SQL';
+  position: absolute;
+  margin-top: 7px;
+  right: 29px;
+  background: #35d;
+  line-height: 24px;
+  height: 23px;
+  font-weight: bold;
+  color: white;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 13px;
+  letter-spacing: 0.7px;
+}
+span.default-input:focus-within:before {
+  margin-top: -25px;
+  padding: 0 3px 0 4px;
+  right: 20px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  height: 20px;
+  line-height: 20px;
+}

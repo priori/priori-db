@@ -42,6 +42,7 @@ export function ColumnFormDialog({
   const isMounted = useIsMounted();
   const onSave = useEvent(async () => {
     try {
+      setError(null);
       setExecuting(true);
       await onUpdate(form);
     } catch (e) {
@@ -198,15 +199,15 @@ export function ColumnFormDialog({
           )}{' '}
           NOT NULL
         </div>
-        <input
-          disabled={fieldsDisabled}
-          type="text"
-          placeholder="Default"
-          value={form.default || ''}
-          onChange={(e) =>
-            setForm({ ...form, default: e.target.value || undefined })
-          }
-        />
+        <span className="default-input">
+          <input
+            disabled={fieldsDisabled}
+            type="text"
+            placeholder="Default"
+            value={form.default || ''}
+            onChange={(e) => setForm({ ...form, default: e.target.value })}
+          />
+        </span>
         <div>
           <button
             disabled={fieldsDisabled}
