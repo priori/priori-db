@@ -144,7 +144,7 @@ const configuration: webpack.Configuration = {
       debug: true,
     }),
 
-    new ReactRefreshWebpackPlugin(),
+    new ReactRefreshWebpackPlugin({ overlay: false }),
 
     new HtmlWebpackPlugin({
       filename: path.join('index.html'),
@@ -177,6 +177,7 @@ const configuration: webpack.Configuration = {
     historyApiFallback: {
       verbose: true,
     },
+    client: false,
     setupMiddlewares(middlewares) {
       console.log('Starting preload.js builder...');
       const preloadProcess = spawn('npm', ['run', 'start:preload'], {
