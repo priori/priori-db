@@ -297,7 +297,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
                 style={{ width: 225, height: 500, zIndex: 10 }}
                 schemas={state.schemas}
                 tabs={state.tabs}
-                roles={state.roles ?? []}
+                roles={state.roles}
                 rolesOpen={state.rolesOpen}
               />
             ) : null}
@@ -307,7 +307,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
           style={{ width: leftWidth }}
           schemas={state.schemas}
           tabs={state.tabs}
-          roles={state.roles ?? []}
+          roles={state.roles}
           disabled={leftWidth <= 40}
           rolesOpen={state.rolesOpen}
         />

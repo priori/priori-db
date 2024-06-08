@@ -72,7 +72,7 @@ export type NavTreeItem =
 
 function buildTree(
   schemas: NavSchema[],
-  roles: { name: string; isUser: boolean }[],
+  roles: { name: string; isUser: boolean }[] | undefined,
   rolesOpen: boolean,
 ) {
   const root: NavTreeItem[] = [];
@@ -199,7 +199,7 @@ function buildTree(
 
 export function useTree(
   schemas: NavSchema[],
-  roles: { name: string; isUser: boolean }[],
+  roles: { name: string; isUser: boolean }[] | undefined,
   rolesOpen: boolean,
   tabs: Tabs,
   focused: Focus | null,

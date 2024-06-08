@@ -35,7 +35,7 @@ export type Focus =
 
 export function useNavTree(
   schemas: NavSchema[],
-  roles: { name: string; isUser: boolean }[],
+  roles: { name: string; isUser: boolean }[] | undefined,
   rolesOpen: boolean,
   tabs: Tabs,
   onBlur: (v: 'down' | 'up' | 'prev' | 'next') => void,

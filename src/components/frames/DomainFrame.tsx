@@ -109,7 +109,7 @@ export function DomainFrame(props: DomainFrameProps) {
 
   const revokeYesClick = useEvent(() => {
     db()
-      .revokeDomain(props.schema, props.name, state.revoke)
+      .privileges?.revokeDomain(props.schema, props.name, state.revoke)
       .then(
         () => {
           service.reload();
@@ -127,7 +127,7 @@ export function DomainFrame(props: DomainFrameProps) {
   const grantClick = useEvent(() => {
     if (typeof state.grant === 'string')
       db()
-        .grantDomain(props.schema, props.name, state.grant)
+        .privileges?.grantDomain(props.schema, props.name, state.grant)
         .then(
           () => {
             service.reload();
@@ -161,7 +161,7 @@ export function DomainFrame(props: DomainFrameProps) {
 
   const internalRoles = useMemo(
     () =>
-      service.lastValidData?.privileges.filter((v) => v.startsWith('pg_'))
+      service.lastValidData?.privileges?.filter((v) => v.startsWith('pg_'))
         .length,
     [service.lastValidData?.privileges],
   );
@@ -302,7 +302,7 @@ export function DomainFrame(props: DomainFrameProps) {
         </div>
       ) : null}
 
-      {service?.lastValidData?.privileges ? (
+      {service?.lastValidData?.privileges && db().privileges ? (
         <>
           <h2 style={{ marginBottom: 3 }}>
             Privileges /{' '}
@@ -409,7 +409,7 @@ export function DomainFrame(props: DomainFrameProps) {
                   {roles
                     ?.filter(
                       (r) =>
-                        !service?.lastValidData?.privileges.find(
+                        !service?.lastValidData?.privileges?.find(
                           (r2) => r2 === r.name,
                         ),
                     )

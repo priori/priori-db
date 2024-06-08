@@ -18,7 +18,7 @@ export interface DomainInfo {
     [k: string]: string | number | null | boolean;
   };
   comment: string | null;
-  privileges: string[];
+  privileges?: string[];
   owner: string;
   hideInternalRoles: true;
 }
@@ -30,7 +30,7 @@ export interface SequenceInfo {
   lastValue: number | string | null;
   comment: string | null;
   owner: string;
-  privileges: { roleName: string; privileges: SequencePrivileges }[];
+  privileges?: { roleName: string; privileges: SequencePrivileges }[];
 }
 
 export interface ColTableInfo {

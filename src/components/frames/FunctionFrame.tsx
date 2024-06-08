@@ -87,7 +87,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
 
   const revokeYesClick = useEvent(() => {
     db()
-      .revokeFunction(props.schema, props.name, state.revoke)
+      .privileges?.revokeFunction(props.schema, props.name, state.revoke)
       .then(
         () => {
           service.reload();
@@ -105,7 +105,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
   const grantClick = useEvent(() => {
     if (typeof state.grant === 'string')
       db()
-        .grantFunction(props.schema, props.name, state.grant)
+        .privileges?.grantFunction(props.schema, props.name, state.grant)
         .then(
           () => {
             service.reload();
@@ -168,7 +168,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
 
   const internalRoles = useMemo(
     () =>
-      service.lastValidData?.privileges.filter((v) => v.startsWith('pg_'))
+      service.lastValidData?.privileges?.filter((v) => v.startsWith('pg_'))
         .length,
     [service.lastValidData?.privileges],
   );
@@ -427,7 +427,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
                   <option value="" />
                   {roles
                     ?.filter(
-                      (r) => !info.privileges.find((r2) => r2 === r.name),
+                      (r) => !info.privileges!.find((r2) => r2 === r.name),
                     )
                     .map((r) => (
                       <option key={r.name} value={r.name}>

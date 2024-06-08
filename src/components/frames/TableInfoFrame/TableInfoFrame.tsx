@@ -207,7 +207,8 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const newPrivilege = useEvent(
     async (form: { role: string; privileges: TablePrivileges }) => {
-      await db().updatePrivileges(
+      if (!db().privileges) return;
+      await db().privileges?.updatePrivileges(
         props.schema,
         props.table,
         form.role,
@@ -226,17 +227,25 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       curr: TablePrivileges,
       update: TablePrivileges,
     ) => {
-      await db().updatePrivileges(props.schema, props.table, roleName, {
-        update: update.update === curr.update ? undefined : update.update,
-        select: update.select === curr.select ? undefined : update.select,
-        insert: update.insert === curr.insert ? undefined : update.insert,
-        delete: update.delete === curr.delete ? undefined : update.delete,
-        truncate:
-          update.truncate === curr.truncate ? undefined : update.truncate,
-        references:
-          update.references === curr.references ? undefined : update.references,
-        trigger: update.trigger === curr.trigger ? undefined : update.trigger,
-      });
+      if (!db().privileges) return;
+      await db().privileges?.updatePrivileges(
+        props.schema,
+        props.table,
+        roleName,
+        {
+          update: update.update === curr.update ? undefined : update.update,
+          select: update.select === curr.select ? undefined : update.select,
+          insert: update.insert === curr.insert ? undefined : update.insert,
+          delete: update.delete === curr.delete ? undefined : update.delete,
+          truncate:
+            update.truncate === curr.truncate ? undefined : update.truncate,
+          references:
+            update.references === curr.references
+              ? undefined
+              : update.references,
+          trigger: update.trigger === curr.trigger ? undefined : update.trigger,
+        },
+      );
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
@@ -1087,7 +1096,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           </table>
         </>
       ) : null}
-      {service.lastValidData && !state.privileges?.length ? (
+      {service.lastValidData && state.privileges && !state.privileges.length ? (
         <>
           <h2>Privileges</h2>
 
@@ -1110,7 +1119,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             ) : null}
           </div>
         </>
-      ) : service.lastValidData ? (
+      ) : service.lastValidData?.privileges ? (
         <>
           <h2 style={{ userSelect: 'text' }}>Privileges</h2>
           <table>

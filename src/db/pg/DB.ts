@@ -305,281 +305,6 @@ export const DB: DBInterface = {
     };
   },
 
-  async role(name: string) {
-    async function rolePrivileges(n: string) {
-      const res = (await list(
-        `
-      SELECT
-        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = t.relnamespace) "schema",
-        "relname" as "name",
-        'table' "type",
-        aux."privilege" privilege_type
-      FROM pg_class t,
-        (SELECT 'DELETE' "privilege" UNION SELECT 'INSERT' UNION SELECT 'REFERENCES'
-        UNION SELECT 'SELECT' UNION SELECT 'TRIGGER' UNION SELECT 'TRUNCATE'
-        UNION SELECT 'UPDATE') aux
-      WHERE
-        relkind IN ('m','v','r') AND
-        pg_catalog.has_table_privilege($1, oid, aux."privilege" )
-
-      UNION
-      SELECT nspname, nspname, 'schema', "privilege"
-      FROM pg_catalog.pg_namespace,
-      	(SELECT 'CREATE' "privilege" UNION SELECT 'USAGE') aux
-      WHERE
-         nspname != 'pg_toast' AND
-         nspname NOT LIKE 'pg_temp_%' AND
-         nspname NOT LIKE 'pg_toast_temp_%' AND
-         pg_catalog.has_schema_privilege($1, nspname, "privilege")
-
-      UNION
-      SELECT
-        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = p.pronamespace) "schema",
-        p.proname || '('||oidvectortypes(proargtypes)||')' "name",
-        'function',
-        'EXECUTE'
-      FROM pg_proc p
-      WHERE pg_catalog.has_function_privilege($1, p.oid, 'EXECUTE')
-
-      UNION
-      SELECT
-        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = p.pronamespace) "schema",
-        p.proname || '('||oidvectortypes(proargtypes)||')' "name",
-        'function',
-        'EXECUTE'
-      FROM pg_proc p
-      WHERE pg_catalog.has_function_privilege($1, p.oid, 'EXECUTE')
-
-      UNION
-      SELECT
-        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = t.relnamespace) "schema",
-        "relname" as "name",
-        'sequence' "type",
-        aux."privilege" privilege_type
-      FROM pg_class t,
-        (SELECT 'USAGE' "privilege" UNION SELECT 'SELECT' UNION SELECT 'UPDATE') aux
-      WHERE
-        relkind = 'S' AND
-        pg_catalog.has_sequence_privilege($1, oid, aux."privilege")
-
-      UNION
-      SELECT
-        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = pg_type.typnamespace),
-        typname,
-        'type',
-        'USAGE'
-      FROM pg_catalog.pg_type
-      LEFT JOIN pg_catalog.pg_enum ON pg_enum.enumtypid = pg_type.oid
-      WHERE
-        pg_catalog.has_type_privilege($1, pg_type.oid, 'USAGE') AND (
-          typtype = 'd' OR
-          pg_enum.enumtypid IS NOT NULL)
-
-      ORDER BY "schema", name`,
-        [n],
-      )) as {
-        schema: string;
-        name: string;
-        privilege_type: string;
-        type: 'table' | 'schema' | 'function' | 'sequence' | 'type';
-      }[];
-
-      const tables: {
-        schema: string;
-        table: string;
-        privileges: TablePrivileges;
-      }[] = [];
-      const tablesOnly = res.filter((a) => a.type === 'table');
-      for (const r of tablesOnly) {
-        const ps = tablesOnly.filter(
-          (t2) => t2.name === r.name && t2.schema === r.schema,
-        );
-        if (!tables.find((t) => t.table === r.name && r.schema === t.schema)) {
-          tables.push({
-            schema: r.schema,
-            table: r.name,
-            privileges: {
-              delete: !!ps.find((r2) => r2.privilege_type === 'DELETE'),
-              insert: !!ps.find((r2) => r2.privilege_type === 'INSERT'),
-              references: !!ps.find((r2) => r2.privilege_type === 'REFERENCES'),
-              select: !!ps.find((r2) => r2.privilege_type === 'SELECT'),
-              trigger: !!ps.find((r2) => r2.privilege_type === 'TRIGGER'),
-              truncate: !!ps.find((r2) => r2.privilege_type === 'TRUNCATE'),
-              update: !!ps.find((r2) => r2.privilege_type === 'UPDATE'),
-            },
-          });
-        }
-      }
-      const publics = await publicsSchemas();
-      tables.sort(
-        (a, b) =>
-          schemaCompare(a.schema, b.schema, publics) ||
-          a.table.localeCompare(b.table),
-      );
-
-      const sequences: {
-        schema: string;
-        name: string;
-        privileges: SequencePrivileges;
-      }[] = [];
-      const sequencesOnly = res.filter((a) => a.type === 'sequence');
-      for (const r of sequencesOnly) {
-        const ss = sequencesOnly.filter(
-          (t2) => t2.name === r.name && t2.schema === r.schema,
-        );
-        if (
-          !sequences.find((t) => t.name === r.name && r.schema === t.schema)
-        ) {
-          sequences.push({
-            schema: r.schema,
-            name: r.name,
-            privileges: {
-              usage: !!ss.find((r2) => r2.privilege_type === 'USAGE'),
-              select: !!ss.find((r2) => r2.privilege_type === 'SELECT'),
-              update: !!ss.find((r2) => r2.privilege_type === 'UPDATE'),
-            },
-          });
-        }
-      }
-
-      const schemas = [] as {
-        name: string;
-        privileges: { usage: boolean; create: boolean };
-      }[];
-      const schemasOnly = res.filter((e) => e.type === 'schema');
-      for (const s of schemasOnly
-        .map((e) => e.schema)
-        .filter((s2, i, a) => a.indexOf(s2) === i)) {
-        schemas.push({
-          name: s,
-          privileges: {
-            usage: !!schemasOnly.find(
-              (r2) => r2.schema === s && r2.privilege_type === 'USAGE',
-            ),
-            create: !!schemasOnly.find(
-              (r2) => r2.schema === s && r2.privilege_type === 'CREATE',
-            ),
-          },
-        });
-      }
-      schemas.sort((a, b) => schemaCompare(a.name, b.name, publics));
-
-      const functions = [] as {
-        schema: string;
-        name: string;
-      }[];
-      const functionsOnly = res.filter((e) => e.type === 'function');
-      for (const f of functionsOnly) {
-        functions.push({
-          schema: f.schema,
-          name: f.name,
-        });
-      }
-      functions.sort(
-        (a, b) =>
-          schemaCompare(a.schema, b.schema, publics) ||
-          a.name.localeCompare(b.name),
-      );
-
-      const types = [] as {
-        schema: string;
-        name: string;
-      }[];
-
-      const typesOnly = res.filter((e) => e.type === 'type');
-      for (const f of typesOnly) {
-        types.push({
-          schema: f.schema,
-          name: f.name,
-        });
-      }
-      types.sort(
-        (a, b) =>
-          schemaCompare(a.schema, b.schema, publics) ||
-          a.name.localeCompare(b.name),
-      );
-
-      return {
-        tables,
-        schemas,
-        sequences,
-        functions,
-        types,
-      };
-    }
-    const [role, info, user, privileges] = await Promise.all([
-      first(
-        `
-        SELECT * FROM pg_roles WHERE rolname = $1
-      `,
-        [name],
-      ),
-      first(
-        `
-        SELECT description AS comment
-        FROM pg_roles r
-        JOIN pg_shdescription c ON c.objoid = r.oid
-        WHERE rolname = $1;
-      `,
-        [name],
-      ),
-      first(
-        `
-        SELECT *
-        FROM pg_user
-        WHERE
-          usename = $1
-      `,
-        [name],
-      ),
-      rolePrivileges(name),
-    ]);
-
-    return { role, info, user, privileges } as {
-      role: {
-        [k: string]: string | number | null | boolean;
-      };
-      info: {
-        definition: string;
-        comment: string;
-      };
-      user: {
-        [k: string]: string | number | null | boolean;
-      };
-      privileges: {
-        tables: {
-          schema: string;
-          table: string;
-          privileges: TablePrivileges;
-        }[];
-        schemas: {
-          name: string;
-          privileges: {
-            usage: boolean;
-            create: boolean;
-          };
-        }[];
-        functions: {
-          schema: string;
-          name: string;
-        }[];
-        sequences: {
-          schema: string;
-          name: string;
-          privileges: {
-            usage: boolean;
-            update: boolean;
-            select: boolean;
-          };
-        }[];
-        types: {
-          schema: string;
-          name: string;
-        }[];
-      };
-    };
-  },
-
   async schema(name: string) {
     async function schemaPrivileges(s: string) {
       const res = await list(
@@ -995,18 +720,6 @@ export const DB: DBInterface = {
     } finally {
       c.release(true);
     }
-  },
-
-  async dropRole(name: string) {
-    await query(`DROP ROLE ${label(name)}`);
-  },
-
-  async updateRoleComment(name: string, text: string) {
-    await query(`COMMENT ON ROLE ${label(name)} IS ${str(text)}`);
-  },
-
-  async renameRole(name: string, name2: string) {
-    await query(`ALTER ROLE ${label(name)} RENAME TO ${label(name2)}`);
   },
 
   async updateColumn(
@@ -1589,196 +1302,6 @@ export const DB: DBInterface = {
     return null;
   },
 
-  async updatePrivileges(
-    schema: string,
-    table: string,
-    grantee: string,
-    privileges: {
-      update?: boolean;
-      select?: boolean;
-      insert?: boolean;
-      delete?: boolean;
-      truncate?: boolean;
-      references?: boolean;
-      trigger?: boolean;
-    },
-  ) {
-    const c = await openConnection();
-    try {
-      await c.query('BEGIN');
-      if (privileges.update !== undefined) {
-        await c.query(
-          `${privileges.update ? 'GRANT' : 'REVOKE'} UPDATE ON ${label(
-            schema,
-          )}.${label(table)} ${privileges.update ? ' TO ' : ' FROM '} ${label(
-            grantee,
-          )}`,
-        );
-      }
-      if (privileges.select !== undefined) {
-        await c.query(
-          `${privileges.select ? 'GRANT' : 'REVOKE'} SELECT ON ${label(
-            schema,
-          )}.${label(table)} ${privileges.select ? ' TO ' : ' FROM '} ${label(
-            grantee,
-          )}`,
-        );
-      }
-      if (privileges.insert !== undefined) {
-        await c.query(
-          `${privileges.insert ? 'GRANT' : 'REVOKE'} INSERT ON ${label(
-            schema,
-          )}.${label(table)} ${privileges.insert ? ' TO ' : ' FROM '} ${label(
-            grantee,
-          )}`,
-        );
-      }
-      if (privileges.delete !== undefined) {
-        await c.query(
-          `${privileges.delete ? 'GRANT' : 'REVOKE'} DELETE ON ${label(
-            schema,
-          )}.${label(table)} ${privileges.delete ? ' TO ' : ' FROM '} ${label(
-            grantee,
-          )}`,
-        );
-      }
-      if (privileges.truncate !== undefined) {
-        await c.query(
-          `${privileges.truncate ? 'GRANT' : 'REVOKE'} TRUNCATE ON ${label(
-            schema,
-          )}.${label(table)} ${privileges.truncate ? ' TO ' : ' FROM '} ${label(
-            grantee,
-          )}`,
-        );
-      }
-      if (privileges.references !== undefined) {
-        await c.query(
-          `${privileges.references ? 'GRANT' : 'REVOKE'} REFERENCES ON ${label(
-            schema,
-          )}.${label(table)} ${
-            privileges.references ? ' TO ' : ' FROM '
-          } ${label(grantee)}`,
-        );
-      }
-      if (privileges.trigger !== undefined) {
-        await c.query(
-          `${privileges.trigger ? 'GRANT' : 'REVOKE'} TRIGGER ON ${label(
-            schema,
-          )}.${label(table)} ${privileges.trigger ? ' TO ' : ' FROM '} ${label(
-            grantee,
-          )}`,
-        );
-      }
-      await c.query('COMMIT');
-    } catch (e) {
-      c.query('ROLLBACK');
-      throw grantError(e);
-    } finally {
-      c.release(true);
-    }
-  },
-
-  async updateSequencePrivileges(
-    schema: string,
-    table: string,
-    grantee: string,
-    privileges: {
-      update?: boolean;
-      select?: boolean;
-      usage?: boolean;
-    },
-  ) {
-    const c = await openConnection();
-    try {
-      await c.query('BEGIN');
-      if (privileges.update !== undefined) {
-        await c.query(
-          `${privileges.update ? 'GRANT' : 'REVOKE'} UPDATE ON SEQUENCE ${label(
-            schema,
-          )}.${label(table)} ${privileges.update ? ' TO ' : ' FROM '} ${label(
-            grantee,
-          )}`,
-        );
-      }
-      if (privileges.select !== undefined) {
-        await c.query(
-          `${privileges.select ? 'GRANT' : 'REVOKE'} SELECT ON SEQUENCE ${label(
-            schema,
-          )}.${label(table)} ${privileges.select ? ' TO ' : ' FROM '} ${label(
-            grantee,
-          )}`,
-        );
-      }
-      if (privileges.usage !== undefined) {
-        await c.query(
-          `${privileges.usage ? 'GRANT' : 'REVOKE'} USAGE ON SEQUENCE ${label(
-            schema,
-          )}.${label(table)} ${privileges.usage ? ' TO ' : ' FROM '} ${label(
-            grantee,
-          )}`,
-        );
-      }
-      await c.query('COMMIT');
-    } catch (e) {
-      c.query('ROLLBACK');
-      throw grantError(e);
-    } finally {
-      c.release(true);
-    }
-  },
-
-  async updateSchemaPrivileges(
-    schema: string,
-    grantee: string,
-    privileges: {
-      create?: boolean;
-      usage?: boolean;
-    },
-  ) {
-    const c = await openConnection();
-    try {
-      await c.query('BEGIN');
-      if (privileges.create !== undefined) {
-        await c.query(
-          `${privileges.create ? 'GRANT' : 'REVOKE'} CREATE ON SCHEMA ${label(
-            schema,
-          )} ${privileges.create ? ' TO ' : ' FROM '} ${label(grantee)}`,
-        );
-      }
-      if (privileges.usage !== undefined) {
-        await c.query(
-          `${privileges.usage ? 'GRANT' : 'REVOKE'} USAGE ON SCHEMA ${label(
-            schema,
-          )} ${privileges.usage ? ' TO ' : ' FROM '} ${label(grantee)}`,
-        );
-      }
-      await c.query('COMMIT');
-    } catch (e) {
-      c.query('ROLLBACK');
-      throw grantError(e);
-    } finally {
-      c.release(true);
-    }
-  },
-
-  async listRoles() {
-    const r = await (list(
-      `
-        SELECT rolname "name", usename IS NOT NULL "isUser"
-        FROM pg_roles
-        LEFT JOIN pg_user
-        ON usename = rolname
-      `,
-      [],
-    ) as Promise<{ name: string; isUser: boolean }[]>);
-    r.sort((a, b) => {
-      if (a.name.startsWith('pg_') && !b.name.startsWith('pg_')) return 1;
-      if (!a.name.startsWith('pg_') && b.name.startsWith('pg_')) return -1;
-      return a.name.localeCompare(b.name);
-    });
-    return r;
-  },
-
   async listAll() {
     const sql = `
       SELECT current_schema() "currentSchema", (
@@ -2040,94 +1563,6 @@ export const DB: DBInterface = {
     );
   },
 
-  async revokeFunction(schema: string, name: string, role: string) {
-    const hasPublicPrivilege = (
-      await first(`SELECT
-        pg_catalog.has_function_privilege((0)::oid, '${label(
-          schema,
-        )}.${name}', 'EXECUTE') has`)
-    ).has;
-    if (hasPublicPrivilege) {
-      const roles = (await list(
-        `
-        SELECT rolname "role"
-        FROM pg_roles
-        WHERE pg_catalog.has_function_privilege(rolname, '${label(
-          schema,
-        )}.${name}', 'EXECUTE')
-        `,
-        [],
-      )) as { role: string }[];
-      await query(`
-          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM PUBLIC;
-          ${roles
-            .map(
-              (r) =>
-                `GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(
-                  r.role,
-                )}`,
-            )
-            .join(';')};
-          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(
-            role,
-          )}
-      `);
-    } else
-      await query(`
-        REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(role)}
-      `);
-  },
-
-  async grantFunction(schema: string, name: string, role: string) {
-    await query(`
-      GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(role)}
-    `);
-  },
-
-  async grantDomain(schema: string, name: string, role: string) {
-    await query(`
-      GRANT USAGE ON TYPE ${label(schema)}.${label(name)} TO ${label(role)}
-    `);
-  },
-
-  async revokeDomain(schema: string, name: string, role: string) {
-    const hasPublicPrivilege = (
-      await first(`SELECT
-        pg_catalog.has_type_privilege((0)::oid, '${label(
-          schema,
-        )}.${name}', 'USAGE') has`)
-    ).has;
-    if (hasPublicPrivilege) {
-      const roles = (await list(
-        `
-        SELECT rolname "role"
-        FROM pg_roles
-        WHERE pg_catalog.has_type_privilege(rolname, '${label(schema)}.${label(
-          name,
-        )}', 'USAGE')
-        `,
-        [],
-      )) as { role: string }[];
-      await query(`
-          REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM PUBLIC;
-          ${roles
-            .map(
-              (r) =>
-                `GRANT USAGE ON TYPE ${label(schema)}.${label(name)} TO ${label(
-                  r.role,
-                )}`,
-            )
-            .join(';')};
-          REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(
-            role,
-          )}
-      `);
-    } else
-      await query(`
-        REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(role)}
-      `);
-  },
-
   hasOpenConnection,
 
   closeAll,
@@ -2222,4 +1657,575 @@ export const DB: DBInterface = {
   },
 
   nullsLast: true,
+
+  privileges: {
+    async role(name: string) {
+      async function rolePrivileges(n: string) {
+        const res = (await list(
+          `
+      SELECT
+        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = t.relnamespace) "schema",
+        "relname" as "name",
+        'table' "type",
+        aux."privilege" privilege_type
+      FROM pg_class t,
+        (SELECT 'DELETE' "privilege" UNION SELECT 'INSERT' UNION SELECT 'REFERENCES'
+        UNION SELECT 'SELECT' UNION SELECT 'TRIGGER' UNION SELECT 'TRUNCATE'
+        UNION SELECT 'UPDATE') aux
+      WHERE
+        relkind IN ('m','v','r') AND
+        pg_catalog.has_table_privilege($1, oid, aux."privilege" )
+
+      UNION
+      SELECT nspname, nspname, 'schema', "privilege"
+      FROM pg_catalog.pg_namespace,
+      	(SELECT 'CREATE' "privilege" UNION SELECT 'USAGE') aux
+      WHERE
+         nspname != 'pg_toast' AND
+         nspname NOT LIKE 'pg_temp_%' AND
+         nspname NOT LIKE 'pg_toast_temp_%' AND
+         pg_catalog.has_schema_privilege($1, nspname, "privilege")
+
+      UNION
+      SELECT
+        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = p.pronamespace) "schema",
+        p.proname || '('||oidvectortypes(proargtypes)||')' "name",
+        'function',
+        'EXECUTE'
+      FROM pg_proc p
+      WHERE pg_catalog.has_function_privilege($1, p.oid, 'EXECUTE')
+
+      UNION
+      SELECT
+        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = p.pronamespace) "schema",
+        p.proname || '('||oidvectortypes(proargtypes)||')' "name",
+        'function',
+        'EXECUTE'
+      FROM pg_proc p
+      WHERE pg_catalog.has_function_privilege($1, p.oid, 'EXECUTE')
+
+      UNION
+      SELECT
+        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = t.relnamespace) "schema",
+        "relname" as "name",
+        'sequence' "type",
+        aux."privilege" privilege_type
+      FROM pg_class t,
+        (SELECT 'USAGE' "privilege" UNION SELECT 'SELECT' UNION SELECT 'UPDATE') aux
+      WHERE
+        relkind = 'S' AND
+        pg_catalog.has_sequence_privilege($1, oid, aux."privilege")
+
+      UNION
+      SELECT
+        (SELECT n.nspname FROM pg_namespace n WHERE n.oid = pg_type.typnamespace),
+        typname,
+        'type',
+        'USAGE'
+      FROM pg_catalog.pg_type
+      LEFT JOIN pg_catalog.pg_enum ON pg_enum.enumtypid = pg_type.oid
+      WHERE
+        pg_catalog.has_type_privilege($1, pg_type.oid, 'USAGE') AND (
+          typtype = 'd' OR
+          pg_enum.enumtypid IS NOT NULL)
+
+      ORDER BY "schema", name`,
+          [n],
+        )) as {
+          schema: string;
+          name: string;
+          privilege_type: string;
+          type: 'table' | 'schema' | 'function' | 'sequence' | 'type';
+        }[];
+
+        const tables: {
+          schema: string;
+          table: string;
+          privileges: TablePrivileges;
+        }[] = [];
+        const tablesOnly = res.filter((a) => a.type === 'table');
+        for (const r of tablesOnly) {
+          const ps = tablesOnly.filter(
+            (t2) => t2.name === r.name && t2.schema === r.schema,
+          );
+          if (
+            !tables.find((t) => t.table === r.name && r.schema === t.schema)
+          ) {
+            tables.push({
+              schema: r.schema,
+              table: r.name,
+              privileges: {
+                delete: !!ps.find((r2) => r2.privilege_type === 'DELETE'),
+                insert: !!ps.find((r2) => r2.privilege_type === 'INSERT'),
+                references: !!ps.find(
+                  (r2) => r2.privilege_type === 'REFERENCES',
+                ),
+                select: !!ps.find((r2) => r2.privilege_type === 'SELECT'),
+                trigger: !!ps.find((r2) => r2.privilege_type === 'TRIGGER'),
+                truncate: !!ps.find((r2) => r2.privilege_type === 'TRUNCATE'),
+                update: !!ps.find((r2) => r2.privilege_type === 'UPDATE'),
+              },
+            });
+          }
+        }
+        const publics = await publicsSchemas();
+        tables.sort(
+          (a, b) =>
+            schemaCompare(a.schema, b.schema, publics) ||
+            a.table.localeCompare(b.table),
+        );
+
+        const sequences: {
+          schema: string;
+          name: string;
+          privileges: SequencePrivileges;
+        }[] = [];
+        const sequencesOnly = res.filter((a) => a.type === 'sequence');
+        for (const r of sequencesOnly) {
+          const ss = sequencesOnly.filter(
+            (t2) => t2.name === r.name && t2.schema === r.schema,
+          );
+          if (
+            !sequences.find((t) => t.name === r.name && r.schema === t.schema)
+          ) {
+            sequences.push({
+              schema: r.schema,
+              name: r.name,
+              privileges: {
+                usage: !!ss.find((r2) => r2.privilege_type === 'USAGE'),
+                select: !!ss.find((r2) => r2.privilege_type === 'SELECT'),
+                update: !!ss.find((r2) => r2.privilege_type === 'UPDATE'),
+              },
+            });
+          }
+        }
+
+        const schemas = [] as {
+          name: string;
+          privileges: { usage: boolean; create: boolean };
+        }[];
+        const schemasOnly = res.filter((e) => e.type === 'schema');
+        for (const s of schemasOnly
+          .map((e) => e.schema)
+          .filter((s2, i, a) => a.indexOf(s2) === i)) {
+          schemas.push({
+            name: s,
+            privileges: {
+              usage: !!schemasOnly.find(
+                (r2) => r2.schema === s && r2.privilege_type === 'USAGE',
+              ),
+              create: !!schemasOnly.find(
+                (r2) => r2.schema === s && r2.privilege_type === 'CREATE',
+              ),
+            },
+          });
+        }
+        schemas.sort((a, b) => schemaCompare(a.name, b.name, publics));
+
+        const functions = [] as {
+          schema: string;
+          name: string;
+        }[];
+        const functionsOnly = res.filter((e) => e.type === 'function');
+        for (const f of functionsOnly) {
+          functions.push({
+            schema: f.schema,
+            name: f.name,
+          });
+        }
+        functions.sort(
+          (a, b) =>
+            schemaCompare(a.schema, b.schema, publics) ||
+            a.name.localeCompare(b.name),
+        );
+
+        const types = [] as {
+          schema: string;
+          name: string;
+        }[];
+
+        const typesOnly = res.filter((e) => e.type === 'type');
+        for (const f of typesOnly) {
+          types.push({
+            schema: f.schema,
+            name: f.name,
+          });
+        }
+        types.sort(
+          (a, b) =>
+            schemaCompare(a.schema, b.schema, publics) ||
+            a.name.localeCompare(b.name),
+        );
+
+        return {
+          tables,
+          schemas,
+          sequences,
+          functions,
+          types,
+        };
+      }
+      const [role, info, user, privileges] = await Promise.all([
+        first(
+          `
+        SELECT * FROM pg_roles WHERE rolname = $1
+      `,
+          [name],
+        ),
+        first(
+          `
+        SELECT description AS comment
+        FROM pg_roles r
+        JOIN pg_shdescription c ON c.objoid = r.oid
+        WHERE rolname = $1;
+      `,
+          [name],
+        ),
+        first(
+          `
+        SELECT *
+        FROM pg_user
+        WHERE
+          usename = $1
+      `,
+          [name],
+        ),
+        rolePrivileges(name),
+      ]);
+
+      return { role, info, user, privileges } as {
+        role: {
+          [k: string]: string | number | null | boolean;
+        };
+        info: {
+          definition: string;
+          comment: string;
+        };
+        user: {
+          [k: string]: string | number | null | boolean;
+        };
+        privileges: {
+          tables: {
+            schema: string;
+            table: string;
+            privileges: TablePrivileges;
+          }[];
+          schemas: {
+            name: string;
+            privileges: {
+              usage: boolean;
+              create: boolean;
+            };
+          }[];
+          functions: {
+            schema: string;
+            name: string;
+          }[];
+          sequences: {
+            schema: string;
+            name: string;
+            privileges: {
+              usage: boolean;
+              update: boolean;
+              select: boolean;
+            };
+          }[];
+          types: {
+            schema: string;
+            name: string;
+          }[];
+        };
+      };
+    },
+
+    async dropRole(name: string) {
+      await query(`DROP ROLE ${label(name)}`);
+    },
+
+    async updateRoleComment(name: string, text: string) {
+      await query(`COMMENT ON ROLE ${label(name)} IS ${str(text)}`);
+    },
+
+    async renameRole(name: string, name2: string) {
+      await query(`ALTER ROLE ${label(name)} RENAME TO ${label(name2)}`);
+    },
+
+    async updatePrivileges(
+      schema: string,
+      table: string,
+      grantee: string,
+      privileges: {
+        update?: boolean;
+        select?: boolean;
+        insert?: boolean;
+        delete?: boolean;
+        truncate?: boolean;
+        references?: boolean;
+        trigger?: boolean;
+      },
+    ) {
+      const c = await openConnection();
+      try {
+        await c.query('BEGIN');
+        if (privileges.update !== undefined) {
+          await c.query(
+            `${privileges.update ? 'GRANT' : 'REVOKE'} UPDATE ON ${label(
+              schema,
+            )}.${label(table)} ${privileges.update ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        if (privileges.select !== undefined) {
+          await c.query(
+            `${privileges.select ? 'GRANT' : 'REVOKE'} SELECT ON ${label(
+              schema,
+            )}.${label(table)} ${privileges.select ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        if (privileges.insert !== undefined) {
+          await c.query(
+            `${privileges.insert ? 'GRANT' : 'REVOKE'} INSERT ON ${label(
+              schema,
+            )}.${label(table)} ${privileges.insert ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        if (privileges.delete !== undefined) {
+          await c.query(
+            `${privileges.delete ? 'GRANT' : 'REVOKE'} DELETE ON ${label(
+              schema,
+            )}.${label(table)} ${privileges.delete ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        if (privileges.truncate !== undefined) {
+          await c.query(
+            `${privileges.truncate ? 'GRANT' : 'REVOKE'} TRUNCATE ON ${label(
+              schema,
+            )}.${label(table)} ${privileges.truncate ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        if (privileges.references !== undefined) {
+          await c.query(
+            `${privileges.references ? 'GRANT' : 'REVOKE'} REFERENCES ON ${label(
+              schema,
+            )}.${label(table)} ${
+              privileges.references ? ' TO ' : ' FROM '
+            } ${label(grantee)}`,
+          );
+        }
+        if (privileges.trigger !== undefined) {
+          await c.query(
+            `${privileges.trigger ? 'GRANT' : 'REVOKE'} TRIGGER ON ${label(
+              schema,
+            )}.${label(table)} ${privileges.trigger ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        await c.query('COMMIT');
+      } catch (e) {
+        c.query('ROLLBACK');
+        throw grantError(e);
+      } finally {
+        c.release(true);
+      }
+    },
+
+    async updateSequencePrivileges(
+      schema: string,
+      table: string,
+      grantee: string,
+      privileges: {
+        update?: boolean;
+        select?: boolean;
+        usage?: boolean;
+      },
+    ) {
+      const c = await openConnection();
+      try {
+        await c.query('BEGIN');
+        if (privileges.update !== undefined) {
+          await c.query(
+            `${privileges.update ? 'GRANT' : 'REVOKE'} UPDATE ON SEQUENCE ${label(
+              schema,
+            )}.${label(table)} ${privileges.update ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        if (privileges.select !== undefined) {
+          await c.query(
+            `${privileges.select ? 'GRANT' : 'REVOKE'} SELECT ON SEQUENCE ${label(
+              schema,
+            )}.${label(table)} ${privileges.select ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        if (privileges.usage !== undefined) {
+          await c.query(
+            `${privileges.usage ? 'GRANT' : 'REVOKE'} USAGE ON SEQUENCE ${label(
+              schema,
+            )}.${label(table)} ${privileges.usage ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        await c.query('COMMIT');
+      } catch (e) {
+        c.query('ROLLBACK');
+        throw grantError(e);
+      } finally {
+        c.release(true);
+      }
+    },
+
+    async updateSchemaPrivileges(
+      schema: string,
+      grantee: string,
+      privileges: {
+        create?: boolean;
+        usage?: boolean;
+      },
+    ) {
+      const c = await openConnection();
+      try {
+        await c.query('BEGIN');
+        if (privileges.create !== undefined) {
+          await c.query(
+            `${privileges.create ? 'GRANT' : 'REVOKE'} CREATE ON SCHEMA ${label(
+              schema,
+            )} ${privileges.create ? ' TO ' : ' FROM '} ${label(grantee)}`,
+          );
+        }
+        if (privileges.usage !== undefined) {
+          await c.query(
+            `${privileges.usage ? 'GRANT' : 'REVOKE'} USAGE ON SCHEMA ${label(
+              schema,
+            )} ${privileges.usage ? ' TO ' : ' FROM '} ${label(grantee)}`,
+          );
+        }
+        await c.query('COMMIT');
+      } catch (e) {
+        c.query('ROLLBACK');
+        throw grantError(e);
+      } finally {
+        c.release(true);
+      }
+    },
+
+    async listRoles() {
+      const r = await (list(
+        `
+        SELECT rolname "name", usename IS NOT NULL "isUser"
+        FROM pg_roles
+        LEFT JOIN pg_user
+        ON usename = rolname
+      `,
+        [],
+      ) as Promise<{ name: string; isUser: boolean }[]>);
+      r.sort((a, b) => {
+        if (a.name.startsWith('pg_') && !b.name.startsWith('pg_')) return 1;
+        if (!a.name.startsWith('pg_') && b.name.startsWith('pg_')) return -1;
+        return a.name.localeCompare(b.name);
+      });
+      return r;
+    },
+
+    async revokeFunction(schema: string, name: string, role: string) {
+      const hasPublicPrivilege = (
+        await first(`SELECT
+        pg_catalog.has_function_privilege((0)::oid, '${label(
+          schema,
+        )}.${name}', 'EXECUTE') has`)
+      ).has;
+      if (hasPublicPrivilege) {
+        const roles = (await list(
+          `
+        SELECT rolname "role"
+        FROM pg_roles
+        WHERE pg_catalog.has_function_privilege(rolname, '${label(
+          schema,
+        )}.${name}', 'EXECUTE')
+        `,
+          [],
+        )) as { role: string }[];
+        await query(`
+          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM PUBLIC;
+          ${roles
+            .map(
+              (r) =>
+                `GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(
+                  r.role,
+                )}`,
+            )
+            .join(';')};
+          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(
+            role,
+          )}
+      `);
+      } else
+        await query(`
+        REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(role)}
+      `);
+    },
+
+    async grantFunction(schema: string, name: string, role: string) {
+      await query(`
+      GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(role)}
+    `);
+    },
+
+    async grantDomain(schema: string, name: string, role: string) {
+      await query(`
+      GRANT USAGE ON TYPE ${label(schema)}.${label(name)} TO ${label(role)}
+    `);
+    },
+
+    async revokeDomain(schema: string, name: string, role: string) {
+      const hasPublicPrivilege = (
+        await first(`SELECT
+        pg_catalog.has_type_privilege((0)::oid, '${label(
+          schema,
+        )}.${name}', 'USAGE') has`)
+      ).has;
+      if (hasPublicPrivilege) {
+        const roles = (await list(
+          `
+        SELECT rolname "role"
+        FROM pg_roles
+        WHERE pg_catalog.has_type_privilege(rolname, '${label(schema)}.${label(
+          name,
+        )}', 'USAGE')
+        `,
+          [],
+        )) as { role: string }[];
+        await query(`
+          REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM PUBLIC;
+          ${roles
+            .map(
+              (r) =>
+                `GRANT USAGE ON TYPE ${label(schema)}.${label(name)} TO ${label(
+                  r.role,
+                )}`,
+            )
+            .join(';')};
+          REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(
+            role,
+          )}
+      `);
+      } else
+        await query(`
+        REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(role)}
+      `);
+    },
+  },
 };

@@ -49,7 +49,7 @@ export const {
 
 export async function reloadNav() {
   const newSchemas = await db().listAll();
-  const roles = await db().listRoles();
+  const roles = await db().privileges?.listRoles();
   state.updateSchemasAndRoles(newSchemas, roles);
 }
 
@@ -103,7 +103,7 @@ export async function connect(conf: ConnectionConfiguration, database: string) {
     );
     try {
       const schemas = await db().listAll();
-      const roles = await db().listRoles();
+      const roles = await db().privileges?.listRoles();
       state.connected(conf, database, schemas, roles);
     } catch (err) {
       throw grantError(err);

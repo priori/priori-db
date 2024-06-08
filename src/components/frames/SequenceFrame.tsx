@@ -153,7 +153,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
 
   const newPrivilege = useEvent(
     async (form: { role: string; privileges: SequencePrivileges }) => {
-      await db().updateSequencePrivileges(
+      await db().privileges?.updateSequencePrivileges(
         props.schema,
         props.name,
         form.role,
@@ -172,11 +172,16 @@ export function SequenceFrame(props: SequenceFrameProps) {
       curr: SequencePrivileges,
       update: SequencePrivileges,
     ) => {
-      await db().updateSequencePrivileges(props.schema, props.name, roleName, {
-        update: update.update === curr.update ? undefined : update.update,
-        select: update.select === curr.select ? undefined : update.select,
-        usage: update.usage === curr.usage ? undefined : update.usage,
-      });
+      await db().privileges?.updateSequencePrivileges(
+        props.schema,
+        props.name,
+        roleName,
+        {
+          update: update.update === curr.update ? undefined : update.update,
+          select: update.select === curr.select ? undefined : update.select,
+          usage: update.usage === curr.usage ? undefined : update.usage,
+        },
+      );
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
@@ -186,7 +191,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
 
   const internalRoles = useMemo(
     () =>
-      service.lastValidData?.privileges.filter((v) =>
+      service.lastValidData?.privileges?.filter((v) =>
         v.roleName.startsWith('pg_'),
       ).length,
     [service.lastValidData?.privileges],
@@ -351,7 +356,10 @@ export function SequenceFrame(props: SequenceFrameProps) {
           {service.error.message}
         </div>
       )}
-      {service.lastValidData && !privileges?.length ? (
+      {service.lastValidData &&
+      db().privileges &&
+      privileges &&
+      !privileges?.length ? (
         <>
           <h2>Privileges</h2>
 
@@ -374,7 +382,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
             ) : null}
           </div>
         </>
-      ) : service.lastValidData ? (
+      ) : db().privileges && service.lastValidData ? (
         <>
           <h2 style={{ userSelect: 'text' }}>Privileges</h2>
           <table>

@@ -440,7 +440,7 @@ export function updateSchemasAndRoles(
     }[];
     name: string;
   }[],
-  roles: {
+  roles?: {
     name: string;
     isUser: boolean;
   }[],
@@ -542,7 +542,7 @@ export function connected(
     functions: { name: string; type: 'FUNCTION' }[];
     domains: { name: string; type: 'DOMAIN' }[];
   }[],
-  roles: {
+  roles?: {
     name: string;
     isUser: boolean;
   }[],

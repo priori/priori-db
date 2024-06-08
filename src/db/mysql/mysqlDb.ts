@@ -8,10 +8,8 @@ import {
   QueryExecutor,
   QueryResult,
   QueryResultData,
-  SequencePrivileges,
   SimpleValue,
   Sort,
-  TablePrivileges,
 } from 'types';
 import { assert } from 'util/assert';
 import hotLoadSafe from 'util/hotLoadSafe';
@@ -254,15 +252,6 @@ export const mysqlDb: DBInterface = {
       con.query('ROLLBACK;');
       throw e;
     }
-  },
-
-  async listRoles(): Promise<
-    {
-      name: string;
-      isUser: boolean;
-    }[]
-  > {
-    return [];
   },
 
   async defaultSort(
@@ -555,27 +544,6 @@ export const mysqlDb: DBInterface = {
   }> {
     throw new Error('Not implemented!');
   },
-  role(/* name: string */): Promise<{
-    role: { [k: string]: string | number | boolean | null };
-    info: { definition: string; comment: string };
-    user: { [k: string]: string | number | boolean | null };
-    privileges: {
-      tables: { schema: string; table: string; privileges: TablePrivileges }[];
-      schemas: {
-        name: string;
-        privileges: { create: boolean; usage: boolean };
-      }[];
-      functions: { schema: string; name: string }[];
-      sequences: {
-        schema: string;
-        name: string;
-        privileges: SequencePrivileges;
-      }[];
-      types: { schema: string; name: string }[];
-    };
-  }> {
-    throw new Error('Not implemented!');
-  },
   sequence(/* schema: string, name: string */): Promise<SequenceInfo> {
     throw new Error('Not implemented!');
   },
@@ -617,15 +585,6 @@ export const mysqlDb: DBInterface = {
     throw new Error('Not implemented!');
   },
   alterTypeOwner(/* schema: string, name: string, owner: string */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  dropRole(/* name: string */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  updateRoleComment(/* name: string, text: string */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  renameRole(/* name: string, name2: string */): Promise<void> {
     throw new Error('Not implemented!');
   },
   updateSequence(/*
@@ -693,41 +652,6 @@ export const mysqlDb: DBInterface = {
   removeCol(/* schema: string, table: string, col: string */): Promise<void> {
     throw new Error('Not implemented!');
   },
-  updatePrivileges(/*
-    schema: string,
-    table: string,
-    grantee: string,
-    privileges: {
-      update?: boolean | undefined;
-      select?: boolean | undefined;
-      insert?: boolean | undefined;
-      delete?: boolean | undefined;
-      truncate?: boolean | undefined;
-      references?: boolean | undefined;
-      trigger?: boolean | undefined;
-    },
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  updateSequencePrivileges(/*
-    schema: string,
-    table: string,
-    grantee: string,
-    privileges: {
-      update?: boolean | undefined;
-      select?: boolean | undefined;
-      usage?: boolean | undefined;
-    },
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  updateSchemaPrivileges(/*
-    schema: string,
-    grantee: string,
-    privileges: { create?: boolean | undefined; usage?: boolean | undefined },
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
   update(/*
     schema: string,
     table: string,
@@ -758,18 +682,6 @@ export const mysqlDb: DBInterface = {
     name: string,
     cascade?: boolean | undefined,
   */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  revokeFunction(/* schema: string, name: string, role: string */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  grantFunction(/* schema: string, name: string, role: string */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  grantDomain(/* schema: string, name: string, role: string */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  revokeDomain(/* schema: string, name: string, role: string */): Promise<void> {
     throw new Error('Not implemented!');
   },
   closeAll(): Promise<void> {

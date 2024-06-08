@@ -74,7 +74,7 @@ function NavNewSchema({ disabled }: { disabled?: boolean }) {
 export function Nav(props: {
   schemas: NavSchema[];
   tabs: Tab[];
-  roles: { name: string; isUser: boolean }[];
+  roles?: { name: string; isUser: boolean }[];
   style?: React.CSSProperties;
   disabled?: boolean;
   title?: string;

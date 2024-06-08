@@ -22,50 +22,12 @@ export interface DBInterface {
     };
     comment: string;
     definition: string;
-    privileges: string[];
+    privileges?: string[];
     owner: string;
   }>;
-  role(name: string): Promise<{
-    role: {
-      [k: string]: string | number | boolean | null;
-    };
-    info: {
-      definition: string;
-      comment: string;
-    };
-    user: {
-      [k: string]: string | number | boolean | null;
-    };
-    privileges: {
-      tables: {
-        schema: string;
-        table: string;
-        privileges: TablePrivileges;
-      }[];
-      schemas: {
-        name: string;
-        privileges: {
-          create: boolean;
-          usage: boolean;
-        };
-      }[];
-      functions: {
-        schema: string;
-        name: string;
-      }[];
-      sequences: {
-        schema: string;
-        name: string;
-        privileges: SequencePrivileges;
-      }[];
-      types: {
-        schema: string;
-        name: string;
-      }[];
-    };
-  }>;
+
   schema(name: string): Promise<{
-    privileges: {
+    privileges?: {
       roleName: string;
       privileges: {
         create: boolean;
@@ -129,9 +91,6 @@ export interface DBInterface {
     onlyTable: string;
     indexes: string;
   }>;
-  dropRole(name: string): Promise<void>;
-  updateRoleComment(name: string, text: string): Promise<void>;
-  renameRole(name: string, name2: string): Promise<void>;
   updateColumn(
     schema: string,
     table: string,
@@ -216,44 +175,7 @@ export interface DBInterface {
     schema: string,
     tableName: string,
   ): Promise<{ field: string; direction: string }[] | null>;
-  updatePrivileges(
-    schema: string,
-    table: string,
-    grantee: string,
-    privileges: {
-      update?: boolean;
-      select?: boolean;
-      insert?: boolean;
-      delete?: boolean;
-      truncate?: boolean;
-      references?: boolean;
-      trigger?: boolean;
-    },
-  ): Promise<void>;
-  updateSequencePrivileges(
-    schema: string,
-    table: string,
-    grantee: string,
-    privileges: {
-      update?: boolean;
-      select?: boolean;
-      usage?: boolean;
-    },
-  ): Promise<void>;
-  updateSchemaPrivileges(
-    schema: string,
-    grantee: string,
-    privileges: {
-      create?: boolean;
-      usage?: boolean;
-    },
-  ): Promise<void>;
-  listRoles(): Promise<
-    {
-      name: string;
-      isUser: boolean;
-    }[]
-  >;
+
   listAll(): Promise<
     {
       name: string;
@@ -316,10 +238,7 @@ export interface DBInterface {
   dropFunction(schema: string, name: string, cascade?: boolean): Promise<void>;
   dropDomain(schema: string, name: string, cascade?: boolean): Promise<void>;
   dropSequence(schema: string, name: string, cascade?: boolean): Promise<void>;
-  revokeFunction(schema: string, name: string, role: string): Promise<void>;
-  grantFunction(schema: string, name: string, role: string): Promise<void>;
-  grantDomain(schema: string, name: string, role: string): Promise<void>;
-  revokeDomain(schema: string, name: string, role: string): Promise<void>;
+
   hasOpenConnection(): Promise<boolean>;
   closeAll(): Promise<void>;
   newQueryExecutor(
@@ -331,4 +250,91 @@ export interface DBInterface {
   inOpenTransaction(id: number): Promise<boolean>;
   indexesTypes: (() => Promise<string[]>) | undefined;
   nullsLast: boolean;
+
+  privileges?: {
+    role(name: string): Promise<{
+      role: {
+        [k: string]: string | number | boolean | null;
+      };
+      info: {
+        definition: string;
+        comment: string;
+      };
+      user: {
+        [k: string]: string | number | boolean | null;
+      };
+      privileges: {
+        tables: {
+          schema: string;
+          table: string;
+          privileges: TablePrivileges;
+        }[];
+        schemas: {
+          name: string;
+          privileges: {
+            create: boolean;
+            usage: boolean;
+          };
+        }[];
+        functions: {
+          schema: string;
+          name: string;
+        }[];
+        sequences: {
+          schema: string;
+          name: string;
+          privileges: SequencePrivileges;
+        }[];
+        types: {
+          schema: string;
+          name: string;
+        }[];
+      };
+    }>;
+    dropRole(name: string): Promise<void>;
+    updateRoleComment(name: string, text: string): Promise<void>;
+    renameRole(name: string, name2: string): Promise<void>;
+    revokeFunction(schema: string, name: string, role: string): Promise<void>;
+    grantFunction(schema: string, name: string, role: string): Promise<void>;
+    grantDomain(schema: string, name: string, role: string): Promise<void>;
+    updatePrivileges(
+      schema: string,
+      table: string,
+      grantee: string,
+      privileges: {
+        update?: boolean;
+        select?: boolean;
+        insert?: boolean;
+        delete?: boolean;
+        truncate?: boolean;
+        references?: boolean;
+        trigger?: boolean;
+      },
+    ): Promise<void>;
+    updateSequencePrivileges(
+      schema: string,
+      table: string,
+      grantee: string,
+      privileges: {
+        update?: boolean;
+        select?: boolean;
+        usage?: boolean;
+      },
+    ): Promise<void>;
+    updateSchemaPrivileges(
+      schema: string,
+      grantee: string,
+      privileges: {
+        create?: boolean;
+        usage?: boolean;
+      },
+    ): Promise<void>;
+    revokeDomain(schema: string, name: string, role: string): Promise<void>;
+    listRoles(): Promise<
+      {
+        name: string;
+        isUser: boolean;
+      }[]
+    >;
+  };
 }

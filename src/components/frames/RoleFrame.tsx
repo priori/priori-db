@@ -127,7 +127,10 @@ function TypeDialog({
 export function RoleFrame(props: RoleFrameProps) {
   const { name } = props;
 
-  const service = useService(() => db().role(props.name), [props.name]);
+  const service = useService(
+    () => db().privileges!.role(props.name),
+    [props.name],
+  );
 
   const { schemas } = currentState();
   const currentSchemas = useMemo(
@@ -181,7 +184,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const yesClick = useEvent(() => {
     db()
-      .dropRole(props.name)
+      .privileges!.dropRole(props.name)
       .then(
         () => {
           setTimeout(() => closeTab(props), 10);
@@ -194,7 +197,7 @@ export function RoleFrame(props: RoleFrameProps) {
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await db().updateRoleComment(props.name, text);
+    await db().privileges!.updateRoleComment(props.name, text);
     await service.reload();
     set({ ...state, editComment: false });
   });
@@ -207,7 +210,7 @@ export function RoleFrame(props: RoleFrameProps) {
   });
 
   const onRename = useEvent(async (newName: string) => {
-    await db().renameRole(name, newName);
+    await db().privileges!.renameRole(name, newName);
     renameEntity(props.uid, newName);
     reloadNav();
     set({ ...state, rename: false });
@@ -217,7 +220,12 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const grantTable = useEvent(
     async (schema: string, table: string, privileges: TablePrivileges) => {
-      await db().updatePrivileges(schema, table, props.name, privileges);
+      await db().privileges!.updatePrivileges(
+        schema,
+        table,
+        props.name,
+        privileges,
+      );
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
@@ -227,7 +235,11 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const grantSchema = useEvent(
     async (schema: string, privileges: SchemaPrivileges) => {
-      await db().updateSchemaPrivileges(schema, props.name, privileges);
+      await db().privileges!.updateSchemaPrivileges(
+        schema,
+        props.name,
+        privileges,
+      );
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
@@ -237,7 +249,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const grantSequence = useEvent(
     async (schema: string, table: string, privileges: SequencePrivileges) => {
-      await db().updateSequencePrivileges(
+      await db().privileges!.updateSequencePrivileges(
         schema,
         table,
         props.name,
@@ -257,11 +269,16 @@ export function RoleFrame(props: RoleFrameProps) {
       current: SequencePrivileges,
       update: SequencePrivileges,
     ) => {
-      await db().updateSequencePrivileges(schema, table, props.name, {
-        update: update.update === current.update ? undefined : update.update,
-        select: update.select === current.select ? undefined : update.select,
-        usage: update.usage === current.usage ? undefined : update.usage,
-      });
+      await db().privileges!.updateSequencePrivileges(
+        schema,
+        table,
+        props.name,
+        {
+          update: update.update === current.update ? undefined : update.update,
+          select: update.select === current.select ? undefined : update.select,
+          usage: update.usage === current.usage ? undefined : update.usage,
+        },
+      );
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
@@ -275,7 +292,7 @@ export function RoleFrame(props: RoleFrameProps) {
       curr: SchemaPrivileges,
       update: SchemaPrivileges,
     ) => {
-      await db().updateSchemaPrivileges(schema, props.name, {
+      await db().privileges!.updateSchemaPrivileges(schema, props.name, {
         create: update.create === curr.create ? undefined : update.create,
         usage: update.usage === curr.usage ? undefined : update.usage,
       });
@@ -293,7 +310,7 @@ export function RoleFrame(props: RoleFrameProps) {
       curr: TablePrivileges,
       update: TablePrivileges,
     ) => {
-      await db().updatePrivileges(schema, table, props.name, {
+      await db().privileges!.updatePrivileges(schema, table, props.name, {
         update: update.update === curr.update ? undefined : update.update,
         select: update.select === curr.select ? undefined : update.select,
         insert: update.insert === curr.insert ? undefined : update.insert,
@@ -314,7 +331,7 @@ export function RoleFrame(props: RoleFrameProps) {
   const revokeFunctionYesClick = useEvent(() => {
     if (!state.revokeFunction) return;
     db()
-      .revokeFunction(
+      .privileges!.revokeFunction(
         state.revokeFunction.schema,
         state.revokeFunction.function,
         props.name,
@@ -336,7 +353,11 @@ export function RoleFrame(props: RoleFrameProps) {
   const revokeTypeYesClick = useEvent(() => {
     if (!state.revokeType) return;
     db()
-      .revokeDomain(state.revokeType.schema, state.revokeType.type, props.name)
+      .privileges!.revokeDomain(
+        state.revokeType.schema,
+        state.revokeType.type,
+        props.name,
+      )
       .then(
         () => {
           service.reload();
@@ -353,7 +374,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const newFunctionPrivilegeSave = useEvent((schema: string, fName: string) => {
     db()
-      .grantFunction(schema, fName, props.name)
+      .privileges!.grantFunction(schema, fName, props.name)
       .then(
         () => {
           service.reload();
@@ -370,7 +391,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const newTypePrivilegeSave = useEvent((schema: string, tName: string) => {
     db()
-      .grantDomain(schema, tName, props.name)
+      .privileges!.grantDomain(schema, tName, props.name)
       .then(
         () => {
           service.reload();
@@ -1114,7 +1135,7 @@ export function RoleFrame(props: RoleFrameProps) {
         )
       ) : null}
 
-      {service.lastValidData ? (
+      {service.lastValidData && service.lastValidData.privileges ? (
         <>
           <h2 style={{ userSelect: 'text' }}>
             Domains Privileges /{' '}

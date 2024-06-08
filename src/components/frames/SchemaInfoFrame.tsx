@@ -136,7 +136,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
 
   const newPrivilege = useEvent(
     async (form: { role: string; privileges: SchemaPrivileges }) => {
-      await db().updateSchemaPrivileges(
+      await db().privileges?.updateSchemaPrivileges(
         props.schema,
         form.role,
         form.privileges,
@@ -154,7 +154,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
       curr: SchemaPrivileges,
       update: SchemaPrivileges,
     ) => {
-      await db().updateSchemaPrivileges(props.schema, roleName, {
+      await db().privileges?.updateSchemaPrivileges(props.schema, roleName, {
         create: update.create === curr.create ? undefined : update.create,
         usage: update.usage === curr.usage ? undefined : update.usage,
       });
@@ -167,7 +167,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
 
   const internalRoles = useMemo(
     () =>
-      service.lastValidData?.privileges.filter((v) =>
+      service.lastValidData?.privileges?.filter((v) =>
         v.roleName.startsWith('pg_'),
       ).length,
     [service.lastValidData?.privileges],
@@ -297,7 +297,10 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
           ) : null}
         </div>
       ) : null}
-      {service.lastValidData && !privileges?.length ? (
+      {service.lastValidData &&
+      privileges &&
+      db().privileges &&
+      !privileges?.length ? (
         <>
           <h2>Privileges</h2>
 
@@ -320,7 +323,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
             ) : null}
           </div>
         </>
-      ) : service.lastValidData ? (
+      ) : service.lastValidData && db().privileges && privileges ? (
         <>
           <h2 style={{ userSelect: 'text' }}>Privileges</h2>
           <table>
