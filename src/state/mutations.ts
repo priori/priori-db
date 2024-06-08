@@ -22,6 +22,13 @@ export function askToCloseWindow(current: AppState) {
   } as AppState;
 }
 
+export function openRoles(current: AppState) {
+  return {
+    ...current,
+    rolesOpen: !current.rolesOpen,
+  } as AppState;
+}
+
 export function activateTab(current: AppState, c: Tab) {
   const tabs = current.tabs.map((tab) =>
     c.props.uid === tab.props.uid
@@ -389,21 +396,6 @@ export function updateHeaderTabsDisplayOrder(
   };
 }
 
-export function closeFullView(current: AppState, name: string) {
-  return {
-    ...current,
-    schemas: current.schemas?.map((s) =>
-      s.name === name
-        ? {
-            ...s,
-            open: true,
-            fullView: false,
-          }
-        : s,
-    ),
-  };
-}
-
 export function newTable(current: AppState, schema: string) {
   return newFrame(current, (uid) => ({
     title: 'Nova Tabela',
@@ -466,7 +458,6 @@ export function updateSchemasAndRoles(
       return {
         ...s,
         open: false,
-        fullView: false,
         sequencesOpen: false,
         domainsOpen: false,
         functionsOpen: false,
@@ -562,7 +553,6 @@ export function connected(
     schemas: schemas.map((s) => ({
       ...s,
       open: false,
-      fullView: false,
       sequencesOpen: false,
       functionsOpen: false,
     })),
@@ -631,21 +621,6 @@ export function prevTab(current: AppState) {
   const activeIndex = s.tabs.findIndex((c) => c.active);
   if (activeIndex === 0) return activateTab(s, s.tabs[s.tabs.length - 1]);
   return activateTab(s, s.tabs[activeIndex - 1]);
-}
-
-export function openFullView(current: AppState, name: string) {
-  return {
-    ...current,
-    schemas: current.schemas?.map((s) =>
-      s.name === name
-        ? {
-            ...s,
-            open: true,
-            fullView: true,
-          }
-        : s,
-    ),
-  };
 }
 
 export function changeSchema(current: AppState, uid: number, schema: string) {

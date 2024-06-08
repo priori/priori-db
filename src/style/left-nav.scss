@@ -11,15 +11,7 @@ div.nav {
   background: #f4f4f4;
   display: flex;
   flex-direction: column;
-  .schema {
-    position: relative;
-  }
-  .schema-name,
-  .group-name,
-  .table-name {
-    padding: 2px 20px 2px 20px;
-    font-size: 12px;
-  }
+
   .new-schema {
     position: absolute;
     bottom: 3px;
@@ -39,206 +31,7 @@ div.nav {
     color: #04b;
     opacity: 1;
   }
-  .arrow:after {
-    content: '';
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    border-left: 6px solid #444;
-    height: 0;
-    display: block;
-    position: absolute;
-    left: 9px;
-    top: 4px;
-    transition: transform 0.25s;
-  }
-  .schema--current .schema-name {
-    font-weight: bold;
-    font-weight: 900;
-    letter-spacing: -0.25px;
-    line-height: 1.4;
-    position: relative;
-    height: 18px;
-  }
-  .schema--internal .schema-name {
-    color: #aaa;
-    font-style: italic;
-  }
-  .schema--internal > .arrow:after {
-    border-left: 6px solid #bbb;
-  }
-  .arrow.open:after {
-    transform: rotate(90deg);
-  }
-  .tables {
-    transition: height 0.25s;
-  }
-  .schema sup {
-    font-size: 8px;
-  }
-  .function,
-  .sequence,
-  .domain,
-  .table,
-  .schema-name,
-  .group-name {
-    position: relative;
-  }
-  .table-name,
-  .schema-name,
-  .group-name,
-  .function-name,
-  .sequence-name,
-  .domain-name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .table-type {
-    display: inline-block;
-    margin-right: 5px;
-    margin-top: 1px;
-    position: relative;
-    top: 1px;
-    font-size: 14px;
-    text-align: center;
-    width: 13px;
-  }
-  .fa-user.table-type {
-    text-align: right;
-  }
-  .schema-name,
-  .group-name,
-  .table-name,
-  .schema-name,
-  .function-name {
-    padding-right: 0;
-  }
-  .schema-name:hover,
-  .group-name:hover,
-  .table:hover .table-name,
-  .function:hover .function-name,
-  .sequence:hover .sequence-name,
-  .domain:hover .domain-name {
-    padding-right: 20px;
-  }
 
-  .schema-info,
-  .table-info,
-  .new-table,
-  .view-mode {
-    font-size: 12px;
-    right: 5px;
-    position: absolute;
-    top: 3px;
-    color: #888;
-    display: none;
-    cursor: pointer;
-  }
-  .new-table {
-    right: 22px;
-  }
-  .view-mode {
-    right: 39px;
-  }
-  .schema-name:hover .schema-info,
-  .schema-name:hover .new-table,
-  .table:hover .table-info,
-  .schema-name:hover .view-mode {
-    display: block;
-  }
-
-  .schema:hover .full-view.open .view-mode {
-    display: inline;
-    color: #bbb;
-  }
-  .schema:hover .full-view.open:hover .view-mode {
-    display: inline;
-    color: #888;
-  }
-  .schema:hover .full-view.open .view-mode :hover {
-    color: #000;
-  }
-
-  .new-table:hover,
-  .schema-info:hover,
-  .table-info:hover,
-  .view-mode:hover {
-    color: #000;
-  }
-
-  .group-name.arrow:after {
-    left: 23px !important;
-  }
-  .group-name {
-    padding-left: 37px !important;
-  }
-  .function-name::before {
-    content: 'F';
-    font-weight: 900;
-    margin-right: 5px;
-    letter-spacing: -2px;
-    font-size: 13px;
-    opacity: 0.75;
-    margin-right: 16px;
-  }
-  i.table-type.fa.fa-th {
-    opacity: 0.65;
-  }
-
-  .more {
-    text-align: center;
-  }
-  .more:hover {
-    background: #dadada;
-  }
-  .more.focused {
-    color: #04b;
-    background: #dadada;
-  }
-  .table-name,
-  .sequence-name,
-  .domain-name,
-  .function-name {
-    font-size: 13px;
-    display: block;
-  }
-  .function-name,
-  .sequence-name,
-  .domain-name {
-    padding-left: 38px;
-  }
-  .fa-list-ol {
-    font-size: 14px;
-  }
-  .function,
-  .sequence,
-  .domain {
-    line-height: 20px;
-    height: 20px;
-  }
-
-  .nav-tree {
-    outline: none;
-  }
-  .schema-name:hover,
-  .group-name:hover,
-  .nav-tree:focus .schema-name.focused {
-    background: #dfdfdf;
-  }
-  .nav-tree:focus .schema-name.focused,
-  .nav-tree:focus .functions.focused,
-  .nav-tree:focus .sequences.focused,
-  .nav-tree:focus .domains.focused {
-    color: #04b;
-  }
-  .nav-tree:focus .arrow.focused:after {
-    border-left-color: #04b;
-  }
-
-  .table,
-  .sequence,
-  .domain,
-  .function,
   .nav-search--entity {
     &:hover,
     &.focused {
@@ -263,35 +56,7 @@ div.nav {
       color: white;
     }
   }
-  .sequences.focused,
-  .domains.focused,
-  .functions.focused {
-    background: #dfdfdf;
-  }
-  .table.focused .table-name,
-  .function.focused .function-name,
-  .sequence.focused .sequence-name,
-  .domain.focused .domain-name {
-    color: #04b;
-  }
-  .table.focused.active .table-name,
-  .function.focused.active .function-name,
-  .sequence.focused.active .sequence-name,
-  .domain.focused.active .domain-name {
-    color: #fe0;
-  }
 
-  .view .fa.fa-table {
-    color: #181;
-  }
-  .mview .fa.fa-table {
-    color: #060;
-  }
-  .fa.fa-table {
-    color: #007;
-  }
-
-  .table.active,
   .nav-search--entity.active {
     .fa-database {
       color: rgba(256, 256, 256, 0.85);
@@ -487,17 +252,6 @@ div.nav .fa-search {
   }
 }
 
-.table-type.fa-user {
-  color: #007;
-}
-.table-type.fa-users {
-  color: #181;
-}
-.table.active .table-type.fa-user,
-.table.active .table-type.fa-users {
-  color: #fff;
-}
-
 .nav-search--entity.focused:before {
   content: '';
   position: absolute;
@@ -517,18 +271,6 @@ div.nav .nav-search--entity.focused span {
 }
 div.nav .nav-search--entity.focused.active span {
   color: white;
-}
-.internal {
-  opacity: 0.3;
-  &:hover {
-    opacity: 0.5;
-  }
-  &.open {
-    opacity: 0.7;
-  }
-  &.active {
-    opacity: 0.8;
-  }
 }
 
 .header--menu div.nav {

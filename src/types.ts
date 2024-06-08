@@ -92,7 +92,6 @@ export interface NavSchema {
   internal: boolean;
   name: string;
   open: boolean;
-  fullView: boolean;
   sequencesOpen: boolean;
   domainsOpen: boolean;
   functionsOpen: boolean;
@@ -134,6 +133,7 @@ export interface AppState {
   connected: boolean;
   tabs: Tab[];
   tabsOpenOrder: number[];
+  rolesOpen: boolean;
   database?: string;
   errors: Error[];
   currentConnectionConfiguration?: ConnectionConfiguration;

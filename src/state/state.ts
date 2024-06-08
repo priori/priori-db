@@ -9,6 +9,7 @@ let current: AppState = hls.current || {
   askToCloseWindow: false,
   uidCounter: 0,
   connected: false,
+  rolesOpen: false,
   tabs: [],
   tabsOpenOrder: [],
   errors: [],

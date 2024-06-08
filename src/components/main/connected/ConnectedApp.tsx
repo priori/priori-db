@@ -298,6 +298,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
                 schemas={state.schemas}
                 tabs={state.tabs}
                 roles={state.roles ?? []}
+                rolesOpen={state.rolesOpen}
               />
             ) : null}
           </span>
@@ -308,6 +309,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
           tabs={state.tabs}
           roles={state.roles ?? []}
           disabled={leftWidth <= 40}
+          rolesOpen={state.rolesOpen}
         />
       </div>
       <TabsHeader

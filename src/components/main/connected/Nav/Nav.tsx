@@ -4,8 +4,8 @@ import { useEvent } from 'util/useEvent';
 import { createSchema, reloadNav } from '../../../../state/actions';
 import { NavSchema, Tab } from '../../../../types';
 import { NavSearch } from './NavSearch';
-import { NavTree } from './NavTree';
 import { useTabs } from './navUtils';
+import { NavTree } from './NavTree/NavTree';
 
 export type Entity = {
   fullText: string;
@@ -78,6 +78,7 @@ export function Nav(props: {
   style?: React.CSSProperties;
   disabled?: boolean;
   title?: string;
+  rolesOpen: boolean;
 }) {
   const tabs = (useDeferredValue as useDeferredValueFix<Tab[]>)(props.tabs, {
     timeoutMs: 150,
@@ -141,6 +142,7 @@ export function Nav(props: {
             roles={props.roles}
             onBlur={onNavTreeBlur}
             disabled={props.disabled}
+            rolesOpen={props.rolesOpen}
           />
         </div>
         <NavNewSchema />
@@ -156,6 +158,7 @@ export function Nav(props: {
       props.style,
       props.disabled,
       props.title,
+      props.rolesOpen,
     ],
   );
 }

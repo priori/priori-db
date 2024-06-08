@@ -24,7 +24,7 @@ import { useGridColsSizes } from './useGridColsSizes';
 
 const isIOS = process?.platform === 'darwin';
 
-function useMoreTime(b: boolean, timeout: number) {
+export function useMoreTime(b: boolean, timeout: number) {
   const [b2, setB2] = useState(b);
   useEffect(() => {
     if (b === b2) return () => {};

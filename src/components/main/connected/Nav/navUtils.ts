@@ -63,7 +63,7 @@ export function useTabs(tabs0: Tab[]) {
           return openTabSequences.has(s) && openTabSequences.get(s)!.has(n);
         },
         domain(s: string, n: string) {
-          return openTabSequences.has(s) && openTabSequences.get(s)!.has(n);
+          return openTabDomains.has(s) && openTabDomains.get(s)!.has(n);
         },
       },
     };

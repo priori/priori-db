@@ -11,6 +11,7 @@ export const {
   openFunctions,
   openDomains,
   openSequences,
+  openRoles,
   askToCloseWindow,
   cancelAskToCloseWindow,
   updateTabText,
@@ -127,16 +128,4 @@ export function openSchema(name: string) {
   const schema = s.schemas.find((c) => c.name === name);
   assert(schema);
   state.toggleSchema(name);
-}
-
-export function fullView(name: string) {
-  const current = currentState();
-  assert(!!current.schemas);
-  const currentSchema = current.schemas.find((s) => s.name === name);
-  assert(!!currentSchema);
-  if (currentSchema.fullView) {
-    state.closeFullView(name);
-    return;
-  }
-  state.openFullView(name);
 }
