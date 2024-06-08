@@ -354,8 +354,8 @@ export const DB: DBInterface = {
       SELECT
         (SELECT n.nspname FROM pg_namespace n WHERE n.oid = t.relnamespace) "schema",
         "relname" as "name",
-        aux."privilege" privilege_type
         'sequence' "type",
+        aux."privilege" privilege_type
       FROM pg_class t,
         (SELECT 'USAGE' "privilege" UNION SELECT 'SELECT' UNION SELECT 'UPDATE') aux
       WHERE
