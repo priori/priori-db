@@ -9,6 +9,14 @@ export async function mysqlListDatabases(
     host: c.host,
     user: c.user,
     password: c.password,
+    port: c.port,
+    ...(c.requireSsl
+      ? {
+          ssl: {
+            rejectUnauthorized: true,
+          },
+        }
+      : undefined),
   });
   const [rows] = await connection.query('SHOW DATABASES');
   connection.end();
@@ -40,6 +48,14 @@ export async function mysqlConnect(c: ConnectionConfiguration, name: string) {
     user: c.user,
     password: c.password,
     database: name,
+    port: c.port,
+    ...(c.requireSsl
+      ? {
+          ssl: {
+            rejectUnauthorized: true,
+          },
+        }
+      : undefined),
   });
   hotLoadSafe.mysql = connection;
   (window as any).mysql = connection;
