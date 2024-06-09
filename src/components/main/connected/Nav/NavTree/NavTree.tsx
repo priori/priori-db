@@ -114,7 +114,9 @@ function NavTreeItem0({
           ? icons[item.type as keyof typeof icons]
           : null}
         <div className="nav-tree--item--title">{item.title}</div>
-        {item.children && item.type !== 'schema-folder' ? (
+        {item.children &&
+        item.type !== 'schema-folder' &&
+        item.type !== 'roles-folder' ? (
           <span className="nav-tree--item--count">{item.children.length}</span>
         ) : null}
         {item.includeActions ? (

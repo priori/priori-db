@@ -134,7 +134,12 @@ export function useKeyboardInterations(
       } else if (item.type === 'roles-folder') {
         openRoles();
       }
-    } else if (e.key === 'ArrowLeft' && (!item.isOpen || !item.children)) {
+    } else if (
+      e.key === 'ArrowLeft' &&
+      (!item.isOpen || !item.children) &&
+      item.type !== 'schema-folder' &&
+      item.type !== 'roles-folder'
+    ) {
       const goToSchemaFolder = !!(item.children && item.schema);
       for (let i = index - 1; i >= 0; i -= 1) {
         if (
