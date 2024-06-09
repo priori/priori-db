@@ -2,7 +2,21 @@ import { SimpleValue } from 'db/db';
 import { renderToString } from 'react-dom/server';
 
 export const letterSize = 6;
+function prettyBytes(bytes: number) {
+  const units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  if (bytes === 0 || bytes === 1) return `${bytes} byte`;
+  let i = 0;
+  let n = bytes;
+  while (n >= 1024) {
+    n /= 1024;
+    i += 1;
+  }
+  return `${Math.round(n)} ${units[i]}`;
+}
 export function getValString(val: unknown) {
+  if (val instanceof Buffer) {
+    return `BLOB ${prettyBytes(val.byteLength)}`;
+  }
   return val === null
     ? 'null'
     : val === undefined
@@ -31,9 +45,11 @@ export function getType(val: unknown) {
         typeof val === 'string' ||
         typeof val === 'number'
       ? typeof val
-      : val instanceof Date
-        ? 'date'
-        : undefined;
+      : val instanceof Buffer
+        ? 'blob'
+        : val instanceof Date
+          ? 'date'
+          : undefined;
 }
 
 export function cellClassName(

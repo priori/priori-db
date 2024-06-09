@@ -558,3 +558,17 @@ th.desc.sortable:hover::before {
   left: 0;
   right: 0;
 }
+.blob div {
+  width: calc(100% - 5px);
+  margin: 0 3px;
+  height: 17px;
+  line-height: 17px;
+  position: relative;
+  top: 2px;
+  background: rgba(0, 0, 0, 0.2);
+  font-weight: bold;
+  cursor: default;
+  border-radius: 3px;
+  text-align: center;
+  cursor: pointer;
+}
