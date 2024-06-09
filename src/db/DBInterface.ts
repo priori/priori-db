@@ -13,19 +13,6 @@ import {
 import { DomainInfo, SequenceInfo, TableInfo } from './db';
 
 export interface DBInterface {
-  function(
-    schema: string,
-    name: string,
-  ): Promise<{
-    pgProc: {
-      [key: string]: SimpleValue;
-    };
-    comment: string;
-    definition: string;
-    privileges?: string[];
-    owner: string;
-  }>;
-
   schema(name: string): Promise<{
     privileges?: {
       roleName: string;
@@ -40,8 +27,6 @@ export interface DBInterface {
       [key: string]: SimpleValue;
     } | null;
   }>;
-  sequence(schema: string, name: string): Promise<SequenceInfo>;
-  domain(schema: string, name: string): Promise<DomainInfo>;
   updateSchemaComment:
     | null
     | ((schema: string, comment: string) => Promise<void>);
@@ -75,13 +60,6 @@ export interface DBInterface {
   renameSchema: null | ((schema: string, name: string) => Promise<void>);
   alterSchemaOwner(schema: string, owner: string): Promise<void>;
   alterTableOwner(schema: string, table: string, owner: string): Promise<void>;
-  alterFuncOwner(schema: string, name: string, owner: string): Promise<void>;
-  alterSequenceOwner(
-    schema: string,
-    name: string,
-    owner: string,
-  ): Promise<void>;
-  alterTypeOwner(schema: string, name: string, owner: string): Promise<void>;
   tableSize(
     schema: string,
     table: string,
@@ -105,16 +83,6 @@ export interface DBInterface {
       default?: string | null;
     },
   ): Promise<void>;
-  updateSequence(
-    schema: string,
-    table: string,
-    update: { comment?: string | null; name?: string; schema?: string },
-  ): Promise<void>;
-  updateSequenceValue(
-    schema: string,
-    name: string,
-    value: string,
-  ): Promise<void>;
   updateTable(
     schema: string,
     table: string,
@@ -125,19 +93,9 @@ export interface DBInterface {
     table: string,
     update: { comment?: string | null; name?: string; schema?: string },
   ): Promise<void>;
-  updateDomain(
-    schema: string,
-    table: string,
-    update: { comment?: string | null; name?: string; schema?: string },
-  ): Promise<void>;
   updateMView(
     schema: string,
     table: string,
-    update: { comment?: string | null; name?: string; schema?: string },
-  ): Promise<void>;
-  updateFunction(
-    schema: string,
-    name: string,
     update: { comment?: string | null; name?: string; schema?: string },
   ): Promise<void>;
   removeCol(schema: string, table: string, col: string): Promise<void>;
@@ -185,15 +143,15 @@ export interface DBInterface {
         type: EntityType & ('MATERIALIZED VIEW' | 'VIEW' | 'BASE TABLE');
         name: string;
       }[];
-      functions: {
+      functions?: {
         type: EntityType & 'FUNCTION';
         name: string;
       }[];
-      sequences: {
+      sequences?: {
         type: EntityType & 'SEQUENCE';
         name: string;
       }[];
-      domains: {
+      domains?: {
         type: EntityType & 'DOMAIN';
         name: string;
       }[];
@@ -235,10 +193,6 @@ export interface DBInterface {
   createSchema(schemaName: string): Promise<void>;
   dropSchema(schemaName: string, cascade?: boolean): Promise<void>;
   dropTable(schema: string, name: string, cascade?: boolean): Promise<void>;
-  dropFunction(schema: string, name: string, cascade?: boolean): Promise<void>;
-  dropDomain(schema: string, name: string, cascade?: boolean): Promise<void>;
-  dropSequence(schema: string, name: string, cascade?: boolean): Promise<void>;
-
   hasOpenConnection(): Promise<boolean>;
   closeAll(): Promise<void>;
   newQueryExecutor(
@@ -250,7 +204,6 @@ export interface DBInterface {
   inOpenTransaction(id: number): Promise<boolean>;
   indexesTypes: (() => Promise<string[]>) | undefined;
   nullsLast: boolean;
-
   privileges?: {
     role(name: string): Promise<{
       role: {
@@ -336,5 +289,63 @@ export interface DBInterface {
         isUser: boolean;
       }[]
     >;
+  };
+  functions?: {
+    function(
+      schema: string,
+      name: string,
+    ): Promise<{
+      pgProc: {
+        [key: string]: SimpleValue;
+      };
+      comment: string;
+      definition: string;
+      privileges?: string[];
+      owner: string;
+    }>;
+    updateFunction(
+      schema: string,
+      name: string,
+      update: { comment?: string | null; name?: string; schema?: string },
+    ): Promise<void>;
+    dropFunction(
+      schema: string,
+      name: string,
+      cascade?: boolean,
+    ): Promise<void>;
+    alterFuncOwner(schema: string, name: string, owner: string): Promise<void>;
+  };
+  domains?: {
+    domain(schema: string, name: string): Promise<DomainInfo>;
+    updateDomain(
+      schema: string,
+      table: string,
+      update: { comment?: string | null; name?: string; schema?: string },
+    ): Promise<void>;
+    dropDomain(schema: string, name: string, cascade?: boolean): Promise<void>;
+    alterTypeOwner(schema: string, name: string, owner: string): Promise<void>;
+  };
+  sequences?: {
+    sequence(schema: string, name: string): Promise<SequenceInfo>;
+    updateSequence(
+      schema: string,
+      table: string,
+      update: { comment?: string | null; name?: string; schema?: string },
+    ): Promise<void>;
+    updateSequenceValue(
+      schema: string,
+      name: string,
+      value: string,
+    ): Promise<void>;
+    dropSequence(
+      schema: string,
+      name: string,
+      cascade?: boolean,
+    ): Promise<void>;
+    alterSequenceOwner(
+      schema: string,
+      name: string,
+      owner: string,
+    ): Promise<void>;
   };
 }

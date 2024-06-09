@@ -1,29 +1,36 @@
-import {
-  closeTab,
-  reloadNav,
-  renameEntity,
-  changeSchema,
-  showError,
-} from 'state/actions';
-import { db } from 'db/db';
-import { useMemo, useState } from 'react';
-import { SequenceFrameProps, SequencePrivileges } from 'types';
-import { useEvent } from 'util/useEvent';
-import { useService } from 'util/useService';
 import { useTab } from 'components/main/connected/ConnectedApp';
+import { Comment } from 'components/util/Comment';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
-import { Comment } from 'components/util/Comment';
-import { useIsMounted } from 'util/hooks';
+import { db } from 'db/db';
+import { useMemo, useState } from 'react';
+import {
+  changeSchema,
+  closeTab,
+  reloadNav,
+  renameEntity,
+  showError,
+} from 'state/actions';
 import { currentState } from 'state/state';
+import { SequenceFrameProps, SequencePrivileges } from 'types';
+import { assert } from 'util/assert';
+import { useIsMounted } from 'util/hooks';
+import { useEvent } from 'util/useEvent';
+import { useService } from 'util/useService';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 import { SequencePrivilegesDialog } from './SequencePrivilegesDialog';
 import { TdCheck } from './TableInfoFrame/TableInfoFrame';
 
+function sequenceDb() {
+  const db2 = db();
+  assert(db2.sequences, 'Sequences not supported');
+  return db2.sequences;
+}
+
 export function SequenceFrame(props: SequenceFrameProps) {
   const service = useService(
-    async () => db().sequence(props.schema, props.name),
+    async () => sequenceDb().sequence(props.schema, props.name),
     [props.schema, props.name],
   );
 
@@ -66,7 +73,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
 
   const yesClick = useEvent(() => {
     if (state.dropCascadeConfirmation)
-      db()
+      sequenceDb()
         .dropSequence(props.schema, props.name, true)
         .then(
           () => {
@@ -78,7 +85,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
           },
         );
     else
-      db()
+      sequenceDb()
         .dropSequence(props.schema, props.name)
         .then(
           () => {
@@ -106,27 +113,29 @@ export function SequenceFrame(props: SequenceFrameProps) {
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await db().updateSequence(props.schema, props.name, { comment: text });
+    await sequenceDb().updateSequence(props.schema, props.name, {
+      comment: text,
+    });
     await service.reload();
     set({ ...state, editComment: false });
   });
 
   const onRename = useEvent(async (name: string) => {
-    await db().updateSequence(props.schema, props.name, { name });
+    await sequenceDb().updateSequence(props.schema, props.name, { name });
     renameEntity(props.uid, name);
     reloadNav();
     set({ ...state, rename: false });
   });
 
   const onUpdateCurrentValue = useEvent(async (value: string) => {
-    await db().updateSequenceValue(props.schema, props.name, value);
+    await sequenceDb().updateSequenceValue(props.schema, props.name, value);
     await service.reload();
     reloadNav();
     set({ ...state, updateValue: false });
   });
 
   const onChangeSchema = useEvent(async (schema: string) => {
-    await db().updateSequence(props.schema, props.name, { schema });
+    await sequenceDb().updateSequence(props.schema, props.name, { schema });
     changeSchema(props.uid, schema);
     reloadNav();
     set({ ...state, changeSchema: false });
@@ -136,7 +145,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
   const { roles } = currentState();
   const owner = service.lastValidData?.owner;
   const saveOwner = useEvent(() => {
-    db()
+    sequenceDb()
       .alterSequenceOwner(props.schema, props.name, state.editOwner as string)
       .then(
         () => {

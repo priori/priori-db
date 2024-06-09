@@ -12,15 +12,22 @@ import {
 } from 'state/actions';
 import { currentState } from 'state/state';
 import { DomainFrameProps } from 'types';
+import { assert } from 'util/assert';
 import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 
+function domainsDb() {
+  const d = db();
+  assert(d.domains, 'Domains not supported');
+  return d.domains;
+}
+
 export function DomainFrame(props: DomainFrameProps) {
   const { roles } = currentState();
   const service = useService(
-    () => db().domain(props.schema, props.name),
+    () => domainsDb().domain(props.schema, props.name),
     [props.schema, props.name],
   );
 
@@ -54,7 +61,7 @@ export function DomainFrame(props: DomainFrameProps) {
 
   const yesClick = useEvent(() => {
     if (state.dropCascadeConfirmation)
-      db()
+      domainsDb()
         .dropDomain(props.schema, props.name, true)
         .then(
           () => {
@@ -66,7 +73,7 @@ export function DomainFrame(props: DomainFrameProps) {
           },
         );
     else
-      db()
+      domainsDb()
         .dropDomain(props.schema, props.name)
         .then(
           () => {
@@ -88,20 +95,20 @@ export function DomainFrame(props: DomainFrameProps) {
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await db().updateDomain(props.schema, props.name, { comment: text });
+    await domainsDb().updateDomain(props.schema, props.name, { comment: text });
     await service.reload();
     set({ ...state, editComment: false });
   });
 
   const onRename = useEvent(async (name: string) => {
-    await db().updateDomain(props.schema, props.name, { name });
+    await domainsDb().updateDomain(props.schema, props.name, { name });
     renameEntity(props.uid, name);
     reloadNav();
     set({ ...state, rename: false });
   });
 
   const onChangeSchema = useEvent(async (schema: string) => {
-    await db().updateDomain(props.schema, props.name, { schema });
+    await domainsDb().updateDomain(props.schema, props.name, { schema });
     changeSchema(props.uid, schema);
     reloadNav();
     set({ ...state, changeSchema: false });
@@ -144,7 +151,7 @@ export function DomainFrame(props: DomainFrameProps) {
   const isMounted = useIsMounted();
   const owner = service.lastValidData?.owner;
   const saveOwner = useEvent(() => {
-    db()
+    domainsDb()
       .alterTypeOwner(props.schema, props.name, state.editOwner as string)
       .then(
         () => {

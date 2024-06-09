@@ -28,16 +28,16 @@ function buildEntitites(schemas: NavSchema[]) {
   }
   for (const s of schemas) {
     for (const g of [s.domains, s.sequences, s.functions]) {
-      for (const t of g) {
-        entities.push({
-          name: t.name,
-          schema: s.name,
-          type: t.type,
-          nameLowerCase: t.name.toLowerCase(),
-          fullText: `${s.name}.${t.name}`,
-          fullTextLowerCase: `${s.name.toLowerCase()}.${t.name.toLowerCase()}`,
-        });
-      }
+      if (g)
+        for (const t of g)
+          entities.push({
+            name: t.name,
+            schema: s.name,
+            type: t.type,
+            nameLowerCase: t.name.toLowerCase(),
+            fullText: `${s.name}.${t.name}`,
+            fullTextLowerCase: `${s.name.toLowerCase()}.${t.name.toLowerCase()}`,
+          });
     }
   }
   return entities;

@@ -253,58 +253,6 @@ async function updateEntity(
 }
 
 export const DB: DBInterface = {
-  async function(schema: string, name: string) {
-    async function functionsPrivileges(s: string, n: string) {
-      const res = await list(
-        `
-          SELECT rolname "role"
-          FROM pg_roles
-          WHERE
-          pg_catalog.has_function_privilege(rolname, '${label(s)}.${n}', 'EXECUTE')
-          -- AND NOT rolname ~ '^pg_'
-        `,
-        [],
-      );
-      const rs = res.map((e) => e.role as string);
-      rs.sort((a, b) => {
-        if (a.startsWith('pg_') && !b.startsWith('pg_')) return 1;
-        if (!a.startsWith('pg_') && b.startsWith('pg_')) return -1;
-        return a.localeCompare(b);
-      });
-      return rs;
-    }
-    const [info, privileges] = await Promise.all([
-      first(
-        `
-          SELECT
-            pg_get_functiondef(oid) definition,
-            obj_description(oid) "comment",
-            pg_proc.proowner::regrole "owner",
-            pg_proc.*
-          FROM pg_proc
-          WHERE
-            pg_proc.proname || '('||oidvectortypes(proargtypes)||')' = $2 AND
-            pronamespace = $1::regnamespace
-        `,
-        [schema, name],
-      ),
-      functionsPrivileges(schema, name),
-    ]);
-    const comment = info.comment as string;
-    const definition = info.definition as string;
-    const owner = info.owner as string;
-    delete (info as any).comment;
-    delete (info as any).definition;
-    delete (info as any).owner;
-    return {
-      pgProc: info,
-      comment,
-      definition,
-      privileges,
-      owner,
-    };
-  },
-
   async schema(name: string) {
     async function schemaPrivileges(s: string) {
       const res = await list(
@@ -367,116 +315,6 @@ export const DB: DBInterface = {
       ...owner,
       privileges,
     };
-  },
-
-  async sequence(schema: string, name: string) {
-    async function pgClass(s: string, n: string) {
-      return first(
-        `
-        SELECT pg_class.*
-        FROM pg_class
-        INNER JOIN pg_namespace n ON n.oid = relnamespace AND nspname = $1
-        WHERE relname = $2
-        `,
-        [s, n],
-      );
-    }
-    async function sequenceLastValue(s: string, n: string) {
-      const r = await first(`SELECT last_value FROM ${label(s)}.${label(n)}`);
-      return r.last_value;
-    }
-    async function sequencePrivileges(s: string, n: string) {
-      const res = await list(
-        `
-        SELECT rolname grantee, 'UPDATE' privilege_type
-        FROM pg_roles
-        WHERE
-          pg_catalog.has_sequence_privilege(rolname, '${label(s)}.${label(n)}', 'UPDATE')
-        UNION
-        SELECT rolname grantee, 'SELECT' privilege_type
-        FROM pg_roles
-        WHERE pg_catalog.has_sequence_privilege(rolname, '${label(s)}.${label(n)}', 'SELECT')
-        UNION
-        SELECT rolname grantee, 'USAGE' privilege_type
-        FROM pg_roles
-        WHERE pg_catalog.has_sequence_privilege(rolname, '${label(s)}.${label(n)}', 'USAGE')
-        `,
-        [],
-      );
-      const byGrantee = [...new Set(res.map((r) => r.grantee))].map(
-        (grantee) => ({
-          roleName: grantee as string,
-          privileges: {
-            update: !!res.find(
-              (r) => r.grantee === grantee && r.privilege_type === 'UPDATE',
-            ),
-            select: !!res.find(
-              (r) => r.grantee === grantee && r.privilege_type === 'SELECT',
-            ),
-            usage: !!res.find(
-              (r) => r.grantee === grantee && r.privilege_type === 'USAGE',
-            ),
-          },
-        }),
-      );
-      byGrantee.sort((a, b) => {
-        if (a.roleName.startsWith('pg_') && !b.roleName.startsWith('pg_'))
-          return 1;
-        if (!a.roleName.startsWith('pg_') && b.roleName.startsWith('pg_'))
-          return -1;
-        return a.roleName.localeCompare(b.roleName);
-      });
-      return byGrantee;
-    }
-    const [type, lastValue, comment, privileges] = await Promise.all([
-      pgClass(schema, name),
-      sequenceLastValue(schema, name),
-      first(
-        `SELECT obj_description(oid) "comment",
-          pg_class.relowner::regrole "owner"
-          FROM pg_class
-          WHERE relname = $1 AND relnamespace = $2::regnamespace`,
-        [name, schema],
-      ) as Promise<{ comment: string | null }> as Promise<{
-        comment: string | null;
-        owner: string;
-      }>,
-      sequencePrivileges(schema, name),
-    ]);
-    return { type, lastValue, ...comment, privileges } as SequenceInfo;
-  },
-
-  async domain(schema: string, name: string) {
-    async function domainPrivileges(s: string, n: string) {
-      const res = (await list(
-        `
-        SELECT rolname "role"
-        FROM pg_roles
-        WHERE pg_catalog.has_type_privilege(rolname, '${label(s)}.${label(n)}', 'USAGE')`,
-        [],
-      )) as { role: string }[];
-      const r = res.map((r2) => r2.role);
-      r.sort((a, b) => {
-        if (a.startsWith('pg_') && !b.startsWith('pg_')) return 1;
-        if (!a.startsWith('pg_') && b.startsWith('pg_')) return -1;
-        return a.localeCompare(b);
-      });
-      return r;
-    }
-    const [type, comment, privileges] = await Promise.all([
-      pgType(schema, name),
-      first(
-        `SELECT
-            obj_description(pg_type.oid) "comment",
-            typowner::regrole "owner"
-          FROM pg_type
-          JOIN pg_namespace n ON n.oid = typnamespace
-          WHERE nspname = $1 AND pg_type.typname = $2`,
-        [schema, name],
-      ) as Promise<{ comment: string | null; owner: string }>,
-      domainPrivileges(schema, name),
-    ]);
-    return { type, ...comment, privileges } as DomainInfo;
   },
 
   async updateSchemaComment(schema: string, comment: string) {
@@ -662,27 +500,6 @@ export const DB: DBInterface = {
     `);
   },
 
-  async alterFuncOwner(schema: string, name: string, owner: string) {
-    await query(`
-      ALTER FUNCTION ${label(schema)}.${name}
-      OWNER TO ${label(owner)}
-    `);
-  },
-
-  async alterSequenceOwner(schema: string, name: string, owner: string) {
-    await query(`
-      ALTER SEQUENCE ${label(schema)}.${label(name)}
-      OWNER TO ${label(owner)}
-    `);
-  },
-
-  async alterTypeOwner(schema: string, name: string, owner: string) {
-    await query(`
-      ALTER TYPE ${label(schema)}.${label(name)}
-      OWNER TO ${label(owner)}
-    `);
-  },
-
   async tableSize(schema: string, table: string) {
     const c = await openConnection();
     try {
@@ -810,22 +627,6 @@ export const DB: DBInterface = {
     }
   },
 
-  async updateSequence(
-    schema: string,
-    table: string,
-    update: { comment?: string | null; name?: string; schema?: string },
-  ) {
-    return updateEntity('SEQUENCE', schema, table, update);
-  },
-
-  async updateSequenceValue(schema: string, name: string, value: string) {
-    if (!value || !value.match(/^(\d+|\.)+$/))
-      throw new Error(`Invalid sequence value (${value})`);
-    await query(
-      `ALTER SEQUENCE ${label(schema)}.${label(name)} RESTART WITH ${value}`,
-    );
-  },
-
   async updateTable(
     schema: string,
     table: string,
@@ -842,28 +643,12 @@ export const DB: DBInterface = {
     return updateEntity('VIEW', schema, table, update);
   },
 
-  async updateDomain(
-    schema: string,
-    table: string,
-    update: { comment?: string | null; name?: string; schema?: string },
-  ) {
-    return updateEntity('DOMAIN', schema, table, update);
-  },
-
   async updateMView(
     schema: string,
     table: string,
     update: { comment?: string | null; name?: string; schema?: string },
   ) {
     return updateEntity('MATERIALIZED VIEW', schema, table, update);
-  },
-
-  async updateFunction(
-    schema: string,
-    name: string,
-    update: { comment?: string | null; name?: string; schema?: string },
-  ) {
-    return updateEntity('FUNCTION', schema, name, update);
   },
 
   async removeCol(schema: string, table: string, col: string) {
@@ -1532,37 +1317,6 @@ export const DB: DBInterface = {
     );
   },
 
-  async dropFunction(schema: string, name: string, cascade = false) {
-    const isProcedure = (
-      await first(
-        `SELECT prokind = 'p' is_procedure
-        FROM pg_proc
-        WHERE
-          pg_proc.proname || '('||oidvectortypes(proargtypes)||')' = $2 AND
-          pronamespace = $1::regnamespace
-        `,
-        [schema, name],
-      )
-    ).is_procedure;
-    await query(
-      `DROP ${isProcedure ? 'PROCEDURE' : 'FUNCTION'} ${label(schema)}.${name} ${cascade ? 'CASCADE' : ''}`,
-    );
-  },
-
-  async dropDomain(schema: string, name: string, cascade = false) {
-    await query(
-      `DROP DOMAIN ${label(schema)}.${label(name)} ${cascade ? 'CASCADE' : ''}`,
-    );
-  },
-
-  async dropSequence(schema: string, name: string, cascade = false) {
-    await query(
-      `DROP SEQUENCE ${label(schema)}.${label(name)} ${
-        cascade ? 'CASCADE' : ''
-      }`,
-    );
-  },
-
   hasOpenConnection,
 
   closeAll,
@@ -2226,6 +1980,256 @@ export const DB: DBInterface = {
         await query(`
         REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(role)}
       `);
+    },
+  },
+
+  functions: {
+    async function(schema: string, name: string) {
+      async function functionsPrivileges(s: string, n: string) {
+        const res = await list(
+          `
+          SELECT rolname "role"
+          FROM pg_roles
+          WHERE
+          pg_catalog.has_function_privilege(rolname, '${label(s)}.${n}', 'EXECUTE')
+          -- AND NOT rolname ~ '^pg_'
+        `,
+          [],
+        );
+        const rs = res.map((e) => e.role as string);
+        rs.sort((a, b) => {
+          if (a.startsWith('pg_') && !b.startsWith('pg_')) return 1;
+          if (!a.startsWith('pg_') && b.startsWith('pg_')) return -1;
+          return a.localeCompare(b);
+        });
+        return rs;
+      }
+      const [info, privileges] = await Promise.all([
+        first(
+          `
+          SELECT
+            pg_get_functiondef(oid) definition,
+            obj_description(oid) "comment",
+            pg_proc.proowner::regrole "owner",
+            pg_proc.*
+          FROM pg_proc
+          WHERE
+            pg_proc.proname || '('||oidvectortypes(proargtypes)||')' = $2 AND
+            pronamespace = $1::regnamespace
+        `,
+          [schema, name],
+        ),
+        functionsPrivileges(schema, name),
+      ]);
+      const comment = info.comment as string;
+      const definition = info.definition as string;
+      const owner = info.owner as string;
+      delete (info as any).comment;
+      delete (info as any).definition;
+      delete (info as any).owner;
+      return {
+        pgProc: info,
+        comment,
+        definition,
+        privileges,
+        owner,
+      };
+    },
+    async updateFunction(
+      schema: string,
+      name: string,
+      update: { comment?: string | null; name?: string; schema?: string },
+    ) {
+      return updateEntity('FUNCTION', schema, name, update);
+    },
+
+    async dropFunction(schema: string, name: string, cascade = false) {
+      const isProcedure = (
+        await first(
+          `SELECT prokind = 'p' is_procedure
+        FROM pg_proc
+        WHERE
+          pg_proc.proname || '('||oidvectortypes(proargtypes)||')' = $2 AND
+          pronamespace = $1::regnamespace
+        `,
+          [schema, name],
+        )
+      ).is_procedure;
+      await query(
+        `DROP ${isProcedure ? 'PROCEDURE' : 'FUNCTION'} ${label(schema)}.${name} ${cascade ? 'CASCADE' : ''}`,
+      );
+    },
+
+    async alterFuncOwner(schema: string, name: string, owner: string) {
+      await query(`
+      ALTER FUNCTION ${label(schema)}.${name}
+      OWNER TO ${label(owner)}
+    `);
+    },
+  },
+
+  sequences: {
+    async sequence(schema: string, name: string) {
+      async function pgClass(s: string, n: string) {
+        return first(
+          `
+        SELECT pg_class.*
+        FROM pg_class
+        INNER JOIN pg_namespace n ON n.oid = relnamespace AND nspname = $1
+        WHERE relname = $2
+        `,
+          [s, n],
+        );
+      }
+      async function sequenceLastValue(s: string, n: string) {
+        const r = await first(`SELECT last_value FROM ${label(s)}.${label(n)}`);
+        return r.last_value;
+      }
+      async function sequencePrivileges(s: string, n: string) {
+        const res = await list(
+          `
+        SELECT rolname grantee, 'UPDATE' privilege_type
+        FROM pg_roles
+        WHERE
+          pg_catalog.has_sequence_privilege(rolname, '${label(s)}.${label(n)}', 'UPDATE')
+        UNION
+        SELECT rolname grantee, 'SELECT' privilege_type
+        FROM pg_roles
+        WHERE pg_catalog.has_sequence_privilege(rolname, '${label(s)}.${label(n)}', 'SELECT')
+        UNION
+        SELECT rolname grantee, 'USAGE' privilege_type
+        FROM pg_roles
+        WHERE pg_catalog.has_sequence_privilege(rolname, '${label(s)}.${label(n)}', 'USAGE')
+        `,
+          [],
+        );
+        const byGrantee = [...new Set(res.map((r) => r.grantee))].map(
+          (grantee) => ({
+            roleName: grantee as string,
+            privileges: {
+              update: !!res.find(
+                (r) => r.grantee === grantee && r.privilege_type === 'UPDATE',
+              ),
+              select: !!res.find(
+                (r) => r.grantee === grantee && r.privilege_type === 'SELECT',
+              ),
+              usage: !!res.find(
+                (r) => r.grantee === grantee && r.privilege_type === 'USAGE',
+              ),
+            },
+          }),
+        );
+        byGrantee.sort((a, b) => {
+          if (a.roleName.startsWith('pg_') && !b.roleName.startsWith('pg_'))
+            return 1;
+          if (!a.roleName.startsWith('pg_') && b.roleName.startsWith('pg_'))
+            return -1;
+          return a.roleName.localeCompare(b.roleName);
+        });
+        return byGrantee;
+      }
+      const [type, lastValue, comment, privileges] = await Promise.all([
+        pgClass(schema, name),
+        sequenceLastValue(schema, name),
+        first(
+          `SELECT obj_description(oid) "comment",
+          pg_class.relowner::regrole "owner"
+          FROM pg_class
+          WHERE relname = $1 AND relnamespace = $2::regnamespace`,
+          [name, schema],
+        ) as Promise<{ comment: string | null }> as Promise<{
+          comment: string | null;
+          owner: string;
+        }>,
+        sequencePrivileges(schema, name),
+      ]);
+      return { type, lastValue, ...comment, privileges } as SequenceInfo;
+    },
+
+    async dropSequence(schema: string, name: string, cascade = false) {
+      await query(
+        `DROP SEQUENCE ${label(schema)}.${label(name)} ${
+          cascade ? 'CASCADE' : ''
+        }`,
+      );
+    },
+    async updateSequence(
+      schema: string,
+      table: string,
+      update: { comment?: string | null; name?: string; schema?: string },
+    ) {
+      return updateEntity('SEQUENCE', schema, table, update);
+    },
+
+    async updateSequenceValue(schema: string, name: string, value: string) {
+      if (!value || !value.match(/^(\d+|\.)+$/))
+        throw new Error(`Invalid sequence value (${value})`);
+      await query(
+        `ALTER SEQUENCE ${label(schema)}.${label(name)} RESTART WITH ${value}`,
+      );
+    },
+
+    async alterSequenceOwner(schema: string, name: string, owner: string) {
+      await query(`
+      ALTER SEQUENCE ${label(schema)}.${label(name)}
+      OWNER TO ${label(owner)}
+    `);
+    },
+  },
+
+  domains: {
+    async domain(schema: string, name: string) {
+      async function domainPrivileges(s: string, n: string) {
+        const res = (await list(
+          `
+        SELECT rolname "role"
+        FROM pg_roles
+        WHERE pg_catalog.has_type_privilege(rolname, '${label(s)}.${label(n)}', 'USAGE')`,
+          [],
+        )) as { role: string }[];
+        const r = res.map((r2) => r2.role);
+        r.sort((a, b) => {
+          if (a.startsWith('pg_') && !b.startsWith('pg_')) return 1;
+          if (!a.startsWith('pg_') && b.startsWith('pg_')) return -1;
+          return a.localeCompare(b);
+        });
+        return r;
+      }
+      const [type, comment, privileges] = await Promise.all([
+        pgType(schema, name),
+        first(
+          `SELECT
+            obj_description(pg_type.oid) "comment",
+            typowner::regrole "owner"
+          FROM pg_type
+          JOIN pg_namespace n ON n.oid = typnamespace
+          WHERE nspname = $1 AND pg_type.typname = $2`,
+          [schema, name],
+        ) as Promise<{ comment: string | null; owner: string }>,
+        domainPrivileges(schema, name),
+      ]);
+      return { type, ...comment, privileges } as DomainInfo;
+    },
+
+    async updateDomain(
+      schema: string,
+      table: string,
+      update: { comment?: string | null; name?: string; schema?: string },
+    ) {
+      return updateEntity('DOMAIN', schema, table, update);
+    },
+
+    async dropDomain(schema: string, name: string, cascade = false) {
+      await query(
+        `DROP DOMAIN ${label(schema)}.${label(name)} ${cascade ? 'CASCADE' : ''}`,
+      );
+    },
+
+    async alterTypeOwner(schema: string, name: string, owner: string) {
+      await query(`
+      ALTER TYPE ${label(schema)}.${label(name)}
+      OWNER TO ${label(owner)}
+    `);
     },
   },
 };

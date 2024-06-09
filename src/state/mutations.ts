@@ -426,15 +426,15 @@ export function updateSchemasAndRoles(
       type: 'MATERIALIZED VIEW' | 'VIEW' | 'BASE TABLE';
       name: string;
     }[];
-    functions: {
+    functions?: {
       type: 'FUNCTION';
       name: string;
     }[];
-    sequences: {
+    sequences?: {
       type: 'SEQUENCE';
       name: string;
     }[];
-    domains: {
+    domains?: {
       type: 'DOMAIN';
       name: string;
     }[];
@@ -538,9 +538,9 @@ export function connected(
       name: string;
       type: 'MATERIALIZED VIEW' | 'VIEW' | 'BASE TABLE';
     }[];
-    sequences: { name: string; type: 'SEQUENCE' }[];
-    functions: { name: string; type: 'FUNCTION' }[];
-    domains: { name: string; type: 'DOMAIN' }[];
+    sequences?: { name: string; type: 'SEQUENCE' }[];
+    functions?: { name: string; type: 'FUNCTION' }[];
+    domains?: { name: string; type: 'DOMAIN' }[];
   }[],
   roles?: {
     name: string;

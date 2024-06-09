@@ -43,15 +43,15 @@ export function useMouseInterations(
       } else if (e.type === 'functions-folder') {
         const s = schemas.find((v) => v.name === e.schema);
         assert(s);
-        if (s.functions.length > 0) openFunctions(s);
+        if (s.functions && s.functions.length > 0) openFunctions(s);
       } else if (e.type === 'domains-folder') {
         const s = schemas.find((v) => v.name === e.schema);
         assert(s);
-        if (s.domains.length > 0) openDomains(s);
+        if (s.domains && s.domains.length > 0) openDomains(s);
       } else if (e.type === 'sequences-folder') {
         const s = schemas.find((v) => v.name === e.schema);
         assert(s);
-        if (s.sequences.length > 0) openSequences(s);
+        if (s.sequences && s.sequences.length > 0) openSequences(s);
       } else if (e.type === 'roles-folder') {
         openRoles();
       }

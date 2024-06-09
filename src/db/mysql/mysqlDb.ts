@@ -13,7 +13,6 @@ import {
 } from 'types';
 import { assert } from 'util/assert';
 import hotLoadSafe from 'util/hotLoadSafe';
-import { SequenceInfo, DomainInfo } from 'db/db';
 import { execute, first, list, openConnection, val } from './mysql';
 import { MysqlCol, fixCol, tableInfo } from './tableInfo';
 
@@ -44,15 +43,15 @@ export const mysqlDb: DBInterface = {
         type: EntityType & ('MATERIALIZED VIEW' | 'VIEW' | 'BASE TABLE');
         name: string;
       }[];
-      functions: {
+      functions?: {
         type: EntityType & 'FUNCTION';
         name: string;
       }[];
-      sequences: {
+      sequences?: {
         type: EntityType & 'SEQUENCE';
         name: string;
       }[];
-      domains: {
+      domains?: {
         type: EntityType & 'DOMAIN';
         name: string;
       }[];
@@ -99,9 +98,6 @@ export const mysqlDb: DBInterface = {
         db === 'sys',
       current: db === currentDb,
       tables: tables.filter((t) => t.DATABASE === db),
-      functions: [],
-      sequences: [],
-      domains: [],
     }));
     return listAll;
   },
@@ -532,24 +528,6 @@ export const mysqlDb: DBInterface = {
   },
   renameSchema: null,
   updateSchemaComment: null,
-  function(/*
-    schema: string,
-    name: string,
-  */): Promise<{
-    pgProc: { [key: string]: SimpleValue };
-    comment: string;
-    definition: string;
-    privileges: string[];
-    owner: string;
-  }> {
-    throw new Error('Not implemented!');
-  },
-  sequence(/* schema: string, name: string */): Promise<SequenceInfo> {
-    throw new Error('Not implemented!');
-  },
-  domain(/* schema: string, name: string */): Promise<DomainInfo> {
-    throw new Error('Not implemented!');
-  },
   createTable(/* newTable: {
     name: string;
     owner: string;
@@ -574,49 +552,7 @@ export const mysqlDb: DBInterface = {
   alterTableOwner(/* schema: string, table: string, owner: string */): Promise<void> {
     throw new Error('Not implemented!');
   },
-  alterFuncOwner(/* schema: string, name: string, owner: string */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  alterSequenceOwner() /*
-    schema: string,
-    name: string,
-    owner: string, */
-  : Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  alterTypeOwner(/* schema: string, name: string, owner: string */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  updateSequence(/*
-    schema: string,
-    table: string,
-    update: {
-      comment?: string | null | undefined;
-      name?: string | undefined;
-      schema?: string | undefined;
-    },
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  updateSequenceValue(/*
-    schema: string,
-    name: string,
-    value: string,
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
   updateView(/*
-    schema: string,
-    table: string,
-    update: {
-      comment?: string | null | undefined;
-      name?: string | undefined;
-      schema?: string | undefined;
-    },
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  updateDomain(/*
     schema: string,
     table: string,
     update: {
@@ -638,17 +574,6 @@ export const mysqlDb: DBInterface = {
   */): Promise<void> {
     throw new Error('Not implemented!');
   },
-  updateFunction(/*
-    schema: string,
-    name: string,
-    update: {
-      comment?: string | null | undefined;
-      name?: string | undefined;
-      schema?: string | undefined;
-    },
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
   removeCol(/* schema: string, table: string, col: string */): Promise<void> {
     throw new Error('Not implemented!');
   },
@@ -660,27 +585,6 @@ export const mysqlDb: DBInterface = {
       values: { [fieldName: string]: string | null };
     }[],
     inserts: { [fieldName: string]: string | null }[],
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  dropFunction(/*
-    schema: string,
-    name: string,
-    cascade?: boolean | undefined,
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  dropDomain(/*
-    schema: string,
-    name: string,
-    cascade?: boolean | undefined,
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  dropSequence(/*
-    schema: string,
-    name: string,
-    cascade?: boolean | undefined,
   */): Promise<void> {
     throw new Error('Not implemented!');
   },

@@ -1,21 +1,28 @@
+import { Comment } from 'components/util/Comment';
+import { Dialog } from 'components/util/Dialog/Dialog';
+import { RenameDialog } from 'components/util/Dialog/RenameDialog';
+import { db } from 'db/db';
+import React, { useMemo, useState } from 'react';
 import {
+  changeSchema,
   closeTab,
   reloadNav,
   renameEntity,
-  changeSchema,
   showError,
 } from 'state/actions';
-import { db } from 'db/db';
-import React, { useMemo, useState } from 'react';
+import { currentState } from 'state/state';
 import { FunctionFrameProps } from 'types';
+import { assert } from 'util/assert';
+import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
-import { Dialog } from 'components/util/Dialog/Dialog';
-import { RenameDialog } from 'components/util/Dialog/RenameDialog';
-import { Comment } from 'components/util/Comment';
-import { currentState } from 'state/state';
-import { useIsMounted } from 'util/hooks';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
+
+function functionsDb() {
+  const d = db();
+  assert(d.functions, 'Functions not loaded');
+  return d.functions;
+}
 
 export function FunctionFrame(props: FunctionFrameProps) {
   const { roles } = currentState();
@@ -24,7 +31,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
       ? props.name.substring(0, props.name.lastIndexOf('('))
       : props.name;
   const service = useService(
-    () => db().function(props.schema, props.name),
+    () => functionsDb().function(props.schema, props.name),
     [props.schema, props.name],
   );
 
@@ -60,7 +67,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
 
   const yesClick = useEvent(() => {
     if (state.dropCascadeConfirmation)
-      db()
+      functionsDb()
         .dropFunction(props.schema, props.name, true)
         .then(
           () => {
@@ -72,7 +79,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
           },
         );
     else
-      db()
+      functionsDb()
         .dropFunction(props.schema, props.name)
         .then(
           () => {
@@ -121,7 +128,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await db().updateFunction(props.schema, name, { comment: text });
+    await functionsDb().updateFunction(props.schema, name, { comment: text });
     await service.reload();
     set({ ...state, editComment: false });
   });
@@ -135,14 +142,14 @@ export function FunctionFrame(props: FunctionFrameProps) {
   });
 
   const onRename = useEvent(async (newName: string) => {
-    await db().updateFunction(props.schema, name, { name: newName });
+    await functionsDb().updateFunction(props.schema, name, { name: newName });
     renameEntity(props.uid, newName);
     reloadNav();
     set({ ...state, rename: false });
   });
 
   const onChangeSchema = useEvent(async (schema: string) => {
-    await db().updateFunction(props.schema, name, { schema });
+    await functionsDb().updateFunction(props.schema, name, { schema });
     changeSchema(props.uid, schema);
     reloadNav();
     set({ ...state, changeSchema: false });
@@ -151,7 +158,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
   const isMounted = useIsMounted();
 
   const saveOwner = useEvent(() => {
-    db()
+    functionsDb()
       .alterFuncOwner(props.schema, props.name, state.editOwner as string)
       .then(
         () => {

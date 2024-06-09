@@ -169,7 +169,7 @@ export function SequencePrivilegesDialog(props: SequencePrivilegesDialogProps) {
               {schemaNameValue &&
                 schemas
                   ?.find((s) => s.name === schemaNameValue)
-                  ?.sequences.map((t) => (
+                  ?.sequences?.map((t) => (
                     <option key={t.name} value={t.name}>
                       {t.name}
                     </option>

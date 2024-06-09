@@ -122,15 +122,15 @@ export function useKeyboardInterations(
       } else if (item.type === 'functions-folder') {
         const s = schemas.find((v) => v.name === item.schema);
         assert(s);
-        if (s.functions.length > 0) openFunctions(s);
+        if (s.functions && s.functions.length > 0) openFunctions(s);
       } else if (item.type === 'domains-folder') {
         const s = schemas.find((v) => v.name === item.schema);
         assert(s);
-        if (s.domains.length > 0) openDomains(s);
+        if (s.domains && s.domains.length > 0) openDomains(s);
       } else if (item.type === 'sequences-folder') {
         const s = schemas.find((v) => v.name === item.schema);
         assert(s);
-        if (s.sequences.length > 0) openSequences(s);
+        if (s.sequences && s.sequences.length > 0) openSequences(s);
       } else if (item.type === 'roles-folder') {
         openRoles();
       }
