@@ -234,7 +234,7 @@ export const mysqlDb: DBInterface = {
     update: { comment?: string | null; name?: string; schema?: string },
   ): Promise<void> {
     const con = await openConnection();
-    con.query('START TRANSACTION;');
+    await con.query('START TRANSACTION;');
     try {
       if (update.name || update.schema) {
         await execute(
@@ -261,8 +261,12 @@ export const mysqlDb: DBInterface = {
     return [];
   },
 
-  async pks(_schemaName: string, _tableName: string): Promise<string[]> {
-    return [];
+  async pks(schema: string, table: string): Promise<string[]> {
+    const cols = await list(
+      `SHOW FULL COLUMNS FROM ${label(schema)}.${label(table)}`,
+    );
+    const cols2 = cols.map((c) => fixCol(c as MysqlCol));
+    return cols2.filter((c) => c.is_primary).map((c) => c.column_name);
   },
 
   async select({
@@ -291,21 +295,19 @@ export const mysqlDb: DBInterface = {
             .join(', ')} `
         : ''
     }LIMIT 1000`;
-    const rows = await list(sql, params);
+    const pool = hotLoadSafe.mysql;
+    assert(pool);
+    const [rows, cols] = await pool.query({
+      sql,
+      values: params,
+      rowsAsArray: true,
+    });
     const ret = {
       fields:
-        rows && rows?.length > 0
-          ? Object.keys(rows[0]).map((name) => ({
-              name,
-            }))
-          : [],
-      rows: rows?.map((row) => {
-        const row2 = [];
-        for (const i in row) {
-          row2.push(row[i]);
-        }
-        return row2;
-      }),
+        cols?.map((f) => ({
+          name: f.name,
+        })) ?? [],
+      rows: rows as SimpleValue[][],
     };
     return ret;
   },
@@ -379,7 +381,10 @@ export const mysqlDb: DBInterface = {
         const [rows, fields] = all;
         return {
           rows: rows instanceof Array ? (rows as SimpleValue[][]) : [],
-          fields: fields?.map((f) => ({ name: f.name })) || [],
+          fields:
+            fields?.map((f) => ({
+              name: f.name,
+            })) || [],
           rowCount: 0,
         };
       },
@@ -601,7 +606,7 @@ export const mysqlDb: DBInterface = {
   removeCol(/* schema: string, table: string, col: string */): Promise<void> {
     throw new Error('Not implemented!');
   },
-  update(/*
+  async update(
     schema: string,
     table: string,
     updates: {
@@ -609,9 +614,39 @@ export const mysqlDb: DBInterface = {
       values: { [fieldName: string]: string | null };
     }[],
     inserts: { [fieldName: string]: string | null }[],
-  */): Promise<void> {
-    throw new Error('Not implemented!');
+  ): Promise<void> {
+    const con = await openConnection();
+    try {
+      await con.query('START TRANSACTION;');
+      for (const { where, values } of updates) {
+        await con.query(
+          `UPDATE ${label(schema)}.${label(table)} SET ${Object.keys(values)
+            .map((k) => `${label(k)} = ?`)
+            .join(', ')} WHERE ${Object.keys(where)
+            .map((k) => `${label(k)} = ?`)
+            .join(' AND ')}`,
+          [...Object.values(values), ...Object.values(where)],
+        );
+      }
+      for (const insert of inserts) {
+        await con.query(
+          `INSERT INTO ${label(schema)}.${label(table)} (${Object.keys(insert)
+            .map((k) => label(k))
+            .join(', ')}) VALUES (${Object.keys(insert)
+            .map(() => `?`)
+            .join(', ')})`,
+          Object.values(insert),
+        );
+      }
+      await con.query('COMMIT');
+    } catch (err) {
+      await con.query('ROLLBACK');
+      throw err;
+    } finally {
+      con.release();
+    }
   },
+
   closeAll(): Promise<void> {
     throw new Error('Not implemented!');
   },

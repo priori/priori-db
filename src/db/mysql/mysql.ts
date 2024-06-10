@@ -10,6 +10,7 @@ export async function mysqlListDatabases(
     user: c.user,
     password: c.password,
     port: c.port,
+    dateStrings: true,
     ...(c.requireSsl
       ? {
           ssl: {
@@ -49,6 +50,7 @@ export async function mysqlConnect(c: ConnectionConfiguration, name: string) {
     password: c.password,
     database: name,
     port: c.port,
+    dateStrings: true,
     ...(c.requireSsl
       ? {
           ssl: {
