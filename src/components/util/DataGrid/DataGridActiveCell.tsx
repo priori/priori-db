@@ -86,6 +86,7 @@ interface DataGridActiveCellProps {
   editing: boolean | 1 | 2;
   changed: boolean;
   onBlur: () => void;
+  field?: string;
 }
 export const DataGridActiveCell = React.memo(
   ({
@@ -103,9 +104,10 @@ export const DataGridActiveCell = React.memo(
     editing,
     changed,
     onBlur,
+    field,
   }: DataGridActiveCellProps) => {
     const val = value;
-    const type = getType(val);
+    const type = getType(val, field);
     const valString = getValString(val);
     const { top, left, leftCrop, wrapperWidth } = activePos(
       colsWidths,

@@ -306,6 +306,11 @@ export const mysqlDb: DBInterface = {
       fields:
         cols?.map((f) => ({
           name: f.name,
+          type:
+            f.columnType === 7 ||
+            (f.columnType && f.columnType >= 10 && f.columnType < 14)
+              ? 'date'
+              : undefined,
         })) ?? [],
       rows: rows as SimpleValue[][],
     };
@@ -384,6 +389,11 @@ export const mysqlDb: DBInterface = {
           fields:
             fields?.map((f) => ({
               name: f.name,
+              type:
+                f.columnType === 7 ||
+                (f.columnType && f.columnType >= 10 && f.columnType < 14)
+                  ? 'date'
+                  : undefined,
             })) || [],
           rowCount: 0,
         };

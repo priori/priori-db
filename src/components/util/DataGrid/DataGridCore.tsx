@@ -124,6 +124,7 @@ export function DataGridCore(props: DataGridCoreProps) {
       </div>
       {state.active ? (
         <DataGridActiveCell
+          field={props.result.fields[state.active.colIndex].type}
           scrollLeft={scrollRef.current.top}
           scrollTop={scrollRef.current.left}
           containerHeight={props.height}

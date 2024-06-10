@@ -64,13 +64,13 @@ export const DataGridTable = React.memo(
                   : undefined
               }
             >
-              {fields.map((_, index) => {
+              {fields.map((field, index) => {
                 const hasChange =
                   typeof update?.[slice[0] + rowIndex]?.[index] !== 'undefined';
                 const val = hasChange
                   ? update[slice[0] + rowIndex][index]
                   : row[index];
-                const type = getType(val);
+                const type = getType(val, field.type);
                 const valString = getValString(val);
                 const className = cellClassName(
                   index,

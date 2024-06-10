@@ -201,6 +201,7 @@ export type SimpleValue =
 
 export interface QueryResultDataField {
   name: string;
+  type?: string;
 }
 
 export interface QueryResult {

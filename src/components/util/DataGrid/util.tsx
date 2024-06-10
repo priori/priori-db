@@ -38,7 +38,8 @@ export const topRenderOffset = 100;
 export const allowedBottomDistance = 50;
 export const allowedTopDistance = 50;
 
-export function getType(val: unknown) {
+export function getType(val: unknown, field?: string) {
+  if (field) return field;
   return val === null
     ? 'null'
     : typeof val === 'boolean' ||
