@@ -50,6 +50,13 @@ export interface DataGridState {
   touched: boolean;
 }
 
+// prevent focus for better window drag experience
+function onGridContentMouseDown(e: React.MouseEvent) {
+  if (e.target === e.currentTarget) {
+    e.preventDefault();
+  }
+}
+
 export function DataGridCore(props: DataGridCoreProps) {
   const {
     state,
@@ -158,6 +165,7 @@ export function DataGridCore(props: DataGridCoreProps) {
         className="grid-content"
         onScroll={onScroll}
         ref={gridContentRef}
+        onMouseDown={onGridContentMouseDown}
         style={{
           overflowX: hasBottomScrollbar ? 'scroll' : 'hidden',
           overflowY: hasRightScrollbar ? 'scroll' : 'hidden',
