@@ -159,7 +159,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
 
   const saveOwner = useEvent(() => {
     functionsDb()
-      .alterFuncOwner(props.schema, props.name, state.editOwner as string)
+      .alterFuncOwner?.(props.schema, props.name, state.editOwner as string)
       .then(
         () => {
           if (!isMounted()) return;
@@ -180,11 +180,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
     [service.lastValidData?.privileges],
   );
 
-  const isProcedure = useMemo(() => {
-    if (!info) return undefined;
-    return info.pgProc.prokind === 'p';
-  }, [info]);
-
+  const isProcedure = info?.type === 'procedure';
   return (
     <div>
       <h1>
@@ -197,34 +193,45 @@ export function FunctionFrame(props: FunctionFrameProps) {
         >
           Comment <i className="fa fa-file-text-o" />
         </button>{' '}
-        <button type="button" onClick={() => set({ ...state, rename: true })}>
-          Rename <i className="fa fa-pencil" />
-        </button>{' '}
-        {state.rename ? (
-          <RenameDialog
-            relativeTo="previousSibling"
-            value={name}
-            onCancel={() => set({ ...state, rename: false })}
-            onUpdate={onRename}
-          />
+        {db().functions?.rename ? (
+          <>
+            <button
+              type="button"
+              onClick={() => set({ ...state, rename: true })}
+            >
+              Rename <i className="fa fa-pencil" />
+            </button>{' '}
+            {state.rename ? (
+              <RenameDialog
+                relativeTo="previousSibling"
+                value={name}
+                onCancel={() => set({ ...state, rename: false })}
+                onUpdate={onRename}
+              />
+            ) : null}
+          </>
         ) : null}
-        <button
-          type="button"
-          onClick={() => set({ ...state, changeSchema: true })}
-        >
-          Change Schema{' '}
-          <i
-            className="fa fa-arrow-right"
-            style={{ transform: 'rotate(-45deg)' }}
-          />
-        </button>{' '}
-        {state.changeSchema ? (
-          <ChangeSchemaDialog
-            relativeTo="previousSibling"
-            value={props.schema}
-            onCancel={() => set({ ...state, changeSchema: false })}
-            onUpdate={onChangeSchema}
-          />
+        {db().functions?.move ? (
+          <>
+            <button
+              type="button"
+              onClick={() => set({ ...state, changeSchema: true })}
+            >
+              Change Schema{' '}
+              <i
+                className="fa fa-arrow-right"
+                style={{ transform: 'rotate(-45deg)' }}
+              />
+            </button>{' '}
+            {state.changeSchema ? (
+              <ChangeSchemaDialog
+                relativeTo="previousSibling"
+                value={props.schema}
+                onCancel={() => set({ ...state, changeSchema: false })}
+                onUpdate={onChangeSchema}
+              />
+            ) : null}
+          </>
         ) : null}
         {isProcedure === undefined ? null : (
           <>
@@ -261,16 +268,18 @@ export function FunctionFrame(props: FunctionFrameProps) {
                 </div>
               </Dialog>
             ) : null}
-            <button
-              type="button"
-              onClick={
-                state.dropCascadeConfirmation || state.dropConfirmation
-                  ? undefined
-                  : dropCascade
-              }
-            >
-              Drop Cascade <i className="fa fa-warning" />
-            </button>
+            {db().functions?.dropCascade && (
+              <button
+                type="button"
+                onClick={
+                  state.dropCascadeConfirmation || state.dropConfirmation
+                    ? undefined
+                    : dropCascade
+                }
+              >
+                Drop Cascade <i className="fa fa-warning" />
+              </button>
+            )}
           </>
         )}
       </div>

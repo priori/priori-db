@@ -62,12 +62,26 @@ export const mysqlDb: DBInterface = {
       }[];
     }[]
   > {
-    const currentDb = await val('SELECT DATABASE()');
-    const dbs0 = await list('SHOW DATABASES');
-    const dbs = dbs0.map((db) => db.Database as string);
-    const tables0 = await list(
+    const currentDbP = await val('SELECT DATABASE()');
+    const dbsP = await list('SHOW DATABASES');
+    const tablesP = await list(
       'SELECT table_name, table_schema, table_type FROM INFORMATION_SCHEMA.TABLES ORDER BY table_name',
     );
+    const functionsP = await list(`
+      SELECT routine_name, routine_schema, routine_catalog
+      FROM information_schema.routines`);
+    const [currentDb, dbs0, tables0, functions0] = await Promise.all([
+      currentDbP,
+      dbsP,
+      tablesP,
+      functionsP,
+    ]);
+    const functions = functions0.map((f) => ({
+      type: 'FUNCTION' as EntityType & 'FUNCTION',
+      name: f.ROUTINE_NAME,
+      schema: f.ROUTINE_SCHEMA,
+    }));
+    const dbs = dbs0.map((db) => db.Database as string);
     const tables = tables0.map((t) => ({
       type: (t.TABLE_TYPE === 'SYSTEM VIEW'
         ? 'VIEW'
@@ -102,7 +116,18 @@ export const mysqlDb: DBInterface = {
         db === 'performance_schema' ||
         db === 'sys',
       current: db === currentDb,
-      tables: tables.filter((t) => t.DATABASE === db),
+      tables: tables
+        .filter((t) => t.DATABASE === db)
+        .map((t) => ({
+          type: t.type,
+          name: t.name,
+        })),
+      functions: functions
+        .filter((f) => f.schema === db)
+        .map((f) => ({
+          type: 'FUNCTION' as EntityType & 'FUNCTION',
+          name: f.name,
+        })),
     }));
     return listAll;
   },
@@ -679,5 +704,71 @@ export const mysqlDb: DBInterface = {
       'between',
       'nbetween',
     ];
+  },
+  functions: {
+    async function(
+      schema: string,
+      name: string,
+    ): Promise<{
+      comment: string;
+      type: 'procedure' | 'function';
+      definition: string;
+      privileges?: string[];
+      owner: string;
+    }> {
+      const isProc0 = await first(
+        `SELECT routine_type = 'PROCEDURE' p FROM information_schema.routines
+        WHERE routine_schema = ? AND routine_name = ?`,
+        [schema, name],
+      );
+      const isProc = (isProc0 as any)?.p;
+      const comment = await val(
+        `SELECT routine_comment FROM information_schema.routines
+        WHERE routine_schema = ? AND routine_name = ?`,
+        [schema, name],
+      );
+      const def = await first(
+        `SHOW CREATE ${isProc ? 'PROCEDURE' : 'FUNCTION'} ${label(schema)}.${label(name)}`,
+      );
+      return {
+        type: isProc ? 'procedure' : 'function',
+        comment: comment ?? '',
+        definition: def?.[`Create ${isProc ? 'Procedure' : 'Function'}`] ?? '',
+        owner: '',
+      };
+    },
+
+    rename: false,
+    async updateFunction(
+      schema: string,
+      name: string,
+      update: { comment?: string | null; name?: string; schema?: string },
+    ): Promise<void> {
+      const isProc0 = await first(
+        `SELECT routine_type = 'PROCEDURE' p FROM information_schema.routines
+        WHERE routine_schema = ? AND routine_name = ?`,
+        [schema, name],
+      );
+      const isProc = (isProc0 as any)?.p;
+      const entityName = isProc ? 'PROCEDURE' : 'FUNCTION';
+      if (update.comment) {
+        await execute(
+          `ALTER ${entityName} ${label(schema)}.${label(name)}
+            COMMENT ?`,
+          [update.comment],
+        );
+      }
+    },
+    dropCascade: false,
+    async dropFunction(schema: string, name: string): Promise<void> {
+      const isProc0 = await first(
+        `SELECT routine_type = 'PROCEDURE' p FROM information_schema.routines
+        WHERE routine_schema = ? AND routine_name = ?`,
+        [schema, name],
+      );
+      const isProc = (isProc0 as any)?.p;
+      const entityName = isProc ? 'PROCEDURE' : 'FUNCTION';
+      await execute(`DROP ${entityName} ${label(schema)}.${label(name)}`);
+    },
   },
 };

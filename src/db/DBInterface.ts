@@ -297,25 +297,29 @@ export interface DBInterface {
       schema: string,
       name: string,
     ): Promise<{
-      pgProc: {
+      pgProc?: {
         [key: string]: SimpleValue;
       };
+      type: 'procedure' | 'function';
       comment: string;
       definition: string;
       privileges?: string[];
       owner: string;
     }>;
+    rename?: boolean;
+    move?: boolean;
     updateFunction(
       schema: string,
       name: string,
       update: { comment?: string | null; name?: string; schema?: string },
     ): Promise<void>;
+    dropCascade: boolean;
     dropFunction(
       schema: string,
       name: string,
       cascade?: boolean,
     ): Promise<void>;
-    alterFuncOwner(schema: string, name: string, owner: string): Promise<void>;
+    alterFuncOwner?(schema: string, name: string, owner: string): Promise<void>;
   };
   domains?: {
     domain(schema: string, name: string): Promise<DomainInfo>;

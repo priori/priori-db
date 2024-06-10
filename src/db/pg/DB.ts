@@ -1889,6 +1889,7 @@ export const DB: DBInterface = {
       delete (info as any).owner;
       return {
         pgProc: info,
+        type: (info.pgProc as any).prokind === 'p' ? 'procedure' : 'function',
         comment,
         definition,
         privileges,
@@ -1903,6 +1904,7 @@ export const DB: DBInterface = {
       return updateEntity('FUNCTION', schema, name, update);
     },
 
+    dropCascade: true,
     async dropFunction(schema: string, name: string, cascade = false) {
       const isProcedure = (
         await first(
