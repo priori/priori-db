@@ -265,7 +265,7 @@ export function NavSearch({
           disabled={disabled}
         />
         {searchText ? (
-          <i className="fa fa-close" onClick={onCloseClick} />
+          <i className="fa fa-close" onClick={onCloseClick} tabIndex={0} />
         ) : (
           <i className="fa fa-search" />
         )}
