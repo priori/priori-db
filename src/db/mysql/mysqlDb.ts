@@ -255,12 +255,12 @@ export const mysqlDb: DBInterface = {
     }
   },
 
-  async defaultSort(
-    _schema: string,
-    _tableName: string,
-  ): Promise<{ field: string; direction: string }[] | null> {
+  async defaultSort(): Promise<
+    { field: string; direction: 'asc' | 'desc' }[] | null
+  > {
     return [];
   },
+
   async pks(_schemaName: string, _tableName: string): Promise<string[]> {
     return [];
   },
@@ -268,7 +268,7 @@ export const mysqlDb: DBInterface = {
   async select({
     schema,
     table,
-    // sort,
+    sort,
     filter,
   }: {
     schema: string;
@@ -281,6 +281,15 @@ export const mysqlDb: DBInterface = {
       : { where: '', params: [] };
     const sql = `SELECT * FROM ${label(schema)}.${label(table)} ${
       where ? `WHERE ${where} ` : ''
+    }${
+      sort && sort.length
+        ? `ORDER BY ${sort
+            .map(
+              (x) =>
+                `${label(x.field)}${x.direction === 'desc' ? ' DESC' : ''}`,
+            )
+            .join(', ')} `
+        : ''
     }LIMIT 1000`;
     const rows = await list(sql, params);
     const ret = {

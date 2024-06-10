@@ -133,7 +133,7 @@ export interface DBInterface {
   defaultSort(
     schema: string,
     tableName: string,
-  ): Promise<{ field: string; direction: string }[] | null>;
+  ): Promise<{ field: string; direction: 'asc' | 'desc' }[] | null>;
 
   listAll(): Promise<
     {
