@@ -1,4 +1,5 @@
 import { DBInterface } from 'db/DBInterface';
+import { buildFilterWhere, buildFinalQueryWhere } from 'db/util';
 import { grantError } from 'util/errors';
 import {
   EntityType,
@@ -48,38 +49,6 @@ function label(s: string) {
 export function str(s: string) {
   return `'${s.replace(/'/g, "''")}'`;
 }
-
-function wrapWithParentheses(s: string) {
-  return `(${s})`;
-}
-
-const simpleFilterOperators = {
-  eq: '=',
-  ne: '!=',
-  gt: '>',
-  gte: '>=',
-  lt: '<',
-  lte: '<=',
-  nlike: 'NOT LIKE',
-  like: 'LIKE',
-  ilike: 'ILIKE',
-  nilike: 'NOT ILIKE',
-  similar: 'SIMILAR TO',
-  nsimilar: 'NOT SIMILAR TO',
-};
-
-const filterOperatorsFuncs = {
-  posix: (n: string, v: string) => `regexp_like(${label(n)}, ${v})`,
-  nposix: (n: string, v: string | null) =>
-    `NOT regexp_like(${label(n)}, ${v}))`,
-  posixi: (n: string, v: string | null) => `regexp_ilike(${label(n)}, ${v}))`,
-  nposixi: (n: string, v: string | null) =>
-    `NOT regexp_ilike(${label(n)}, ${v}))`,
-  between: (n: string, v: string, v2: string) =>
-    `${label(n)} BETWEEN ${v} AND ${v2}`,
-  nbetween: (n: string, v: string, v2: string) =>
-    `${label(n)} NOT BETWEEN ${v} AND ${v2}`,
-};
 
 async function pgType(schema: string, name: string) {
   return first(
@@ -334,85 +303,8 @@ export const DB: DBInterface = {
     sort: Sort | null;
     filter: Filter | undefined;
   }): Promise<QueryResultData> {
-    function buildWhere(filter2: Filter): {
-      where: string;
-      params: (string | null)[];
-    } {
-      return {
-        where:
-          'type' in filter2
-            ? (filter2.where as string)
-            : filter2.length === 1 && filter2[0].length === 0
-              ? ''
-              : filter2
-                  .map((ands) =>
-                    ands
-                      .map((f) =>
-                        f.operator in simpleFilterOperators
-                          ? `${f.field ? label(f.field) : '"???"'} ${
-                              simpleFilterOperators[
-                                f.operator as keyof typeof simpleFilterOperators
-                              ]
-                            } ${
-                              f.sql && f.value
-                                ? wrapWithParentheses(f.value ?? '')
-                                : f.sql
-                                  ? '<<SQL>>'
-                                  : (f as { value: string | null }).value ===
-                                      null
-                                    ? 'NULL'
-                                    : str((f as { value: string }).value)
-                            }`
-                          : f.operator in filterOperatorsFuncs
-                            ? (f.sql && !f.value ? '-- ' : '') +
-                              filterOperatorsFuncs[
-                                f.operator as keyof typeof filterOperatorsFuncs
-                              ](
-                                f.field,
-                                f.sql
-                                  ? f.value
-                                    ? wrapWithParentheses(f.value)
-                                    : '<<SQL>>'
-                                  : (f as { value: string | null }).value ===
-                                      null
-                                    ? 'NULL'
-                                    : str((f as { value: string }).value),
-                                'sql2' in f && f.sql2
-                                  ? f.value2
-                                    ? wrapWithParentheses(f.value2)
-                                    : '<<SQL>>'
-                                  : (f as { value2: string | null }).value2 ===
-                                      null
-                                    ? 'NULL'
-                                    : str((f as { value2: string }).value2),
-                              )
-                            : f.operator === 'in' || f.operator === 'nin'
-                              ? `${f.field ? label(f.field) : '???'} ${
-                                  f.operator === 'in' ? 'IN' : 'NOT IN'
-                                } (${(f as { values: string[] }).values
-                                  .map(str)
-                                  .join(', ')})`
-                              : f.field
-                                ? /* --  */ `${label(f.field)} ???`
-                                : /* --  */ `???${
-                                    (f as { value?: string | null }).value ===
-                                    null
-                                      ? ' null'
-                                      : (f as { value?: string }).value
-                                        ? ` ${str((f as { value: string }).value)}`
-                                        : ''
-                                  }`,
-                      )
-                      .filter((v) => v),
-                  )
-                  .map((p) => p.join('\nAND ') || '  ??')
-                  .join('\nOR\n')
-                  .replace(/\nAND --/g, '\n-- AND '),
-        params: [],
-      };
-    }
     const { where, params } = filter
-      ? buildWhere(filter)
+      ? buildFinalQueryWhere(label, str, filter)
       : { where: '', params: [] };
     const sql = `SELECT * FROM ${label(schema)}.${label(table)} ${
       where ? `WHERE ${where} ` : ''
@@ -1330,66 +1222,7 @@ export const DB: DBInterface = {
   },
 
   buildFilterWhere(filter: Filter): string {
-    if ('type' in filter) return filter.where;
-    if (filter.length === 1 && filter[0].length === 0) return '';
-    const parts = filter.map((ands) =>
-      ands
-        .map((f) =>
-          f.operator in simpleFilterOperators
-            ? `${f.field ? label(f.field) : '"???"'} ${
-                simpleFilterOperators[
-                  f.operator as keyof typeof simpleFilterOperators
-                ]
-              } ${
-                f.sql && f.value
-                  ? wrapWithParentheses(f.value ?? '')
-                  : f.sql
-                    ? '<<SQL>>'
-                    : (f as { value: string | null }).value === null
-                      ? 'NULL'
-                      : str((f as { value: string }).value)
-              }`
-            : f.operator in filterOperatorsFuncs
-              ? (f.sql && !f.value ? '-- ' : '') +
-                filterOperatorsFuncs[
-                  f.operator as keyof typeof filterOperatorsFuncs
-                ](
-                  f.field,
-                  f.sql
-                    ? f.value
-                      ? wrapWithParentheses(f.value)
-                      : '<<SQL>>'
-                    : (f as { value: string | null }).value === null
-                      ? 'NULL'
-                      : str((f as { value: string }).value),
-                  'sql2' in f && f.sql2
-                    ? f.value2
-                      ? wrapWithParentheses(f.value2)
-                      : '<<SQL>>'
-                    : (f as { value2: string | null }).value2 === null
-                      ? 'NULL'
-                      : str((f as { value2: string }).value2),
-                )
-              : f.operator === 'in' || f.operator === 'nin'
-                ? `${f.field ? label(f.field) : '???'} ${
-                    f.operator === 'in' ? 'IN' : 'NOT IN'
-                  } (${(f as { values: string[] }).values.map(str).join(', ')})`
-                : f.field
-                  ? /* --  */ `${label(f.field)} ???`
-                  : /* --  */ `???${
-                      (f as { value?: string | null }).value === null
-                        ? ' null'
-                        : (f as { value?: string }).value
-                          ? ` ${str((f as { value: string }).value)}`
-                          : ''
-                    }`,
-        )
-        .filter((v) => v),
-    );
-    return parts
-      .map((p) => p.join('\nAND ') || '  ??')
-      .join('\nOR\n')
-      .replace(/\nAND --/g, '\n-- AND ');
+    return buildFilterWhere(label, str, filter);
   },
 
   async inOpenTransaction(id: number) {
@@ -1411,6 +1244,33 @@ export const DB: DBInterface = {
   },
 
   nullsLast: true,
+
+  async operators() {
+    return [
+      'eq',
+      'ne',
+      'gt',
+      'gte',
+      'lt',
+      'lte',
+      'like',
+      'nlike',
+      'ilike',
+      'nilike',
+      'similar',
+      'nsimilar',
+      'posix',
+      'nposix',
+      'posixi',
+      'nposixi',
+      'null',
+      'notnull',
+      'in',
+      'nin',
+      'between',
+      'nbetween',
+    ];
+  },
 
   privileges: {
     async role(name: string) {

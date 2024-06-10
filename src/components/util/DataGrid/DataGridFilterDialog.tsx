@@ -1,5 +1,6 @@
+import { Filter, db, operatorsLabels } from 'db/db';
 import React, { useState } from 'react';
-import { Filter, operatorsLabels, db } from 'db/db';
+import { useService } from 'util/useService';
 import { Dialog } from '../Dialog/Dialog';
 
 function ValueListInput({
@@ -121,6 +122,9 @@ function fit() {
 
 export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
   const [focus, setFocus] = useState<[number, number, 0 | 1] | null>(null);
+
+  const operatorsS = useService(() => db().operators(), []);
+  const operators = operatorsS.lastValidData ?? [];
 
   const onCancelClick = () => {
     props.onClose();
@@ -462,7 +466,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                       }}
                     >
                       {formField?.operator ? null : <option value="" />}
-                      {Object.keys(operatorsLabels).map((operator) => (
+                      {operators.map((operator) => (
                         <option key={operator} value={operator}>
                           {
                             operatorsLabels[

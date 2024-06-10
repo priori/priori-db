@@ -1,6 +1,7 @@
 import {
   EntityType,
   Filter,
+  FilterOperator,
   Notice,
   QueryExecutor,
   QueryResultData,
@@ -204,6 +205,7 @@ export interface DBInterface {
   inOpenTransaction(id: number): Promise<boolean>;
   indexesTypes: (() => Promise<string[]>) | undefined;
   nullsLast: boolean;
+  operators(): Promise<FilterOperator[]>;
   privileges?: {
     role(name: string): Promise<{
       role: {

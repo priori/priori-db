@@ -239,7 +239,37 @@ export interface QueryExecutor {
   destroy(): void;
 }
 
-export const operatorsLabels = {
+export type FilterOperator =
+  | 'eq'
+  | 'ne'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'like'
+  | 'nlike'
+  | 'null'
+  | 'notnull'
+  | 'in'
+  | 'nin'
+  | 'between'
+  | 'nbetween'
+  // postgres
+  | 'ilike'
+  | 'nilike'
+  | 'similar'
+  | 'nsimilar'
+  | 'posix'
+  | 'nposix'
+  | 'posixi'
+  | 'nposixi'
+  // mysql
+  | 'regexplike'
+  | 'nregexplike';
+
+export const operatorsLabels: {
+  [k in FilterOperator]: string;
+} = {
   eq: '=',
   ne: '≠',
   gt: '>',
@@ -248,6 +278,13 @@ export const operatorsLabels = {
   lte: '≤',
   like: 'LIKE',
   nlike: 'NOT LIKE',
+  null: 'IS NULL',
+  notnull: 'IS NOT NULL',
+  in: 'IN',
+  nin: 'NOT IN',
+  between: 'BETWEEN',
+  nbetween: 'NOT BETWEEN',
+  // postgres
   ilike: 'ILIKE',
   nilike: 'NOT ILIKE',
   similar: 'SIMILAR TO',
@@ -256,12 +293,9 @@ export const operatorsLabels = {
   nposix: 'NOT REGEXP LIKE (POSIX)',
   posixi: 'REGEXP ILIKE',
   nposixi: 'NOT REGEXP ILIKE',
-  null: 'IS NULL',
-  notnull: 'IS NOT NULL',
-  in: 'IN',
-  nin: 'NOT IN',
-  between: 'BETWEEN',
-  nbetween: 'NOT BETWEEN',
+  // mysql
+  regexplike: 'REGEXP_LIKE',
+  nregexplike: 'NOT REGEXP_LIKE',
 };
 
 export type Filter =
@@ -281,6 +315,8 @@ export type Filter =
             | 'nilike'
             | 'similar'
             | 'nsimilar'
+            | 'regexplike'
+            | 'nregexplike'
             | 'posix'
             | 'nposix'
             | 'posixi'
@@ -307,7 +343,6 @@ export type Filter =
         }
     )[][]
   | { type: 'query'; where: string };
-
 export type Sort = {
   field: string;
   direction: 'asc' | 'desc';

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { DBInterface } from 'db/DBInterface';
+import { buildFilterWhere, buildFinalQueryWhere } from 'db/util';
 import { PoolConnection } from 'mysql2/promise';
 import {
   EntityType,
@@ -31,6 +32,10 @@ function prettyBytes(bytes: number) {
 
 export function label(s: string) {
   return `\`${s.replace(/`/g, '``')}\``;
+}
+
+function str(s: string) {
+  return `'${s.replace(/'/g, "'").replace(/\\/g, '\\\\')}'`;
 }
 
 export const mysqlDb: DBInterface = {
@@ -264,14 +269,20 @@ export const mysqlDb: DBInterface = {
     schema,
     table,
     // sort,
-    // filter,
+    filter,
   }: {
     schema: string;
     table: string;
     sort: Sort | null;
     filter: Filter | undefined;
   }): Promise<QueryResultData> {
-    const rows = await list(`SELECT * FROM ${schema}.${table}`);
+    const { where, params } = filter
+      ? buildFinalQueryWhere(label, str, filter)
+      : { where: '', params: [] };
+    const sql = `SELECT * FROM ${label(schema)}.${label(table)} ${
+      where ? `WHERE ${where} ` : ''
+    }LIMIT 1000`;
+    const rows = await list(sql, params);
     const ret = {
       fields:
         rows && rows?.length > 0
@@ -288,6 +299,10 @@ export const mysqlDb: DBInterface = {
       }),
     };
     return ret;
+  },
+
+  buildFilterWhere(filter: Filter): string {
+    return buildFilterWhere(label, str, filter);
   },
 
   async tableSize(
@@ -591,7 +606,24 @@ export const mysqlDb: DBInterface = {
   closeAll(): Promise<void> {
     throw new Error('Not implemented!');
   },
-  buildFilterWhere(/* filter: Filter */): string {
-    throw new Error('Not implemented!');
+  async operators() {
+    return [
+      'eq',
+      'ne',
+      'gt',
+      'gte',
+      'lt',
+      'lte',
+      'like',
+      'nlike',
+      'regexplike',
+      'nregexplike',
+      'null',
+      'notnull',
+      'in',
+      'nin',
+      'between',
+      'nbetween',
+    ];
   },
 };

@@ -2,6 +2,7 @@ import {
   ConnectionConfiguration,
   SequencePrivileges,
   TablePrivileges,
+  Filter as ImportedFilter,
 } from 'types';
 import hotLoadSafe from 'util/hotLoadSafe';
 import { DBInterface } from './DBInterface';
@@ -152,6 +153,13 @@ export const operatorsLabels = {
   lte: '≤',
   like: 'LIKE',
   nlike: 'NOT LIKE',
+  null: 'IS NULL',
+  notnull: 'IS NOT NULL',
+  in: 'IN',
+  nin: 'NOT IN',
+  between: 'BETWEEN',
+  nbetween: 'NOT BETWEEN',
+  // postgres
   ilike: 'ILIKE',
   nilike: 'NOT ILIKE',
   similar: 'SIMILAR TO',
@@ -160,57 +168,10 @@ export const operatorsLabels = {
   nposix: 'NOT REGEXP LIKE (POSIX)',
   posixi: 'REGEXP ILIKE',
   nposixi: 'NOT REGEXP ILIKE',
-  null: 'IS NULL',
-  notnull: 'IS NOT NULL',
-  in: 'IN',
-  nin: 'NOT IN',
-  between: 'BETWEEN',
-  nbetween: 'NOT BETWEEN',
-};
-
-export type Filter =
-  | (
-      | {
-          field: string;
-          operator:
-            | 'eq'
-            | 'ne'
-            | 'gt'
-            | 'gte'
-            | 'lt'
-            | 'lte'
-            | 'like'
-            | 'nlike'
-            | 'ilike'
-            | 'nilike'
-            | 'similar'
-            | 'nsimilar'
-            | 'posix'
-            | 'nposix'
-            | 'posixi'
-            | 'nposixi'
-            | 'null'
-            | 'notnull'
-            | '';
-          value: string | null;
-          sql?: boolean;
-        }
-      | {
-          field: string;
-          operator: 'in' | 'nin';
-          values: (string | null)[];
-          sql?: never;
-        }
-      | {
-          field: string;
-          operator: 'between' | 'nbetween';
-          value: string | null;
-          value2: string | null;
-          sql?: boolean;
-          sql2?: boolean;
-        }
-    )[][]
-  | { type: 'query'; where: string };
+  // mysql
+  regexplike: 'REGEXP_LIKE',
+  nregexplike: 'NOT REGEXP_LIKE',
+} as const;
 
 export type Sort = {
   field: string;
@@ -236,6 +197,8 @@ export async function connect(c: ConnectionConfiguration, name: string) {
   }
   throw new Error('Unsupported database type');
 }
+
+export type Filter = ImportedFilter;
 
 export async function listDatabases(
   c: Omit<ConnectionConfiguration, 'id'> | ConnectionConfiguration,
