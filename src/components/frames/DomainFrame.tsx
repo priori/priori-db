@@ -176,6 +176,9 @@ export function DomainFrame(props: DomainFrameProps) {
   return (
     <div>
       <h1>
+        <span className="adjustment-icon2">
+          <div />
+        </span>
         {props.schema}.{props.name}
       </h1>
       <div className="table-info-frame__actions">

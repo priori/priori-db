@@ -175,7 +175,12 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
 
   return (
     <div>
-      <h1>{props.schema}</h1>
+      <h1>
+        <span className="adjustment-icon2">
+          <div />
+        </span>
+        {props.schema}
+      </h1>
       <div className="table-info-frame__actions">
         {db().updateSchemaComment ? (
           <>

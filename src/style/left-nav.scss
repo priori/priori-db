@@ -36,24 +36,42 @@ div.nav {
     &:hover,
     &.focused {
       background: #dfdfdf;
+      --bg: #dfdfdf;
     }
     &.open {
       color: #04b;
-      background: rgba(0, 0, 0, 0.04);
+      background: #ebebeb;
+      --bg: #ebebeb;
     }
     &.open:hover {
       background: #ddd;
+      --bg: #ddd;
     }
     &.active {
       background: #1976d2;
+      --bg: #1976d2;
       color: white;
       text-shadow: 0 1px 1px #15c;
     }
     &.active:hover {
       background: #15d;
+      --bg: #15d;
     }
-    &.active:hover i {
+    &.active:hover i,
+    &.active i {
       color: white;
+    }
+    &.active .adjustment-icon {
+      border-top-color: white;
+      border-bottom-color: white;
+      opacity: 0.7;
+      &:hover {
+        opacity: 1;
+      }
+      &:before,
+      &:after {
+        border-color: white;
+      }
     }
   }
 
@@ -237,19 +255,8 @@ div.nav .fa-search {
   margin-top: 1px;
   padding-left: 2px;
 }
-.nav-search--entity .fa-info-circle {
-  font-size: 12px;
-  color: #888;
-  display: none;
-  margin-top: 3px;
-  margin-right: 3px;
-  cursor: pointer;
-}
-.nav-search--entity:hover .fa-info-circle {
-  display: inline-block;
-  &:hover {
-    color: #000;
-  }
+.nav-search--entity:hover .adjustment-icon {
+  display: block;
 }
 
 .nav-search--entity.focused:before {

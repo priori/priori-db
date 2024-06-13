@@ -378,6 +378,9 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   return (
     <>
       <h1>
+        <span className="adjustment-icon2">
+          <div />
+        </span>
         {props.schema}.{props.table}
       </h1>
       <div className="table-info-frame__actions">

@@ -456,7 +456,12 @@ export function RoleFrame(props: RoleFrameProps) {
 
   return (
     <div>
-      <h1>{props.name}</h1>
+      <h1>
+        <span className="adjustment-icon2">
+          <div />
+        </span>
+        {props.name}
+      </h1>
       <div className="table-info-frame__actions">
         <button
           type="button"

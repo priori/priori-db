@@ -269,7 +269,8 @@ export function useTree(
             ((v2.type === 'table' ||
               v2.type === 'view' ||
               v2.type === 'mview') &&
-              tabs.active?.props.type === 'table' &&
+              (tabs.active?.props.type === 'table' ||
+                tabs.active?.props.type === 'tableinfo') &&
               tabs.active.props.table === v2.title) ||
             ((v2.type === 'role' || v2.type === 'user') &&
               tabs.active?.props.type === 'role' &&

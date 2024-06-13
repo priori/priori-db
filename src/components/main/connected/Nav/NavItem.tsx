@@ -118,8 +118,8 @@ export function NavItem({
       {entity.type === 'BASE TABLE' ||
       entity.type === 'MATERIALIZED VIEW' ||
       entity.type === 'VIEW' ? (
-        <i
-          className="fa fa-info-circle"
+        <div
+          className="adjustment-icon"
           title={`${entity.type} INFO`}
           onClick={onInfoClick}
           onDoubleClick={onInfoDoubleClick}

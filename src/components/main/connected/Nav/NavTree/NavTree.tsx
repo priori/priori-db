@@ -123,8 +123,8 @@ function NavTreeItem0({
           <i className="fa fa-plus" onClick={onPlusClick} />
         ) : null}
         {item.infoAction ? (
-          <i
-            className="fa fa-info-circle"
+          <span
+            className="adjustment-icon"
             onClick={onInfoClick}
             onDoubleClick={onInfoDblClick}
           />

@@ -209,6 +209,9 @@ export function SequenceFrame(props: SequenceFrameProps) {
   return (
     <div>
       <h1>
+        <span className="adjustment-icon2">
+          <div />
+        </span>
         {props.schema}.{props.name}
       </h1>
       <div
