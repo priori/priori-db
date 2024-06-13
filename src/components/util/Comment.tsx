@@ -55,7 +55,16 @@ export function Comment({
       style={
         value && value.length < 35 && value.indexOf('\n') === -1
           ? { fontSize: '45px' }
-          : undefined
+          : value &&
+              value.length > 200 &&
+              value.indexOf('+--') > -1 &&
+              value.indexOf('--+') > -1
+            ? {
+                fontSize: 13,
+                whiteSpace: 'pre-wrap',
+                fontFamily: 'Inconsolata',
+              }
+            : undefined
       }
     >
       {value}
