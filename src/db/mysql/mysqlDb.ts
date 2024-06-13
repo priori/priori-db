@@ -20,6 +20,8 @@ import { MysqlCol, fixCol, tableInfo } from './tableInfo';
 const openIds = new Set<number>();
 
 function prettyBytes(bytes: number) {
+  if (bytes === 0) return '0 byte';
+  if (bytes === 1) return '1 byte';
   const units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
   let i = 0;
   let n = bytes;
