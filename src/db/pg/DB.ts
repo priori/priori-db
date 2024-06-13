@@ -1760,11 +1760,14 @@ export const DB: DBInterface = {
       const comment = info.comment as string;
       const definition = info.definition as string;
       const owner = info.owner as string;
-      delete (info as any).definition;
-      delete (info as any).owner;
+      delete info.definition;
+      delete info.prosqlbody;
+      delete info.comment;
+      delete info.definition;
+      delete info.owner;
       return {
         pgProc: info,
-        type: (info.pgProc as any).prokind === 'p' ? 'procedure' : 'function',
+        type: (info.pgProc as any)?.prokind === 'p' ? 'procedure' : 'function',
         comment,
         definition,
         privileges,
