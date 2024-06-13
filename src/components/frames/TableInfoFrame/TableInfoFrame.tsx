@@ -586,30 +586,36 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           <div style={{ flex: 1, marginRight: 10 }}>
                             {col.column_name}{' '}
                           </div>
-                          <div>
-                            <button
-                              type="button"
-                              className="simple-button"
-                              style={{ float: 'right' }}
-                              onClick={() =>
-                                set({ ...edit, renameColumn: col.column_name })
-                              }
-                            >
-                              Rename <i className="fa fa-pencil" />
-                            </button>
-                            {col.column_name === edit.renameColumn ? (
-                              <RenameDialog
-                                value={col.column_name}
-                                relativeTo="previousSibling"
-                                onCancel={() =>
-                                  set({ ...edit, renameColumn: null })
+                          {state.subType === 'table' ||
+                          db().updateColumnViewName ? (
+                            <div>
+                              <button
+                                type="button"
+                                className="simple-button"
+                                style={{ float: 'right' }}
+                                onClick={() =>
+                                  set({
+                                    ...edit,
+                                    renameColumn: col.column_name,
+                                  })
                                 }
-                                onUpdate={(name) =>
-                                  renameColumn(col.column_name, name)
-                                }
-                              />
-                            ) : null}
-                          </div>
+                              >
+                                Rename <i className="fa fa-pencil" />
+                              </button>
+                              {col.column_name === edit.renameColumn ? (
+                                <RenameDialog
+                                  value={col.column_name}
+                                  relativeTo="previousSibling"
+                                  onCancel={() =>
+                                    set({ ...edit, renameColumn: null })
+                                  }
+                                  onUpdate={(name) =>
+                                    renameColumn(col.column_name, name)
+                                  }
+                                />
+                              ) : null}
+                            </div>
+                          ) : null}
                         </div>
                       </td>
                       <td>{col.data_type}</td>
@@ -634,7 +640,8 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         className={!col.comment ? 'actions' : undefined}
                       >
                         {col.comment}
-                        {col.comment ? (
+                        {(col.comment && state.subType === 'table') ||
+                        db().updateColumnViewName ? (
                           <>
                             {' '}
                             <button
@@ -648,7 +655,8 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                               <i className="fa fa-pencil" />
                             </button>
                           </>
-                        ) : (
+                        ) : state.subType === 'table' ||
+                          db().updateColumnViewName ? (
                           <button
                             type="button"
                             className="simple-button"
@@ -658,7 +666,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           >
                             Create Comment <i className="fa fa-pencil" />
                           </button>
-                        )}
+                        ) : null}
                         {col.column_name === edit.commentColumn ? (
                           <InputDialog
                             type="textarea"
@@ -804,7 +812,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           alignItems: 'center',
                         }}
                       >
-                        <div style={{ flex: 1 }}>{index.name} </div>
+                        <div style={{ flex: 1 }}>{index.name}</div>
                         <div>
                           <button
                             type="button"

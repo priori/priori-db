@@ -1271,6 +1271,9 @@ export const DB: DBInterface = {
     ];
   },
 
+  updateColumnViewName: true,
+  updateColumnViewComment: true,
+
   privileges: {
     async tablePrivilegesTypes() {
       return [

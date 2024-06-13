@@ -705,6 +705,10 @@ export const mysqlDb: DBInterface = {
       'nbetween',
     ];
   },
+
+  updateColumnViewName: false,
+  updateColumnViewComment: false,
+
   functions: {
     async function(
       schema: string,

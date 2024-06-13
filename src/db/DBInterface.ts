@@ -207,6 +207,8 @@ export interface DBInterface {
   indexesTypes: (() => Promise<string[]>) | undefined;
   nullsLast: boolean;
   operators(): Promise<FilterOperator[]>;
+  updateColumnViewName: boolean;
+  updateColumnViewComment: boolean;
   privileges?: {
     tablePrivilegesTypes(): Promise<TablePrivilegesType[]>;
     listRoles(): Promise<
