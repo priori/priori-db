@@ -39,6 +39,10 @@ export async function tableInfo(
   const cols = await list(
     `SHOW FULL COLUMNS FROM ${label(schema)}.${label(table)}`,
   );
+  const table0 = (await first(
+    'SELECT table_type FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?',
+    [schema, table],
+  )) as { TABLE_TYPE: string };
   const indexesRet = (await list(
     `SHOW INDEXES FROM ${label(schema)}.${label(table)}`,
   )) as {
@@ -114,7 +118,12 @@ export async function tableInfo(
     }
   }
   const tableInfoRet: TableInfo = {
-    subType: 'table',
+    subType:
+      table0.TABLE_TYPE === 'SYSTEM VIEW' || table0.TABLE_TYPE === 'VIEW'
+        ? 'view'
+        : table0.TABLE_TYPE === 'MAT_VIEW'
+          ? 'mview'
+          : 'table',
     comment: comment.TABLE_COMMENT || null,
     cols: cols.map((c) => fixCol(c as MysqlCol)),
     indexes,

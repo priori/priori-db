@@ -83,7 +83,7 @@ export const mysqlDb: DBInterface = {
     }));
     const dbs = dbs0.map((db) => db.Database as string);
     const tables = tables0.map((t) => ({
-      type: (t.TABLE_TYPE === 'SYSTEM VIEW'
+      type: (t.TABLE_TYPE === 'SYSTEM VIEW' || t.TABLE_TYPE === 'VIEW'
         ? 'VIEW'
         : t.type === 'MAT_VIEW'
           ? 'MATERIALIZED VIEW'
@@ -167,7 +167,6 @@ export const mysqlDb: DBInterface = {
         default:
           update?.default !== undefined ? update.default : curr.column_default,
       };
-
       const q = `ALTER TABLE ${label(schema)}.${label(table)}
           MODIFY COLUMN ${label(column)} ${merge.type} ${
             merge.length
