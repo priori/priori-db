@@ -570,13 +570,13 @@ export const mysqlDb: DBInterface = {
   },
   nullsLast: false,
   async schema(_name: string): Promise<{
-    privileges: {
+    /* privileges: {
       roleName: string;
       privileges: {
         create: boolean;
         usage: boolean;
       };
-    }[];
+    }[]; */
     owner: string;
     comment: string;
     pgNamesspace: {
@@ -584,7 +584,6 @@ export const mysqlDb: DBInterface = {
     } | null;
   }> {
     return {
-      privileges: [],
       owner: '',
       comment: '',
       pgNamesspace: null,
@@ -769,6 +768,78 @@ export const mysqlDb: DBInterface = {
       const isProc = (isProc0 as any)?.p;
       const entityName = isProc ? 'PROCEDURE' : 'FUNCTION';
       await execute(`DROP ${entityName} ${label(schema)}.${label(name)}`);
+    },
+  },
+
+  privileges: {
+    async tablePrivilegesTypes() {
+      return [
+        'update',
+        'insert',
+        'select',
+        'delete',
+        'references',
+        'trigger',
+        'index',
+        'drop',
+        'alter',
+        'showView',
+      ];
+    },
+
+    async listRoles() {
+      const roles = await list(`
+        SELECT User, Host, authentication_string != '' and authentication_string IS not NULL is_user
+        FROM mysql.user
+      `);
+      return roles.map((r) => ({
+        name: r.User,
+        isUser: r.is_user,
+        host: r.Host,
+      }));
+    },
+
+    async updateTablePrivileges(
+      schema: string,
+      table: string,
+      grantee: string,
+      privileges: {
+        [k: string]: boolean;
+      },
+      host?: string,
+    ): Promise<void> {
+      const grants = Object.keys(privileges)
+        .filter((k) => privileges[k as keyof typeof privileges])
+        .map((k) =>
+          k.replace(/([A-Z])/g, (m) => ` ${m.toLowerCase()}`).toUpperCase(),
+        )
+        .join(', ');
+      const revokes = Object.keys(privileges)
+        .filter((k) => privileges[k as keyof typeof privileges] === false)
+        .map((k) =>
+          k.replace(/([A-Z])/g, (m) => ` ${m.toLowerCase()}`).toUpperCase(),
+        )
+        .join(', ');
+      const con = await openConnection();
+      try {
+        if (revokes) {
+          await con.query(
+            `REVOKE ${revokes} ON ${label(schema)}.${label(table)} FROM ${label(grantee)}${host ? `@${label(host)}` : ''}`,
+          );
+        }
+        if (grants) {
+          console.log(
+            `GRANT ${grants} ON ${label(schema)}.${label(table)} TO ${label(grantee)}${host ? `@${label(host)}` : ''}`,
+          );
+          await con.query(
+            `GRANT ${grants} ON ${label(schema)}.${label(table)} TO ${label(grantee)}${host ? `@${label(host)}` : ''}`,
+          );
+        }
+        con.query('COMMIT;');
+      } catch (e) {
+        con.query('ROLLBACK;');
+        throw e;
+      }
     },
   },
 };

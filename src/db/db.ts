@@ -51,6 +51,7 @@ export interface TableInfo {
   cols?: ColTableInfo[];
   privileges?: {
     roleName: string;
+    host?: string;
     privileges: TablePrivileges;
   }[];
   indexes?: {

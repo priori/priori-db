@@ -146,7 +146,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
   const owner = service.lastValidData?.owner;
   const saveOwner = useEvent(() => {
     sequenceDb()
-      .alterSequenceOwner(props.schema, props.name, state.editOwner as string)
+      .alterSequenceOwner?.(props.schema, props.name, state.editOwner as string)
       .then(
         () => {
           if (!isMounted()) return;
@@ -162,7 +162,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
 
   const newPrivilege = useEvent(
     async (form: { role: string; privileges: SequencePrivileges }) => {
-      await db().privileges?.updateSequencePrivileges(
+      await sequenceDb().updateSequencePrivileges?.(
         props.schema,
         props.name,
         form.role,
@@ -181,7 +181,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
       curr: SequencePrivileges,
       update: SequencePrivileges,
     ) => {
-      await db().privileges?.updateSequencePrivileges(
+      await sequenceDb().updateSequencePrivileges?.(
         props.schema,
         props.name,
         roleName,

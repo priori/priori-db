@@ -1273,6 +1273,17 @@ export const DB: DBInterface = {
   },
 
   privileges: {
+    async tablePrivilegesTypes() {
+      return [
+        'update',
+        'insert',
+        'select',
+        'delete',
+        'references',
+        'trigger',
+        'truncate',
+      ];
+    },
     async role(name: string) {
       async function rolePrivileges(n: string) {
         const res = (await list(
@@ -1564,7 +1575,7 @@ export const DB: DBInterface = {
       await query(`ALTER ROLE ${label(name)} RENAME TO ${label(name2)}`);
     },
 
-    async updatePrivileges(
+    async updateTablePrivileges(
       schema: string,
       table: string,
       grantee: string,
@@ -1653,55 +1664,6 @@ export const DB: DBInterface = {
       }
     },
 
-    async updateSequencePrivileges(
-      schema: string,
-      table: string,
-      grantee: string,
-      privileges: {
-        update?: boolean;
-        select?: boolean;
-        usage?: boolean;
-      },
-    ) {
-      const c = await openConnection();
-      try {
-        await c.query('BEGIN');
-        if (privileges.update !== undefined) {
-          await c.query(
-            `${privileges.update ? 'GRANT' : 'REVOKE'} UPDATE ON SEQUENCE ${label(
-              schema,
-            )}.${label(table)} ${privileges.update ? ' TO ' : ' FROM '} ${label(
-              grantee,
-            )}`,
-          );
-        }
-        if (privileges.select !== undefined) {
-          await c.query(
-            `${privileges.select ? 'GRANT' : 'REVOKE'} SELECT ON SEQUENCE ${label(
-              schema,
-            )}.${label(table)} ${privileges.select ? ' TO ' : ' FROM '} ${label(
-              grantee,
-            )}`,
-          );
-        }
-        if (privileges.usage !== undefined) {
-          await c.query(
-            `${privileges.usage ? 'GRANT' : 'REVOKE'} USAGE ON SEQUENCE ${label(
-              schema,
-            )}.${label(table)} ${privileges.usage ? ' TO ' : ' FROM '} ${label(
-              grantee,
-            )}`,
-          );
-        }
-        await c.query('COMMIT');
-      } catch (e) {
-        c.query('ROLLBACK');
-        throw grantError(e);
-      } finally {
-        c.release(true);
-      }
-    },
-
     async updateSchemaPrivileges(
       schema: string,
       grantee: string,
@@ -1752,94 +1714,6 @@ export const DB: DBInterface = {
         return a.name.localeCompare(b.name);
       });
       return r;
-    },
-
-    async revokeFunction(schema: string, name: string, role: string) {
-      const hasPublicPrivilege = (
-        await first(`SELECT
-        pg_catalog.has_function_privilege((0)::oid, '${label(
-          schema,
-        )}.${name}', 'EXECUTE') has`)
-      ).has;
-      if (hasPublicPrivilege) {
-        const roles = (await list(
-          `
-        SELECT rolname "role"
-        FROM pg_roles
-        WHERE pg_catalog.has_function_privilege(rolname, '${label(
-          schema,
-        )}.${name}', 'EXECUTE')
-        `,
-          [],
-        )) as { role: string }[];
-        await query(`
-          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM PUBLIC;
-          ${roles
-            .map(
-              (r) =>
-                `GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(
-                  r.role,
-                )}`,
-            )
-            .join(';')};
-          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(
-            role,
-          )}
-      `);
-      } else
-        await query(`
-        REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(role)}
-      `);
-    },
-
-    async grantFunction(schema: string, name: string, role: string) {
-      await query(`
-      GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(role)}
-    `);
-    },
-
-    async grantDomain(schema: string, name: string, role: string) {
-      await query(`
-      GRANT USAGE ON TYPE ${label(schema)}.${label(name)} TO ${label(role)}
-    `);
-    },
-
-    async revokeDomain(schema: string, name: string, role: string) {
-      const hasPublicPrivilege = (
-        await first(`SELECT
-        pg_catalog.has_type_privilege((0)::oid, '${label(
-          schema,
-        )}.${name}', 'USAGE') has`)
-      ).has;
-      if (hasPublicPrivilege) {
-        const roles = (await list(
-          `
-        SELECT rolname "role"
-        FROM pg_roles
-        WHERE pg_catalog.has_type_privilege(rolname, '${label(schema)}.${label(
-          name,
-        )}', 'USAGE')
-        `,
-          [],
-        )) as { role: string }[];
-        await query(`
-          REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM PUBLIC;
-          ${roles
-            .map(
-              (r) =>
-                `GRANT USAGE ON TYPE ${label(schema)}.${label(name)} TO ${label(
-                  r.role,
-                )}`,
-            )
-            .join(';')};
-          REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(
-            role,
-          )}
-      `);
-      } else
-        await query(`
-        REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(role)}
-      `);
     },
   },
 
@@ -1926,6 +1800,50 @@ export const DB: DBInterface = {
       await query(`
       ALTER FUNCTION ${label(schema)}.${name}
       OWNER TO ${label(owner)}
+    `);
+    },
+
+    async revokeFunction(schema: string, name: string, role: string) {
+      const hasPublicPrivilege = (
+        await first(`SELECT
+        pg_catalog.has_function_privilege((0)::oid, '${label(
+          schema,
+        )}.${name}', 'EXECUTE') has`)
+      ).has;
+      if (hasPublicPrivilege) {
+        const roles = (await list(
+          `
+        SELECT rolname "role"
+        FROM pg_roles
+        WHERE pg_catalog.has_function_privilege(rolname, '${label(
+          schema,
+        )}.${name}', 'EXECUTE')
+        `,
+          [],
+        )) as { role: string }[];
+        await query(`
+          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM PUBLIC;
+          ${roles
+            .map(
+              (r) =>
+                `GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(
+                  r.role,
+                )}`,
+            )
+            .join(';')};
+          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(
+            role,
+          )}
+      `);
+      } else
+        await query(`
+        REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(role)}
+      `);
+    },
+
+    async grantFunction(schema: string, name: string, role: string) {
+      await query(`
+      GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(role)}
     `);
     },
   },
@@ -2037,6 +1955,55 @@ export const DB: DBInterface = {
       OWNER TO ${label(owner)}
     `);
     },
+
+    async updateSequencePrivileges(
+      schema: string,
+      table: string,
+      grantee: string,
+      privileges: {
+        update?: boolean;
+        select?: boolean;
+        usage?: boolean;
+      },
+    ) {
+      const c = await openConnection();
+      try {
+        await c.query('BEGIN');
+        if (privileges.update !== undefined) {
+          await c.query(
+            `${privileges.update ? 'GRANT' : 'REVOKE'} UPDATE ON SEQUENCE ${label(
+              schema,
+            )}.${label(table)} ${privileges.update ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        if (privileges.select !== undefined) {
+          await c.query(
+            `${privileges.select ? 'GRANT' : 'REVOKE'} SELECT ON SEQUENCE ${label(
+              schema,
+            )}.${label(table)} ${privileges.select ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        if (privileges.usage !== undefined) {
+          await c.query(
+            `${privileges.usage ? 'GRANT' : 'REVOKE'} USAGE ON SEQUENCE ${label(
+              schema,
+            )}.${label(table)} ${privileges.usage ? ' TO ' : ' FROM '} ${label(
+              grantee,
+            )}`,
+          );
+        }
+        await c.query('COMMIT');
+      } catch (e) {
+        c.query('ROLLBACK');
+        throw grantError(e);
+      } finally {
+        c.release(true);
+      }
+    },
   },
 
   domains: {
@@ -2092,6 +2059,50 @@ export const DB: DBInterface = {
       ALTER TYPE ${label(schema)}.${label(name)}
       OWNER TO ${label(owner)}
     `);
+    },
+
+    async grantDomain(schema: string, name: string, role: string) {
+      await query(`
+      GRANT USAGE ON TYPE ${label(schema)}.${label(name)} TO ${label(role)}
+    `);
+    },
+
+    async revokeDomain(schema: string, name: string, role: string) {
+      const hasPublicPrivilege = (
+        await first(`SELECT
+        pg_catalog.has_type_privilege((0)::oid, '${label(
+          schema,
+        )}.${name}', 'USAGE') has`)
+      ).has;
+      if (hasPublicPrivilege) {
+        const roles = (await list(
+          `
+        SELECT rolname "role"
+        FROM pg_roles
+        WHERE pg_catalog.has_type_privilege(rolname, '${label(schema)}.${label(
+          name,
+        )}', 'USAGE')
+        `,
+          [],
+        )) as { role: string }[];
+        await query(`
+          REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM PUBLIC;
+          ${roles
+            .map(
+              (r) =>
+                `GRANT USAGE ON TYPE ${label(schema)}.${label(name)} TO ${label(
+                  r.role,
+                )}`,
+            )
+            .join(';')};
+          REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(
+            role,
+          )}
+      `);
+      } else
+        await query(`
+        REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(role)}
+      `);
     },
   },
 };

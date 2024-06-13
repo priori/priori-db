@@ -136,7 +136,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
 
   const newPrivilege = useEvent(
     async (form: { role: string; privileges: SchemaPrivileges }) => {
-      await db().privileges?.updateSchemaPrivileges(
+      await db().privileges?.updateSchemaPrivileges?.(
         props.schema,
         form.role,
         form.privileges,
@@ -154,7 +154,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
       curr: SchemaPrivileges,
       update: SchemaPrivileges,
     ) => {
-      await db().privileges?.updateSchemaPrivileges(props.schema, roleName, {
+      await db().privileges?.updateSchemaPrivileges?.(props.schema, roleName, {
         create: update.create === curr.create ? undefined : update.create,
         usage: update.usage === curr.usage ? undefined : update.usage,
       });

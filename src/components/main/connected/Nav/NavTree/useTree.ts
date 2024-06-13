@@ -1,3 +1,4 @@
+import { db } from 'db/db';
 import React from 'react';
 import { NavSchema } from 'types';
 import { Tabs } from '../navUtils';
@@ -171,7 +172,7 @@ function buildTree(
         : 1,
     });
   }
-  if (roles) {
+  if (roles && db().privileges?.role) {
     const children: NavTreeItem[] = [];
     for (const r of roles) {
       const role: NavTreeItem = {

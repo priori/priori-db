@@ -115,8 +115,8 @@ export function DomainFrame(props: DomainFrameProps) {
   });
 
   const revokeYesClick = useEvent(() => {
-    db()
-      .privileges?.revokeDomain(props.schema, props.name, state.revoke)
+    domainsDb()
+      ?.revokeDomain?.(props.schema, props.name, state.revoke)
       .then(
         () => {
           service.reload();
@@ -133,8 +133,8 @@ export function DomainFrame(props: DomainFrameProps) {
 
   const grantClick = useEvent(() => {
     if (typeof state.grant === 'string')
-      db()
-        .privileges?.grantDomain(props.schema, props.name, state.grant)
+      domainsDb()
+        ?.grantDomain?.(props.schema, props.name, state.grant)
         .then(
           () => {
             service.reload();

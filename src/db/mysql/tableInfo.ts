@@ -58,6 +58,37 @@ export async function tableInfo(
     Table: string;
     Visible: 'YES' | 'NO';
   }[];
+
+  const priviliges0 = await list(
+    `
+      SELECT * FROM mysql.tables_priv WHERE Db = ? AND Table_name = ?
+    `,
+    [schema, table],
+  );
+
+  const privileges = priviliges0.map((p) => {
+    const ps = {
+      update: undefined,
+      insert: undefined,
+      select: undefined,
+      delete: undefined,
+      references: undefined,
+      trigger: undefined,
+      index: undefined,
+      drop: undefined,
+      alter: undefined,
+      showView: undefined,
+    };
+    for (const p2 of p.Table_priv.split(',')) {
+      (ps as any)[p2 === 'Show view' ? 'showView' : p2.toLowerCase()] = true;
+    }
+    return {
+      roleName: p.User,
+      host: p.Host,
+      privileges: ps,
+    };
+  });
+
   indexesRet.sort((a, b) => a.Seq_in_index - b.Seq_in_index);
   const indexes: {
     name: string;
@@ -88,6 +119,7 @@ export async function tableInfo(
     cols: cols.map((c) => fixCol(c as MysqlCol)),
     indexes,
     constraints: [],
+    privileges,
     table: null,
     view: null,
     mView: null,

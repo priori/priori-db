@@ -128,7 +128,14 @@ export function RoleFrame(props: RoleFrameProps) {
   const { name } = props;
 
   const service = useService(
-    () => db().privileges!.role(props.name),
+    () =>
+      Promise.all([
+        db().privileges!.role?.(props.name),
+        db().privileges!.tablePrivilegesTypes(),
+      ]).then(([role, tablePrivilegesTypes]) => ({
+        ...role,
+        tablePrivilegesTypes,
+      })),
     [props.name],
   );
 
@@ -184,7 +191,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const yesClick = useEvent(() => {
     db()
-      .privileges!.dropRole(props.name)
+      .privileges!.dropRole?.(props.name)
       .then(
         () => {
           setTimeout(() => closeTab(props), 10);
@@ -197,7 +204,7 @@ export function RoleFrame(props: RoleFrameProps) {
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await db().privileges!.updateRoleComment(props.name, text);
+    await db().privileges!.updateRoleComment?.(props.name, text);
     await service.reload();
     set({ ...state, editComment: false });
   });
@@ -210,7 +217,7 @@ export function RoleFrame(props: RoleFrameProps) {
   });
 
   const onRename = useEvent(async (newName: string) => {
-    await db().privileges!.renameRole(name, newName);
+    await db().privileges!.renameRole?.(name, newName);
     renameEntity(props.uid, newName);
     reloadNav();
     set({ ...state, rename: false });
@@ -220,7 +227,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const grantTable = useEvent(
     async (schema: string, table: string, privileges: TablePrivileges) => {
-      await db().privileges!.updatePrivileges(
+      await db().privileges!.updateTablePrivileges(
         schema,
         table,
         props.name,
@@ -235,7 +242,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const grantSchema = useEvent(
     async (schema: string, privileges: SchemaPrivileges) => {
-      await db().privileges!.updateSchemaPrivileges(
+      await db().privileges!.updateSchemaPrivileges?.(
         schema,
         props.name,
         privileges,
@@ -249,7 +256,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const grantSequence = useEvent(
     async (schema: string, table: string, privileges: SequencePrivileges) => {
-      await db().privileges!.updateSequencePrivileges(
+      await db().sequences?.updateSequencePrivileges?.(
         schema,
         table,
         props.name,
@@ -269,7 +276,7 @@ export function RoleFrame(props: RoleFrameProps) {
       current: SequencePrivileges,
       update: SequencePrivileges,
     ) => {
-      await db().privileges!.updateSequencePrivileges(
+      await db().sequences?.updateSequencePrivileges?.(
         schema,
         table,
         props.name,
@@ -292,7 +299,7 @@ export function RoleFrame(props: RoleFrameProps) {
       curr: SchemaPrivileges,
       update: SchemaPrivileges,
     ) => {
-      await db().privileges!.updateSchemaPrivileges(schema, props.name, {
+      await db().privileges!.updateSchemaPrivileges?.(schema, props.name, {
         create: update.create === curr.create ? undefined : update.create,
         usage: update.usage === curr.usage ? undefined : update.usage,
       });
@@ -310,7 +317,7 @@ export function RoleFrame(props: RoleFrameProps) {
       curr: TablePrivileges,
       update: TablePrivileges,
     ) => {
-      await db().privileges!.updatePrivileges(schema, table, props.name, {
+      await db().privileges!.updateTablePrivileges(schema, table, props.name, {
         update: update.update === curr.update ? undefined : update.update,
         select: update.select === curr.select ? undefined : update.select,
         insert: update.insert === curr.insert ? undefined : update.insert,
@@ -331,7 +338,7 @@ export function RoleFrame(props: RoleFrameProps) {
   const revokeFunctionYesClick = useEvent(() => {
     if (!state.revokeFunction) return;
     db()
-      .privileges!.revokeFunction(
+      .functions?.revokeFunction?.(
         state.revokeFunction.schema,
         state.revokeFunction.function,
         props.name,
@@ -353,7 +360,7 @@ export function RoleFrame(props: RoleFrameProps) {
   const revokeTypeYesClick = useEvent(() => {
     if (!state.revokeType) return;
     db()
-      .privileges!.revokeDomain(
+      .domains?.revokeDomain?.(
         state.revokeType.schema,
         state.revokeType.type,
         props.name,
@@ -374,7 +381,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const newFunctionPrivilegeSave = useEvent((schema: string, fName: string) => {
     db()
-      .privileges!.grantFunction(schema, fName, props.name)
+      .functions?.grantFunction?.(schema, fName, props.name)
       .then(
         () => {
           service.reload();
@@ -391,7 +398,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const newTypePrivilegeSave = useEvent((schema: string, tName: string) => {
     db()
-      .privileges!.grantDomain(schema, tName, props.name)
+      .domains?.grantDomain?.(schema, tName, props.name)
       .then(
         () => {
           service.reload();
@@ -409,38 +416,38 @@ export function RoleFrame(props: RoleFrameProps) {
   const privilegesSizes = useMemo(
     () => ({
       tables: {
-        internals: service.lastValidData?.privileges.tables.filter(
+        internals: service.lastValidData?.privileges?.tables.filter(
           (v) => v.schema === 'pg_catalog',
         ).length,
-        internals2: service.lastValidData?.privileges.tables.filter(
+        internals2: service.lastValidData?.privileges?.tables.filter(
           (v) => v.schema === 'information_schema',
         ).length,
       },
       functions: {
-        internals: service.lastValidData?.privileges.functions.filter(
+        internals: service.lastValidData?.privileges?.functions.filter(
           (v) => v.schema === 'pg_catalog',
         ).length,
-        internals2: service.lastValidData?.privileges.functions.filter(
+        internals2: service.lastValidData?.privileges?.functions.filter(
           (v) => v.schema === 'information_schema',
         ).length,
       },
       sequences: {
-        internals: service.lastValidData?.privileges.sequences.filter(
+        internals: service.lastValidData?.privileges?.sequences.filter(
           (v) => v.schema === 'pg_catalog',
         ).length,
-        internals2: service.lastValidData?.privileges.sequences.filter(
+        internals2: service.lastValidData?.privileges?.sequences.filter(
           (v) => v.schema === 'information_schema',
         ).length,
       },
       types: {
-        internals: service.lastValidData?.privileges.types.filter(
+        internals: service.lastValidData?.privileges?.types.filter(
           (v) => v.schema === 'pg_catalog',
         ).length,
-        internals2: service.lastValidData?.privileges.types.filter(
+        internals2: service.lastValidData?.privileges?.types.filter(
           (v) => v.schema === 'information_schema',
         ).length,
       },
-      internalSchemas: service.lastValidData?.privileges.schemas.filter(
+      internalSchemas: service.lastValidData?.privileges?.schemas.filter(
         (s) => s.name === 'pg_catalog' || s.name === 'information_schema',
       ).length,
     }),
@@ -506,7 +513,7 @@ export function RoleFrame(props: RoleFrameProps) {
         </div>
       )}
 
-      {service?.lastValidData?.privileges.schemas ? (
+      {service?.lastValidData?.privileges?.schemas ? (
         service?.lastValidData?.privileges.schemas?.length === 0 ? (
           <>
             <h2 style={{ userSelect: 'text' }}>Schemas Privileges</h2>
@@ -646,7 +653,7 @@ export function RoleFrame(props: RoleFrameProps) {
         )
       ) : null}
 
-      {service?.lastValidData?.privileges.tables ? (
+      {service?.lastValidData?.privileges?.tables ? (
         service?.lastValidData?.privileges.tables?.length === 0 ? (
           <>
             <h2 style={{ userSelect: 'text' }}>Table Privileges</h2>
@@ -661,6 +668,7 @@ export function RoleFrame(props: RoleFrameProps) {
               </button>
               {state.newTablePrivilege ? (
                 <TablePrivilegesDialog
+                  privilegesTypes={service.lastValidData.tablePrivilegesTypes}
                   relativeTo="previousSibling"
                   type="by_table"
                   onCancel={() => set({ ...state, newTablePrivilege: false })}
@@ -735,8 +743,12 @@ export function RoleFrame(props: RoleFrameProps) {
                         </button>
                         {state.updatePrivilege &&
                         state.updatePrivilege.schema === p.schema &&
+                        service.lastValidData &&
                         state.updatePrivilege.table === p.table ? (
                           <TablePrivilegesDialog
+                            privilegesTypes={
+                              service.lastValidData.tablePrivilegesTypes
+                            }
                             relativeTo="previousSibling"
                             privileges={{
                               update: p.privileges.update,
@@ -818,6 +830,7 @@ export function RoleFrame(props: RoleFrameProps) {
               </button>
               {state.newTablePrivilege ? (
                 <TablePrivilegesDialog
+                  privilegesTypes={service.lastValidData.tablePrivilegesTypes}
                   relativeTo="previousSibling"
                   onCancel={() => {
                     set({ ...state, newTablePrivilege: false });
@@ -840,7 +853,7 @@ export function RoleFrame(props: RoleFrameProps) {
             <span style={{ fontWeight: 'normal' }}> EXECUTE GRANTs</span>
           </h2>
           <div>
-            {service.lastValidData?.privileges.functions
+            {service.lastValidData?.privileges?.functions
               .filter(
                 (r) =>
                   (!state.hideInternalsFunctions ||
@@ -957,7 +970,7 @@ export function RoleFrame(props: RoleFrameProps) {
         </>
       ) : null}
 
-      {service?.lastValidData?.privileges.sequences ? (
+      {service?.lastValidData?.privileges?.sequences ? (
         service?.lastValidData?.privileges.sequences?.length === 0 ? (
           <>
             <h2 style={{ userSelect: 'text' }}>Sequence Privileges</h2>

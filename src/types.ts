@@ -140,6 +140,7 @@ export interface AppState {
   schemas?: NavSchema[];
   roles?: {
     name: string;
+    host?: string;
     isUser: boolean;
   }[];
 }
@@ -155,10 +156,18 @@ export type TablePrivileges = {
   insert?: boolean | undefined;
   select?: boolean | undefined;
   delete?: boolean | undefined;
-  truncate?: boolean | undefined;
   references?: boolean | undefined;
   trigger?: boolean | undefined;
+  // postgres
+  truncate?: boolean | undefined;
+  // mysql
+  index?: boolean | undefined;
+  drop?: boolean | undefined;
+  alter?: boolean | undefined;
+  showView?: boolean | undefined;
 };
+
+export type TablePrivilegesType = keyof TablePrivileges;
 
 export type SequencePrivileges = {
   update?: boolean | undefined;

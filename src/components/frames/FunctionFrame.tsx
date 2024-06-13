@@ -93,8 +93,8 @@ export function FunctionFrame(props: FunctionFrameProps) {
   });
 
   const revokeYesClick = useEvent(() => {
-    db()
-      .privileges?.revokeFunction(props.schema, props.name, state.revoke)
+    functionsDb()
+      .revokeFunction?.(props.schema, props.name, state.revoke)
       .then(
         () => {
           service.reload();
@@ -111,8 +111,8 @@ export function FunctionFrame(props: FunctionFrameProps) {
 
   const grantClick = useEvent(() => {
     if (typeof state.grant === 'string')
-      db()
-        .privileges?.grantFunction(props.schema, props.name, state.grant)
+      functionsDb()
+        .grantFunction?.(props.schema, props.name, state.grant)
         .then(
           () => {
             service.reload();
@@ -193,7 +193,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
         >
           Comment <i className="fa fa-file-text-o" />
         </button>{' '}
-        {db().functions?.rename ? (
+        {functionsDb()?.rename ? (
           <>
             <button
               type="button"
@@ -211,7 +211,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
             ) : null}
           </>
         ) : null}
-        {db().functions?.move ? (
+        {functionsDb()?.move ? (
           <>
             <button
               type="button"
@@ -268,7 +268,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
                 </div>
               </Dialog>
             ) : null}
-            {db().functions?.dropCascade && (
+            {functionsDb()?.dropCascade && (
               <button
                 type="button"
                 onClick={

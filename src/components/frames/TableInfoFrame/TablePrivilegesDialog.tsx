@@ -2,7 +2,7 @@ import { Dialog } from 'components/util/Dialog/Dialog';
 import { useState } from 'react';
 import { showError } from 'state/actions';
 import { currentState } from 'state/state';
-import { TablePrivileges } from 'types';
+import { TablePrivileges, TablePrivilegesType } from 'types';
 import { equals } from 'util/equals';
 import { grantError } from 'util/errors';
 import { useIsMounted } from 'util/hooks';
@@ -12,13 +12,16 @@ type TablePrivilegesDialogProps =
   | {
       relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
       type: 'by_role';
+      host?: string;
       onCancel: () => void;
       onUpdate: (f: {
         role: string;
         privileges: TablePrivileges;
+        host?: string;
       }) => Promise<void>;
       roleName?: string;
       privileges?: TablePrivileges;
+      privilegesTypes: TablePrivilegesType[];
     }
   | {
       relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
@@ -32,6 +35,7 @@ type TablePrivilegesDialogProps =
       schema?: string;
       table?: string;
       privileges?: TablePrivileges;
+      privilegesTypes: TablePrivilegesType[];
     };
 
 export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
@@ -53,23 +57,17 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
   const [form, setForm] = useState({
     ...privileges,
   });
-  const [roleNameInput, setRoleName] = useState(roleName);
+  const [role, setRole] = useState<{ name: string; host?: string } | undefined>(
+    undefined,
+  );
 
   const updateDisabled =
     !!error ||
     executing ||
     equals(form, privileges) ||
-    (type === 'by_role' && !roleNameInput) ||
+    (type === 'by_role' && !role && !props.roleName) ||
     (type === 'by_table' && (!schemaNameValue || !tableNameValue)) ||
-    !(
-      !!form.update !== !!privileges?.update ||
-      !!form.insert !== !!privileges?.insert ||
-      !!form.select !== !!privileges?.select ||
-      !!form.delete !== !!privileges?.delete ||
-      !!form.truncate !== !!privileges?.truncate ||
-      !!form.references !== !!privileges?.references ||
-      !!form.trigger !== !!privileges?.trigger
-    );
+    !props.privilegesTypes.find((t) => !!form[t] !== !!privileges?.[t]);
 
   // const updateDisabled =
   //   !!error ||
@@ -79,39 +77,31 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
   const fieldsDisabled = executing || !!error;
   const onSave = useEvent(async () => {
     if (
-      (!roleNameInput && type === 'by_role') ||
+      (type === 'by_role' && !props.roleName && !role) ||
       (type === 'by_table' && (!schemaNameValue || !tableNameValue))
     )
       return;
     try {
+      const update: Partial<Record<TablePrivilegesType, boolean>> = {};
+      for (const key of props.privilegesTypes) {
+        if (typeof form[key] === 'boolean' && form[key] !== privileges?.[key]) {
+          update[key] = form[key];
+        }
+      }
       setExecuting(true);
-      if (type === 'by_role')
+      if (type === 'by_role') {
         await onUpdate({
-          role: roleNameInput!,
-          privileges: {
-            update: form.update,
-            insert: form.insert,
-            select: form.select,
-            delete: form.delete,
-            truncate: form.truncate,
-            references: form.references,
-            trigger: form.trigger,
-          },
+          role: role?.name || props.roleName!,
+          privileges: update,
+          host: role?.host || props.host,
         });
-      else if (type === 'by_table')
+      } else if (type === 'by_table') {
         await onUpdate({
           schema: schemaNameValue!,
           table: tableNameValue!,
-          privileges: {
-            update: form.update,
-            insert: form.insert,
-            select: form.select,
-            delete: form.delete,
-            truncate: form.truncate,
-            references: form.references,
-            trigger: form.trigger,
-          },
+          privileges: update,
         });
+      }
     } catch (e) {
       if (isMounted()) setError(grantError(e));
       else showError(grantError(e));
@@ -190,11 +180,23 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
           </div>
         ) : (
           <div>
-            <select onChange={(e) => setRoleName(e.target.value)}>
+            <select
+              value={JSON.stringify(
+                role ? [role.name, role.host] : [roleName, props.host],
+              )}
+              onChange={(e) => {
+                const [name2, host] = JSON.parse(e.target.value);
+                setRole({ name: name2, host });
+              }}
+            >
               <option value="" />
               {roles?.map((r) => (
-                <option key={r.name} value={r.name}>
+                <option
+                  key={JSON.stringify([r.name, r.host])}
+                  value={JSON.stringify([r.name, r.host])}
+                >
                   {r.name}
+                  {r.host ? `@${r.host}` : ''}
                 </option>
               ))}
             </select>
@@ -207,258 +209,45 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
             flexWrap: 'wrap',
           }}
         >
-          <div
-            tabIndex={0}
-            style={
-              !!form.update === !!privileges?.update
-                ? {
-                    opacity: 0.3,
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-                : {
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-            }
-            onKeyDown={
-              executing || !!error
-                ? undefined
-                : (e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      setForm({ ...form, update: !form.update });
+          {props.privilegesTypes.map((t) => (
+            <div
+              key={t}
+              tabIndex={0}
+              style={
+                !!form[t] === !!privileges?.[t]
+                  ? {
+                      opacity: 0.3,
+                      width: '25%',
+                      textAlign: 'left',
                     }
-                  }
-            }
-            onClick={
-              executing || !!error
-                ? undefined
-                : () => setForm({ ...form, update: !form.update })
-            }
-          >
-            {form.update ? (
-              <i className="fa fa-check-square-o" />
-            ) : (
-              <i className="fa fa-square-o" />
-            )}{' '}
-            UPDATE
-          </div>
-          <div
-            style={
-              !!form.insert === !!privileges?.insert
-                ? {
-                    opacity: 0.3,
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-                : {
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-            }
-            tabIndex={0}
-            onKeyDown={
-              executing || !!error
-                ? undefined
-                : (e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      setForm({ ...form, insert: !form.insert });
+                  : {
+                      width: '25%',
+                      textAlign: 'left',
                     }
-                  }
-            }
-            onClick={
-              executing || !!error
-                ? undefined
-                : () => setForm({ ...form, insert: !form.insert })
-            }
-          >
-            {form.insert ? (
-              <i className="fa fa-check-square-o" />
-            ) : (
-              <i className="fa fa-square-o" />
-            )}{' '}
-            INSERT
-          </div>
-          <div
-            style={
-              !!form.select === !!privileges?.select
-                ? {
-                    opacity: 0.3,
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-                : {
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-            }
-            tabIndex={0}
-            onKeyDown={
-              executing || !!error
-                ? undefined
-                : (e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      setForm({ ...form, select: !form.select });
+              }
+              onKeyDown={
+                executing || !!error
+                  ? undefined
+                  : (e) => {
+                      if (e.key === ' ' || e.key === 'Enter') {
+                        setForm({ ...form, [t]: !form?.[t] });
+                      }
                     }
-                  }
-            }
-            onClick={
-              executing || !!error
-                ? undefined
-                : () => setForm({ ...form, select: !form.select })
-            }
-          >
-            {form.select ? (
-              <i className="fa fa-check-square-o" />
-            ) : (
-              <i className="fa fa-square-o" />
-            )}{' '}
-            SELECT
-          </div>
-          <div
-            style={
-              !!form.delete === !!privileges?.delete
-                ? {
-                    opacity: 0.3,
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-                : {
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-            }
-            tabIndex={0}
-            onKeyDown={
-              executing || !!error
-                ? undefined
-                : (e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      setForm({ ...form, delete: !form.delete });
-                    }
-                  }
-            }
-            onClick={
-              executing || !!error
-                ? undefined
-                : () => setForm({ ...form, delete: !form.delete })
-            }
-          >
-            {form.delete ? (
-              <i className="fa fa-check-square-o" />
-            ) : (
-              <i className="fa fa-square-o" />
-            )}{' '}
-            DELETE
-          </div>
-          <div
-            style={
-              !!form.truncate === !!privileges?.truncate
-                ? {
-                    opacity: 0.3,
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-                : {
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-            }
-            tabIndex={0}
-            onKeyDown={
-              executing || !!error
-                ? undefined
-                : (e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      setForm({ ...form, truncate: !form.truncate });
-                    }
-                  }
-            }
-            onClick={
-              executing || !!error
-                ? undefined
-                : () => setForm({ ...form, truncate: !form.truncate })
-            }
-          >
-            {form.truncate ? (
-              <i className="fa fa-check-square-o" />
-            ) : (
-              <i className="fa fa-square-o" />
-            )}{' '}
-            TRUNCATE
-          </div>
-          <div
-            style={
-              !!form.references === !!privileges?.references
-                ? {
-                    opacity: 0.3,
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-                : {
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-            }
-            tabIndex={0}
-            onKeyDown={
-              executing || !!error
-                ? undefined
-                : (e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      setForm({ ...form, references: !form.references });
-                    }
-                  }
-            }
-            onClick={
-              executing || !!error
-                ? undefined
-                : () => setForm({ ...form, references: !form.references })
-            }
-          >
-            {form.references ? (
-              <i className="fa fa-check-square-o" />
-            ) : (
-              <i className="fa fa-square-o" />
-            )}{' '}
-            REFERENCES
-          </div>
-          <div
-            style={
-              !!form.trigger === !!privileges?.trigger
-                ? {
-                    opacity: 0.3,
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-                : {
-                    width: '25%',
-                    textAlign: 'left',
-                  }
-            }
-            tabIndex={0}
-            onKeyDown={
-              executing || !!error
-                ? undefined
-                : (e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      setForm({ ...form, trigger: !form.trigger });
-                    }
-                  }
-            }
-            onClick={
-              executing || !!error
-                ? undefined
-                : () => setForm({ ...form, trigger: !form.trigger })
-            }
-          >
-            {form.trigger ? (
-              <i className="fa fa-check-square-o" />
-            ) : (
-              <i className="fa fa-square-o" />
-            )}{' '}
-            TRIGGER
-          </div>
+              }
+              onClick={
+                executing || !!error
+                  ? undefined
+                  : () => setForm({ ...form, [t]: !form?.[t] })
+              }
+            >
+              {form?.[t] ? (
+                <i className="fa fa-check-square-o" />
+              ) : (
+                <i className="fa fa-square-o" />
+              )}{' '}
+              {t.replace(/[A-Z]/g, ' $&').toUpperCase()}
+            </div>
+          ))}
         </div>
         <div>
           <button

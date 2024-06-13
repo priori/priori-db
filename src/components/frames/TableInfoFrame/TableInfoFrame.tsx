@@ -41,7 +41,14 @@ export function TdCheck({ checked }: { checked: boolean }) {
 
 export function TableInfoFrame(props: TableInfoFrameProps) {
   const service = useService(
-    async () => db().tableInfo(props.schema, props.table),
+    async () =>
+      Promise.all([
+        db().tableInfo(props.schema, props.table),
+        db().privileges?.tablePrivilegesTypes(),
+      ]).then(([tableInfo, privilegesTypes]) => ({
+        privilegesTypes,
+        ...tableInfo,
+      })),
     [props.schema, props.table],
   );
 
@@ -81,6 +88,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     newIndex: false,
     openIndexComment: null as string | null,
     updatePrivilege: null as string | null,
+    updatePrivilegeHost: null as string | null | undefined,
     newPrivilege: false,
     editOwner: false as boolean | string,
     hideInternalRoles: true,
@@ -206,13 +214,18 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   });
 
   const newPrivilege = useEvent(
-    async (form: { role: string; privileges: TablePrivileges }) => {
+    async (form: {
+      role: string;
+      host?: string;
+      privileges: TablePrivileges;
+    }) => {
       if (!db().privileges) return;
-      await db().privileges?.updatePrivileges(
+      await db().privileges?.updateTablePrivileges(
         props.schema,
         props.table,
         form.role,
         form.privileges,
+        form.host,
       );
       if (!isMounted()) return;
       await service.reload();
@@ -222,34 +235,19 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   );
 
   const onUpdatePrivileges = useEvent(
-    async (
-      roleName: string,
-      curr: TablePrivileges,
-      update: TablePrivileges,
-    ) => {
+    async (roleName: string, update: TablePrivileges, host?: string) => {
       if (!db().privileges) return;
-      await db().privileges?.updatePrivileges(
+      await db().privileges?.updateTablePrivileges(
         props.schema,
         props.table,
         roleName,
-        {
-          update: update.update === curr.update ? undefined : update.update,
-          select: update.select === curr.select ? undefined : update.select,
-          insert: update.insert === curr.insert ? undefined : update.insert,
-          delete: update.delete === curr.delete ? undefined : update.delete,
-          truncate:
-            update.truncate === curr.truncate ? undefined : update.truncate,
-          references:
-            update.references === curr.references
-              ? undefined
-              : update.references,
-          trigger: update.trigger === curr.trigger ? undefined : update.trigger,
-        },
+        update,
+        host,
       );
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
-      set({ ...edit, updatePrivilege: null });
+      set({ ...edit, updatePrivilege: null, updatePrivilegeHost: null });
     },
   );
 
@@ -1102,37 +1100,42 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
           <div className="empty">
             No privileges found for table.{' '}
-            <button
-              type="button"
-              className="simple-button"
-              onClick={() => set({ ...edit, newPrivilege: true })}
-            >
-              Grant new privilege <i className="fa fa-plus" />
-            </button>
-            {state.cols && edit.newPrivilege ? (
-              <TablePrivilegesDialog
-                relativeTo="previousSibling"
-                type="by_role"
-                onCancel={() => set({ ...edit, newPrivilege: false })}
-                onUpdate={(form) => newPrivilege(form)}
-              />
+            {service.lastValidData.privilegesTypes ? (
+              <>
+                <button
+                  type="button"
+                  className="simple-button"
+                  onClick={() => set({ ...edit, newPrivilege: true })}
+                >
+                  Grant new privilege <i className="fa fa-plus" />
+                </button>
+                {state.cols && edit.newPrivilege ? (
+                  <TablePrivilegesDialog
+                    privilegesTypes={service.lastValidData.privilegesTypes}
+                    relativeTo="previousSibling"
+                    type="by_role"
+                    onCancel={() => set({ ...edit, newPrivilege: false })}
+                    onUpdate={(form) => newPrivilege(form)}
+                  />
+                ) : null}
+              </>
             ) : null}
           </div>
         </>
-      ) : service.lastValidData?.privileges ? (
+      ) : service.lastValidData?.privileges &&
+        service.lastValidData.privilegesTypes ? (
         <>
           <h2 style={{ userSelect: 'text' }}>Privileges</h2>
           <table>
             <thead>
               <tr>
                 <th>Role</th>
-                <th style={{ width: 75 }}>Update</th>
-                <th style={{ width: 75 }}>Insert</th>
-                <th style={{ width: 75 }}>Select</th>
-                <th style={{ width: 75 }}>Delete</th>
-                <th style={{ width: 75 }}>Truncate</th>
-                <th style={{ width: 80 }}>References</th>
-                <th style={{ width: 75 }}>Trigger</th>
+                {service.lastValidData.privilegesTypes.map((p) => (
+                  <th style={{ width: 75 }} key={p}>
+                    {p[0].toUpperCase()}
+                    {p.substring(1).replace(/[A-Z]/g, ' $&')}
+                  </th>
+                ))}
                 <th style={{ width: 62 }} />
               </tr>
             </thead>
@@ -1151,48 +1154,50 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         : undefined
                     }
                   >
-                    <td>{p.roleName}</td>
-                    <TdCheck checked={!!p.privileges.update} />
-                    <TdCheck checked={!!p.privileges.insert} />
-                    <TdCheck checked={!!p.privileges.select} />
-                    <TdCheck checked={!!p.privileges.delete} />
-                    <TdCheck checked={!!p.privileges.truncate} />
-                    <TdCheck checked={!!p.privileges.references} />
-                    <TdCheck checked={!!p.privileges.trigger} />
+                    <td>
+                      {p.roleName}
+                      {p.host ? '@' : ''}
+                      {p.host}
+                    </td>
+                    {service.lastValidData!.privilegesTypes!.map((t) => (
+                      <TdCheck checked={!!p.privileges[t]} key={t} />
+                    ))}
                     <td className="actions">
                       <button
                         type="button"
                         className="simple-button"
-                        onClick={() =>
-                          set({ ...edit, updatePrivilege: p.roleName })
-                        }
+                        onClick={() => {
+                          set({
+                            ...edit,
+                            updatePrivilege: p.roleName,
+                            updatePrivilegeHost: p.host,
+                          });
+                        }}
                       >
                         Edit <i className="fa fa-pencil" />
                       </button>
-                      {edit.updatePrivilege === p.roleName ? (
+                      {edit.updatePrivilege === p.roleName &&
+                      edit.updatePrivilegeHost === p.host ? (
                         <TablePrivilegesDialog
                           relativeTo="previousSibling"
-                          privileges={{
-                            update: p.privileges.update,
-                            insert: p.privileges.insert,
-                            select: p.privileges.select,
-                            delete: p.privileges.delete,
-                            truncate: p.privileges.truncate,
-                            references: p.privileges.references,
-                            trigger: p.privileges.trigger,
-                          }}
+                          privilegesTypes={
+                            service.lastValidData!.privilegesTypes!
+                          }
+                          privileges={p.privileges}
                           type="by_role"
                           onUpdate={(e) =>
-                            onUpdatePrivileges(
-                              p.roleName,
-                              p.privileges,
-                              e.privileges,
-                            )
+                            onUpdatePrivileges(p.roleName, e.privileges, p.host)
                           }
                           onCancel={() =>
-                            set({ ...edit, updatePrivilege: null })
+                            set({
+                              ...edit,
+                              updatePrivilege: null,
+                              updatePrivilegeHost: null,
+                            })
                           }
-                          roleName={p.roleName}
+                          roleName={
+                            p.host ? `${p.roleName}@${p.host}` : p.roleName
+                          }
                         />
                       ) : null}
                     </td>
@@ -1228,6 +1233,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             </button>
             {edit.newPrivilege ? (
               <TablePrivilegesDialog
+                privilegesTypes={service.lastValidData.privilegesTypes}
                 relativeTo="previousSibling"
                 onCancel={() => set({ ...edit, newPrivilege: false })}
                 onUpdate={(form) => newPrivilege(form)}
