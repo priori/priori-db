@@ -451,6 +451,10 @@ th.desc.sortable:hover::before {
 .form-row textarea {
   padding: 6px;
   height: 38px;
+  &:focus {
+    padding: 5px;
+    border: solid 2px #06c !important;
+  }
 }
 
 .dialog.form .form-row .fa-close {
@@ -462,8 +466,7 @@ th.desc.sortable:hover::before {
 }
 
 .dialog input,
-.dialog textarea,
-.dialog select {
+.dialog textarea {
   border: solid 1px #ccc;
 }
 
@@ -471,18 +474,23 @@ th.desc.sortable:hover::before {
 
 .grid .dialog {
   input,
-  textarea,
-  select {
+  textarea {
     border: solid 1px #ccc;
     border-radius: 3px;
     outline: none;
     &:focus {
-      border-color: #06c;
+      border: solid 1px #06c;
       box-shadow:
         inset 1px 1px 0 0 #06c,
         inset -1px 1px 0 0 #06c,
         inset 1px -1px 0 0 #06c,
         inset -1px -1px 0 0 #06c;
+    }
+  }
+  input {
+    padding: 2px;
+    &:focus {
+      padding: 1px;
     }
   }
 }

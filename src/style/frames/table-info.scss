@@ -281,15 +281,15 @@ div.comment {
   width: 100%;
   margin-bottom: 17px;
   outline: none;
-  &:focus {
-    padding: 9px;
-    border: 2px #1976d2 solid;
-    box-shadow:
-      0 1px #1976d2,
-      0 -1px #1976d2,
-      1px 0 #1976d2,
-      -1px 0 #1976d2;
-  }
+}
+.dialog input:focus {
+  border: 2px #1976d2 solid;
+  padding: 9px;
+  box-shadow:
+    0 1px #1976d2,
+    0 -1px #1976d2,
+    1px 0 #1976d2,
+    -1px 0 #1976d2;
 }
 button[disabled] {
   opacity: 0.33;
@@ -335,16 +335,12 @@ body div.frame.role div.dialog-form {
       opacity: 1;
     }
   }
-  select,
   textarea {
     border: solid 1px #e1e1e1;
     outline: none;
   }
   select {
     padding-left: 7px;
-    &:focus {
-      padding-left: 6px;
-    }
   }
   textarea {
     padding: 5px;
@@ -368,11 +364,13 @@ body div.frame.role div.dialog-form {
   }
   input[type='number'] {
     padding: 7px;
+    &:focus {
+      padding: 6px;
+    }
   }
   input[type='number']::placeholder {
     font-size: 11px;
   }
-  select:focus,
   textarea:focus {
     border: 1px solid #029;
   }
@@ -482,4 +480,23 @@ span.default-input:focus-within:before {
   letter-spacing: 1px;
   height: 20px;
   line-height: 20px;
+}
+
+select {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  outline: none;
+}
+select:active,
+select:focus {
+  border: solid 1px #1976d2;
+  box-shadow:
+    1px 1px #1976d2,
+    -1px -1px #1976d2,
+    -1px 1px #1976d2,
+    1px -1px #1976d2,
+    inset #1976d2 1px 1px,
+    inset #1976d2 -1px -1px,
+    inset #1976d2 -1px 1px,
+    inset #1976d2 1px -1px;
 }

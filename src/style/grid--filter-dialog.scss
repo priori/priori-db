@@ -24,7 +24,6 @@
   input,
   textarea {
     font-family: 'Inconsolata';
-    border: solid 1px #ccc;
     padding: 2px;
     line-height: 16px;
     height: 22px;
@@ -201,6 +200,11 @@ textarea.data-grid-filter-dialog--sql-where {
   padding: 15px 19px !important;
   background: #fafafa;
   font-size: 14px !important;
+  &:focus,
+  &:active {
+    border: 2px solid #1976d2 !important;
+    padding: 14px 18px !important;
+  }
 }
 
 .app-content button.data-grid-filter-dialog--edit-button {
