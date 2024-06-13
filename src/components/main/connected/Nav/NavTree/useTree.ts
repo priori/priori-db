@@ -22,7 +22,14 @@ export type NavTreeItemType =
 export type NavTreeItem =
   | {
       title: string;
-      type: 'table' | 'function' | 'mview' | 'view' | 'domain' | 'sequence';
+      type:
+        | 'table'
+        | 'function'
+        | 'mview'
+        | 'view'
+        | 'domain'
+        | 'sequence'
+        | 'procedure';
       internal?: boolean;
       infoAction?: boolean;
       includeActions?: never;
@@ -99,7 +106,7 @@ function buildTree(
       for (const f of s.functions) {
         children2.push({
           title: f.name,
-          type: 'function',
+          type: f.type === 'FUNCTION' ? 'function' : 'procedure',
           key: JSON.stringify(f.name),
           rowsOpen: 1,
           schema: s.name,

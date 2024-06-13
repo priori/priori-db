@@ -61,7 +61,7 @@ export function useMouseInterations(
         ?.tables.find((v) => v.name === e.title);
       assert(t);
       previewTable(e.schema, { name: e.title, type: t.type });
-    } else if (e.type === 'function') {
+    } else if (e.type === 'function' || e.type === 'procedure') {
       previewFunction(e.schema, e.title);
     } else if (e.type === 'domain') {
       previewDomain(e.schema, e.title);
@@ -81,7 +81,7 @@ export function useMouseInterations(
       assert(e.schema);
       assert(t);
       keepOpenTable(e.schema, { name: e.title, type: t.type });
-    } else if (e.type === 'function') {
+    } else if (e.type === 'function' || e.type === 'procedure') {
       assert(e.schema);
       keepFunction(e.schema, e.title);
     } else if (e.type === 'domain') {

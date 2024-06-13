@@ -146,7 +146,7 @@ export interface DBInterface {
         name: string;
       }[];
       functions?: {
-        type: EntityType & 'FUNCTION';
+        type: EntityType & ('FUNCTION' | 'PROCEDURE');
         name: string;
       }[];
       sequences?: {

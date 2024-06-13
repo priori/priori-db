@@ -11,6 +11,7 @@ export type Focus =
       type:
         | 'table'
         | 'function'
+        | 'procedure'
         | 'mview'
         | 'view'
         | 'domain'

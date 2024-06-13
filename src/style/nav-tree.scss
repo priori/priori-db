@@ -96,8 +96,10 @@
 .tree--domain-icon.tree--icon {
   margin-top: 3px;
 }
-.tree--function-icon.tree--icon {
+.tree--function-icon,
+.tree--procedure-icon {
   display: flex;
+  margin-top: -1px;
   & > span:first-of-type {
     font-weight: 900;
     letter-spacing: -2px;
@@ -111,6 +113,11 @@
     font-weight: 900;
     letter-spacing: 0.7px;
   }
+}
+.tree--procedure-icon.tree--icon > span:first-of-type {
+  font-size: 17px;
+  margin-top: -1px;
+  font-family: 'Inconsolata', monospace;
 }
 .tree--table-icon.tree--icon {
   color: #007;

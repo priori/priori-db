@@ -193,7 +193,8 @@ div.nav {
     width: 13px;
     text-align: center;
   }
-  .function-icon {
+  .function-icon,
+  .procedure-icon {
     font-style: normal;
     line-height: 13px;
     &:before {
@@ -213,6 +214,14 @@ div.nav {
       margin-top: 1px;
       font-weight: 900;
       letter-spacing: 0.7px;
+    }
+  }
+  .procedure-icon {
+    &:before {
+      content: '#';
+      font-family: 'Inconsolata', monospace;
+      font-size: 17px;
+      margin-top: -1px;
     }
   }
   mark {

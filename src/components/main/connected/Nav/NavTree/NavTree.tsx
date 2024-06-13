@@ -32,6 +32,13 @@ const icons = {
       <span>()</span>
     </span>
   ),
+  // procedure: <i className="fa fa-cogs tree--procedure-icon tree--icon" />,
+  procedure: (
+    <span className="tree--procedure-icon tree--icon">
+      <span>#</span>
+      <span>()</span>
+    </span>
+  ),
   role: <i className="fa fa-users tree--role-icon tree--icon" />,
   user: <i className="fa fa-user tree--user-icon tree--icon" />,
   mview: <i className="fa fa-table tree--mview-icon tree--icon" />,

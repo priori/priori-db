@@ -99,7 +99,8 @@ export const NavSearchCore = React.memo(
                     entity.type === 'MATERIALIZED VIEW' ||
                     entity.type === 'VIEW') &&
                     tabs.open.table(entity.schema, entity.name)) ||
-                  (entity.type === 'FUNCTION' &&
+                  ((entity.type === 'FUNCTION' ||
+                    entity.type === 'PROCEDURE') &&
                     tabs.open.function(entity.schema, entity.name)) ||
                   (entity.type === 'DOMAIN' &&
                     tabs.open.domain(entity.schema, entity.name)) ||

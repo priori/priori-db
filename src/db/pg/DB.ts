@@ -1020,7 +1020,7 @@ export const DB: DBInterface = {
               p.pronamespace schema_id,
               p.proname || '('||oidvectortypes(proargtypes)||')' "name",
               -- prolang = 12 internal,
-              'FUNCTION' "type"
+              CASE WHEN p.prokind = 'p' THEN 'PROCEDURE' ELSE 'FUNCTION' END "type"
           FROM pg_proc p
           ORDER BY "name"
           ) aux) entities
@@ -1060,9 +1060,13 @@ export const DB: DBInterface = {
         name: string;
       }[],
       functions: entities
-        .filter((e) => e.schema_id === s.schema_id && e.type === 'FUNCTION')
+        .filter(
+          (e) =>
+            e.schema_id === s.schema_id &&
+            (e.type === 'FUNCTION' || e.type === 'PROCEDURE'),
+        )
         .map((v) => ({ name: v.name, type: v.type })) as {
-        type: EntityType & 'FUNCTION';
+        type: EntityType & ('FUNCTION' | 'PROCEDURE');
         name: string;
       }[],
       sequences: entities

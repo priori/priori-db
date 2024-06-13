@@ -427,7 +427,7 @@ export function updateSchemasAndRoles(
       name: string;
     }[];
     functions?: {
-      type: 'FUNCTION';
+      type: 'FUNCTION' | 'PROCEDURE';
       name: string;
     }[];
     sequences?: {
@@ -539,7 +539,7 @@ export function connected(
       type: 'MATERIALIZED VIEW' | 'VIEW' | 'BASE TABLE';
     }[];
     sequences?: { name: string; type: 'SEQUENCE' }[];
-    functions?: { name: string; type: 'FUNCTION' }[];
+    functions?: { name: string; type: 'FUNCTION' | 'PROCEDURE' }[];
     domains?: { name: string; type: 'DOMAIN' }[];
   }[],
   roles?: {

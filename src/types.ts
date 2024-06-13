@@ -85,7 +85,8 @@ export type EntityType =
   | 'FUNCTION'
   | 'SEQUENCE'
   | 'DOMAIN'
-  | 'ENUM';
+  | 'ENUM'
+  | 'PROCEDURE';
 
 export interface NavSchema {
   current: boolean;
@@ -100,7 +101,7 @@ export interface NavSchema {
     type: EntityType & ('MATERIALIZED VIEW' | 'VIEW' | 'BASE TABLE');
   }[];
   sequences?: { name: string; type: EntityType & 'SEQUENCE' }[];
-  functions?: { name: string; type: EntityType & 'FUNCTION' }[];
+  functions?: { name: string; type: EntityType & ('FUNCTION' | 'PROCEDURE') }[];
   domains?: { name: string; type: EntityType & 'DOMAIN' }[];
 }
 

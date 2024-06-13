@@ -168,7 +168,7 @@ export function useKeyboardInterations(
         if (strongHit)
           keepOpenTable(item.schema, { name: item.title, type: t.type });
         else previewTable(item.schema, { name: item.title, type: t.type });
-      } else if (item.type === 'function') {
+      } else if (item.type === 'function' || item.type === 'procedure') {
         if (strongHit) keepFunction(item.schema, focused.name);
         else previewFunction(item.schema, focused.name);
       } else if (item.type === 'domain') {
@@ -209,6 +209,7 @@ export function useKeyboardInterations(
         focused.type === 'view' ||
         focused.type === 'mview' ||
         focused.type === 'function' ||
+        focused.type === 'procedure' ||
         focused.type === 'domain' ||
         focused.type === 'sequence' ||
         focused.type === 'role' ||
@@ -229,7 +230,7 @@ export function useKeyboardInterations(
             .find((s) => s.name === focused.schema)!
             .tables.find((t) => t.name === focused.name)!,
         );
-      } else if (focused.type === 'function') {
+      } else if (focused.type === 'function' || focused.type === 'procedure') {
         keepFunction(focused.schema, focused.name);
       } else if (focused.type === 'domain') {
         keepDomain(focused.schema, focused.name);

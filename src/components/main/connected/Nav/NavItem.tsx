@@ -25,6 +25,7 @@ const icons = {
   'MATERIALIZED VIEW': 'fa fa-table',
   SCHEMA: 'fa fa-database',
   FUNCTION: 'function-icon',
+  PROCEDURE: 'procedure-icon',
 } as const;
 
 function grantScrollVisibility(el: HTMLDivElement | null) {
@@ -64,7 +65,8 @@ export function NavItem({
     )
       previewTable(e.schema, { type: e.type, name: e.name });
     else if (e.type === 'DOMAIN') previewDomain(e.schema, e.name);
-    else if (e.type === 'FUNCTION') previewFunction(e.schema, e.name);
+    else if (e.type === 'FUNCTION' || e.type === 'PROCEDURE')
+      previewFunction(e.schema, e.name);
     else if (e.type === 'SEQUENCE') previewSequence(e.schema, e.name);
   });
 
@@ -78,7 +80,8 @@ export function NavItem({
     )
       keepOpenTable(e.schema, { type: e.type, name: e.name });
     else if (e.type === 'DOMAIN') keepDomain(e.schema, e.name);
-    else if (e.type === 'FUNCTION') keepFunction(e.schema, e.name);
+    else if (e.type === 'FUNCTION' || e.type === 'PROCEDURE')
+      keepFunction(e.schema, e.name);
     else if (e.type === 'SEQUENCE') keepSequence(e.schema, e.name);
   });
   const onInfoDoubleClick = useEvent((ev: React.MouseEvent<HTMLElement>) => {

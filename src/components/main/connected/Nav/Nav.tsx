@@ -17,6 +17,7 @@ export type Entity = {
     | 'VIEW'
     | 'BASE TABLE'
     | 'FUNCTION'
+    | 'PROCEDURE'
     | 'DOMAIN'
     | 'ENUM'
     | 'SEQUENCE'

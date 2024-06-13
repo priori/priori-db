@@ -51,7 +51,7 @@ export const mysqlDb: DBInterface = {
         name: string;
       }[];
       functions?: {
-        type: EntityType & 'FUNCTION';
+        type: EntityType & ('FUNCTION' | 'PROCEDURE');
         name: string;
       }[];
       sequences?: {
@@ -67,10 +67,11 @@ export const mysqlDb: DBInterface = {
     const currentDbP = await val('SELECT DATABASE()');
     const dbsP = await list('SHOW DATABASES');
     const tablesP = await list(
-      'SELECT table_name, table_schema, table_type FROM INFORMATION_SCHEMA.TABLES ORDER BY table_name',
+      `SELECT table_name, table_schema, table_type
+       FROM INFORMATION_SCHEMA.TABLES ORDER BY table_name`,
     );
     const functionsP = await list(`
-      SELECT routine_name, routine_schema, routine_catalog
+      SELECT routine_name, routine_schema, routine_catalog, routine_type
       FROM information_schema.routines`);
     const [currentDb, dbs0, tables0, functions0] = await Promise.all([
       currentDbP,
@@ -79,7 +80,7 @@ export const mysqlDb: DBInterface = {
       functionsP,
     ]);
     const functions = functions0.map((f) => ({
-      type: 'FUNCTION' as EntityType & 'FUNCTION',
+      type: f.ROUTINE_TYPE as EntityType & ('FUNCTION' | 'PROCEDURE'),
       name: f.ROUTINE_NAME,
       schema: f.ROUTINE_SCHEMA,
     }));
@@ -127,7 +128,7 @@ export const mysqlDb: DBInterface = {
       functions: functions
         .filter((f) => f.schema === db)
         .map((f) => ({
-          type: 'FUNCTION' as EntityType & 'FUNCTION',
+          type: f.type,
           name: f.name,
         })),
     }));
