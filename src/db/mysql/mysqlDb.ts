@@ -833,9 +833,6 @@ export const mysqlDb: DBInterface = {
           );
         }
         if (grants) {
-          console.log(
-            `GRANT ${grants} ON ${label(schema)}.${label(table)} TO ${label(grantee)}${host ? `@${label(host)}` : ''}`,
-          );
           await con.query(
             `GRANT ${grants} ON ${label(schema)}.${label(table)} TO ${label(grantee)}${host ? `@${label(host)}` : ''}`,
           );

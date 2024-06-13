@@ -1760,7 +1760,6 @@ export const DB: DBInterface = {
       const comment = info.comment as string;
       const definition = info.definition as string;
       const owner = info.owner as string;
-      delete (info as any).comment;
       delete (info as any).definition;
       delete (info as any).owner;
       return {
