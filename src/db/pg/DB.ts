@@ -1766,6 +1766,7 @@ export const DB: DBInterface = {
       const owner = info.owner as string;
       delete info.definition;
       delete info.prosqlbody;
+      delete info.prosrc;
       delete info.comment;
       delete info.definition;
       delete info.owner;
