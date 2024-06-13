@@ -106,7 +106,7 @@ function buildTree(
         });
       }
       children.push({
-        title: 'Functions',
+        title: 'Functions & Procedures',
         children: children2,
         key: 'functions',
         type: 'functions-folder',
@@ -148,7 +148,7 @@ function buildTree(
         });
       }
       children.push({
-        title: 'Domains',
+        title: 'Domains & Types',
         children: children2,
         key: 'domains',
         type: 'domains-folder',
