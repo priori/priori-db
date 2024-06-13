@@ -465,11 +465,6 @@ th.desc.sortable:hover::before {
   align-items: center;
 }
 
-.dialog input,
-.dialog textarea {
-  border: solid 1px #ccc;
-}
-
 @import './grid--filter-dialog.scss';
 
 .grid .dialog {

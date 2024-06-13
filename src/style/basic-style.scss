@@ -133,3 +133,21 @@ button {
     text-align: center;
   }
 }
+select {
+  border: 1px solid #e1e1e1;
+  border-radius: 3px;
+  outline: none;
+}
+select:active,
+select:focus {
+  border: solid 1px #1976d2;
+  box-shadow:
+    1px 1px #1976d2,
+    -1px -1px #1976d2,
+    -1px 1px #1976d2,
+    1px -1px #1976d2,
+    inset #1976d2 1px 1px,
+    inset #1976d2 -1px -1px,
+    inset #1976d2 -1px 1px,
+    inset #1976d2 1px -1px;
+}

@@ -133,7 +133,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
           {c.type && c.type.allowLength ? (
             <input
               type="number"
-              style={{ width: '60px' }}
+              style={{ width: '60px', margin: '0 auto' }}
               onChange={(e) =>
                 set({ ...c, length: (e.target as HTMLInputElement).value })
               }
@@ -144,7 +144,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
           {c.type && c.type.allowPrecision ? (
             <input
               type="number"
-              style={{ width: '60px' }}
+              style={{ width: '60px', margin: '0 auto' }}
               onChange={(e) =>
                 set({ ...c, precision: (e.target as HTMLInputElement).value })
               }
@@ -228,12 +228,12 @@ export function NewTableFrame(props: NewTableFrameProps) {
     );
   };
 
-  if (!types) return <div style={{ width: '720px' }} />;
+  if (!types) return <div style={{ width: '777px' }} />;
 
   return (
-    <div style={{ width: '720px' }}>
+    <div style={{ width: '777px' }}>
       <h1>New Table in {props.schema}</h1>
-      <div className="form-field input-form-field">
+      <div className="form-field input-form-field new-table--name">
         Name:{' '}
         <input
           onChange={(e) =>
