@@ -149,7 +149,6 @@ async function publicsSchemas() {
   const res = await list(`SELECT current_schema() "name"`);
   return (res as { name: string }[]).map((r) => r.name);
 }
-
 export async function existsSomePendingProcess(
   ...ids: number[]
 ): Promise<boolean> {
@@ -912,7 +911,7 @@ export const DB: DBInterface = {
     return types.map((type) => {
       let allowLength = !!(!type.name.endsWith('[]') && type.length === -1);
       if (type.name.endsWith('[]')) {
-        const name = type.name.substr(0, type.name.length - 2);
+        const name = type.name.substring(0, type.name.length - 2);
         const el = types.find((el2) => el2.name === name);
         allowLength = (el && el.length === -1) || false;
       }
