@@ -1,28 +1,28 @@
-import { useService } from 'util/useService';
-import { useMemo, useState } from 'react';
-import { useEvent } from 'util/useEvent';
 import { useTab } from 'components/main/connected/ConnectedApp';
-import { Dialog } from 'components/util/Dialog/Dialog';
-import { YesNoDialog } from 'components/util/Dialog/YesNoDialog';
-import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { Comment } from 'components/util/Comment';
+import { Dialog } from 'components/util/Dialog/Dialog';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
-import { useIsMounted } from 'util/hooks';
-import { assert } from 'util/assert';
-import { currentState } from 'state/state';
+import { RenameDialog } from 'components/util/Dialog/RenameDialog';
+import { YesNoDialog } from 'components/util/Dialog/YesNoDialog';
 import { ColTableInfo, db } from 'db/db';
-import { TableInfoFrameProps, TablePrivileges } from '../../../types';
+import { useMemo, useState } from 'react';
+import { currentState } from 'state/state';
+import { assert } from 'util/assert';
+import { useIsMounted } from 'util/hooks';
+import { useEvent } from 'util/useEvent';
+import { useService } from 'util/useService';
 import {
-  reloadNav,
-  closeTab,
-  renameEntity,
   changeSchema,
+  closeTab,
+  reloadNav,
+  renameEntity,
   showError,
 } from '../../../state/actions';
+import { TableInfoFrameProps } from '../../../types';
 import { ChangeSchemaDialog } from '../../util/Dialog/ChangeSchemaDialog';
+import { Privileges } from '../Privileges/Privileges';
 import { ColumnForm, ColumnFormDialog } from './ColumnFormDialog';
-import { IndexForm, IndexDialog } from './IndexDialog';
-import { TablePrivilegesDialog } from './TablePrivilegesDialog';
+import { IndexDialog, IndexForm } from './IndexDialog';
 
 export function TdCheck({ checked }: { checked: boolean }) {
   return (
@@ -87,11 +87,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     newColumn: false,
     newIndex: false,
     openIndexComment: null as string | null,
-    updatePrivilege: null as string | null,
-    updatePrivilegeHost: null as string | null | undefined,
-    newPrivilege: false,
     editOwner: false as boolean | string,
-    hideInternalRoles: true,
   });
 
   const isMounted = useIsMounted();
@@ -213,11 +209,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     set({ ...edit, removeIndex: null });
   });
 
-  const newPrivilege = useEvent(
+  const onUpdatePrivileges = useEvent(
     async (form: {
       role: string;
       host?: string;
-      privileges: TablePrivileges;
+      newPrivilege: boolean;
+      privileges: { [k: string]: boolean | undefined };
     }) => {
       if (!db().privileges) return;
       await db().privileges?.updateTablePrivileges(
@@ -229,25 +226,6 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       );
       if (!isMounted()) return;
       await service.reload();
-      if (!isMounted()) return;
-      set({ ...edit, newPrivilege: false });
-    },
-  );
-
-  const onUpdatePrivileges = useEvent(
-    async (roleName: string, update: TablePrivileges, host?: string) => {
-      if (!db().privileges) return;
-      await db().privileges?.updateTablePrivileges(
-        props.schema,
-        props.table,
-        roleName,
-        update,
-        host,
-      );
-      if (!isMounted()) return;
-      await service.reload();
-      if (!isMounted()) return;
-      set({ ...edit, updatePrivilege: null, updatePrivilegeHost: null });
     },
   );
 
@@ -364,14 +342,6 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         },
       );
   });
-
-  const internalRoles = useMemo(
-    () =>
-      service.lastValidData?.privileges?.filter((v) =>
-        v.roleName.startsWith('pg_'),
-      ).length,
-    [service.lastValidData?.privileges],
-  );
 
   const { roles } = currentState();
 
@@ -1105,154 +1075,13 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           </table>
         </>
       ) : null}
-      {service.lastValidData && state.privileges && !state.privileges.length ? (
-        <>
-          <h2>Privileges</h2>
-
-          <div className="empty">
-            No privileges found for table.{' '}
-            {service.lastValidData.privilegesTypes ? (
-              <>
-                <button
-                  type="button"
-                  className="simple-button"
-                  onClick={() => set({ ...edit, newPrivilege: true })}
-                >
-                  Grant new privilege <i className="fa fa-plus" />
-                </button>
-                {state.cols && edit.newPrivilege ? (
-                  <TablePrivilegesDialog
-                    privilegesTypes={service.lastValidData.privilegesTypes}
-                    relativeTo="previousSibling"
-                    type="by_role"
-                    onCancel={() => set({ ...edit, newPrivilege: false })}
-                    onUpdate={(form) => newPrivilege(form)}
-                  />
-                ) : null}
-              </>
-            ) : null}
-          </div>
-        </>
-      ) : service.lastValidData?.privileges &&
-        service.lastValidData.privilegesTypes ? (
-        <>
-          <h2 style={{ userSelect: 'text' }}>Privileges</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Role</th>
-                {service.lastValidData.privilegesTypes.map((p) => (
-                  <th style={{ width: 75 }} key={p}>
-                    {p[0].toUpperCase()}
-                    {p.substring(1).replace(/[A-Z]/g, ' $&')}
-                  </th>
-                ))}
-                <th style={{ width: 62 }} />
-              </tr>
-            </thead>
-            <tbody>
-              {state.privileges
-                ?.filter(
-                  (r) =>
-                    !edit.hideInternalRoles || !r.roleName.startsWith('pg_'),
-                )
-                .map((p) => (
-                  <tr
-                    key={p.roleName}
-                    style={
-                      p.roleName.startsWith('pg_')
-                        ? { color: '#ccc' }
-                        : undefined
-                    }
-                  >
-                    <td>
-                      {p.roleName}
-                      {p.host ? '@' : ''}
-                      {p.host}
-                    </td>
-                    {service.lastValidData!.privilegesTypes!.map((t) => (
-                      <TdCheck checked={!!p.privileges[t]} key={t} />
-                    ))}
-                    <td className="actions">
-                      <button
-                        type="button"
-                        className="simple-button"
-                        onClick={() => {
-                          set({
-                            ...edit,
-                            updatePrivilege: p.roleName,
-                            updatePrivilegeHost: p.host,
-                          });
-                        }}
-                      >
-                        Edit <i className="fa fa-pencil" />
-                      </button>
-                      {edit.updatePrivilege === p.roleName &&
-                      edit.updatePrivilegeHost === p.host ? (
-                        <TablePrivilegesDialog
-                          relativeTo="previousSibling"
-                          privilegesTypes={
-                            service.lastValidData!.privilegesTypes!
-                          }
-                          privileges={p.privileges}
-                          type="by_role"
-                          onUpdate={(e) =>
-                            onUpdatePrivileges(p.roleName, e.privileges, p.host)
-                          }
-                          onCancel={() =>
-                            set({
-                              ...edit,
-                              updatePrivilege: null,
-                              updatePrivilegeHost: null,
-                            })
-                          }
-                          roleName={
-                            p.host ? `${p.roleName}@${p.host}` : p.roleName
-                          }
-                        />
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-          <div className="actions">
-            {internalRoles ? (
-              <button
-                type="button"
-                key={edit.hideInternalRoles ? 1 : 0}
-                className={`simple-button simple-button2 hide-button ${
-                  edit.hideInternalRoles ? ' hidden' : ' shown'
-                }`}
-                onClick={() => {
-                  set({
-                    ...edit,
-                    hideInternalRoles: !edit.hideInternalRoles,
-                  });
-                }}
-              >
-                {internalRoles} pg_* <i className="fa fa-eye-slash" />
-                <i className="fa fa-eye" />
-              </button>
-            ) : null}{' '}
-            <button
-              type="button"
-              className="simple-button"
-              onClick={() => set({ ...edit, newPrivilege: true })}
-            >
-              New <i className="fa fa-plus" />
-            </button>
-            {edit.newPrivilege ? (
-              <TablePrivilegesDialog
-                privilegesTypes={service.lastValidData.privilegesTypes}
-                relativeTo="previousSibling"
-                onCancel={() => set({ ...edit, newPrivilege: false })}
-                onUpdate={(form) => newPrivilege(form)}
-                type="by_role"
-              />
-            ) : null}
-          </div>
-        </>
+      {state.privileges && service.lastValidData?.privilegesTypes ? (
+        <Privileges
+          entityType="table"
+          privileges={state.privileges}
+          privilegesTypes={service.lastValidData?.privilegesTypes}
+          onUpdate={onUpdatePrivileges}
+        />
       ) : null}
       {state.table ? (
         <>

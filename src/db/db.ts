@@ -1,7 +1,6 @@
 import {
   ConnectionConfiguration,
   SequencePrivileges,
-  TablePrivileges,
   Filter as ImportedFilter,
 } from 'types';
 import hotLoadSafe from 'util/hotLoadSafe';
@@ -52,7 +51,10 @@ export interface TableInfo {
   privileges?: {
     roleName: string;
     host?: string;
-    privileges: TablePrivileges;
+    internal?: boolean;
+    privileges: {
+      [key: string]: boolean | undefined;
+    };
   }[];
   indexes?: {
     name: string;

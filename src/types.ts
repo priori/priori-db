@@ -152,24 +152,6 @@ export interface TableColumnType {
   allowPrecision: boolean;
 }
 
-export type TablePrivileges = {
-  update?: boolean | undefined;
-  insert?: boolean | undefined;
-  select?: boolean | undefined;
-  delete?: boolean | undefined;
-  references?: boolean | undefined;
-  trigger?: boolean | undefined;
-  // postgres
-  truncate?: boolean | undefined;
-  // mysql
-  index?: boolean | undefined;
-  drop?: boolean | undefined;
-  alter?: boolean | undefined;
-  showView?: boolean | undefined;
-};
-
-export type TablePrivilegesType = keyof TablePrivileges;
-
 export type SequencePrivileges = {
   update?: boolean | undefined;
   usage?: boolean | undefined;

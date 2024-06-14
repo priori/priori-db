@@ -9,8 +9,6 @@ import {
   SimpleValue,
   Sort,
   TableColumnType,
-  TablePrivileges,
-  TablePrivilegesType,
 } from 'types';
 import { DomainInfo, SequenceInfo, TableInfo } from './db';
 
@@ -210,7 +208,7 @@ export interface DBInterface {
   updateColumnViewName: boolean;
   updateColumnViewComment: boolean;
   privileges?: {
-    tablePrivilegesTypes(): Promise<TablePrivilegesType[]>;
+    tablePrivilegesTypes(): Promise<string[]>;
     listRoles(): Promise<
       {
         name: string;
@@ -233,7 +231,9 @@ export interface DBInterface {
         tables: {
           schema: string;
           table: string;
-          privileges: TablePrivileges;
+          privileges: {
+            [k: string]: boolean | undefined;
+          };
         }[];
         schemas: {
           name: string;

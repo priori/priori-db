@@ -7,7 +7,7 @@ import { grantError } from 'util/errors';
 import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 
-type TablePrivilegesDialogProps =
+type PrivilegesDialogProps =
   | {
       relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
       type: 'by_role';
@@ -28,7 +28,7 @@ type TablePrivilegesDialogProps =
     }
   | {
       relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
-      type: 'by_table';
+      type: 'by_entity';
       onCancel: () => void;
       onUpdate: (f: {
         table: string;
@@ -38,21 +38,21 @@ type TablePrivilegesDialogProps =
         };
       }) => Promise<void>;
       schema?: string;
-      table?: string;
+      entity?: string;
       privileges?: {
         [k: string]: boolean | undefined;
       };
       privilegesTypes: string[];
     };
 
-export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
+export function PrivilegesDialog(props: PrivilegesDialogProps) {
   const { relativeTo, onCancel, privileges, onUpdate, type } = props;
   const roleName = type === 'by_role' ? props.roleName : undefined;
-
-  const tableName = type === 'by_table' ? props.table : undefined;
-  const schemaName = type === 'by_table' ? props.schema : undefined;
+  const tableName = type === 'by_entity' ? props.entity : undefined;
+  const schemaName = type === 'by_entity' ? props.schema : undefined;
   const [tableNameValue, setTableNameValue] = useState(tableName);
   const [schemaNameValue, setSchemaNameValue] = useState(schemaName);
+  const host = type === 'by_role' ? props.host : undefined;
 
   const [executing, setExecuting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -61,7 +61,7 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
     onCancel();
   });
   const isMounted = useIsMounted();
-  const [form, setForm] = useState<Record<string, undefined | boolean>>({
+  const [form, setForm] = useState<Record<string, boolean | undefined>>({
     ...privileges,
   });
   const [role, setRole] = useState<{ name: string; host?: string } | undefined>(
@@ -73,7 +73,7 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
     executing ||
     equals(form, privileges) ||
     (type === 'by_role' && !role && !props.roleName) ||
-    (type === 'by_table' && (!schemaNameValue || !tableNameValue)) ||
+    (type === 'by_entity' && (!schemaNameValue || !tableNameValue)) ||
     !props.privilegesTypes.find((t) => !!form[t] !== !!privileges?.[t]);
 
   // const updateDisabled =
@@ -85,11 +85,11 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
   const onSave = useEvent(async () => {
     if (
       (type === 'by_role' && !props.roleName && !role) ||
-      (type === 'by_table' && (!schemaNameValue || !tableNameValue))
+      (type === 'by_entity' && (!schemaNameValue || !tableNameValue))
     )
       return;
     try {
-      const update: Record<string, boolean | undefined> = {};
+      const update: Partial<Record<string, boolean>> = {};
       for (const key of props.privilegesTypes) {
         if (typeof form[key] === 'boolean' && form[key] !== privileges?.[key]) {
           update[key] = form[key];
@@ -102,7 +102,7 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
           privileges: update,
           host: role?.host || props.host,
         });
-      } else if (type === 'by_table') {
+      } else if (type === 'by_entity') {
         await onUpdate({
           schema: schemaNameValue!,
           table: tableNameValue!,
@@ -141,6 +141,7 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
             }}
           >
             {roleName}
+            {host ? `@${host}` : ''}
           </div>
         ) : schemaName && tableName ? (
           <div
@@ -151,7 +152,7 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
           >
             {schemaName}.{tableName}
           </div>
-        ) : type === 'by_table' ? (
+        ) : type === 'by_entity' ? (
           <div style={{ display: 'flex', gap: 20 }}>
             <select
               onChange={(e) => {
@@ -192,8 +193,8 @@ export function TablePrivilegesDialog(props: TablePrivilegesDialogProps) {
                 role ? [role.name, role.host] : [roleName, props.host],
               )}
               onChange={(e) => {
-                const [name2, host] = JSON.parse(e.target.value);
-                setRole({ name: name2, host });
+                const [name2, host2] = JSON.parse(e.target.value);
+                setRole({ name: name2, host: host2 });
               }}
             >
               <option value="" />

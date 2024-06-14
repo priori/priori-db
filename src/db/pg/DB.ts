@@ -1,12 +1,7 @@
 import { DBInterface } from 'db/DBInterface';
 import { buildFilterWhere, buildFinalQueryWhere } from 'db/util';
 import { grantError } from 'util/errors';
-import {
-  EntityType,
-  SequencePrivileges,
-  TableColumnType,
-  TablePrivileges,
-} from '../../types';
+import { EntityType, SequencePrivileges, TableColumnType } from '../../types';
 import {
   DomainInfo,
   Filter,
@@ -608,17 +603,16 @@ export const DB: DBInterface = {
       WHERE
         schemaname = $1 AND tablename = $2`,
         [s, n],
-      )) as
-        | {
-            tableowner: string;
-            tablespace: string;
-            hasindexes: boolean;
-            hasrules: boolean;
-            hastriggers: boolean;
-            rowsecurity: boolean;
-            uid: number;
-          }
-        | string;
+      )) as {
+        tableowner: string;
+        tablespace: string;
+        hasindexes: boolean;
+        hasrules: boolean;
+        hastriggers: boolean;
+        rowsecurity: boolean;
+        view_definition: string | null;
+        uid: number;
+      } | null;
     }
 
     async function pgView(s: string, n: string) {
@@ -629,12 +623,10 @@ export const DB: DBInterface = {
       WHERE
         schemaname = $1 AND viewname = $2`,
         [s, n],
-      )) as
-        | {
-            viewowner: string;
-            definition: string;
-          }
-        | string;
+      )) as {
+        viewowner: string;
+        definition: string;
+      } | null;
     }
 
     async function pgMView(s: string, n: string) {
@@ -645,15 +637,14 @@ export const DB: DBInterface = {
       WHERE
         schemaname = $1 AND matviewname = $2`,
         [s, n],
-      )) as
-        | {
-            matviewowner: string;
-            tablespace: string;
-            hasindexes: boolean;
-            ispopulated: boolean;
-            definition: string;
-          }
-        | string;
+      )) as {
+        viewowner: string;
+        matviewowner: string;
+        tablespace: string;
+        hasindexes: boolean;
+        ispopulated: boolean;
+        definition: string;
+      } | null;
     }
     async function listIndexes(s: string, n: string) {
       const res = await list(
@@ -783,6 +774,7 @@ export const DB: DBInterface = {
       const byGrantee = [...new Set(res.map((r) => r.grantee))].map(
         (grantee) => ({
           roleName: grantee as string,
+          internal: (grantee as string).startsWith('pg_'),
           privileges: {
             delete: !!res.find(
               (r) => r.grantee === grantee && r.privilege_type === 'DELETE',
@@ -1372,7 +1364,9 @@ export const DB: DBInterface = {
         const tables: {
           schema: string;
           table: string;
-          privileges: TablePrivileges;
+          privileges: {
+            [k: string]: boolean | undefined;
+          };
         }[] = [];
         const tablesOnly = res.filter((a) => a.type === 'table');
         for (const r of tablesOnly) {
@@ -1539,7 +1533,9 @@ export const DB: DBInterface = {
           tables: {
             schema: string;
             table: string;
-            privileges: TablePrivileges;
+            privileges: {
+              [k: string]: boolean | undefined;
+            };
           }[];
           schemas: {
             name: string;

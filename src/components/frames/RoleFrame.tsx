@@ -1,10 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import {
-  RoleFrameProps,
-  SchemaPrivileges,
-  SequencePrivileges,
-  TablePrivileges,
-} from 'types';
+import { RoleFrameProps, SchemaPrivileges, SequencePrivileges } from 'types';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { Dialog } from 'components/util/Dialog/Dialog';
@@ -226,7 +221,11 @@ export function RoleFrame(props: RoleFrameProps) {
   const isMounted = useIsMounted();
 
   const grantTable = useEvent(
-    async (schema: string, table: string, privileges: TablePrivileges) => {
+    async (
+      schema: string,
+      table: string,
+      privileges: { [k: string]: boolean | undefined },
+    ) => {
       await db().privileges!.updateTablePrivileges(
         schema,
         table,
@@ -314,8 +313,12 @@ export function RoleFrame(props: RoleFrameProps) {
     async (
       schema: string,
       table: string,
-      curr: TablePrivileges,
-      update: TablePrivileges,
+      curr: {
+        [k: string]: boolean | undefined;
+      },
+      update: {
+        [k: string]: boolean | undefined;
+      },
     ) => {
       await db().privileges!.updateTablePrivileges(schema, table, props.name, {
         update: update.update === curr.update ? undefined : update.update,
