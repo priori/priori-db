@@ -2,7 +2,7 @@ import { Comment } from 'components/util/Comment';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { db } from 'db/db';
-import React, { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   changeSchema,
   closeTab,
@@ -17,6 +17,7 @@ import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
+import { Privileges } from './Privileges/Privileges';
 
 function functionsDb() {
   const d = db();
@@ -31,7 +32,14 @@ export function FunctionFrame(props: FunctionFrameProps) {
       ? props.name.substring(0, props.name.lastIndexOf('('))
       : props.name;
   const service = useService(
-    () => functionsDb().function(props.schema, props.name),
+    () =>
+      Promise.all([
+        functionsDb().function(props.schema, props.name),
+        functionsDb().privilegesTypes?.() ?? Promise.resolve(undefined),
+      ]).then(([data, privilegesTypes]) => ({
+        ...data,
+        privilegesTypes,
+      })),
     [props.schema, props.name],
   );
 
@@ -92,58 +100,6 @@ export function FunctionFrame(props: FunctionFrameProps) {
         );
   });
 
-  const revokeYesClick = useEvent(() => {
-    if (!state.revoke) return;
-    functionsDb()
-      .updateFunctionPrivileges?.(
-        props.schema,
-        props.name,
-        state.revoke.roleName,
-        {
-          execute: false,
-        },
-        state.revoke.host,
-      )
-      .then(
-        () => {
-          service.reload();
-          set({
-            ...state,
-            revoke: false,
-          });
-        },
-        (err) => {
-          showError(err);
-        },
-      );
-  });
-
-  const grantClick = useEvent(() => {
-    if (typeof state.grant === 'object')
-      functionsDb()
-        .updateFunctionPrivileges?.(
-          props.schema,
-          props.name,
-          state.grant.roleName,
-          {
-            execute: true,
-          },
-          state.grant.host,
-        )
-        .then(
-          () => {
-            service.reload();
-            set({
-              ...state,
-              grant: false,
-            });
-          },
-          (err) => {
-            showError(err);
-          },
-        );
-  });
-
   const onUpdateComment = useEvent(async (text: string) => {
     await functionsDb().updateFunction(props.schema, name, { comment: text });
     await service.reload();
@@ -190,12 +146,24 @@ export function FunctionFrame(props: FunctionFrameProps) {
       );
   });
 
-  const internalRoles = useMemo(
-    () =>
-      service.lastValidData?.privileges?.filter((v) =>
-        v.roleName.startsWith('pg_'),
-      ).length,
-    [service.lastValidData?.privileges],
+  const onUpdatePrivileges = useEvent(
+    async (form: {
+      role: string;
+      host?: string;
+      newPrivilege: boolean;
+      privileges: { [k: string]: boolean | undefined };
+    }) => {
+      if (!db().privileges) return;
+      await db().functions?.updateFunctionPrivileges?.(
+        props.schema,
+        props.name,
+        form.role,
+        form.privileges,
+        form.host,
+      );
+      if (!isMounted()) return;
+      await service.reload();
+    },
   );
 
   const isProcedure = info?.type === 'procedure';
@@ -360,161 +328,13 @@ export function FunctionFrame(props: FunctionFrameProps) {
           ) : null}
         </div>
       ) : null}
-      {info?.privileges ? (
-        <>
-          <h2 style={{ marginBottom: 3 }}>
-            Privileges /{' '}
-            <span style={{ fontWeight: 'normal' }}>
-              {' '}
-              Roles &amp; Users with EXECUTE GRANTs
-            </span>
-          </h2>
-          <div>
-            {info.privileges
-              .filter(
-                (r) =>
-                  !state.hideInternalRoles || !r.roleName.startsWith('pg_'),
-              )
-              .map((role) => (
-                <React.Fragment key={role.roleName}>
-                  <span
-                    className="privileges-role"
-                    style={
-                      role.roleName.startsWith('pg_')
-                        ? { opacity: 0.4 }
-                        : undefined
-                    }
-                  >
-                    {role.roleName}
-                    {role.host ? `@${role.host}` : ''}
-                    <i
-                      className="fa fa-close"
-                      onClick={() =>
-                        set({
-                          ...state,
-                          revoke: { roleName: role.roleName, host: role.host },
-                        })
-                      }
-                    />
-                  </span>
-                  {state.revoke &&
-                  role.roleName === state.revoke.roleName &&
-                  role.host === state.revoke.host ? (
-                    <Dialog
-                      onBlur={() =>
-                        set({
-                          ...state,
-                          revoke: false,
-                        })
-                      }
-                      relativeTo="previousSibling"
-                    >
-                      Do you really want to revoke this role?
-                      <div>
-                        <button type="button" onClick={revokeYesClick}>
-                          Yes
-                        </button>{' '}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            set({
-                              ...state,
-                              revoke: false,
-                            })
-                          }
-                        >
-                          No
-                        </button>
-                      </div>
-                    </Dialog>
-                  ) : null}{' '}
-                </React.Fragment>
-              ))}
-            {internalRoles ? (
-              <button
-                type="button"
-                className={`simple-button simple-button2 hide-button ${
-                  state.hideInternalRoles ? ' hidden' : ' shown'
-                }`}
-                key={state.hideInternalRoles ? 1 : 0}
-                onClick={() => {
-                  set({
-                    ...state,
-                    hideInternalRoles: !state.hideInternalRoles,
-                  });
-                }}
-              >
-                {internalRoles} pg_* <i className="fa fa-eye-slash" />
-                <i className="fa fa-eye" />
-              </button>
-            ) : null}{' '}
-            <button
-              type="button"
-              className="simple-button new-privileges-role"
-              disabled={roles?.length === info.privileges.length}
-              onClick={() => set({ ...state, grant: true })}
-            >
-              New <i className="fa fa-plus" />
-            </button>
-            {state.grant !== false ? (
-              <Dialog
-                relativeTo="previousSibling"
-                onBlur={() =>
-                  set({
-                    ...state,
-                    grant: false,
-                  })
-                }
-              >
-                <select
-                  onChange={(e) => {
-                    const [roleName, host] = JSON.parse(e.target.value);
-                    set({
-                      ...state,
-                      grant: {
-                        roleName,
-                        host,
-                      },
-                    });
-                  }}
-                >
-                  <option value="" />
-                  {roles
-                    ?.filter(
-                      (r) =>
-                        !info.privileges!.find((r2) => r2.roleName === r.name),
-                    )
-                    .map((r) => (
-                      <option
-                        key={r.name}
-                        value={JSON.stringify([r.name, r.host])}
-                      >
-                        {r.name}
-                      </option>
-                    ))}
-                </select>
-                <div>
-                  <button
-                    style={{ fontWeight: 'normal' }}
-                    type="button"
-                    onClick={() =>
-                      set({
-                        ...state,
-                        grant: false,
-                      })
-                    }
-                  >
-                    Cancel
-                  </button>
-                  <button type="button" onClick={grantClick}>
-                    Save
-                    <i className="fa fa-check" />
-                  </button>
-                </div>
-              </Dialog>
-            ) : null}
-          </div>
-        </>
+      {info?.privileges && info.privilegesTypes ? (
+        <Privileges
+          entityType="function"
+          privileges={info.privileges}
+          onUpdate={onUpdatePrivileges}
+          privilegesTypes={info.privilegesTypes}
+        />
       ) : null}
       {info?.pgProc ? (
         <>
