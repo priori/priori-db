@@ -43,8 +43,8 @@ export function FunctionFrame(props: FunctionFrameProps) {
     editComment: false,
     rename: false,
     changeSchema: false,
-    revoke: '',
-    grant: false as string | false | true,
+    revoke: false as { roleName: string; host?: string } | false,
+    grant: false as { roleName: string; host?: string } | false | true,
     editOwner: false as string | boolean,
     hideInternalRoles: true,
   });
@@ -93,16 +93,23 @@ export function FunctionFrame(props: FunctionFrameProps) {
   });
 
   const revokeYesClick = useEvent(() => {
+    if (!state.revoke) return;
     functionsDb()
-      .updateFunctionPrivileges?.(props.schema, props.name, state.revoke, {
-        execute: false,
-      })
+      .updateFunctionPrivileges?.(
+        props.schema,
+        props.name,
+        state.revoke.roleName,
+        {
+          execute: false,
+        },
+        state.revoke.host,
+      )
       .then(
         () => {
           service.reload();
           set({
             ...state,
-            revoke: '',
+            revoke: false,
           });
         },
         (err) => {
@@ -112,11 +119,17 @@ export function FunctionFrame(props: FunctionFrameProps) {
   });
 
   const grantClick = useEvent(() => {
-    if (typeof state.grant === 'string')
+    if (typeof state.grant === 'object')
       functionsDb()
-        .updateFunctionPrivileges?.(props.schema, props.name, state.grant, {
-          execute: true,
-        })
+        .updateFunctionPrivileges?.(
+          props.schema,
+          props.name,
+          state.grant.roleName,
+          {
+            execute: true,
+          },
+          state.grant.host,
+        )
         .then(
           () => {
             service.reload();
@@ -373,22 +386,25 @@ export function FunctionFrame(props: FunctionFrameProps) {
                     }
                   >
                     {role.roleName}
+                    {role.host ? `@${role.host}` : ''}
                     <i
                       className="fa fa-close"
                       onClick={() =>
                         set({
                           ...state,
-                          revoke: role.roleName,
+                          revoke: { roleName: role.roleName, host: role.host },
                         })
                       }
                     />
                   </span>
-                  {role.roleName === state.revoke ? (
+                  {state.revoke &&
+                  role.roleName === state.revoke.roleName &&
+                  role.host === state.revoke.host ? (
                     <Dialog
                       onBlur={() =>
                         set({
                           ...state,
-                          revoke: '',
+                          revoke: false,
                         })
                       }
                       relativeTo="previousSibling"
@@ -403,7 +419,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
                           onClick={() =>
                             set({
                               ...state,
-                              revoke: '',
+                              revoke: false,
                             })
                           }
                         >
@@ -451,7 +467,16 @@ export function FunctionFrame(props: FunctionFrameProps) {
                 }
               >
                 <select
-                  onChange={(e) => set({ ...state, grant: e.target.value })}
+                  onChange={(e) => {
+                    const [roleName, host] = JSON.parse(e.target.value);
+                    set({
+                      ...state,
+                      grant: {
+                        roleName,
+                        host,
+                      },
+                    });
+                  }}
                 >
                   <option value="" />
                   {roles
@@ -460,7 +485,10 @@ export function FunctionFrame(props: FunctionFrameProps) {
                         !info.privileges!.find((r2) => r2.roleName === r.name),
                     )
                     .map((r) => (
-                      <option key={r.name} value={r.name}>
+                      <option
+                        key={r.name}
+                        value={JSON.stringify([r.name, r.host])}
+                      >
                         {r.name}
                       </option>
                     ))}

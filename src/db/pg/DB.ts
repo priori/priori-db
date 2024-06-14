@@ -1820,13 +1820,26 @@ export const DB: DBInterface = {
         [k: string]: boolean | undefined;
       },
     ) {
-      if (privileges.execute === false) {
-        const hasPublicPrivilege = (
-          await first(`SELECT
+      if (privileges.execute === undefined) return;
+      const isProcedure = (
+        await first(
+          `SELECT prokind = 'p' is_procedure
+        FROM pg_proc
+        WHERE
+          pg_proc.proname || '('||oidvectortypes(proargtypes)||')' = $2 AND
+          pronamespace = $1::regnamespace
+        `,
+          [schema, name],
+        )
+      ).is_procedure;
+      const hasPublicPrivilege = (
+        await first(`SELECT
           pg_catalog.has_function_privilege((0)::oid, '${label(
             schema,
           )}.${name}', 'EXECUTE') has`)
-        ).has;
+      ).has;
+      const entityName = isProcedure ? 'PROCEDURE' : 'FUNCTION';
+      if (privileges.execute === false) {
         if (hasPublicPrivilege) {
           const roles = (await list(
             `
@@ -1836,25 +1849,24 @@ export const DB: DBInterface = {
             `,
             [],
           )) as { role: string }[];
-          await query(` REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM PUBLIC; ${roles
+          await query(`REVOKE EXECUTE ON ${entityName} ${label(schema)}.${name} FROM PUBLIC; ${roles
             .map(
               (r) =>
-                `GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(
+                `GRANT EXECUTE ON ${entityName} ${label(schema)}.${name} TO ${label(
                   r.role,
                 )}`,
             )
             .join(';')};
-          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(
+          REVOKE EXECUTE ON ${entityName} ${label(schema)}.${name} FROM ${label(
             role,
-          )}
-      `);
+          )}`);
         } else
           await query(
-            `REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(role)}`,
+            `REVOKE EXECUTE ON ${entityName} ${label(schema)}.${name} FROM ${label(role)}`,
           );
       } else if (privileges.execute) {
         await query(
-          `GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(role)}`,
+          `GRANT EXECUTE ON ${entityName} ${label(schema)}.${name} TO ${label(role)}`,
         );
       }
     },

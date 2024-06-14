@@ -303,7 +303,7 @@ export interface DBInterface {
         privileges: {
           [k: string]: boolean | undefined;
         };
-        internal: boolean;
+        internal?: boolean;
       }[];
       owner: string;
     }>;

@@ -719,6 +719,13 @@ export const mysqlDb: DBInterface = {
       type: 'procedure' | 'function';
       definition: string;
       owner: string;
+      privileges: {
+        roleName: string;
+        host: string;
+        privileges: {
+          [k: string]: boolean;
+        };
+      }[];
     }> {
       const isProc0 = await first(
         `SELECT routine_type = 'PROCEDURE' p FROM information_schema.routines
@@ -734,11 +741,38 @@ export const mysqlDb: DBInterface = {
       const def = await first(
         `SHOW CREATE ${isProc ? 'PROCEDURE' : 'FUNCTION'} ${label(schema)}.${label(name)}`,
       );
+      const privs = await list(
+        `
+        SELECT User, Host, Proc_priv
+        FROM mysql.procs_priv
+        WHERE Db = ? AND Routine_name = ?`,
+        [schema, name],
+      );
+      const privileges: {
+        roleName: string;
+        host: string;
+        privileges: {
+          [k: string]: boolean;
+        };
+      }[] = [];
+      for (const p of privs) {
+        const type = p.Proc_priv === 'Execute' ? 'execute' : 'alterRoutine';
+        if (type === 'execute') {
+          privileges.push({
+            roleName: p.User,
+            host: p.Host,
+            privileges: {
+              execute: true,
+            },
+          });
+        }
+      }
       return {
         type: isProc ? 'procedure' : 'function',
         comment: comment ?? '',
         definition: def?.[`Create ${isProc ? 'Procedure' : 'Function'}`] ?? '',
         owner: '',
+        privileges,
       };
     },
 
@@ -773,6 +807,32 @@ export const mysqlDb: DBInterface = {
       const isProc = (isProc0 as any)?.p;
       const entityName = isProc ? 'PROCEDURE' : 'FUNCTION';
       await execute(`DROP ${entityName} ${label(schema)}.${label(name)}`);
+    },
+
+    privilegesTypes() {
+      return Promise.resolve(['execute' /* 'alterRoutine' */]);
+    },
+
+    async updateFunctionPrivileges(schema, func, user, privileges, host) {
+      if (privileges.execute === undefined) return;
+      const isProc0 = await first(
+        `
+          SELECT routine_type = 'PROCEDURE' p FROM information_schema.routines
+          WHERE routine_schema = ? AND routine_name = ?
+        `,
+        [schema, func],
+      );
+      const isProc = (isProc0 as any)?.p;
+      const type = isProc ? 'PROCEDURE' : 'FUNCTION';
+      if (privileges.execute) {
+        await execute(
+          `GRANT EXECUTE ON ${type} ${label(schema)}.${label(func)} TO ${label(user)}${host ? `@${label(host)}` : ''}`,
+        );
+      } else {
+        await execute(
+          `REVOKE EXECUTE ON ${type} ${label(schema)}.${label(func)} FROM ${label(user)}${host ? `@${label(host)}` : ''}`,
+        );
+      }
     },
   },
 
