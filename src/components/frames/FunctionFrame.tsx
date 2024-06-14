@@ -94,7 +94,9 @@ export function FunctionFrame(props: FunctionFrameProps) {
 
   const revokeYesClick = useEvent(() => {
     functionsDb()
-      .revokeFunction?.(props.schema, props.name, state.revoke)
+      .updateFunctionPrivileges?.(props.schema, props.name, state.revoke, {
+        execute: false,
+      })
       .then(
         () => {
           service.reload();
@@ -112,7 +114,9 @@ export function FunctionFrame(props: FunctionFrameProps) {
   const grantClick = useEvent(() => {
     if (typeof state.grant === 'string')
       functionsDb()
-        .grantFunction?.(props.schema, props.name, state.grant)
+        .updateFunctionPrivileges?.(props.schema, props.name, state.grant, {
+          execute: true,
+        })
         .then(
           () => {
             service.reload();
@@ -175,8 +179,9 @@ export function FunctionFrame(props: FunctionFrameProps) {
 
   const internalRoles = useMemo(
     () =>
-      service.lastValidData?.privileges?.filter((v) => v.startsWith('pg_'))
-        .length,
+      service.lastValidData?.privileges?.filter((v) =>
+        v.roleName.startsWith('pg_'),
+      ).length,
     [service.lastValidData?.privileges],
   );
 
@@ -353,27 +358,32 @@ export function FunctionFrame(props: FunctionFrameProps) {
           </h2>
           <div>
             {info.privileges
-              .filter((r) => !state.hideInternalRoles || !r.startsWith('pg_'))
+              .filter(
+                (r) =>
+                  !state.hideInternalRoles || !r.roleName.startsWith('pg_'),
+              )
               .map((role) => (
-                <React.Fragment key={role}>
+                <React.Fragment key={role.roleName}>
                   <span
                     className="privileges-role"
                     style={
-                      role.startsWith('pg_') ? { opacity: 0.4 } : undefined
+                      role.roleName.startsWith('pg_')
+                        ? { opacity: 0.4 }
+                        : undefined
                     }
                   >
-                    {role}
+                    {role.roleName}
                     <i
                       className="fa fa-close"
                       onClick={() =>
                         set({
                           ...state,
-                          revoke: role,
+                          revoke: role.roleName,
                         })
                       }
                     />
                   </span>
-                  {role === state.revoke ? (
+                  {role.roleName === state.revoke ? (
                     <Dialog
                       onBlur={() =>
                         set({
@@ -446,7 +456,8 @@ export function FunctionFrame(props: FunctionFrameProps) {
                   <option value="" />
                   {roles
                     ?.filter(
-                      (r) => !info.privileges!.find((r2) => r2 === r.name),
+                      (r) =>
+                        !info.privileges!.find((r2) => r2.roleName === r.name),
                     )
                     .map((r) => (
                       <option key={r.name} value={r.name}>

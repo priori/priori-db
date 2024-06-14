@@ -297,7 +297,14 @@ export interface DBInterface {
       type: 'procedure' | 'function';
       comment: string;
       definition: string;
-      privileges?: string[];
+      privileges?: {
+        roleName: string;
+        host?: string;
+        privileges: {
+          [k: string]: boolean | undefined;
+        };
+        internal: boolean;
+      }[];
       owner: string;
     }>;
     rename?: boolean;
@@ -315,8 +322,16 @@ export interface DBInterface {
     ): Promise<void>;
     alterFuncOwner?(schema: string, name: string, owner: string): Promise<void>;
 
-    revokeFunction?(schema: string, name: string, role: string): Promise<void>;
-    grantFunction?(schema: string, name: string, role: string): Promise<void>;
+    updateFunctionPrivileges?(
+      schema: string,
+      table: string,
+      grantee: string,
+      privileges: {
+        [k: string]: boolean | undefined;
+      },
+      host?: string,
+    ): Promise<void>;
+    privilegesTypes?(): Promise<string[]>;
   };
   domains?: {
     domain(schema: string, name: string): Promise<DomainInfo>;

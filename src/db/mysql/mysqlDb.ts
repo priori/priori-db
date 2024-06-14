@@ -718,7 +718,6 @@ export const mysqlDb: DBInterface = {
       comment: string;
       type: 'procedure' | 'function';
       definition: string;
-      privileges?: string[];
       owner: string;
     }> {
       const isProc0 = await first(

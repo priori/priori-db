@@ -341,10 +341,13 @@ export function RoleFrame(props: RoleFrameProps) {
   const revokeFunctionYesClick = useEvent(() => {
     if (!state.revokeFunction) return;
     db()
-      .functions?.revokeFunction?.(
+      .functions?.updateFunctionPrivileges?.(
         state.revokeFunction.schema,
         state.revokeFunction.function,
         props.name,
+        {
+          execute: false,
+        },
       )
       .then(
         () => {
@@ -384,7 +387,9 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const newFunctionPrivilegeSave = useEvent((schema: string, fName: string) => {
     db()
-      .functions?.grantFunction?.(schema, fName, props.name)
+      .functions?.updateFunctionPrivileges?.(schema, fName, props.name, {
+        execute: true,
+      })
       .then(
         () => {
           service.reload();

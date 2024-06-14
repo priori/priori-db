@@ -1771,7 +1771,11 @@ export const DB: DBInterface = {
         type: (info.pgProc as any)?.prokind === 'p' ? 'procedure' : 'function',
         comment,
         definition,
-        privileges,
+        privileges: privileges.map((role) => ({
+          roleName: role,
+          internal: role.startsWith('pg_'),
+          privileges: { execute: true },
+        })),
         owner,
       };
     },
@@ -1808,27 +1812,31 @@ export const DB: DBInterface = {
     `);
     },
 
-    async revokeFunction(schema: string, name: string, role: string) {
-      const hasPublicPrivilege = (
-        await first(`SELECT
-        pg_catalog.has_function_privilege((0)::oid, '${label(
-          schema,
-        )}.${name}', 'EXECUTE') has`)
-      ).has;
-      if (hasPublicPrivilege) {
-        const roles = (await list(
-          `
-        SELECT rolname "role"
-        FROM pg_roles
-        WHERE pg_catalog.has_function_privilege(rolname, '${label(
-          schema,
-        )}.${name}', 'EXECUTE')
-        `,
-          [],
-        )) as { role: string }[];
-        await query(`
-          REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM PUBLIC;
-          ${roles
+    async updateFunctionPrivileges(
+      schema: string,
+      name: string,
+      role: string,
+      privileges: {
+        [k: string]: boolean | undefined;
+      },
+    ) {
+      if (privileges.execute === false) {
+        const hasPublicPrivilege = (
+          await first(`SELECT
+          pg_catalog.has_function_privilege((0)::oid, '${label(
+            schema,
+          )}.${name}', 'EXECUTE') has`)
+        ).has;
+        if (hasPublicPrivilege) {
+          const roles = (await list(
+            `
+            SELECT rolname "role"
+            FROM pg_roles
+            WHERE pg_catalog.has_function_privilege(rolname, '${label(schema)}.${name}', 'EXECUTE')
+            `,
+            [],
+          )) as { role: string }[];
+          await query(` REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM PUBLIC; ${roles
             .map(
               (r) =>
                 `GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(
@@ -1840,16 +1848,19 @@ export const DB: DBInterface = {
             role,
           )}
       `);
-      } else
-        await query(`
-        REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(role)}
-      `);
+        } else
+          await query(
+            `REVOKE EXECUTE ON FUNCTION ${label(schema)}.${name} FROM ${label(role)}`,
+          );
+      } else if (privileges.execute) {
+        await query(
+          `GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(role)}`,
+        );
+      }
     },
 
-    async grantFunction(schema: string, name: string, role: string) {
-      await query(`
-      GRANT EXECUTE ON FUNCTION ${label(schema)}.${name} TO ${label(role)}
-    `);
+    privilegesTypes() {
+      return Promise.resolve(['execute']);
     },
   },
 
