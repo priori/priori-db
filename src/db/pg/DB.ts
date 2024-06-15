@@ -1,7 +1,7 @@
 import { DBInterface } from 'db/DBInterface';
 import { buildFilterWhere, buildFinalQueryWhere } from 'db/util';
 import { grantError } from 'util/errors';
-import { EntityType, SequencePrivileges, TableColumnType } from '../../types';
+import { EntityType, TableColumnType } from '../../types';
 import {
   DomainInfo,
   Filter,
@@ -1408,7 +1408,11 @@ export const DB: DBInterface = {
         const sequences: {
           schema: string;
           name: string;
-          privileges: SequencePrivileges;
+          host?: string;
+          internal?: boolean;
+          privileges: {
+            [k: string]: boolean | undefined;
+          };
         }[] = [];
         const sequencesOnly = res.filter((a) => a.type === 'sequence');
         for (const r of sequencesOnly) {
@@ -1994,9 +1998,7 @@ export const DB: DBInterface = {
       table: string,
       grantee: string,
       privileges: {
-        update?: boolean;
-        select?: boolean;
-        usage?: boolean;
+        [k: string]: boolean;
       },
     ) {
       const c = await openConnection();
@@ -2037,6 +2039,9 @@ export const DB: DBInterface = {
         c.release(true);
       }
     },
+    async privilegesTypes() {
+      return ['update', 'select', 'usage'];
+    },
   },
 
   domains: {
@@ -2055,7 +2060,13 @@ export const DB: DBInterface = {
           if (!a.startsWith('pg_') && b.startsWith('pg_')) return -1;
           return a.localeCompare(b);
         });
-        return r;
+        return r.map((p) => {
+          return {
+            roleName: p,
+            internal: p.startsWith('pg_'),
+            privileges: { usage: true },
+          };
+        });
       }
       const [type, comment, privileges] = await Promise.all([
         pgType(schema, name),
@@ -2089,9 +2100,20 @@ export const DB: DBInterface = {
 
     async alterTypeOwner(schema: string, name: string, owner: string) {
       await query(`
-      ALTER TYPE ${label(schema)}.${label(name)}
-      OWNER TO ${label(owner)}
-    `);
+        ALTER TYPE ${label(schema)}.${label(name)}
+        OWNER TO ${label(owner)}
+      `);
+    },
+
+    async updateDomainPrivileges(
+      schema: string,
+      name: string,
+      role: string,
+      privileges: { [k: string]: boolean | undefined },
+    ) {
+      if (privileges.usage === undefined) return;
+      if (privileges.usage) await DB.domains!.grantDomain(schema, name, role);
+      else await DB.domains!.revokeDomain(schema, name, role);
     },
 
     async grantDomain(schema: string, name: string, role: string) {
@@ -2136,6 +2158,9 @@ export const DB: DBInterface = {
         await query(`
         REVOKE USAGE ON TYPE ${label(schema)}.${label(name)} FROM ${label(role)}
       `);
+    },
+    async privilegesTypes() {
+      return ['usage'];
     },
   },
 };

@@ -5,7 +5,6 @@ import {
   Notice,
   QueryExecutor,
   QueryResultData,
-  SequencePrivileges,
   SimpleValue,
   Sort,
   TableColumnType,
@@ -251,7 +250,9 @@ export interface DBInterface {
         sequences: {
           schema: string;
           name: string;
-          privileges: SequencePrivileges;
+          privileges: {
+            [k: string]: boolean | undefined;
+          };
         }[];
         types: {
           schema: string;
@@ -344,9 +345,18 @@ export interface DBInterface {
     ): Promise<void>;
     dropDomain(schema: string, name: string, cascade?: boolean): Promise<void>;
     alterTypeOwner(schema: string, name: string, owner: string): Promise<void>;
-
+    updateDomainPrivileges(
+      schema: string,
+      name: string,
+      grantee: string,
+      privileges: {
+        [k: string]: boolean | undefined;
+      },
+      host?: string,
+    ): Promise<void>;
     grantDomain(schema: string, name: string, role: string): Promise<void>;
     revokeDomain(schema: string, name: string, role: string): Promise<void>;
+    privilegesTypes?(): Promise<string[]>;
   };
   sequences?: {
     sequence(schema: string, name: string): Promise<SequenceInfo>;
@@ -365,7 +375,6 @@ export interface DBInterface {
       name: string,
       cascade?: boolean,
     ): Promise<void>;
-
     alterSequenceOwner?(
       schema: string,
       name: string,
@@ -376,10 +385,10 @@ export interface DBInterface {
       table: string,
       grantee: string,
       privileges: {
-        update?: boolean;
-        select?: boolean;
-        usage?: boolean;
+        [k: string]: boolean | undefined;
       },
+      host?: string,
     ): Promise<void>;
+    privilegesTypes?(): Promise<string[]>;
   };
 }

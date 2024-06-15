@@ -2,7 +2,6 @@ import { Dialog } from 'components/util/Dialog/Dialog';
 import { useState } from 'react';
 import { showError } from 'state/actions';
 import { currentState } from 'state/state';
-import { SequencePrivileges } from 'types';
 import { equals } from 'util/equals';
 import { grantError } from 'util/errors';
 import { useIsMounted } from 'util/hooks';
@@ -15,10 +14,14 @@ type SequencePrivilegesDialogProps =
       onCancel: () => void;
       onUpdate: (f: {
         role: string;
-        privileges: SequencePrivileges;
+        privileges: {
+          [k: string]: boolean | undefined;
+        };
       }) => Promise<void>;
       roleName?: string;
-      privileges?: SequencePrivileges;
+      privileges?: {
+        [k: string]: boolean | undefined;
+      };
     }
   | {
       relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
@@ -27,11 +30,15 @@ type SequencePrivilegesDialogProps =
       onUpdate: (f: {
         sequence: string;
         schema: string;
-        privileges: SequencePrivileges;
+        privileges: {
+          [k: string]: boolean | undefined;
+        };
       }) => Promise<void>;
       schema?: string;
       sequence?: string;
-      privileges?: SequencePrivileges;
+      privileges?: {
+        [k: string]: boolean | undefined;
+      };
     };
 
 export function SequencePrivilegesDialog(props: SequencePrivilegesDialogProps) {
@@ -50,7 +57,7 @@ export function SequencePrivilegesDialog(props: SequencePrivilegesDialogProps) {
     onCancel();
   });
   const isMounted = useIsMounted();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<Record<string, boolean | undefined>>({
     ...privileges,
   });
   const [roleNameInput, setRoleName] = useState(roleName);

@@ -123,9 +123,11 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
     return props.privilegesTypes.length > 2 &&
       !!props.privilegesTypes.find((t) => t.length > 10)
       ? 'large'
-      : props.privilegesTypes.length < 2
+      : props.privilegesTypes.length <= 2
         ? 'small'
-        : 'normal';
+        : props.privilegesTypes.length === 3
+          ? '3'
+          : 'normal';
   }, [props.privilegesTypes]);
 
   return (
@@ -222,7 +224,7 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
         <div
           style={{
             display: 'flex',
-            width: layout === 'small' ? 200 : 510,
+            width: layout === 'small' ? 200 : layout === '3' ? 300 : 510,
             flexWrap: 'wrap',
           }}
         >
@@ -235,18 +237,18 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
                   ? {
                       opacity: 0.3,
                       width:
-                        layout === 'large'
+                        layout === 'large' || layout === '3'
                           ? '33.3333%'
-                          : layout === 'small'
+                          : layout === 'normal'
                             ? '25%'
                             : '50%',
                       textAlign: 'left',
                     }
                   : {
                       width:
-                        layout === 'large'
+                        layout === 'large' || layout === '3'
                           ? '33.3333%'
-                          : layout === 'small'
+                          : layout === 'normal'
                             ? '25%'
                             : '50%',
                       textAlign: 'left',
@@ -276,7 +278,7 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
             </div>
           ))}
         </div>
-        <div>
+        <div style={{ paddingTop: 7 }}>
           <button
             disabled={fieldsDisabled}
             style={{ fontWeight: 'normal' }}

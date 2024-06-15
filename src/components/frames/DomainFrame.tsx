@@ -2,7 +2,7 @@ import { Comment } from 'components/util/Comment';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { db } from 'db/db';
-import React, { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   changeSchema,
   closeTab,
@@ -17,6 +17,7 @@ import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
+import { Privileges } from './Privileges/Privileges';
 
 function domainsDb() {
   const d = db();
@@ -27,7 +28,14 @@ function domainsDb() {
 export function DomainFrame(props: DomainFrameProps) {
   const { roles } = currentState();
   const service = useService(
-    () => domainsDb().domain(props.schema, props.name),
+    () =>
+      Promise.all([
+        domainsDb().domain(props.schema, props.name),
+        domainsDb().privilegesTypes?.(),
+      ]).then(([domain, privilegesTypes]) => ({
+        ...domain,
+        privilegesTypes,
+      })),
     [props.schema, props.name],
   );
 
@@ -37,10 +45,7 @@ export function DomainFrame(props: DomainFrameProps) {
     editComment: false,
     rename: false,
     changeSchema: false,
-    revoke: '',
-    grant: false as string | boolean,
     editOwner: false as string | boolean,
-    hideInternalRoles: true,
   });
 
   const dropCascade = useEvent(() => {
@@ -114,40 +119,35 @@ export function DomainFrame(props: DomainFrameProps) {
     set({ ...state, changeSchema: false });
   });
 
-  const revokeYesClick = useEvent(() => {
-    domainsDb()
-      ?.revokeDomain?.(props.schema, props.name, state.revoke)
-      .then(
-        () => {
-          service.reload();
-          set({
-            ...state,
-            revoke: '',
-          });
-        },
-        (err) => {
-          showError(err);
-        },
-      );
-  });
-
-  const grantClick = useEvent(() => {
-    if (typeof state.grant === 'string')
-      domainsDb()
-        ?.grantDomain?.(props.schema, props.name, state.grant)
+  const onUpdatePrivilege = useEvent(
+    ({
+      host,
+      role,
+      privileges,
+    }: {
+      host?: string;
+      role: string;
+      privileges: { [k: string]: boolean | undefined };
+    }) => {
+      return domainsDb()
+        .updateDomainPrivileges(
+          props.schema,
+          props.name,
+          role,
+          privileges,
+          host,
+        )
         .then(
           () => {
             service.reload();
-            set({
-              ...state,
-              grant: false,
-            });
           },
           (err) => {
             showError(err);
           },
         );
-  });
+    },
+  );
+
   const isMounted = useIsMounted();
   const owner = service.lastValidData?.owner;
   const saveOwner = useEvent(() => {
@@ -165,13 +165,6 @@ export function DomainFrame(props: DomainFrameProps) {
         },
       );
   });
-
-  const internalRoles = useMemo(
-    () =>
-      service.lastValidData?.privileges?.filter((v) => v.startsWith('pg_'))
-        .length,
-    [service.lastValidData?.privileges],
-  );
 
   return (
     <div>
@@ -312,145 +305,14 @@ export function DomainFrame(props: DomainFrameProps) {
         </div>
       ) : null}
 
-      {service?.lastValidData?.privileges && db().privileges ? (
-        <>
-          <h2 style={{ marginBottom: 3 }}>
-            Privileges /{' '}
-            <span style={{ fontWeight: 'normal' }}>
-              {' '}
-              Roles &amp; Users with USAGE GRANTs
-            </span>
-          </h2>
-          <div>
-            {service?.lastValidData?.privileges
-              .filter((r) => !state.hideInternalRoles || !r.startsWith('pg_'))
-              .map((role) => (
-                <React.Fragment key={role}>
-                  <span
-                    className="privileges-role"
-                    style={
-                      role.startsWith('pg_') ? { opacity: 0.4 } : undefined
-                    }
-                  >
-                    {role}
-                    <i
-                      className="fa fa-close"
-                      onClick={() =>
-                        set({
-                          ...state,
-                          revoke: role,
-                        })
-                      }
-                    />
-                  </span>
-                  {role === state.revoke ? (
-                    <Dialog
-                      onBlur={() =>
-                        set({
-                          ...state,
-                          revoke: '',
-                        })
-                      }
-                      relativeTo="previousSibling"
-                    >
-                      Do you really want to revoke this role?
-                      <div>
-                        <button type="button" onClick={revokeYesClick}>
-                          Yes
-                        </button>{' '}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            set({
-                              ...state,
-                              revoke: '',
-                            })
-                          }
-                        >
-                          No
-                        </button>
-                      </div>
-                    </Dialog>
-                  ) : null}{' '}
-                </React.Fragment>
-              ))}
-            {internalRoles ? (
-              <button
-                type="button"
-                key={state.hideInternalRoles ? 1 : 0}
-                className={`simple-button simple-button2 hide-button ${
-                  state.hideInternalRoles ? ' hidden' : ' shown'
-                }`}
-                onClick={() => {
-                  set({
-                    ...state,
-                    hideInternalRoles: !state.hideInternalRoles,
-                  });
-                }}
-              >
-                {internalRoles} pg_* <i className="fa fa-eye-slash" />
-                <i className="fa fa-eye" />
-              </button>
-            ) : null}{' '}
-            <button
-              type="button"
-              className="simple-button new-privileges-role"
-              disabled={
-                roles?.length === service?.lastValidData?.privileges.length
-              }
-              onClick={() => set({ ...state, grant: true })}
-            >
-              New <i className="fa fa-plus" />
-            </button>
-            {state.grant !== false ? (
-              <Dialog
-                relativeTo="previousSibling"
-                onBlur={() =>
-                  set({
-                    ...state,
-                    grant: false,
-                  })
-                }
-              >
-                <select
-                  onChange={(e) => set({ ...state, grant: e.target.value })}
-                >
-                  <option value="" />
-                  {roles
-                    ?.filter(
-                      (r) =>
-                        !service?.lastValidData?.privileges?.find(
-                          (r2) => r2 === r.name,
-                        ),
-                    )
-                    .map((r) => (
-                      <option key={r.name} value={r.name}>
-                        {r.name}
-                      </option>
-                    ))}
-                </select>
-                <div>
-                  <button
-                    style={{ fontWeight: 'normal' }}
-                    type="button"
-                    onClick={() =>
-                      set({
-                        ...state,
-                        grant: false,
-                      })
-                    }
-                  >
-                    Cancel
-                  </button>
-                  <button type="button" onClick={grantClick}>
-                    Save
-                    <i className="fa fa-check" />
-                  </button>
-                </div>
-              </Dialog>
-            ) : null}
-          </div>
-        </>
+      {service?.lastValidData?.privilegesTypes?.length &&
+      service?.lastValidData?.privileges ? (
+        <Privileges
+          privileges={service.lastValidData.privileges}
+          privilegesTypes={service.lastValidData.privilegesTypes}
+          entityType="domain"
+          onUpdate={onUpdatePrivilege}
+        />
       ) : null}
 
       {service.lastValidData && service.lastValidData.type ? (

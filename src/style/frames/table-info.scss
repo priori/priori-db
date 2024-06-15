@@ -326,6 +326,9 @@ button[disabled] {
   overflow: auto;
 }
 
+.dialog-form {
+  font-weight: normal;
+}
 body div.frame.table-info div.dialog-form,
 body div.frame.role div.dialog-form {
   .fa-close {

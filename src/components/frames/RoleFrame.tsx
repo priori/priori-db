@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { RoleFrameProps, SchemaPrivileges, SequencePrivileges } from 'types';
+import { RoleFrameProps } from 'types';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { Dialog } from 'components/util/Dialog/Dialog';
@@ -240,7 +240,10 @@ export function RoleFrame(props: RoleFrameProps) {
   );
 
   const grantSchema = useEvent(
-    async (schema: string, privileges: SchemaPrivileges) => {
+    async (
+      schema: string,
+      privileges: { [k: string]: boolean | undefined },
+    ) => {
       await db().privileges!.updateSchemaPrivileges?.(
         schema,
         props.name,
@@ -254,7 +257,11 @@ export function RoleFrame(props: RoleFrameProps) {
   );
 
   const grantSequence = useEvent(
-    async (schema: string, table: string, privileges: SequencePrivileges) => {
+    async (
+      schema: string,
+      table: string,
+      privileges: { [k: string]: boolean | undefined },
+    ) => {
       await db().sequences?.updateSequencePrivileges?.(
         schema,
         table,
@@ -272,8 +279,8 @@ export function RoleFrame(props: RoleFrameProps) {
     async (
       schema: string,
       table: string,
-      current: SequencePrivileges,
-      update: SequencePrivileges,
+      current: { [k: string]: boolean | undefined },
+      update: { [k: string]: boolean | undefined },
     ) => {
       await db().sequences?.updateSequencePrivileges?.(
         schema,
@@ -295,8 +302,8 @@ export function RoleFrame(props: RoleFrameProps) {
   const onUpdateSchemaPrivileges = useEvent(
     async (
       schema: string,
-      curr: SchemaPrivileges,
-      update: SchemaPrivileges,
+      curr: { [k: string]: boolean | undefined },
+      update: { [k: string]: boolean | undefined },
     ) => {
       await db().privileges!.updateSchemaPrivileges?.(schema, props.name, {
         create: update.create === curr.create ? undefined : update.create,

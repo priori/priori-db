@@ -152,23 +152,19 @@ export interface TableColumnType {
   allowPrecision: boolean;
 }
 
-export type SequencePrivileges = {
-  update?: boolean | undefined;
-  usage?: boolean | undefined;
-  select?: boolean | undefined;
-};
-
-export type SchemaPrivileges = {
-  usage?: boolean | undefined;
-  create?: boolean | undefined;
-};
-
 export interface DomainFrameInfo {
   type: {
     [k: string]: string | number | null | boolean;
   };
   comment: string | null;
-  privileges: string[];
+  privileges: {
+    roleName: string;
+    host?: string;
+    internal?: boolean;
+    privileges: {
+      [key: string]: boolean | undefined;
+    };
+  }[];
   owner: string;
   hideInternalRoles: true;
 }
@@ -180,7 +176,14 @@ export type SequenceInfo = {
   lastValue: number | string | null;
   comment: string | null;
   owner: string;
-  privileges: { roleName: string; privileges: SequencePrivileges }[];
+  privileges: {
+    roleName: string;
+    host?: string;
+    internal?: boolean;
+    privileges: {
+      [key: string]: boolean | undefined;
+    };
+  }[];
 };
 
 export type SimpleValue =

@@ -2,7 +2,6 @@ import { Dialog } from 'components/util/Dialog/Dialog';
 import { useState } from 'react';
 import { showError } from 'state/actions';
 import { currentState } from 'state/state';
-import { SchemaPrivileges } from 'types';
 import { equals } from 'util/equals';
 import { grantError } from 'util/errors';
 import { useIsMounted } from 'util/hooks';
@@ -15,10 +14,10 @@ type SchemaPrivilegesDialogProps =
       onCancel: () => void;
       onUpdate: (f: {
         role: string;
-        privileges: SchemaPrivileges;
+        privileges: { [k: string]: boolean | undefined };
       }) => Promise<void>;
       roleName?: string;
-      privileges?: SchemaPrivileges;
+      privileges?: { [k: string]: boolean | undefined };
     }
   | {
       relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
@@ -26,10 +25,10 @@ type SchemaPrivilegesDialogProps =
       onCancel: () => void;
       onUpdate: (f: {
         schema: string;
-        privileges: SchemaPrivileges;
+        privileges: { [k: string]: boolean | undefined };
       }) => Promise<void>;
       schema?: string;
-      privileges?: SchemaPrivileges;
+      privileges?: { [k: string]: boolean | undefined };
     };
 
 export function SchemaPrivilegesDialog(props: SchemaPrivilegesDialogProps) {
@@ -44,7 +43,7 @@ export function SchemaPrivilegesDialog(props: SchemaPrivilegesDialogProps) {
     onCancel();
   });
   const isMounted = useIsMounted();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<Record<string, boolean | undefined>>({
     ...privileges,
   });
   const [roleNameInput, setRoleName] = useState(roleName);

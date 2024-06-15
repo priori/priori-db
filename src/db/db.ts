@@ -1,8 +1,4 @@
-import {
-  ConnectionConfiguration,
-  SequencePrivileges,
-  Filter as ImportedFilter,
-} from 'types';
+import { ConnectionConfiguration, Filter as ImportedFilter } from 'types';
 import hotLoadSafe from 'util/hotLoadSafe';
 import { DBInterface } from './DBInterface';
 import {
@@ -18,9 +14,15 @@ export interface DomainInfo {
     [k: string]: string | number | null | boolean;
   };
   comment: string | null;
-  privileges?: string[];
+  privileges?: {
+    roleName: string;
+    host?: string;
+    internal?: boolean;
+    privileges: {
+      [key: string]: boolean | undefined;
+    };
+  }[];
   owner: string;
-  hideInternalRoles: true;
 }
 
 export interface SequenceInfo {
@@ -30,7 +32,14 @@ export interface SequenceInfo {
   lastValue: number | string | null;
   comment: string | null;
   owner: string;
-  privileges?: { roleName: string; privileges: SequencePrivileges }[];
+  privileges?: {
+    roleName: string;
+    host?: string;
+    internal?: boolean;
+    privileges: {
+      [key: string]: boolean | undefined;
+    };
+  }[];
 }
 
 export interface ColTableInfo {
