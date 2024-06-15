@@ -222,8 +222,8 @@ export interface DBInterface {
         [k: string]: string | number | boolean | null;
       };
       info: {
-        definition: string;
-        comment: string;
+        definition: string | null;
+        comment: string | null;
       };
       user: {
         [k: string]: string | number | boolean | null;
@@ -232,22 +232,28 @@ export interface DBInterface {
         tables: {
           schema: string;
           table: string;
+          internal?: boolean;
           privileges: {
             [k: string]: boolean | undefined;
           };
         }[];
         schemas: {
           name: string;
+          internal?: boolean;
           privileges: {
-            create: boolean;
-            usage: boolean;
+            [k: string]: boolean | undefined;
           };
         }[];
         functions: {
+          internal?: boolean;
           schema: string;
           name: string;
+          privileges: {
+            [k: string]: boolean | undefined;
+          };
         }[];
         sequences: {
+          internal?: boolean;
           schema: string;
           name: string;
           privileges: {
@@ -255,8 +261,12 @@ export interface DBInterface {
           };
         }[];
         types: {
+          internal?: boolean;
           schema: string;
           name: string;
+          privileges: {
+            [k: string]: boolean | undefined;
+          };
         }[];
       };
     }>;

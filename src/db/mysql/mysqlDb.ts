@@ -587,24 +587,26 @@ export const mysqlDb: DBInterface = {
     const privileges0 = await list(`SELECT * FROM mysql.db WHERE Db = ?`, [
       name,
     ]);
-    const privileges = privileges0.map((p) => {
-      const rolePrivileges: Record<string, boolean> = {};
-      for (const k in p) {
-        if (k.endsWith('_priv') && (p[k] === 'Y' || p[k] === 'N')) {
-          rolePrivileges[
-            `${k[0].toLowerCase()}${k
+    const privileges = privileges0
+      .map((p) => {
+        const rolePrivileges: Record<string, boolean> = {};
+        for (const k in p) {
+          if (k.endsWith('_priv') && (p[k] === 'Y' || p[k] === 'N')) {
+            const pName = `${k[0].toLowerCase()}${k
               .substring(1)
               .replace('_priv', '')
-              .replace(/_(\w)/g, (_, v) => v.toUpperCase())}`
-          ] = p[k] === 'Y';
+              .replace(/_(\w)/g, (_, v) => v.toUpperCase())}`;
+            if (pName !== 'createTmpTable')
+              rolePrivileges[pName] = p[k] === 'Y';
+          }
         }
-      }
-      return {
-        roleName: p.User,
-        host: p.Host,
-        privileges: rolePrivileges,
-      };
-    });
+        return {
+          roleName: p.User,
+          host: p.Host,
+          privileges: rolePrivileges,
+        };
+      })
+      .filter((v) => Object.values(v.privileges).filter((p) => p).length > 0);
     return {
       owner: '',
       comment: '',
@@ -777,16 +779,24 @@ export const mysqlDb: DBInterface = {
         };
       }[] = [];
       for (const p of privs) {
-        const type = p.Proc_priv === 'Execute' ? 'execute' : 'alterRoutine';
-        if (type === 'execute') {
-          privileges.push({
-            roleName: p.User,
-            host: p.Host,
-            privileges: {
-              execute: true,
-            },
-          });
+        const parts = p.Proc_priv.split(',');
+        const privileges2: {
+          [k: string]: boolean;
+        } = {};
+        for (const part of parts) {
+          const type =
+            part === 'Execute'
+              ? 'execute'
+              : part === 'Alter Routine'
+                ? 'alterRoutine'
+                : undefined;
+          if (type !== undefined) privileges2[type] = true;
         }
+        privileges.push({
+          roleName: p.User,
+          host: p.Host,
+          privileges: privileges2,
+        });
       }
       return {
         type: isProc ? 'procedure' : 'function',
@@ -831,11 +841,15 @@ export const mysqlDb: DBInterface = {
     },
 
     privilegesTypes() {
-      return Promise.resolve(['execute' /* 'alterRoutine' */]);
+      return Promise.resolve(['execute', 'alterRoutine']);
     },
 
     async updateFunctionPrivileges(schema, func, user, privileges, host) {
-      if (privileges.execute === undefined) return;
+      if (
+        privileges.execute === undefined &&
+        privileges.alterRoutine === undefined
+      )
+        return;
       const isProc0 = await first(
         `
           SELECT routine_type = 'PROCEDURE' p FROM information_schema.routines
@@ -847,11 +861,28 @@ export const mysqlDb: DBInterface = {
       const type = isProc ? 'PROCEDURE' : 'FUNCTION';
       if (privileges.execute) {
         await execute(
-          `GRANT EXECUTE ON ${type} ${label(schema)}.${label(func)} TO ${label(user)}${host ? `@${label(host)}` : ''}`,
+          `GRANT EXECUTE ON ${type} ${label(schema)}.${label(
+            func,
+          )} TO ${label(user)}${host ? `@${label(host)}` : ''}`,
         );
-      } else {
+      } else if (privileges.execute === false) {
         await execute(
-          `REVOKE EXECUTE ON ${type} ${label(schema)}.${label(func)} FROM ${label(user)}${host ? `@${label(host)}` : ''}`,
+          `REVOKE EXECUTE ON ${type} ${label(schema)}.${label(
+            func,
+          )} FROM ${label(user)}${host ? `@${label(host)}` : ''}`,
+        );
+      }
+      if (privileges.alterRoutine) {
+        await execute(
+          `GRANT ALTER ROUTINE ON ${type} ${label(schema)}.${label(
+            func,
+          )} TO ${label(user)}${host ? `@${label(host)}` : ''}`,
+        );
+      } else if (privileges.alterRoutine === false) {
+        await execute(
+          `REVOKE ALTER ROUTINE ON ${type} ${label(schema)}.${label(
+            func,
+          )} FROM ${label(user)}${host ? `@${label(host)}` : ''}`,
         );
       }
     },

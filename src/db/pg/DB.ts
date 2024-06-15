@@ -1369,6 +1369,7 @@ export const DB: DBInterface = {
         const tables: {
           schema: string;
           table: string;
+          internal: boolean;
           privileges: {
             [k: string]: boolean | undefined;
           };
@@ -1384,6 +1385,8 @@ export const DB: DBInterface = {
             tables.push({
               schema: r.schema,
               table: r.name,
+              internal:
+                r.schema === 'pg_catalog' || r.schema === 'information_schema',
               privileges: {
                 delete: !!ps.find((r2) => r2.privilege_type === 'DELETE'),
                 insert: !!ps.find((r2) => r2.privilege_type === 'INSERT'),
@@ -1408,8 +1411,7 @@ export const DB: DBInterface = {
         const sequences: {
           schema: string;
           name: string;
-          host?: string;
-          internal?: boolean;
+          internal: boolean;
           privileges: {
             [k: string]: boolean | undefined;
           };
@@ -1425,6 +1427,8 @@ export const DB: DBInterface = {
             sequences.push({
               schema: r.schema,
               name: r.name,
+              internal:
+                r.schema === 'pg_catalog' || r.schema === 'information_schema',
               privileges: {
                 usage: !!ss.find((r2) => r2.privilege_type === 'USAGE'),
                 select: !!ss.find((r2) => r2.privilege_type === 'SELECT'),
@@ -1436,6 +1440,7 @@ export const DB: DBInterface = {
 
         const schemas = [] as {
           name: string;
+          internal: boolean;
           privileges: { usage: boolean; create: boolean };
         }[];
         const schemasOnly = res.filter((e) => e.type === 'schema');
@@ -1444,6 +1449,7 @@ export const DB: DBInterface = {
           .filter((s2, i, a) => a.indexOf(s2) === i)) {
           schemas.push({
             name: s,
+            internal: s === 'pg_catalog' || s === 'information_schema',
             privileges: {
               usage: !!schemasOnly.find(
                 (r2) => r2.schema === s && r2.privilege_type === 'USAGE',
@@ -1459,12 +1465,21 @@ export const DB: DBInterface = {
         const functions = [] as {
           schema: string;
           name: string;
+          internal: boolean;
+          privileges: {
+            execute: true;
+          };
         }[];
         const functionsOnly = res.filter((e) => e.type === 'function');
         for (const f of functionsOnly) {
           functions.push({
             schema: f.schema,
             name: f.name,
+            internal:
+              f.schema === 'pg_catalog' || f.schema === 'information_schema',
+            privileges: {
+              execute: true,
+            },
           });
         }
         functions.sort(
@@ -1476,6 +1491,10 @@ export const DB: DBInterface = {
         const types = [] as {
           schema: string;
           name: string;
+          internal: boolean;
+          privileges: {
+            usage: true;
+          };
         }[];
 
         const typesOnly = res.filter((e) => e.type === 'type');
@@ -1483,6 +1502,11 @@ export const DB: DBInterface = {
           types.push({
             schema: f.schema,
             name: f.name,
+            internal:
+              f.schema === 'pg_catalog' || f.schema === 'information_schema',
+            privileges: {
+              usage: true,
+            },
           });
         }
         types.sort(
@@ -1500,77 +1524,32 @@ export const DB: DBInterface = {
         };
       }
       const [role, info, user, privileges] = await Promise.all([
+        first(`SELECT * FROM pg_roles WHERE rolname = $1`, [name]),
         first(
           `
-        SELECT * FROM pg_roles WHERE rolname = $1
-      `,
+          SELECT description AS comment
+          FROM pg_roles r
+          JOIN pg_shdescription c ON c.objoid = r.oid
+          WHERE rolname = $1;
+          `,
           [name],
         ),
         first(
           `
-        SELECT description AS comment
-        FROM pg_roles r
-        JOIN pg_shdescription c ON c.objoid = r.oid
-        WHERE rolname = $1;
-      `,
-          [name],
-        ),
-        first(
-          `
-        SELECT *
-        FROM pg_user
-        WHERE
-          usename = $1
-      `,
+          SELECT *
+          FROM pg_user
+          WHERE
+          usename = $1`,
           [name],
         ),
         rolePrivileges(name),
       ]);
 
-      return { role, info, user, privileges } as {
-        role: {
-          [k: string]: string | number | null | boolean;
-        };
-        info: {
-          definition: string;
-          comment: string;
-        };
-        user: {
-          [k: string]: string | number | null | boolean;
-        };
-        privileges: {
-          tables: {
-            schema: string;
-            table: string;
-            privileges: {
-              [k: string]: boolean | undefined;
-            };
-          }[];
-          schemas: {
-            name: string;
-            privileges: {
-              usage: boolean;
-              create: boolean;
-            };
-          }[];
-          functions: {
-            schema: string;
-            name: string;
-          }[];
-          sequences: {
-            schema: string;
-            name: string;
-            privileges: {
-              usage: boolean;
-              update: boolean;
-              select: boolean;
-            };
-          }[];
-          types: {
-            schema: string;
-            name: string;
-          }[];
-        };
+      return {
+        role: role as { [k: string]: string | number | boolean | null },
+        info: info as { definition: string | null; comment: string | null },
+        user: user as { [k: string]: string | number | boolean | null },
+        privileges,
       };
     },
 
@@ -1830,7 +1809,7 @@ export const DB: DBInterface = {
       },
     ) {
       if (privileges.execute === undefined) return;
-      const isProcedure = (
+      const isProcedure = !!(
         await first(
           `SELECT prokind = 'p' is_procedure
         FROM pg_proc
@@ -1840,7 +1819,7 @@ export const DB: DBInterface = {
         `,
           [schema, name],
         )
-      ).is_procedure;
+      )?.is_procedure;
       const hasPublicPrivilege = (
         await first(`SELECT
           pg_catalog.has_function_privilege((0)::oid, '${label(
@@ -1923,6 +1902,7 @@ export const DB: DBInterface = {
         const byGrantee = [...new Set(res.map((r) => r.grantee))].map(
           (grantee) => ({
             roleName: grantee as string,
+            internal: (grantee as string).startsWith('pg_'),
             privileges: {
               update: !!res.find(
                 (r) => r.grantee === grantee && r.privilege_type === 'UPDATE',
@@ -2040,7 +2020,7 @@ export const DB: DBInterface = {
       }
     },
     async privilegesTypes() {
-      return ['update', 'select', 'usage'];
+      return ['select', 'update', 'usage'];
     },
   },
 

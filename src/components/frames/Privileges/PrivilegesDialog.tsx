@@ -27,12 +27,13 @@ type PrivilegesDialogProps =
       privilegesTypes: string[];
     }
   | {
+      entityType: 'domain' | 'table' | 'sequence' | 'schema' | 'function';
       relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
       type: 'by_entity';
       onCancel: () => void;
       onUpdate: (f: {
-        table: string;
-        schema: string;
+        entityName: string;
+        schema?: string;
         privileges: {
           [k: string]: boolean | undefined;
         };
@@ -73,19 +74,18 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
     executing ||
     equals(form, privileges) ||
     (type === 'by_role' && !role && !props.roleName) ||
-    (type === 'by_entity' && (!schemaNameValue || !tableNameValue)) ||
+    (type === 'by_entity' &&
+      (!schemaNameValue ||
+        (!tableNameValue && props.entityType !== 'schema'))) ||
     !props.privilegesTypes.find((t) => !!form[t] !== !!privileges?.[t]);
 
-  // const updateDisabled =
-  //   !!error ||
-  //   executing ||
-  //   form.cols.length === 0 ||
-  //   !!form.cols.find((c) => !c.name);
   const fieldsDisabled = executing || !!error;
   const onSave = useEvent(async () => {
     if (
       (type === 'by_role' && !props.roleName && !role) ||
-      (type === 'by_entity' && (!schemaNameValue || !tableNameValue))
+      (type === 'by_entity' &&
+        (!schemaNameValue ||
+          (!tableNameValue && props.entityType !== 'schema')))
     )
       return;
     try {
@@ -105,7 +105,7 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
       } else if (type === 'by_entity') {
         await onUpdate({
           schema: schemaNameValue!,
-          table: tableNameValue!,
+          entityName: tableNameValue!,
           privileges: update,
         });
       }
@@ -124,11 +124,26 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
       !!props.privilegesTypes.find((t) => t.length > 10)
       ? 'large'
       : props.privilegesTypes.length <= 2
-        ? 'small'
+        ? props.privilegesTypes.find((t) => t.length > 10)
+          ? 'small2'
+          : 'small'
         : props.privilegesTypes.length === 3
           ? '3'
           : 'normal';
   }, [props.privilegesTypes]);
+
+  const width =
+    layout === 'small'
+      ? 200
+      : layout === 'small2' || layout === '3'
+        ? 300
+        : 510;
+  const itemWidth =
+    layout === 'large' || layout === '3'
+      ? '33.3333%'
+      : layout === 'normal'
+        ? '25%'
+        : '50%';
 
   return (
     <Dialog relativeTo={relativeTo} onBlur={onBlur}>
@@ -164,7 +179,13 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
             {schemaName}.{tableName}
           </div>
         ) : type === 'by_entity' ? (
-          <div style={{ display: 'flex', gap: 20 }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: 20,
+              width,
+            }}
+          >
             <select
               onChange={(e) => {
                 setSchemaNameValue(e.target.value);
@@ -179,26 +200,40 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
                 </option>
               ))}
             </select>
-            <select
-              disabled={!schemaNameValue}
-              value={tableNameValue}
-              onChange={(e) => {
-                setTableNameValue(e.target.value);
-              }}
-            >
-              <option value="" />
-              {schemaNameValue &&
-                schemas
-                  ?.find((s) => s.name === schemaNameValue)
-                  ?.tables.map((t) => (
-                    <option key={t.name} value={t.name}>
-                      {t.name}
-                    </option>
-                  ))}
-            </select>
+            {props.entityType === 'schema' ? null : (
+              <select
+                disabled={!schemaNameValue}
+                value={tableNameValue}
+                onChange={(e) => {
+                  setTableNameValue(e.target.value);
+                }}
+              >
+                <option value="" />
+                {schemaNameValue &&
+                  schemas
+                    ?.find((s) => s.name === schemaNameValue)
+                    ?.[
+                      props.entityType === 'sequence'
+                        ? 'sequences'
+                        : props.entityType === 'domain'
+                          ? 'domains'
+                          : props.entityType === 'function'
+                            ? 'functions'
+                            : 'tables'
+                    ]?.map((t) => (
+                      <option key={t.name} value={t.name}>
+                        {t.name}
+                      </option>
+                    ))}
+              </select>
+            )}
           </div>
         ) : (
-          <div>
+          <div
+            style={{
+              width,
+            }}
+          >
             <select
               value={JSON.stringify(
                 role ? [role.name, role.host] : [roleName, props.host],
@@ -224,7 +259,7 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
         <div
           style={{
             display: 'flex',
-            width: layout === 'small' ? 200 : layout === '3' ? 300 : 510,
+            width,
             flexWrap: 'wrap',
           }}
         >
@@ -236,21 +271,11 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
                 !!form[t] === !!privileges?.[t]
                   ? {
                       opacity: 0.3,
-                      width:
-                        layout === 'large' || layout === '3'
-                          ? '33.3333%'
-                          : layout === 'normal'
-                            ? '25%'
-                            : '50%',
+                      width: itemWidth,
                       textAlign: 'left',
                     }
                   : {
-                      width:
-                        layout === 'large' || layout === '3'
-                          ? '33.3333%'
-                          : layout === 'normal'
-                            ? '25%'
-                            : '50%',
+                      width: itemWidth,
                       textAlign: 'left',
                     }
               }

@@ -51,10 +51,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
     editComment: false,
     rename: false,
     changeSchema: false,
-    revoke: false as { roleName: string; host?: string } | false,
-    grant: false as { roleName: string; host?: string } | false | true,
     editOwner: false as string | boolean,
-    hideInternalRoles: true,
   });
 
   const dropCascade = useEvent(() => {
