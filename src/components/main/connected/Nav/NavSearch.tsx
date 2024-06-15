@@ -10,7 +10,7 @@ import {
   previewSchemaInfo,
   previewSequence,
   previewTable,
-  keepOpenTable,
+  extraTableTab,
   keepSchemaInfo,
 } from 'state/actions';
 import { equals } from 'util/equals';
@@ -95,10 +95,7 @@ export function NavSearch({
         focusedEntity.type === 'MATERIALIZED VIEW' ||
         focusedEntity.type === 'VIEW'
       ) {
-        keepOpenTable(focusedEntity.schema, {
-          type: focusedEntity.type,
-          name: focusedEntity.name,
-        });
+        extraTableTab(focusedEntity.schema, focusedEntity.name);
       } else if (focusedEntity.type === 'DOMAIN') {
         keepDomain(focusedEntity.schema, focusedEntity.name);
       } else if (focusedEntity.type === 'FUNCTION') {
@@ -156,10 +153,7 @@ export function NavSearch({
           focusedEntity.type === 'VIEW'
         ) {
           if (strongHit)
-            keepOpenTable(focusedEntity.schema, {
-              type: focusedEntity.type,
-              name: focusedEntity.name,
-            });
+            extraTableTab(focusedEntity.schema, focusedEntity.name);
           else
             previewTable(focusedEntity.schema, {
               type: focusedEntity.type,

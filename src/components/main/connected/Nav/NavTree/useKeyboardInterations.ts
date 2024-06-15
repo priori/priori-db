@@ -3,7 +3,6 @@ import {
   keepDomain,
   keepFunction,
   keepOpenRole,
-  keepOpenTable,
   keepSequence,
   openDomains,
   openFunctions,
@@ -15,6 +14,7 @@ import {
   previewRole,
   previewSequence,
   previewTable,
+  extraTableTab,
 } from 'state/actions';
 import { NavSchema } from 'types';
 import { assert } from 'util/assert';
@@ -165,9 +165,9 @@ export function useKeyboardInterations(
           .find((v) => v.name === item.schema)
           ?.tables.find((v) => v.name === item.title);
         assert(t);
-        if (strongHit)
-          keepOpenTable(item.schema, { name: item.title, type: t.type });
-        else previewTable(item.schema, { name: item.title, type: t.type });
+        if (strongHit) {
+          extraTableTab(item.schema, item.title);
+        } else previewTable(item.schema, { name: item.title, type: t.type });
       } else if (item.type === 'function' || item.type === 'procedure') {
         if (strongHit) keepFunction(item.schema, focused.name);
         else previewFunction(item.schema, focused.name);
@@ -224,12 +224,7 @@ export function useKeyboardInterations(
         focused.type === 'view' ||
         focused.type === 'mview'
       ) {
-        keepOpenTable(
-          focused.schema,
-          schemas
-            .find((s) => s.name === focused.schema)!
-            .tables.find((t) => t.name === focused.name)!,
-        );
+        extraTableTab(focused.schema, focused.name);
       } else if (focused.type === 'function' || focused.type === 'procedure') {
         keepFunction(focused.schema, focused.name);
       } else if (focused.type === 'domain') {

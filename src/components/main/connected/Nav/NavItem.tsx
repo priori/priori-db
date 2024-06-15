@@ -1,7 +1,7 @@
 import {
   keepDomain,
   keepFunction,
-  keepOpenTable,
+  extraTableTab,
   keepSchemaInfo,
   keepSequence,
   keepTableInfo,
@@ -78,7 +78,7 @@ export function NavItem({
       e.type === 'MATERIALIZED VIEW' ||
       e.type === 'VIEW'
     )
-      keepOpenTable(e.schema, { type: e.type, name: e.name });
+      extraTableTab(e.schema, e.name);
     else if (e.type === 'DOMAIN') keepDomain(e.schema, e.name);
     else if (e.type === 'FUNCTION' || e.type === 'PROCEDURE')
       keepFunction(e.schema, e.name);

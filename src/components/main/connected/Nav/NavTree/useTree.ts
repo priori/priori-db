@@ -287,6 +287,7 @@ export function useTree(
             focused.type === v2.type &&
             focused.key === v2.key &&
             focused.schema === v2.schema;
+
           return isOpen || isActive || hasFocus
             ? {
                 ...v2,

@@ -2,7 +2,6 @@ import {
   keepDomain,
   keepFunction,
   keepOpenRole,
-  keepOpenTable,
   keepSequence,
   openDomains,
   openFunctions,
@@ -14,6 +13,7 @@ import {
   previewRole,
   previewSequence,
   previewTable,
+  extraTableTab,
 } from 'state/actions';
 import { NavSchema } from 'types';
 import { assert } from 'util/assert';
@@ -80,7 +80,7 @@ export function useMouseInterations(
         ?.tables.find((v) => v.name === e.title);
       assert(e.schema);
       assert(t);
-      keepOpenTable(e.schema, { name: e.title, type: t.type });
+      extraTableTab(e.schema, e.title);
     } else if (e.type === 'function' || e.type === 'procedure') {
       assert(e.schema);
       keepFunction(e.schema, e.title);

@@ -231,6 +231,16 @@ export function previewTable(
 }
 
 export function extraTableTab(current: AppState, schema: string, name: string) {
+  const openTab = current.tabs.find(
+    (tab) =>
+      tab.props.type === 'table' &&
+      tab.props.schema === schema &&
+      tab.props.table === name,
+  );
+  if (!openTab?.keep && openTab) {
+    // eslint-disable-next-line no-use-before-define
+    return keepOpenTable(current, schema, { name, type: openTab.props.type });
+  }
   return newFrame(current, (uid) => ({
     title: `${schema}.${name}`,
     active: true,
