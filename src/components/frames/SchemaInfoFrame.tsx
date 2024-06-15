@@ -141,14 +141,17 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
     async ({
       role,
       privileges,
+      host,
     }: {
       role: string;
       privileges: { [k: string]: boolean | undefined };
+      host?: string;
     }) => {
       await db().privileges?.updateSchemaPrivileges?.(
         props.schema,
         role,
         privileges,
+        host,
       );
       if (!isMounted()) return;
       await service.reload();

@@ -1,5 +1,5 @@
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { showError } from 'state/actions';
 import { currentState } from 'state/state';
 import { equals } from 'util/equals';
@@ -119,6 +119,15 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
 
   const { roles, schemas } = currentState();
 
+  const layout = React.useMemo(() => {
+    return props.privilegesTypes.length > 2 &&
+      !!props.privilegesTypes.find((t) => t.length > 10)
+      ? 'large'
+      : props.privilegesTypes.length < 2
+        ? 'small'
+        : 'normal';
+  }, [props.privilegesTypes]);
+
   return (
     <Dialog relativeTo={relativeTo} onBlur={onBlur}>
       <div className="dialog-form" style={{ lineHeight: '2.5em' }}>
@@ -213,7 +222,7 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
         <div
           style={{
             display: 'flex',
-            width: props.privilegesTypes.length > 2 ? '500px' : '200px',
+            width: layout === 'small' ? 200 : 510,
             flexWrap: 'wrap',
           }}
         >
@@ -225,11 +234,21 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
                 !!form[t] === !!privileges?.[t]
                   ? {
                       opacity: 0.3,
-                      width: props.privilegesTypes.length > 2 ? '25%' : '50%',
+                      width:
+                        layout === 'large'
+                          ? '33.3333%'
+                          : layout === 'small'
+                            ? '25%'
+                            : '50%',
                       textAlign: 'left',
                     }
                   : {
-                      width: props.privilegesTypes.length > 2 ? '25%' : '50%',
+                      width:
+                        layout === 'large'
+                          ? '33.3333%'
+                          : layout === 'small'
+                            ? '25%'
+                            : '50%',
                       textAlign: 'left',
                     }
               }

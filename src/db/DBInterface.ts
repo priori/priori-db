@@ -285,6 +285,7 @@ export interface DBInterface {
       privileges: {
         [k: string]: boolean | undefined;
       },
+      host?: string,
     ): Promise<void>;
   };
   functions?: {

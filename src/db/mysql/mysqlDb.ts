@@ -571,24 +571,45 @@ export const mysqlDb: DBInterface = {
     );
   },
   nullsLast: false,
-  async schema(_name: string): Promise<{
-    /* privileges: {
+  async schema(name: string): Promise<{
+    privileges: {
       roleName: string;
       privileges: {
-        create: boolean;
-        usage: boolean;
+        [k: string]: boolean | undefined;
       };
-    }[]; */
+    }[];
     owner: string;
     comment: string;
     pgNamesspace: {
       [key: string]: SimpleValue;
     } | null;
   }> {
+    const privileges0 = await list(`SELECT * FROM mysql.db WHERE Db = ?`, [
+      name,
+    ]);
+    const privileges = privileges0.map((p) => {
+      const rolePrivileges: Record<string, boolean> = {};
+      for (const k in p) {
+        if (k.endsWith('_priv') && (p[k] === 'Y' || p[k] === 'N')) {
+          rolePrivileges[
+            `${k[0].toLowerCase()}${k
+              .substring(1)
+              .replace('_priv', '')
+              .replace(/_(\w)/g, (_, v) => v.toUpperCase())}`
+          ] = p[k] === 'Y';
+        }
+      }
+      return {
+        roleName: p.User,
+        host: p.Host,
+        privileges: rolePrivileges,
+      };
+    });
     return {
       owner: '',
       comment: '',
       pgNamesspace: null,
+      privileges,
     };
   },
   renameSchema: null,
@@ -850,6 +871,57 @@ export const mysqlDb: DBInterface = {
         'alter',
         'showView',
       ];
+    },
+    async schemaPrivilegesTypes() {
+      return [
+        'alter',
+        'alterRoutine',
+        'create',
+        'createRoutine',
+        // 'createTemporaryTables',
+        'createView',
+        'delete',
+        'drop',
+        'execute',
+        // grant?
+        'index',
+        'event',
+        'insert',
+        'lockTables',
+        'references',
+        'select',
+        'showView',
+        'trigger',
+        'update',
+      ];
+    },
+    async updateSchemaPrivileges(
+      schema: string,
+      grantee: string,
+      privileges: {
+        [k: string]: boolean | undefined;
+      },
+      host?: string,
+    ) {
+      const tx = await openConnection();
+      try {
+        tx.query('START TRANSACTION;');
+        for (const k in privileges) {
+          const priv = k.replace(/([A-Z])/g, (m) => ` ${m}`).toUpperCase();
+          if (privileges[k]) {
+            await tx.query(
+              `GRANT ${priv} ON ${label(schema)}.* TO ${label(grantee)}${host ? `@${label(host)}` : ''}`,
+            );
+          } else if (privileges[k] !== undefined) {
+            await tx.query(
+              `REVOKE ${priv} ON ${label(schema)}.* FROM ${label(grantee)}${host ? `@${label(host)}` : ''}`,
+            );
+          }
+        }
+      } catch (e) {
+        tx.query('ROLLBACK;');
+        throw e;
+      }
     },
 
     async listRoles() {
