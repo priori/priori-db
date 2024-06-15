@@ -213,7 +213,7 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
         <div
           style={{
             display: 'flex',
-            width: '500px',
+            width: props.privilegesTypes.length > 2 ? '500px' : '200px',
             flexWrap: 'wrap',
           }}
         >
@@ -225,11 +225,11 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
                 !!form[t] === !!privileges?.[t]
                   ? {
                       opacity: 0.3,
-                      width: '25%',
+                      width: props.privilegesTypes.length > 2 ? '25%' : '50%',
                       textAlign: 'left',
                     }
                   : {
-                      width: '25%',
+                      width: props.privilegesTypes.length > 2 ? '25%' : '50%',
                       textAlign: 'left',
                     }
               }

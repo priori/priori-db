@@ -1,28 +1,31 @@
-import { useMemo, useState } from 'react';
-import { useEvent } from 'util/useEvent';
-import { db } from 'db/db';
+import { Comment } from 'components/util/Comment';
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { useService } from 'util/useService';
+import { RenameDialog } from 'components/util/Dialog/RenameDialog';
+import { db } from 'db/db';
+import { useState } from 'react';
 import { currentState } from 'state/state';
 import { useIsMounted } from 'util/hooks';
-import { Comment } from 'components/util/Comment';
-import { RenameDialog } from 'components/util/Dialog/RenameDialog';
-import { SchemaInfoFrameProps, SchemaPrivileges } from '../../types';
+import { useEvent } from 'util/useEvent';
+import { useService } from 'util/useService';
 import {
   closeTab,
   reloadNav,
   renameSchema,
   showError,
 } from '../../state/actions';
-import { SchemaPrivilegesDialog } from './SchemaPrivilegesDialog';
+import { SchemaInfoFrameProps } from '../../types';
+import { Privileges } from './Privileges/Privileges';
 
 export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
   const service = useService(
-    async () => db().schema(props.schema),
+    async () =>
+      Promise.all([
+        db().schema(props.schema),
+        db().privileges?.schemaPrivilegesTypes?.() ??
+          Promise.resolve(undefined),
+      ]).then(([info, privilegesTypes]) => ({ ...info, privilegesTypes })),
     [props.schema],
   );
-
-  const privileges = service?.lastValidData?.privileges;
 
   const [state, set] = useState({
     dropCascadeConfirmation: false,
@@ -134,43 +137,24 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
     set({ ...state, rename: false });
   });
 
-  const newPrivilege = useEvent(
-    async (form: { role: string; privileges: SchemaPrivileges }) => {
+  const onUpdatePrivileges = useEvent(
+    async ({
+      role,
+      privileges,
+    }: {
+      role: string;
+      privileges: { [k: string]: boolean | undefined };
+    }) => {
       await db().privileges?.updateSchemaPrivileges?.(
         props.schema,
-        form.role,
-        form.privileges,
+        role,
+        privileges,
       );
-      if (!isMounted()) return;
-      await service.reload();
-      if (!isMounted()) return;
-      set({ ...state, newPrivilege: false });
-    },
-  );
-
-  const onUpdatePrivileges = useEvent(
-    async (
-      roleName: string,
-      curr: SchemaPrivileges,
-      update: SchemaPrivileges,
-    ) => {
-      await db().privileges?.updateSchemaPrivileges?.(props.schema, roleName, {
-        create: update.create === curr.create ? undefined : update.create,
-        usage: update.usage === curr.usage ? undefined : update.usage,
-      });
       if (!isMounted()) return;
       await service.reload();
       if (!isMounted()) return;
       set({ ...state, updatePrivilege: null });
     },
-  );
-
-  const internalRoles = useMemo(
-    () =>
-      service.lastValidData?.privileges?.filter((v) =>
-        v.roleName.startsWith('pg_'),
-      ).length,
-    [service.lastValidData?.privileges],
   );
 
   return (
@@ -302,154 +286,16 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
           ) : null}
         </div>
       ) : null}
-      {service.lastValidData &&
-      privileges &&
-      db().privileges &&
-      !privileges?.length ? (
-        <>
-          <h2>Privileges</h2>
-
-          <div className="empty">
-            No privileges found for table.{' '}
-            <button
-              type="button"
-              className="simple-button"
-              onClick={() => set({ ...state, newPrivilege: true })}
-            >
-              Grant new privilege <i className="fa fa-plus" />
-            </button>
-            {state.newPrivilege ? (
-              <SchemaPrivilegesDialog
-                relativeTo="previousSibling"
-                type="by_role"
-                onCancel={() => set({ ...state, newPrivilege: false })}
-                onUpdate={(form) => newPrivilege(form)}
-              />
-            ) : null}
-          </div>
-        </>
-      ) : service.lastValidData && db().privileges && privileges ? (
-        <>
-          <h2 style={{ userSelect: 'text' }}>Privileges</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Role</th>
-                <th style={{ width: 75 }}>Usage</th>
-                <th style={{ width: 75 }}>Create</th>
-                <th style={{ width: 62 }} />
-              </tr>
-            </thead>
-            <tbody>
-              {privileges
-                ?.filter(
-                  (r) =>
-                    !state.hideInternalRoles || !r.roleName.startsWith('pg_'),
-                )
-                .map((p) => (
-                  <tr
-                    key={p.roleName}
-                    style={
-                      p.roleName.startsWith('pg_')
-                        ? { color: '#ccc' }
-                        : undefined
-                    }
-                  >
-                    <td>{p.roleName}</td>
-
-                    <td style={{ fontWeight: 'bold', textAlign: 'center' }}>
-                      {p.privileges.usage ? <i className="fa fa-check" /> : '-'}
-                    </td>
-
-                    <td
-                      style={{
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        padding: '0',
-                        ...(!p.privileges.create
-                          ? { fontSize: 20, color: '#ccc' }
-                          : {}),
-                      }}
-                    >
-                      {p.privileges.create ? (
-                        <i className="fa fa-check" />
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="actions">
-                      <button
-                        type="button"
-                        className="simple-button"
-                        onClick={() =>
-                          set({ ...state, updatePrivilege: p.roleName })
-                        }
-                      >
-                        Edit <i className="fa fa-pencil" />
-                      </button>
-                      {state.updatePrivilege === p.roleName ? (
-                        <SchemaPrivilegesDialog
-                          relativeTo="previousSibling"
-                          privileges={{
-                            create: p.privileges.create,
-                            usage: p.privileges.usage,
-                          }}
-                          type="by_role"
-                          onUpdate={(e) =>
-                            onUpdatePrivileges(
-                              p.roleName,
-                              p.privileges,
-                              e.privileges,
-                            )
-                          }
-                          onCancel={() =>
-                            set({ ...state, updatePrivilege: null })
-                          }
-                          roleName={p.roleName}
-                        />
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-          <div className="actions">
-            {internalRoles ? (
-              <button
-                type="button"
-                key={state.hideInternalRoles ? 1 : 0}
-                className={`simple-button simple-button2 hide-button ${
-                  state.hideInternalRoles ? ' hidden' : ' shown'
-                }`}
-                onClick={() => {
-                  set({
-                    ...state,
-                    hideInternalRoles: !state.hideInternalRoles,
-                  });
-                }}
-              >
-                {internalRoles} pg_* <i className="fa fa-eye-slash" />
-                <i className="fa fa-eye" />
-              </button>
-            ) : null}{' '}
-            <button
-              type="button"
-              className="simple-button"
-              onClick={() => set({ ...state, newPrivilege: true })}
-            >
-              New <i className="fa fa-plus" />
-            </button>
-            {state.newPrivilege ? (
-              <SchemaPrivilegesDialog
-                relativeTo="previousSibling"
-                onCancel={() => set({ ...state, newPrivilege: false })}
-                onUpdate={(form) => newPrivilege(form)}
-                type="by_role"
-              />
-            ) : null}
-          </div>
-        </>
+      {service.lastValidData?.privilegesTypes &&
+      service.lastValidData.privileges ? (
+        <Privileges
+          privileges={service.lastValidData.privileges}
+          privilegesTypes={service.lastValidData.privilegesTypes}
+          onUpdate={onUpdatePrivileges}
+          entityType="schema"
+        />
       ) : null}
+
       {service.lastValidData?.pgNamesspace ? (
         <>
           <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_namesspace</h2>

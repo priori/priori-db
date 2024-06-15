@@ -31,6 +31,7 @@ export function TdCheck({ checked }: { checked: boolean }) {
         fontWeight: 'bold',
         textAlign: 'center',
         userSelect: 'none',
+        lineHeight: '22px',
         ...(!checked ? { fontSize: 20, color: '#ccc' } : {}),
       }}
     >

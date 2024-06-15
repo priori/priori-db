@@ -16,9 +16,10 @@ export interface DBInterface {
   schema(name: string): Promise<{
     privileges?: {
       roleName: string;
+      host?: string;
+      internal?: boolean;
       privileges: {
-        create: boolean;
-        usage: boolean;
+        [k: string]: boolean | undefined;
       };
     }[];
     owner: string;
@@ -208,6 +209,7 @@ export interface DBInterface {
   updateColumnViewName: boolean;
   updateColumnViewComment: boolean;
   privileges?: {
+    schemaPrivilegesTypes?(): Promise<string[]>;
     tablePrivilegesTypes(): Promise<string[]>;
     listRoles(): Promise<
       {
@@ -281,8 +283,7 @@ export interface DBInterface {
       schema: string,
       grantee: string,
       privileges: {
-        create?: boolean;
-        usage?: boolean;
+        [k: string]: boolean | undefined;
       },
     ): Promise<void>;
   };

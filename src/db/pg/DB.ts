@@ -235,6 +235,7 @@ export const DB: DBInterface = {
       const byGrantee = [...new Set(res.map((r) => r.grantee))].map(
         (grantee) => ({
           roleName: grantee as string,
+          internal: (grantee as string).startsWith('pg_'),
           privileges: {
             create: !!res.find(
               (r) => r.grantee === grantee && r.privilege_type === 'CREATE',
@@ -1282,6 +1283,10 @@ export const DB: DBInterface = {
         'truncate',
       ];
     },
+    async schemaPrivilegesTypes() {
+      return ['usage', 'create'];
+    },
+
     async role(name: string) {
       async function rolePrivileges(n: string) {
         const res = (await list(
