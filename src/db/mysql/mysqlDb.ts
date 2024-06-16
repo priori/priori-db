@@ -562,6 +562,7 @@ export const mysqlDb: DBInterface = {
   },
   renameSchema: null,
   updateSchemaComment: null,
+
   createTable(/* newTable: {
     name: string;
     schema: string;
@@ -579,27 +580,20 @@ export const mysqlDb: DBInterface = {
   } */): Promise<void> {
     throw new Error('Not implemented!');
   },
-  updateView(/*
+
+  updateViewSchema: false,
+  async updateView(
     schema: string,
     table: string,
     update: {
-      comment?: string | null | undefined;
       name?: string | undefined;
       schema?: string | undefined;
     },
-  */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  updateMView(/*
-    schema: string,
-    table: string,
-    update: {
-      comment?: string | null | undefined;
-      name?: string | undefined;
-      schema?: string | undefined;
-    },
-  */): Promise<void> {
-    throw new Error('Not implemented!');
+  ): Promise<void> {
+    await execute(
+      `RENAME TABLE ${label(schema)}.${label(table)}
+       TO ${update.schema ? `${label(update.schema)}.` : ''}${label(update.name || table)}`,
+    );
   },
   async removeCol(schema: string, table: string, col: string): Promise<void> {
     await execute(

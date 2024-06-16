@@ -91,12 +91,13 @@ export interface DBInterface {
     update: { comment?: string | null; name?: string; schema?: string },
   ): Promise<void>;
   updateViewComment?: false;
+  updateViewSchema?: false;
   updateView(
     schema: string,
     table: string,
     update: { comment?: string | null; name?: string; schema?: string },
   ): Promise<void>;
-  updateMView(
+  updateMView?(
     schema: string,
     table: string,
     update: { comment?: string | null; name?: string; schema?: string },

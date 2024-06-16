@@ -96,7 +96,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const onUpdateComment = useEvent(async (text: string) => {
     if (state.subType === 'mview')
-      await db().updateMView(props.schema, props.table, { comment: text });
+      await db().updateMView?.(props.schema, props.table, { comment: text });
     else if (state.subType === 'view')
       await db().updateView(props.schema, props.table, { comment: text });
     else await db().updateTable(props.schema, props.table, { comment: text });
@@ -106,7 +106,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const onChangeSchema = useEvent(async (schema: string) => {
     if (state.subType === 'mview')
-      await db().updateMView(props.schema, props.table, { schema });
+      await db().updateMView?.(props.schema, props.table, { schema });
     else if (state.subType === 'view')
       await db().updateView(props.schema, props.table, { schema });
     else await db().updateTable(props.schema, props.table, { schema });
@@ -168,7 +168,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const onRename = useEvent(async (name: string) => {
     if (state.subType === 'mview')
-      await db().updateMView(props.schema, props.table, { name });
+      await db().updateMView?.(props.schema, props.table, { name });
     else if (state.subType === 'view')
       await db().updateView(props.schema, props.table, { name });
     else await db().updateTable(props.schema, props.table, { name });
@@ -349,6 +349,16 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const { roles } = currentState();
 
+  if (!service.lastValidData)
+    return (
+      <h1 style={{ opacity: 0.5 }}>
+        <span className="adjustment-icon2">
+          <div />
+        </span>
+        {props.schema}.{props.table}
+      </h1>
+    );
+
   return (
     <>
       <h1>
@@ -383,24 +393,29 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             onUpdate={onRename}
           />
         ) : null}
-        <button
-          type="button"
-          onClick={() => set({ ...edit, updateSchema: true })}
-        >
-          Change Schema{' '}
-          <i
-            className="fa fa-arrow-right"
-            style={{ transform: 'rotate(-45deg)' }}
-          />
-        </button>{' '}
-        {edit.updateSchema ? (
-          <ChangeSchemaDialog
-            relativeTo="previousSibling"
-            value={props.schema}
-            onCancel={() => set({ ...edit, updateSchema: false })}
-            onUpdate={onChangeSchema}
-          />
-        ) : null}
+        {(state.subType === 'view' || state.subType === 'mview') &&
+        db().updateViewSchema === false ? null : (
+          <>
+            <button
+              type="button"
+              onClick={() => set({ ...edit, updateSchema: true })}
+            >
+              Change Schema{' '}
+              <i
+                className="fa fa-arrow-right"
+                style={{ transform: 'rotate(-45deg)' }}
+              />
+            </button>{' '}
+            {edit.updateSchema ? (
+              <ChangeSchemaDialog
+                relativeTo="previousSibling"
+                value={props.schema}
+                onCancel={() => set({ ...edit, updateSchema: false })}
+                onUpdate={onChangeSchema}
+              />
+            ) : null}
+          </>
+        )}
         <button
           type="button"
           onClick={
