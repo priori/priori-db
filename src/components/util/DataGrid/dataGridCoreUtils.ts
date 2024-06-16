@@ -59,10 +59,11 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
   let state = state0;
   const resultRef = useRef(props.result);
+  const resultLengthRef = useRef(props.result.rows.length);
   if (resultRef.current !== props.result) {
     if (
       state.fetchingNewRows &&
-      props.result.rows.length > resultRef.current.rows.length
+      props.result.rows.length > resultLengthRef.current
     ) {
       resultRef.current = props.result;
       setState((s) => ({
@@ -81,6 +82,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         touched: state.touched,
       };
       resultRef.current = props.result;
+      resultLengthRef.current = props.result.rows.length;
       scrollRef.current = { left: 0, top: 0 };
       gridContentRef.current?.scrollTo(0, 0);
       setState(state);
