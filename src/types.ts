@@ -16,6 +16,7 @@ export interface AbstractTabProps<T extends FrameType> {
 
 export interface RoleFrameProps extends AbstractTabProps<'role'> {
   readonly name: string;
+  readonly host?: string;
 }
 
 export interface QueryFrameProps extends AbstractTabProps<'query'> {

@@ -68,7 +68,7 @@ export function useMouseInterations(
     } else if (e.type === 'sequence') {
       previewSequence(e.schema, e.title);
     } else if (e.type === 'role' || e.type === 'user') {
-      previewRole(e.title);
+      previewRole(e.title, e.host);
     }
   });
 
@@ -91,7 +91,7 @@ export function useMouseInterations(
       assert(e.schema);
       keepSequence(e.schema, e.title);
     } else if (e.type === 'role' || e.type === 'user') {
-      keepOpenRole(e.title);
+      keepOpenRole(e.title, e.host);
     }
   });
   return {

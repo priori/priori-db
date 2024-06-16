@@ -18,7 +18,7 @@ export function useTabs(tabs0: Tab[]) {
     const openTabDomains: Map<string, Set<string>> = new Map();
     const openTabFunctions: Map<string, Set<string>> = new Map();
     const openTabSequences: Map<string, Set<string>> = new Map();
-    const openRoles: Set<string> = new Set();
+    const openRoles: Map<string, Set<string | undefined>> = new Map();
     const openSchemas: Set<string> = new Set();
     for (const tab of tabs) {
       if (tab.props.type === 'table' || tab.props.type === 'tableinfo') {
@@ -38,7 +38,9 @@ export function useTabs(tabs0: Tab[]) {
           openTabSequences.set(tab.props.schema, new Set());
         openTabSequences.get(tab.props.schema)!.add(tab.props.name);
       } else if (tab.props.type === 'role') {
-        openRoles.add(tab.props.name);
+        if (!openRoles.has(tab.props.name))
+          openRoles.set(tab.props.name, new Set());
+        openRoles.get(tab.props.name)!.add(tab.props.host);
       } else if (tab.props.type === 'schemainfo') {
         openSchemas.add(tab.props.schema);
       }
@@ -53,8 +55,8 @@ export function useTabs(tabs0: Tab[]) {
         table(s: string, t: string) {
           return openTables.has(s) && openTables.get(s)!.has(t);
         },
-        role(n: string) {
-          return openRoles.has(n);
+        role(n: string, h?: string) {
+          return openRoles.has(n) && openRoles.get(n)!.has(h);
         },
         function(s: string, n: string) {
           return openTabFunctions.has(s) && openTabFunctions.get(s)!.has(n);

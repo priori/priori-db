@@ -56,6 +56,7 @@ export type NavTreeItem =
       isOpen?: boolean;
       schema?: string;
       rowsOpen: number;
+      host?: string;
     }
   | {
       title: string;
@@ -80,7 +81,7 @@ export type NavTreeItem =
 
 function buildTree(
   schemas: NavSchema[],
-  roles: { name: string; isUser: boolean }[] | undefined,
+  roles: { name: string; isUser: boolean; host?: string }[] | undefined,
   rolesOpen: boolean,
 ) {
   const root: NavTreeItem[] = [];
@@ -185,9 +186,10 @@ function buildTree(
       const role: NavTreeItem = {
         title: r.name,
         type: r.isUser ? 'user' : 'role',
-        key: r.name,
+        key: r.host ? `${r.name}\n${r.host}` : r.name,
         internal: r.name.startsWith('pg_'),
         rowsOpen: 1,
+        host: r.host,
       };
       children.push(role);
     }
@@ -271,7 +273,7 @@ export function useTree(
               v2.type === 'mview') &&
               tabs.open.table(v2.schema, v2.title)) ||
             ((v2.type === 'role' || v2.type === 'user') &&
-              tabs.open.role(v2.title));
+              tabs.open.role(v2.title, v2.host));
           const isActive =
             ((v2.type === 'table' ||
               v2.type === 'view' ||
@@ -281,6 +283,7 @@ export function useTree(
               tabs.active.props.table === v2.title) ||
             ((v2.type === 'role' || v2.type === 'user') &&
               tabs.active?.props.type === 'role' &&
+              tabs.active?.props.host === v2.host &&
               tabs.active.props.name === v2.title);
           const hasFocus =
             focused &&

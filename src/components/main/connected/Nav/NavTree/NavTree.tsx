@@ -120,7 +120,27 @@ function NavTreeItem0({
         {item.type && item.type in icons
           ? icons[item.type as keyof typeof icons]
           : null}
-        <div className="nav-tree--item--title">{item.title}</div>
+        <div className="nav-tree--item--title">
+          {item.title}
+          {(item.type === 'role' || item.type === 'user') && item.host ? (
+            <span
+              style={{
+                opacity: 0.5,
+                fontSize: 11,
+                lineHeight: '11px',
+                position: 'relative',
+                top: -0.1,
+              }}
+            >
+              @
+              <span style={{ position: 'relative', top: '-0.3px' }}>
+                {item.host}
+              </span>
+            </span>
+          ) : (
+            ''
+          )}
+        </div>
         {item.children &&
         item.type !== 'schema-folder' &&
         item.type !== 'roles-folder' ? (

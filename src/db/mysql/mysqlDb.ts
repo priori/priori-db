@@ -40,6 +40,35 @@ function str(s: string) {
   return `'${s.replace(/'/g, "'").replace(/\\/g, '\\\\')}'`;
 }
 
+function privsToPrivileges(
+  p: Record<string, string> | string,
+  allowed: string[],
+) {
+  if (typeof p === 'string') {
+    const parts = p.split(',');
+    const privileges2: {
+      [k: string]: boolean;
+    } = {};
+    for (const part of parts) {
+      const type = `${part[0].toLowerCase()}${part.substring(1).replace(/ \w/g, (m) => m[1].toUpperCase())}`;
+      if (type !== undefined && allowed.includes(type))
+        privileges2[type] = true;
+    }
+    return privileges2;
+  }
+  const privileges: Record<string, boolean> = {};
+  for (const k in p) {
+    if (k.endsWith('_priv') && (p[k] === 'Y' || p[k] === 'N')) {
+      const pName = `${k[0].toLowerCase()}${k
+        .substring(1)
+        .replace('_priv', '')
+        .replace(/_(\w)/g, (_, v) => v.toUpperCase())}`;
+      if (allowed.includes(pName)) privileges[pName] = p[k] === 'Y';
+    }
+  }
+  return privileges;
+}
+
 export const mysqlDb: DBInterface = {
   async listAll(): Promise<
     {
@@ -955,10 +984,71 @@ export const mysqlDb: DBInterface = {
       }
     },
 
+    async role(name: string, host: string) {
+      const dbsP = list(`SELECT * FROM mysql.db WHERE User = ?`, [name, host]);
+      const functionsP = list(
+        `SELECT * FROM mysql.procs_priv WHERE User = ? AND Host = ?`,
+        [name, host],
+      );
+      const tablesP = list(
+        `SELECT * FROM mysql.tables_priv WHERE User = ? AND Host = ?`,
+        [name, host],
+      );
+      const [dbs0, dbPs, functions0, fsPs, tables0, tbsPs, { db }] =
+        await Promise.all([
+          dbsP,
+          mysqlDb.privileges!.schemaPrivilegesTypes!(),
+          functionsP,
+          mysqlDb.functions!.privilegesTypes!(),
+          tablesP,
+          mysqlDb.privileges!.tablePrivilegesTypes!(),
+          first('SELECT DATABASE() "db"', []),
+        ]);
+      dbs0.sort((a, b) => {
+        if (a.Db === db) return -1;
+        if (b.Db === db) return 1;
+        return a.Db.localeCompare(b.Db);
+      });
+      return {
+        privileges: {
+          tables: tables0.map((t) => ({
+            schema: t.Db,
+            table: t.Table_name,
+            privileges: privsToPrivileges(t.Table_priv, tbsPs),
+          })),
+          functions: functions0.map((f) => ({
+            schema: f.Db,
+            name: f.Routine_name,
+            privileges: privsToPrivileges(f.Proc_priv, fsPs),
+          })),
+          schemas: dbs0.map((d) => ({
+            name: d.Db,
+            privileges: privsToPrivileges(d, dbPs),
+          })),
+        },
+      };
+    },
+
+    async dropRole(name, host) {
+      await execute(`DROP ROLE ${label(name)}${host ? `@${label(host)}` : ''}`);
+    },
+
+    async renameRole(name, newName, host) {
+      await execute(
+        `RENAME USER ${label(name)}${host ? `@${label(host)}` : ''}
+        TO ${label(newName)}${host ? `@${label(host)}` : ''}`,
+      );
+    },
+
     async listRoles() {
       const roles = await list(`
-        SELECT User, Host, authentication_string != '' and authentication_string IS not NULL is_user
+        SELECT
+          User,
+          Host,
+          authentication_string != '' and
+            authentication_string IS not NULL is_user
         FROM mysql.user
+        ORDER BY User, Host
       `);
       return roles.map((r) => ({
         name: r.User,

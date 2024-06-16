@@ -2,8 +2,9 @@ import { Comment } from 'components/util/Comment';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { db } from 'db/db';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { closeTab, reloadNav, renameEntity, showError } from 'state/actions';
+import { currentState } from 'state/state';
 import { RoleFrameProps } from 'types';
 import { grantError } from 'util/errors';
 import { useIsMounted } from 'util/hooks';
@@ -17,7 +18,7 @@ export function RoleFrame(props: RoleFrameProps) {
   const service = useService(
     () =>
       Promise.all([
-        db().privileges!.role?.(props.name),
+        db().privileges!.role?.(props.name, props.host),
         db().privileges?.tablePrivilegesTypes?.(),
         db().privileges?.schemaPrivilegesTypes?.(),
         db().sequences?.privilegesTypes?.(),
@@ -60,7 +61,7 @@ export function RoleFrame(props: RoleFrameProps) {
 
   const yesClick = useEvent(() => {
     db()
-      .privileges!.dropRole?.(props.name)
+      .privileges!.dropRole?.(props.name, props.host)
       .then(
         () => {
           setTimeout(() => closeTab(props), 10);
@@ -73,7 +74,7 @@ export function RoleFrame(props: RoleFrameProps) {
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
-    await db().privileges!.updateRoleComment?.(props.name, text);
+    await db().privileges!.updateRoleComment?.(props.name, text, props.host);
     await service.reload();
     set({ ...state, editComment: false });
   });
@@ -86,7 +87,7 @@ export function RoleFrame(props: RoleFrameProps) {
   });
 
   const onRename = useEvent(async (newName: string) => {
-    await db().privileges!.renameRole?.(name, newName);
+    await db().privileges!.renameRole?.(name, newName, props.host);
     renameEntity(props.uid, newName);
     reloadNav();
     set({ ...state, rename: false });
@@ -143,6 +144,11 @@ export function RoleFrame(props: RoleFrameProps) {
     },
   );
 
+  const currentSchema = React.useMemo(
+    () => currentState().schemas?.find((s) => s.current)?.name,
+    [],
+  );
+
   return (
     <div>
       <h1>
@@ -150,14 +156,32 @@ export function RoleFrame(props: RoleFrameProps) {
           <div />
         </span>
         {props.name}
+        {props.host ? (
+          <span
+            style={{
+              opacity: 0.33,
+              fontWeight: 'normal',
+              fontSize: 24,
+            }}
+          >
+            @
+            <span style={{ position: 'relative', top: '-0.04em' }}>
+              {props.host}
+            </span>
+          </span>
+        ) : (
+          ''
+        )}
       </h1>
       <div className="table-info-frame__actions">
-        <button
-          type="button"
-          onClick={() => set({ ...state, editComment: true })}
-        >
-          Comment <i className="fa fa-file-text-o" />
-        </button>{' '}
+        {db().privileges?.updateRoleComment ? (
+          <button
+            type="button"
+            onClick={() => set({ ...state, editComment: true })}
+          >
+            Comment <i className="fa fa-file-text-o" />
+          </button>
+        ) : null}{' '}
         <button type="button" onClick={() => set({ ...state, rename: true })}>
           Rename <i className="fa fa-pencil" />
         </button>{' '}
@@ -215,6 +239,7 @@ export function RoleFrame(props: RoleFrameProps) {
             entityName: p.name,
             privileges: p.privileges,
             internal: p.internal,
+            highlight: p.name === currentSchema,
           }))}
           privilegesTypes={service.lastValidData.schemaPrivilegesTypes}
           entitiesType="schema"

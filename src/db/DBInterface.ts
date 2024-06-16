@@ -217,15 +217,18 @@ export interface DBInterface {
         host?: string;
       }[]
     >;
-    role?(name: string): Promise<{
-      role: {
+    role?(
+      name: string,
+      host?: string,
+    ): Promise<{
+      role?: {
         [k: string]: string | number | boolean | null;
       };
-      info: {
+      info?: {
         definition: string | null;
         comment: string | null;
       };
-      user: {
+      user?: {
         [k: string]: string | number | boolean | null;
       };
       privileges: {
@@ -252,7 +255,7 @@ export interface DBInterface {
             [k: string]: boolean | undefined;
           };
         }[];
-        sequences: {
+        sequences?: {
           internal?: boolean;
           schema: string;
           name: string;
@@ -260,7 +263,7 @@ export interface DBInterface {
             [k: string]: boolean | undefined;
           };
         }[];
-        types: {
+        types?: {
           internal?: boolean;
           schema: string;
           name: string;
@@ -270,9 +273,13 @@ export interface DBInterface {
         }[];
       };
     }>;
-    dropRole?(name: string): Promise<void>;
-    updateRoleComment?(name: string, text: string): Promise<void>;
-    renameRole?(name: string, name2: string): Promise<void>;
+    dropRole?(name: string, host?: string): Promise<void>;
+    updateRoleComment?(
+      name: string,
+      text: string,
+      host?: string,
+    ): Promise<void>;
+    renameRole?(name: string, name2: string, host?: string): Promise<void>;
 
     updateTablePrivileges(
       schema: string,

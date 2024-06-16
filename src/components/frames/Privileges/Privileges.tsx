@@ -14,6 +14,7 @@ type PrivilegesProps = {
     host?: string;
     internal?: boolean;
     privileges: { [k: string]: boolean | undefined };
+    highlight?: boolean;
   }[];
   privilegesTypes: string[];
   onUpdate: (update: {
@@ -31,6 +32,7 @@ type RolePrivilegesProps = {
     entityName: string;
     internal?: boolean;
     privileges: { [k: string]: boolean | undefined };
+    highlight?: boolean;
   }[];
   privilegesTypes: string[];
   onUpdate: (update: {
@@ -232,7 +234,7 @@ function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
       <table>
         <thead>
           <tr>
-            <th>Role</th>
+            <th>{'entitiesType' in props ? entitiesName : 'Role'}</th>
             {privilegesTypes.map((p) => (
               <th style={{ width: 75 }} key={p}>
                 {p[0].toUpperCase()}
@@ -246,11 +248,15 @@ function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
           {list.map((p) => (
             <tr
               key={
-                'roleName' in p ? p.roleName : `${p.schema}\n${p.entityName}`
+                'roleName' in p
+                  ? p.host
+                    ? `${p.roleName}\n${p.host}`
+                    : p.roleName
+                  : `${p.schema}\n${p.entityName}`
               }
               style={p.internal ? { color: '#ccc' } : undefined}
             >
-              <td>
+              <td style={p.highlight ? { fontWeight: 'bold' } : undefined}>
                 {'roleName' in p && p.roleName ? (
                   <>
                     {p.roleName}

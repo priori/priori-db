@@ -318,9 +318,12 @@ export function previewTableInfo(
   }));
 }
 
-export function keepOpenRole(current: AppState, name: string) {
+export function keepOpenRole(current: AppState, name: string, host?: string) {
   const openTab = current.tabs.find(
-    (tab) => tab.props.type === 'role' && tab.props.name === name,
+    (tab) =>
+      tab.props.type === 'role' &&
+      tab.props.name === name &&
+      tab.props.host === host,
   );
   if (openTab) {
     return keepTabOpen(current, openTab.props.uid);
@@ -333,13 +336,17 @@ export function keepOpenRole(current: AppState, name: string) {
       uid,
       type: 'role',
       name,
+      host,
     },
   }));
 }
 
-export function previewRole(current: AppState, name: string) {
+export function previewRole(current: AppState, name: string, host?: string) {
   const openTab = current.tabs.find(
-    (tab) => tab.props.type === 'role' && tab.props.name === name,
+    (tab) =>
+      tab.props.type === 'role' &&
+      tab.props.name === name &&
+      tab.props.host === host,
   );
   if (openTab) {
     return activateTab(current, openTab);
@@ -352,6 +359,7 @@ export function previewRole(current: AppState, name: string) {
       uid,
       type: 'role',
       name,
+      host,
     },
   }));
 }
