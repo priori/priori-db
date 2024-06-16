@@ -110,19 +110,17 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
   const { roles } = currentState();
   const isMounted = useIsMounted();
   const saveOwner = useEvent(() => {
-    db()
-      .alterSchemaOwner(props.schema, state.editOwner as string)
-      .then(
-        () => {
-          if (!isMounted()) return;
-          service.reload();
-          if (!isMounted()) return;
-          set({ ...state, editOwner: false });
-        },
-        (err) => {
-          showError(err);
-        },
-      );
+    db().alterSchemaOwner!(props.schema, state.editOwner as string).then(
+      () => {
+        if (!isMounted()) return;
+        service.reload();
+        if (!isMounted()) return;
+        set({ ...state, editOwner: false });
+      },
+      (err) => {
+        showError(err);
+      },
+    );
   });
 
   const onUpdateComment = useEvent(async (text: string) => {
@@ -256,37 +254,45 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
       {owner ? (
         <div className="owner" title="OWNER">
           <i className="fa fa-user" /> <span className="name">{owner}</span>
-          <i
-            className="fa fa-pencil"
-            onClick={() => set({ ...state, editOwner: true })}
-          />
-          {state.editOwner ? (
-            <Dialog
-              relativeTo="previousSibling"
-              onBlur={() => set({ ...state, editOwner: false })}
-            >
-              <select
-                onChange={(e) => set({ ...state, editOwner: e.target.value })}
-                value={
-                  typeof state.editOwner === 'string' ? state.editOwner : owner
-                }
-              >
-                {roles?.map((r) => <option key={r.name}>{r.name}</option>)}
-              </select>
-              <div>
-                <button
-                  style={{ fontWeight: 'normal' }}
-                  onClick={() => set({ ...state, editOwner: false })}
-                  type="button"
+          {db().alterSchemaOwner ? (
+            <>
+              <i
+                className="fa fa-pencil"
+                onClick={() => set({ ...state, editOwner: true })}
+              />
+              {state.editOwner ? (
+                <Dialog
+                  relativeTo="previousSibling"
+                  onBlur={() => set({ ...state, editOwner: false })}
                 >
-                  Cancel
-                </button>
-                <button onClick={saveOwner} type="button">
-                  Save
-                  <i className="fa fa-check" />
-                </button>
-              </div>
-            </Dialog>
+                  <select
+                    onChange={(e) =>
+                      set({ ...state, editOwner: e.target.value })
+                    }
+                    value={
+                      typeof state.editOwner === 'string'
+                        ? state.editOwner
+                        : owner
+                    }
+                  >
+                    {roles?.map((r) => <option key={r.name}>{r.name}</option>)}
+                  </select>
+                  <div>
+                    <button
+                      style={{ fontWeight: 'normal' }}
+                      onClick={() => set({ ...state, editOwner: false })}
+                      type="button"
+                    >
+                      Cancel
+                    </button>
+                    <button onClick={saveOwner} type="button">
+                      Save
+                      <i className="fa fa-check" />
+                    </button>
+                  </div>
+                </Dialog>
+              ) : null}
+            </>
           ) : null}
         </div>
       ) : null}

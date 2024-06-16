@@ -555,7 +555,6 @@ export const mysqlDb: DBInterface = {
       info: {
         'information_schema.SCHEMATA': schemata,
       },
-      owner: '',
       comment: '',
       pgNamesspace: null,
       privileges,
@@ -565,7 +564,6 @@ export const mysqlDb: DBInterface = {
   updateSchemaComment: null,
   createTable(/* newTable: {
     name: string;
-    owner: string;
     schema: string;
     tableSpace: string;
     comment: string;
@@ -579,12 +577,6 @@ export const mysqlDb: DBInterface = {
       primaryKey: boolean;
     }[];
   } */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  alterSchemaOwner(/* schema: string, owner: string */): Promise<void> {
-    throw new Error('Not implemented!');
-  },
-  alterTableOwner(/* schema: string, table: string, owner: string */): Promise<void> {
     throw new Error('Not implemented!');
   },
   updateView(/*
@@ -739,7 +731,6 @@ export const mysqlDb: DBInterface = {
         type: routine.routine_type === 'PROCEDURE' ? 'procedure' : 'function',
         comment: comment ?? '',
         definition: def?.[`Create ${isProc ? 'Procedure' : 'Function'}`] ?? '',
-        owner: '',
         privileges,
       };
     },

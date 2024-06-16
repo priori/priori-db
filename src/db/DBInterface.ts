@@ -21,7 +21,7 @@ export interface DBInterface {
         [k: string]: boolean | undefined;
       };
     }[];
-    owner: string;
+    owner?: string;
     comment: string;
     info?: {
       [title: string]: {
@@ -45,7 +45,7 @@ export interface DBInterface {
   }): Promise<QueryResultData>;
   createTable(newTable: {
     name: string;
-    owner: string;
+    owner?: string;
     schema: string;
     tableSpace: string;
     comment: string;
@@ -60,8 +60,8 @@ export interface DBInterface {
     }[];
   }): Promise<void>;
   renameSchema: null | ((schema: string, name: string) => Promise<void>);
-  alterSchemaOwner(schema: string, owner: string): Promise<void>;
-  alterTableOwner(schema: string, table: string, owner: string): Promise<void>;
+  alterSchemaOwner?(schema: string, owner: string): Promise<void>;
+  alterTableOwner?(schema: string, table: string, owner: string): Promise<void>;
   tableSize(
     schema: string,
     table: string,
@@ -331,7 +331,7 @@ export interface DBInterface {
         };
         internal?: boolean;
       }[];
-      owner: string;
+      owner?: string;
     }>;
     rename?: boolean;
     move?: boolean;
@@ -367,7 +367,7 @@ export interface DBInterface {
       update: { comment?: string | null; name?: string; schema?: string },
     ): Promise<void>;
     dropDomain(schema: string, name: string, cascade?: boolean): Promise<void>;
-    alterTypeOwner(schema: string, name: string, owner: string): Promise<void>;
+    alterTypeOwner?(schema: string, name: string, owner: string): Promise<void>;
     updateDomainPrivileges(
       schema: string,
       name: string,
