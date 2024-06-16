@@ -24,20 +24,36 @@ function Info0({
       <>
         <h2 style={{ userSelect: 'text' }}>{title}</h2>
         <div className="fields">
-          {Object.entries(info).map(([k, v]) => (
-            <div key={k} className="field">
-              <strong>{k}:</strong>{' '}
-              <span
-                className={
-                  typeof v === 'string' && v.length > 20
-                    ? 'value-hover'
-                    : undefined
-                }
-              >
-                {typeof v === 'string' ? v : JSON.stringify(v)}
-              </span>
-            </div>
-          ))}
+          {Object.entries(info).map(([k, v]) => {
+            const value = typeof v === 'string' ? v : JSON.stringify(v);
+            const big = value.length > 20 || k.length + value.length > 30;
+            const label = k.replace(/_/g, ' ');
+            const labelFix =
+              label.length > 20
+                ? `${label.slice(0, 18)}...${label.slice(-3)}`
+                : label;
+            return (
+              <div key={k} className={`field ${big ? ' value-hover' : ''}`}>
+                <strong title={labelFix !== label ? label : undefined}>
+                  {labelFix}:
+                </strong>{' '}
+                {v === null ? (
+                  <span
+                    style={{
+                      color: 'rgba(0,0,0,.3)',
+                      fontSize: 12,
+                      fontWeight: 'bold',
+                      marginTop: 1,
+                    }}
+                  >
+                    null
+                  </span>
+                ) : (
+                  <span>{value}</span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </>
     );
@@ -49,7 +65,7 @@ function Info0({
         <thead>
           <tr>
             {Object.keys(info).map((key) => (
-              <th key={key}>{key}</th>
+              <th key={key}>{key.replace(/_/g, ' ')}</th>
             ))}
           </tr>
         </thead>

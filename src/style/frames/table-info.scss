@@ -485,9 +485,17 @@ span.default-input:focus-within:before {
   line-height: 20px;
 }
 .field {
-  white-space: nowrap;
+  padding-bottom: 3px;
 }
-.value-hover:hover {
+.value-hover {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  span {
+    display: inline !important;
+  }
+}
+.value-hover span:hover {
   white-space: wrap;
   word-break: break-word;
   background: white;

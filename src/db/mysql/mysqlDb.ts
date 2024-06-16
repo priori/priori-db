@@ -517,22 +517,20 @@ export const mysqlDb: DBInterface = {
     );
   },
   nullsLast: false,
-  async schema(name: string): Promise<{
-    privileges: {
-      roleName: string;
-      privileges: {
-        [k: string]: boolean | undefined;
-      };
-    }[];
-    owner: string;
-    comment: string;
-    pgNamesspace: {
-      [key: string]: SimpleValue;
-    } | null;
-  }> {
-    const privileges0 = await list(`SELECT * FROM mysql.db WHERE Db = ?`, [
-      name,
+  async schema(name: string) {
+    const privilegesP = list(`SELECT * FROM mysql.db WHERE Db = ?`, [name]);
+    const schemataP = first(
+      `SELECT * FROM information_schema.schemata WHERE schema_name = ?`,
+      [name],
+    );
+    const [privileges0, schemata0] = await Promise.all([
+      privilegesP,
+      schemataP,
     ]);
+    const schemata: Record<string, SimpleValue> = {};
+    for (const k in schemata0) {
+      schemata[k.toLowerCase()] = schemata0[k];
+    }
     const privileges = privileges0
       .map((p) => {
         const rolePrivileges: Record<string, boolean> = {};
@@ -554,6 +552,9 @@ export const mysqlDb: DBInterface = {
       })
       .filter((v) => Object.values(v.privileges).filter((p) => p).length > 0);
     return {
+      info: {
+        'information_schema.SCHEMATA': schemata,
+      },
       owner: '',
       comment: '',
       pgNamesspace: null,
@@ -678,45 +679,32 @@ export const mysqlDb: DBInterface = {
 
   updateColumnViewName: false,
   updateColumnViewComment: false,
+  updateViewComment: false,
 
   functions: {
-    async function(
-      schema: string,
-      name: string,
-    ): Promise<{
-      comment: string;
-      type: 'procedure' | 'function';
-      definition: string;
-      owner: string;
-      privileges: {
-        roleName: string;
-        host: string;
-        privileges: {
-          [k: string]: boolean;
-        };
-      }[];
-    }> {
-      const isProc0 = await first(
-        `SELECT routine_type = 'PROCEDURE' p FROM information_schema.routines
+    async function(schema: string, name: string) {
+      const routine0 = await first(
+        `SELECT *
+        FROM information_schema.routines
         WHERE routine_schema = ? AND routine_name = ?`,
         [schema, name],
       );
-      const isProc = (isProc0 as any)?.p;
-      const comment = await val(
-        `SELECT routine_comment FROM information_schema.routines
-        WHERE routine_schema = ? AND routine_name = ?`,
-        [schema, name],
-      );
+      const isProc = routine0.ROUTINE_TYPE === 'PROCEDURE';
+      delete routine0.ROUTINE_DEFINITION;
+      const comment = routine0.ROUTINE_COMMENT;
       const def = await first(
         `SHOW CREATE ${isProc ? 'PROCEDURE' : 'FUNCTION'} ${label(schema)}.${label(name)}`,
       );
       const privs = await list(
-        `
-        SELECT User, Host, Proc_priv
+        `SELECT User, Host, Proc_priv
         FROM mysql.procs_priv
         WHERE Db = ? AND Routine_name = ?`,
         [schema, name],
       );
+      const routine: Record<string, SimpleValue> = {};
+      for (const k in routine0) {
+        routine[k.toLowerCase()] = routine0[k];
+      }
       const privileges: {
         roleName: string;
         host: string;
@@ -745,7 +733,10 @@ export const mysqlDb: DBInterface = {
         });
       }
       return {
-        type: isProc ? 'procedure' : 'function',
+        info: {
+          'information_schema.ROUTINES': routine,
+        },
+        type: routine.routine_type === 'PROCEDURE' ? 'procedure' : 'function',
         comment: comment ?? '',
         definition: def?.[`Create ${isProc ? 'Procedure' : 'Function'}`] ?? '',
         owner: '',
@@ -911,7 +902,7 @@ export const mysqlDb: DBInterface = {
         `SELECT * FROM mysql.tables_priv WHERE User = ? AND Host = ?`,
         [name, host],
       );
-      const [dbs0, dbPs, functions0, fsPs, tables0, tbsPs, { db }] =
+      const [dbs0, dbPs, functions0, fsPs, tables0, tbsPs, { db }, user] =
         await Promise.all([
           dbsP,
           mysqlDb.privileges!.schemaPrivilegesTypes!(),
@@ -920,14 +911,26 @@ export const mysqlDb: DBInterface = {
           tablesP,
           mysqlDb.privileges!.tablePrivilegesTypes!(),
           first('SELECT DATABASE() "db"', []),
+          first('SELECT * FROM mysql.user WHERE User = ? AND Host = ?', [
+            name,
+            host,
+          ]),
         ]);
       dbs0.sort((a, b) => {
         if (a.Db === db) return -1;
         if (b.Db === db) return 1;
         return a.Db.localeCompare(b.Db);
       });
+      delete user.Host;
+      delete user.User;
+      for (const k in user) {
+        if (k.endsWith('_priv') || user[k] instanceof Buffer) delete user[k];
+      }
       return {
         isUser: true,
+        info: {
+          'mysq.user': user,
+        },
         privileges: {
           tables: tables0.map((t) => ({
             schema: t.Db,

@@ -90,6 +90,7 @@ export interface DBInterface {
     table: string,
     update: { comment?: string | null; name?: string; schema?: string },
   ): Promise<void>;
+  updateViewComment?: false;
   updateView(
     schema: string,
     table: string,

@@ -1,4 +1,5 @@
 import { TableInfo } from 'db/db';
+import { SimpleValue } from 'types';
 import { first, list } from './mysql';
 import { label } from './mysqlDb';
 
@@ -32,43 +33,85 @@ export async function tableInfo(
   schema: string,
   table: string,
 ): Promise<TableInfo> {
-  const comment = await first(
-    `SELECT table_comment FROM information_schema.tables WHERE table_schema = ? AND table_name = ?`,
+  const colsP = list(`SHOW FULL COLUMNS FROM ${label(schema)}.${label(table)}`);
+  const tableP = first(
+    `SELECT table_type
+    FROM INFORMATION_SCHEMA.TABLES
+    WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?`,
     [schema, table],
-  );
-  const cols = await list(
-    `SHOW FULL COLUMNS FROM ${label(schema)}.${label(table)}`,
-  );
-  const table0 = (await first(
-    'SELECT table_type FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?',
-    [schema, table],
-  )) as { TABLE_TYPE: string };
-  const indexesRet = (await list(
+  ) as Promise<{ TABLE_TYPE: string }>;
+  const indexesRetP = list(
     `SHOW INDEXES FROM ${label(schema)}.${label(table)}`,
-  )) as {
-    Cardinality: number;
-    Collation: 'A';
-    Column_name: string;
-    Comment: '';
-    Expression: null;
-    Index_comment: '';
-    Index_type: string;
-    Key_name: string;
-    Non_unique: 1;
-    Null: '';
-    Packed: null;
-    Seq_in_index: number;
-    Sub_part: null;
-    Table: string;
-    Visible: 'YES' | 'NO';
-  }[];
-
-  const priviliges0 = await list(
-    `
-      SELECT * FROM mysql.tables_priv WHERE Db = ? AND Table_name = ?
-    `,
+  ) as Promise<
+    {
+      Cardinality: number;
+      Collation: 'A';
+      Column_name: string;
+      Comment: '';
+      Expression: null;
+      Index_comment: '';
+      Index_type: string;
+      Key_name: string;
+      Non_unique: 1;
+      Null: '';
+      Packed: null;
+      Seq_in_index: number;
+      Sub_part: null;
+      Table: string;
+      Visible: 'YES' | 'NO';
+    }[]
+  >;
+  const priviliges0P = list(
+    `SELECT * FROM mysql.tables_priv
+    WHERE Db = ? AND Table_name = ?`,
     [schema, table],
   );
+  const inforSchemaTableP = first(
+    `SELECT *
+    FROM information_schema.TABLES
+    WHERE table_schema = ? AND table_name = ?`,
+    [schema, table],
+  );
+  const viewP = first(
+    `SELECT * FROM information_schema.VIEWS
+    WHERE table_schema = ? AND table_name = ?`,
+    [schema, table],
+  );
+  const innodbStatsP = first(
+    `SELECT *
+    FROM mysql.innodb_table_stats
+    WHERE database_name = ? AND table_name = ?`,
+    [schema, table],
+  );
+  const [
+    cols,
+    table0,
+    indexesRet,
+    priviliges0,
+    inforSchemaTable0,
+    view0,
+    innodbStats,
+  ] = await Promise.all([
+    colsP,
+    tableP,
+    indexesRetP,
+    priviliges0P,
+    inforSchemaTableP,
+    viewP,
+    innodbStatsP,
+  ]);
+
+  const inforSchemaTable: Record<string, SimpleValue> = {};
+  for (const k in inforSchemaTable0) {
+    inforSchemaTable[k.toLowerCase()] = inforSchemaTable0[k];
+  }
+  let view: Record<string, SimpleValue> | undefined;
+  if (view0) {
+    view = {};
+    for (const k in view0) {
+      view[k.toLowerCase()] = view0[k];
+    }
+  }
 
   const privileges = priviliges0.map((p) => {
     const ps = {
@@ -117,14 +160,25 @@ export async function tableInfo(
       });
     }
   }
+  const definition = view?.view_definition;
+  delete view?.view_definition;
+  const comment =
+    (!view && (inforSchemaTable.table_comment as string | null)) || null;
+  delete inforSchemaTable.table_comment;
   const tableInfoRet: TableInfo = {
+    definition: definition as string | undefined,
+    info: {
+      ...(view ? { 'information_schema.VIEWS': view } : undefined),
+      'information_schema.TABLES': inforSchemaTable,
+      'mysql.innodb_table_stats': innodbStats,
+    },
     subType:
       table0.TABLE_TYPE === 'SYSTEM VIEW' || table0.TABLE_TYPE === 'VIEW'
         ? 'view'
         : table0.TABLE_TYPE === 'MAT_VIEW'
           ? 'mview'
           : 'table',
-    comment: comment.TABLE_COMMENT || null,
+    comment,
     cols: cols.map((c) => fixCol(c as MysqlCol)),
     indexes,
     constraints: [],
