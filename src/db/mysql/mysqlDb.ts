@@ -601,8 +601,10 @@ export const mysqlDb: DBInterface = {
   */): Promise<void> {
     throw new Error('Not implemented!');
   },
-  removeCol(/* schema: string, table: string, col: string */): Promise<void> {
-    throw new Error('Not implemented!');
+  async removeCol(schema: string, table: string, col: string): Promise<void> {
+    await execute(
+      `ALTER TABLE ${label(schema)}.${label(table)} DROP COLUMN ${label(col)}`,
+    );
   },
   async update(
     schema: string,
