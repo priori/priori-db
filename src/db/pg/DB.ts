@@ -322,6 +322,7 @@ export const DB: DBInterface = {
     };
   },
 
+  autoIncrement: false,
   async createTable(newTable: {
     name: string;
     owner: string;

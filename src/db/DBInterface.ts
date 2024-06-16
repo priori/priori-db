@@ -43,6 +43,8 @@ export interface DBInterface {
     sort: Sort | null;
     filter: Filter | undefined;
   }): Promise<QueryResultData>;
+
+  autoIncrement: boolean;
   createTable(newTable: {
     name: string;
     owner?: string;

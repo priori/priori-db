@@ -13,6 +13,7 @@ export interface ColumnNewTable {
   precision: string;
   notNull: boolean;
   primaryKey: boolean;
+  autoIncrement?: boolean;
 }
 
 export interface NewTable {
@@ -54,7 +55,18 @@ export function NewTableFrame(props: NewTableFrameProps) {
       comment: '',
       // unlogged: false,
       // hasOids: null,
-      columns: [],
+      columns: db().autoIncrement
+        ? [
+            {
+              name: 'id',
+              type: null,
+              length: '',
+              precision: '',
+              notNull: true,
+              primaryKey: true,
+            } as ColumnNewTable,
+          ]
+        : [],
     },
   } as { constraintsOpen: boolean; newTable: NewTable });
 
@@ -108,8 +120,12 @@ export function NewTableFrame(props: NewTableFrameProps) {
             }
           />
         </div>
-        <div className="columns-form-column-type">
+        <div
+          className="columns-form-column-type"
+          style={db().autoIncrement ? { width: '20%' } : undefined}
+        >
           <select
+            style={db().autoIncrement ? { width: 120 } : undefined}
             onChange={(e) =>
               set({
                 ...c,
@@ -189,7 +205,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
               aria-checked
               onKeyDown={(e) => {
                 if (e.key === 'Space' || e.key === ' ' || e.key === 'Enter')
-                  set({ ...c, primaryKey: false });
+                  set({ ...c, autoIncrement: false });
               }}
               className="fa fa-check-square-o"
               onClick={() => set({ ...c, primaryKey: false })}
@@ -205,10 +221,41 @@ export function NewTableFrame(props: NewTableFrameProps) {
                 if (e.key === 'Space' || e.key === ' ' || e.key === 'Enter')
                   set({ ...c, primaryKey: true });
               }}
-              onClick={() => set({ ...c, primaryKey: true })}
+              onClick={() => set({ ...c, autoIncrement: true })}
             />
           )}
         </div>
+        {db().autoIncrement ? (
+          <div className="columns-form-column-pk">
+            {c.primaryKey ? (
+              <i
+                tabIndex={0}
+                role="checkbox"
+                aria-label="Primary Key"
+                aria-checked
+                onKeyDown={(e) => {
+                  if (e.key === 'Space' || e.key === ' ' || e.key === 'Enter')
+                    set({ ...c, primaryKey: false });
+                }}
+                className="fa fa-check-square-o"
+                onClick={() => set({ ...c, primaryKey: false })}
+              />
+            ) : (
+              <i
+                tabIndex={0}
+                className="fa fa-square-o"
+                role="checkbox"
+                aria-label="Primary Key"
+                aria-checked={false}
+                onKeyDown={(e) => {
+                  if (e.key === 'Space' || e.key === ' ' || e.key === 'Enter')
+                    set({ ...c, primaryKey: true });
+                }}
+                onClick={() => set({ ...c, primaryKey: true })}
+              />
+            )}
+          </div>
+        ) : null}
         <div className="columns-form-column-drop">
           {drop && (
             <i
@@ -276,11 +323,17 @@ export function NewTableFrame(props: NewTableFrameProps) {
       <div className="columns-form">
         <div className="head">
           <div className="columns-form-head-name">Name</div>
-          <div className="columns-form-head-type">Data Type</div>
+          <div
+            className="columns-form-head-type"
+            style={db().autoIncrement ? { width: '20%' } : undefined}
+          >
+            Data Type
+          </div>
           <div className="columns-form-head-length">Length</div>
           <div className="columns-form-head-precision">Precision</div>
           <div className="columns-form-head-notnull">Not Null</div>
           <div className="columns-form-head-pk">Primary Key</div>
+          <div className="columns-form-head-pk">Auto Increment</div>
         </div>
         <ColumnListInput
           entries={state.newTable.columns}

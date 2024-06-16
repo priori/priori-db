@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { DBInterface } from 'db/DBInterface';
 import { buildFilterWhere, buildFinalQueryWhere } from 'db/util';
-import { EntityType, Filter, QueryResultData, SimpleValue, Sort } from 'types';
+import {
+  EntityType,
+  Filter,
+  QueryResultData,
+  SimpleValue,
+  Sort,
+  TableColumnType,
+} from 'types';
 import { assert } from 'util/assert';
 import hotLoadSafe from 'util/hotLoadSafe';
 import { execute, first, list, openConnection, val } from './mysql';
@@ -563,7 +570,8 @@ export const mysqlDb: DBInterface = {
   renameSchema: null,
   updateSchemaComment: null,
 
-  createTable(/* newTable: {
+  autoIncrement: true,
+  async createTable(newTable: {
     name: string;
     schema: string;
     tableSpace: string;
@@ -576,9 +584,23 @@ export const mysqlDb: DBInterface = {
       precision: string;
       notNull: boolean;
       primaryKey: boolean;
+      autoIncrement: boolean;
     }[];
-  } */): Promise<void> {
-    throw new Error('Not implemented!');
+  }): Promise<void> {
+    const q = `
+      CREATE TABLE ${label(newTable.schema)}.${label(newTable.name)} (
+        ${newTable.columns
+          .map(
+            (c) =>
+              `${label(c.name)} ${c.type?.name}${c.length ? `(${c.length}${c.precision ? `,${c.precision}` : ''})` : ''}${
+                c.notNull ? ' NOT NULL' : ''
+              }${c.autoIncrement ? ' AUTO_INCREMENT' : ''}${
+                c.primaryKey ? ' PRIMARY KEY' : ''
+              }`,
+          )
+          .join(', ')}
+      )`;
+    await execute(q);
   },
 
   updateViewSchema: false,
