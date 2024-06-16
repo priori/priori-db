@@ -454,9 +454,9 @@ export const mysqlDb: DBInterface = {
       'DEC(size, d)',
       // date
       'DATE',
-      // 'DATETIME'()
-      // TIMESTAMP(fsp)
-      // TIME(fsp)
+      'DATETIME',
+      'TIMESTAMP',
+      'TIME',
       'YEAR',
     ].map((v) => {
       return {
