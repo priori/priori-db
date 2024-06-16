@@ -18,6 +18,7 @@ import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 import { Privileges } from './Privileges/Privileges';
+import { Info } from './Info';
 
 function functionsDb() {
   const d = db();
@@ -333,19 +334,11 @@ export function FunctionFrame(props: FunctionFrameProps) {
           privilegesTypes={info.privilegesTypes}
         />
       ) : null}
-      {info?.pgProc ? (
-        <>
-          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_proc</h2>
-          <div className="fields">
-            {Object.entries(info.pgProc).map(([k, v]) => (
-              <div key={k} className="field">
-                <strong>{k.startsWith('typ') ? k.substring(3) : k}:</strong>{' '}
-                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      ) : null}
+      {service.lastValidData?.info
+        ? Object.entries(service.lastValidData.info).map(([title, info2]) => (
+            <Info title={title} info={info2} key={title} />
+          ))
+        : null}
     </div>
   );
 }

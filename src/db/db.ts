@@ -9,9 +9,19 @@ import { DB } from './pg/DB';
 import { mysqlConnect, mysqlListDatabases } from './mysql/mysql';
 import { mysqlDb } from './mysql/mysqlDb';
 
+export type SimpleValue =
+  | number
+  | string
+  | boolean
+  | null
+  | { [key: string]: SimpleValue }
+  | SimpleValue[];
+
 export interface DomainInfo {
-  type: {
-    [k: string]: string | number | null | boolean;
+  info?: {
+    [k: string]: {
+      [key: string]: SimpleValue;
+    };
   };
   comment: string | null;
   privileges?: {
@@ -26,8 +36,10 @@ export interface DomainInfo {
 }
 
 export interface SequenceInfo {
-  type: {
-    [key: string]: string | number | boolean | null;
+  info?: {
+    [k: string]: {
+      [key: string]: SimpleValue;
+    };
   };
   lastValue: number | string | null;
   comment: string | null;
@@ -57,6 +69,8 @@ export interface TableInfo {
   comment: string | null;
   subType: 'table' | 'view' | 'mview';
   cols?: ColTableInfo[];
+  owner?: string;
+  definition?: string;
   privileges?: {
     roleName: string;
     host?: string;
@@ -73,28 +87,11 @@ export interface TableInfo {
     pk: boolean;
     cols: string[];
   }[];
-  table: null | {
-    tableowner: string;
-    tablespace: string;
-    hasindexes: boolean;
-    hasrules: boolean;
-    hastriggers: boolean;
-    rowsecurity: boolean;
-    uid: number;
-    view_definition: string | null;
-  } | null;
-  view: {
-    viewowner: string;
-    definition: string;
-  } | null;
-  mView: {
-    viewowner: string;
-    matviewowner: string;
-    tablespace: string;
-    hasindexes: boolean;
-    ispopulated: boolean;
-    definition: string;
-  } | null;
+  info?: {
+    [title: string]: {
+      [key: string]: SimpleValue;
+    };
+  };
   constraints:
     | {
         name: string;
@@ -103,18 +100,7 @@ export interface TableInfo {
         comment: string | null;
       }[]
     | null;
-  type: {
-    [k: string]: string | number | null | boolean;
-  } | null;
 }
-
-export type SimpleValue =
-  | number
-  | string
-  | boolean
-  | null
-  | { [key: string]: SimpleValue }
-  | SimpleValue[];
 
 export interface QueryResultDataField {
   name: string;

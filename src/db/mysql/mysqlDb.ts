@@ -927,6 +927,7 @@ export const mysqlDb: DBInterface = {
         return a.Db.localeCompare(b.Db);
       });
       return {
+        isUser: true,
         privileges: {
           tables: tables0.map((t) => ({
             schema: t.Db,

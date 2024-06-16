@@ -275,8 +275,10 @@ export const DB: DBInterface = {
       schemaPrivileges(name),
     ]);
     return {
-      pgNamesspace,
       ...owner,
+      info: {
+        'pg_catalog.pg_namespace': pgNamesspace,
+      },
       privileges,
     };
   },
@@ -815,9 +817,9 @@ export const DB: DBInterface = {
       cols,
       indexes,
       table,
-      view,
-      mView,
-      type,
+      view0,
+      mView0,
+      type0,
       constraints,
       privileges,
     ] = await Promise.all([
@@ -835,14 +837,50 @@ export const DB: DBInterface = {
       listConstrants(schema, name),
       tablePrivileges(schema, name),
     ]);
+    const type: { [key: string]: string | number | null | boolean } = {};
+    for (const k in type0) {
+      const label2 = k.startsWith('typ') ? k.substring(3) : k;
+      type[label2] = type0[k] as string | number | null | boolean;
+    }
+    let view: undefined | { [key: string]: string | number | null | boolean };
+    if (view0) {
+      view = {
+        Owner: view0.viewowner,
+      };
+    }
+    let mView: undefined | { [key: string]: string | number | null | boolean };
+    if (mView0) {
+      mView = {
+        Owner: mView0.matviewowner,
+        'Table Space': mView0.tablespace,
+        'Has Indexes': mView0.hasindexes,
+        'Is Populated': mView0.ispopulated,
+      };
+    }
     return {
       comment,
+      definition: view0?.definition || mView0?.definition,
+      owner: (table?.tableowner ?? view0?.viewowner ?? mView0?.matviewowner) as
+        | string
+        | undefined,
       cols,
       indexes,
-      table,
-      view,
-      type,
-      mView,
+
+      info: {
+        'pg_catalog.pg_tables': table
+          ? {
+              Owner: table.tableowner,
+              'Table Space': table.tablespace,
+              'Has Indexes': table.hasindexes,
+              'Has Rules': table.hasrules,
+              'Has Triggers': table.hastriggers,
+              'Row Security': table.rowsecurity,
+            }
+          : null,
+        'pg_catalog.pg_views': view,
+        'pg_catalog.pg_matviews': mView,
+        'pg_catalog.pg_type': type,
+      },
       constraints,
       privileges,
       subType: mView ? 'mview' : view ? 'view' : 'table',
@@ -1514,7 +1552,6 @@ export const DB: DBInterface = {
             schemaCompare(a.schema, b.schema, publics) ||
             a.name.localeCompare(b.name),
         );
-
         return {
           tables,
           schemas,
@@ -1523,7 +1560,7 @@ export const DB: DBInterface = {
           types,
         };
       }
-      const [role, info, user, privileges] = await Promise.all([
+      const [role, info, user0, privileges] = await Promise.all([
         first(`SELECT * FROM pg_roles WHERE rolname = $1`, [name]),
         first(
           `
@@ -1544,10 +1581,23 @@ export const DB: DBInterface = {
         ),
         rolePrivileges(name),
       ]);
-
+      const user: { [key: string]: string | number | null | boolean } = {};
+      for (const k in info) {
+        const label2 = k.startsWith('typ') ? k.substring(3) : k;
+        user[label2] = info[k] as string | number | null | boolean;
+      }
       return {
-        role: role as { [k: string]: string | number | boolean | null },
-        info: info as { definition: string | null; comment: string | null },
+        isUser: !!user0,
+        info: {
+          'pg_catalog.pg_roles': role as {
+            [k: string]: string | number | boolean | null;
+          },
+          'pg_catalog.pg_user': user0 as {
+            [k: string]: string | number | boolean | null;
+          },
+        },
+        definition: info?.definition as string | null,
+        comment: info?.comment as string | null,
         user: user as { [k: string]: string | number | boolean | null },
         privileges,
       };
@@ -1754,8 +1804,15 @@ export const DB: DBInterface = {
       delete info.comment;
       delete info.definition;
       delete info.owner;
+      const pgProc: { [key: string]: string | number | null | boolean } = {};
+      for (const k in info) {
+        const label2 = k.startsWith('typ') ? k.substring(3) : k;
+        pgProc[label2] = info[k] as string | number | null | boolean;
+      }
       return {
-        pgProc: info,
+        info: {
+          'pg_catalog.pg_pg_proc': info,
+        },
         type: (info.pgProc as any)?.prokind === 'p' ? 'procedure' : 'function',
         comment,
         definition,
@@ -1925,7 +1982,7 @@ export const DB: DBInterface = {
         });
         return byGrantee;
       }
-      const [type, lastValue, comment, privileges] = await Promise.all([
+      const [type0, lastValue, comment, privileges] = await Promise.all([
         pgClass(schema, name),
         sequenceLastValue(schema, name),
         first(
@@ -1940,7 +1997,19 @@ export const DB: DBInterface = {
         }>,
         sequencePrivileges(schema, name),
       ]);
-      return { type, lastValue, ...comment, privileges } as SequenceInfo;
+      const type: { [key: string]: string | number | null | boolean } = {};
+      for (const k in type0) {
+        const label2 = k.startsWith('rel') ? k.substring(3) : k;
+        type[label2] = type0[k] as string | number | null | boolean;
+      }
+      return {
+        info: {
+          'pg_catalog.pg_type': type,
+        },
+        lastValue,
+        ...comment,
+        privileges,
+      } as SequenceInfo;
     },
 
     async dropSequence(schema: string, name: string, cascade = false) {
@@ -2029,9 +2098,9 @@ export const DB: DBInterface = {
       async function domainPrivileges(s: string, n: string) {
         const res = (await list(
           `
-        SELECT rolname "role"
-        FROM pg_roles
-        WHERE pg_catalog.has_type_privilege(rolname, '${label(s)}.${label(n)}', 'USAGE')`,
+          SELECT rolname "role"
+          FROM pg_roles
+          WHERE pg_catalog.has_type_privilege(rolname, '${label(s)}.${label(n)}', 'USAGE')`,
           [],
         )) as { role: string }[];
         const r = res.map((r2) => r2.role);
@@ -2048,7 +2117,7 @@ export const DB: DBInterface = {
           };
         });
       }
-      const [type, comment, privileges] = await Promise.all([
+      const [type0, comment, privileges] = await Promise.all([
         pgType(schema, name),
         first(
           `SELECT
@@ -2061,7 +2130,18 @@ export const DB: DBInterface = {
         ) as Promise<{ comment: string | null; owner: string }>,
         domainPrivileges(schema, name),
       ]);
-      return { type, ...comment, privileges } as DomainInfo;
+      const type: { [key: string]: string | number | null | boolean } = {};
+      for (const k in type0) {
+        const label2 = k.startsWith('typ') ? k.substring(3) : k;
+        type[label2] = type0[k] as string | number | null | boolean;
+      }
+      return {
+        info: {
+          'pg_catalog.pg_type': type,
+        },
+        ...comment,
+        privileges,
+      } as DomainInfo;
     },
 
     async updateDomain(

@@ -129,10 +129,6 @@ export async function tableInfo(
     indexes,
     constraints: [],
     privileges,
-    table: null,
-    view: null,
-    mView: null,
-    type: null,
   };
   return tableInfoRet;
 }

@@ -20,6 +20,7 @@ import {
 } from '../../../state/actions';
 import { TableInfoFrameProps } from '../../../types';
 import { ChangeSchemaDialog } from '../../util/Dialog/ChangeSchemaDialog';
+import { Info } from '../Info';
 import { Privileges } from '../Privileges/Privileges';
 import { ColumnForm, ColumnFormDialog } from './ColumnFormDialog';
 import { IndexDialog, IndexForm } from './IndexDialog';
@@ -326,7 +327,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     set({ ...edit, updateColumn: null });
   });
 
-  const owner = state?.table?.tableowner ?? state?.view?.viewowner;
+  const owner = service?.lastValidData?.owner;
 
   const saveOwner = useEvent(() => {
     db()
@@ -520,12 +521,8 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         </div>
       ) : null}
 
-      {(state.view && state.view.definition) ||
-      (state.mView && state.mView.definition) ? (
-        <div className="view">
-          {(state.view && state.view.definition) ||
-            (state.mView && state.mView.definition)}
-        </div>
+      {service.lastValidData?.definition ? (
+        <div className="view">{service.lastValidData.definition}</div>
       ) : null}
       {state.cols ? (
         <>
@@ -976,7 +973,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             ) : null}
           </div>
         </div>
-      ) : state.indexes && !state.view ? (
+      ) : state.indexes && service.lastValidData?.subType !== 'view' ? (
         <div>
           <h2>Indexes</h2>
           <div className="empty">
@@ -998,54 +995,6 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             ) : null}
           </div>
         </div>
-      ) : null}
-      {state.view ? (
-        <>
-          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_views</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Owner</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{state.view.viewowner}</td>
-              </tr>
-            </tbody>
-          </table>
-        </>
-      ) : null}
-      {state.mView ? (
-        <>
-          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_matviews</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Owner</th>
-                <th>Table Space</th>
-                <th>Has Indexes</th>
-                <th>Is Populated</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{state.mView.matviewowner}</td>
-                <td>{state.mView.tablespace || '-'}</td>
-                <td>
-                  {typeof state.mView.hasindexes === 'string'
-                    ? state.mView.hasindexes
-                    : JSON.stringify(state.mView.hasindexes)}
-                </td>
-                <td>
-                  {typeof state.mView.ispopulated === 'string'
-                    ? state.mView.ispopulated
-                    : JSON.stringify(state.mView.ispopulated)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </>
       ) : null}
       {state.constraints?.length ? (
         <>
@@ -1084,70 +1033,11 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           onUpdate={onUpdatePrivileges}
         />
       ) : null}
-      {state.table ? (
-        <>
-          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_tables</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Owner</th>
-                <th>Table Space</th>
-                <th>Has Indexes</th>
-                <th>Has Rules</th>
-                <th>Has Triggers</th>
-                <th>Row Security</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{state.table.tableowner}</td>
-                <td>{state.table.tablespace || '-'}</td>
-                <td>
-                  <strong>
-                    {typeof state.table.hasindexes === 'string'
-                      ? state.table.hasindexes
-                      : JSON.stringify(state.table.hasindexes)}
-                  </strong>
-                </td>
-                <td>
-                  <strong>
-                    {typeof state.table.hasrules === 'string'
-                      ? state.table.hasrules
-                      : JSON.stringify(state.table.hasrules)}
-                  </strong>
-                </td>
-                <td>
-                  <strong>
-                    {typeof state.table.hastriggers === 'string'
-                      ? state.table.hastriggers
-                      : JSON.stringify(state.table.hastriggers)}
-                  </strong>
-                </td>
-                <td>
-                  <strong>
-                    {typeof state.table.rowsecurity === 'string'
-                      ? state.table.rowsecurity
-                      : JSON.stringify(state.table.rowsecurity)}
-                  </strong>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </>
-      ) : null}
-      {state.type ? (
-        <>
-          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_type</h2>
-          <div className="fields">
-            {Object.entries(state.type).map(([k, v]) => (
-              <div key={k} className="field">
-                <strong>{k.startsWith('typ') ? k.substring(3) : k}:</strong>{' '}
-                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      ) : null}
+      {service.lastValidData?.info
+        ? Object.entries(service.lastValidData.info).map(([title, info]) => (
+            <Info title={title} info={info} key={title} />
+          ))
+        : null}
       {/*
         <h2>Triggers</h2>
         <table>

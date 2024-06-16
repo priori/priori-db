@@ -15,6 +15,7 @@ import {
 } from '../../state/actions';
 import { SchemaInfoFrameProps } from '../../types';
 import { Privileges } from './Privileges/Privileges';
+import { Info } from './Info';
 
 export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
   const service = useService(
@@ -299,21 +300,11 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
         />
       ) : null}
 
-      {service.lastValidData?.pgNamesspace ? (
-        <>
-          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_namesspace</h2>
-          <div className="fields">
-            {Object.entries(service.lastValidData.pgNamesspace).map(
-              ([k, v]) => (
-                <div key={k} className="field">
-                  <strong>{k.startsWith('nsp') ? k.substring(3) : k}:</strong>{' '}
-                  <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
-                </div>
-              ),
-            )}
-          </div>
-        </>
-      ) : null}
+      {service.lastValidData?.info
+        ? Object.entries(service.lastValidData.info).map(([title, info]) => (
+            <Info title={title} info={info} key={title} />
+          ))
+        : null}
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
 import { Privileges } from './Privileges/Privileges';
+import { Info } from './Info';
 
 function domainsDb() {
   const d = db();
@@ -315,19 +316,11 @@ export function DomainFrame(props: DomainFrameProps) {
         />
       ) : null}
 
-      {service.lastValidData && service.lastValidData.type ? (
-        <>
-          <h2>pg_catalog.pg_type</h2>
-          <div className="fields">
-            {Object.entries(service.lastValidData.type).map(([k, v]) => (
-              <div key={k} className="field">
-                <strong>{k.startsWith('typ') ? k.substring(3) : k}:</strong>{' '}
-                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      ) : null}
+      {service.lastValidData?.info
+        ? Object.entries(service.lastValidData.info).map(([title, info]) => (
+            <Info title={title} info={info} key={title} />
+          ))
+        : null}
     </div>
   );
 }

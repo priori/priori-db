@@ -23,9 +23,11 @@ export interface DBInterface {
     }[];
     owner: string;
     comment: string;
-    pgNamesspace: {
-      [key: string]: SimpleValue;
-    } | null;
+    info?: {
+      [title: string]: {
+        [key: string]: SimpleValue;
+      };
+    };
   }>;
   updateSchemaComment:
     | null
@@ -221,12 +223,13 @@ export interface DBInterface {
       name: string,
       host?: string,
     ): Promise<{
-      role?: {
-        [k: string]: string | number | boolean | null;
-      };
+      definition?: string | null;
+      comment?: string | null;
+      isUser: boolean;
       info?: {
-        definition: string | null;
-        comment: string | null;
+        [title: string]: {
+          [k: string]: string | number | boolean | null;
+        };
       };
       user?: {
         [k: string]: string | number | boolean | null;
@@ -311,12 +314,14 @@ export interface DBInterface {
       schema: string,
       name: string,
     ): Promise<{
-      pgProc?: {
-        [key: string]: SimpleValue;
+      info?: {
+        [k: string]: {
+          [key: string]: SimpleValue;
+        };
       };
       type: 'procedure' | 'function';
       comment: string;
-      definition: string;
+      definition?: string;
       privileges?: {
         roleName: string;
         host?: string;

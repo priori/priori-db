@@ -11,6 +11,7 @@ import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { RolePrivileges } from './Privileges/Privileges';
+import { Info } from './Info';
 
 export function RoleFrame(props: RoleFrameProps) {
   const { name } = props;
@@ -44,7 +45,7 @@ export function RoleFrame(props: RoleFrameProps) {
     [props.name],
   );
 
-  const isUser = !!service?.lastValidData?.user;
+  const isUser = !!service?.lastValidData?.isUser;
 
   const [state, set] = useState({
     dropConfirmation: false,
@@ -215,9 +216,9 @@ export function RoleFrame(props: RoleFrameProps) {
         ) : null}
       </div>
 
-      {service?.lastValidData?.info?.comment || state.editComment ? (
+      {service?.lastValidData?.comment || state.editComment ? (
         <Comment
-          value={service?.lastValidData?.info?.comment || ''}
+          value={service?.lastValidData?.comment || ''}
           edit={state.editComment}
           onUpdate={onUpdateComment}
           onCancel={() => set({ ...state, editComment: false })}
@@ -336,20 +337,11 @@ export function RoleFrame(props: RoleFrameProps) {
           }}
         />
       ) : null}
-
-      {service?.lastValidData?.role ? (
-        <>
-          <h2 style={{ userSelect: 'text' }}>pg_catalog.pg_roles</h2>
-          <div className="fields">
-            {Object.entries(service.lastValidData?.role).map(([k, v]) => (
-              <div key={k} className="field">
-                <strong>{k.startsWith('typ') ? k.substring(3) : k}:</strong>{' '}
-                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      ) : null}
+      {service.lastValidData?.info
+        ? Object.entries(service.lastValidData.info).map(([title, info]) => (
+            <Info title={title} info={info} key={title} />
+          ))
+        : null}
     </div>
   );
 }
