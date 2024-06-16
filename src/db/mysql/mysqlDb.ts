@@ -1,23 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { DBInterface } from 'db/DBInterface';
 import { buildFilterWhere, buildFinalQueryWhere } from 'db/util';
-import { PoolConnection } from 'mysql2/promise';
-import {
-  EntityType,
-  Filter,
-  Notice,
-  QueryExecutor,
-  QueryResult,
-  QueryResultData,
-  SimpleValue,
-  Sort,
-} from 'types';
+import { EntityType, Filter, QueryResultData, SimpleValue, Sort } from 'types';
 import { assert } from 'util/assert';
 import hotLoadSafe from 'util/hotLoadSafe';
 import { execute, first, list, openConnection, val } from './mysql';
+import { newQueryExecutor } from './newQueryExecutor';
 import { MysqlCol, fixCol, tableInfo } from './tableInfo';
-
-const openIds = new Set<number>();
 
 function prettyBytes(bytes: number) {
   if (bytes === 0) return '0 byte';
@@ -68,6 +57,8 @@ function privsToPrivileges(
   }
   return privileges;
 }
+
+export const openIds = new Set<number>();
 
 export const mysqlDb: DBInterface = {
   async listAll(): Promise<
@@ -399,6 +390,8 @@ export const mysqlDb: DBInterface = {
     };
   },
 
+  newQueryExecutor,
+
   async hasOpenConnection(): Promise<boolean> {
     if (openIds.size === 0) return false;
     const ids = Array.from(openIds).join(', ');
@@ -410,82 +403,6 @@ export const mysqlDb: DBInterface = {
       WHERE
         t.processlist_id IN (${ids}) AND
         tx.\`STATE\` = "ACTIVE"`));
-  },
-
-  newQueryExecutor(
-    _onNotice: (n: Notice) => void,
-    onPid: (pid: number | null) => void,
-    _onError: (e: Error) => void,
-  ): QueryExecutor {
-    const pool = hotLoadSafe.mysql;
-    assert(pool);
-    let pid: number | null = null;
-    let conP: Promise<PoolConnection> | null = null;
-    async function openCon() {
-      assert(pool);
-      if (!conP) conP = pool.getConnection();
-      const con = await conP;
-      if (pid !== con.threadId) {
-        pid = con.threadId;
-        openIds.add(pid);
-        onPid(con.threadId);
-      }
-      return con;
-    }
-    return {
-      async query(q: string): Promise<QueryResult> {
-        const con = await openCon();
-        const all = await con.query({
-          sql: q,
-          rowsAsArray: true,
-        });
-        const [rows, fields] = all;
-        return {
-          rows: rows instanceof Array ? (rows as SimpleValue[][]) : [],
-          fields:
-            fields?.map((f) => ({
-              name: f.name,
-              type:
-                f.columnType === 7 ||
-                (f.columnType && f.columnType >= 10 && f.columnType < 14)
-                  ? 'date'
-                  : undefined,
-            })) || [],
-          rowCount: 0,
-        };
-      },
-      async stopRunningQuery() {
-        if (pid) await execute(`KILL QUERY ${pid}`);
-        // mysql allows the reuse of transactions after errors or kills
-        // if (conP) {
-        //   try {
-        //     const con = await conP;
-        //     con.release();
-        //   } finally {
-        //     conP = null;
-        //     if (pid) {
-        //       onPid(null);
-        //       openIds.delete(pid);
-        //     }
-        //   }
-        // }
-      },
-      async destroy() {
-        if (pid) await execute(`KILL QUERY ${pid}`);
-        if (conP) {
-          try {
-            const con = await conP;
-            con.release();
-          } finally {
-            conP = null;
-            if (pid) {
-              onPid(null);
-              openIds.delete(pid);
-            }
-          }
-        }
-      },
-    };
   },
 
   async inOpenTransaction(id: number): Promise<boolean> {
