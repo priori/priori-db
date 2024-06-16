@@ -356,12 +356,15 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         {props.schema}.{props.table}
       </h1>
       <div className="table-info-frame__actions">
-        <button
-          type="button"
-          onClick={() => set({ ...edit, editComment: true })}
-        >
-          Comment <i className="fa fa-file-text-o" />
-        </button>{' '}
+        {(state.subType === 'view' || state.subType === 'mview') &&
+        db().updateViewComment === false ? null : (
+          <button
+            type="button"
+            onClick={() => set({ ...edit, editComment: true })}
+          >
+            Comment <i className="fa fa-file-text-o" />
+          </button>
+        )}{' '}
         <button
           type="button"
           onClick={() => {
@@ -453,35 +456,37 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         />
       ) : null}
 
-      <div
-        className="hd"
-        title={
-          size.lastValidData?.size === 0 &&
-          (state.subType === 'view' || state.subType === 'mview')
-            ? 'View'
-            : undefined
-        }
-        style={size.status === 'starting' ? { opacity: 0.3 } : undefined}
-      >
-        <i
-          className="fa-hdd-o fa"
-          title={size.error?.message}
-          style={
-            size.error
-              ? { color: '#e11', fontWeight: 'bold' }
-              : { fontWeight: 'bold' }
+      {state.subType === 'view' && !size.lastValidData?.size ? null : (
+        <div
+          className="hd"
+          title={
+            size.lastValidData?.size === 0 &&
+            (state.subType === 'view' || state.subType === 'mview')
+              ? 'View'
+              : undefined
           }
-        />{' '}
-        {size.lastValidData?.pretty}{' '}
-        {size.lastValidData && size.lastValidData.size ? (
-          <span
-            style={{ color: '#aaa', fontWeight: 'normal' }}
-            title={`${size.lastValidData.onlyTable} used by the table (including TOAST, free space map, and visibility map) + ${size.lastValidData.indexes} for indexes`}
-          >
-            ({size.lastValidData.onlyTable} + {size.lastValidData.indexes})
-          </span>
-        ) : null}
-      </div>
+          style={size.status === 'starting' ? { opacity: 0.3 } : undefined}
+        >
+          <i
+            className="fa-hdd-o fa"
+            title={size.error?.message}
+            style={
+              size.error
+                ? { color: '#e11', fontWeight: 'bold' }
+                : { fontWeight: 'bold' }
+            }
+          />{' '}
+          {size.lastValidData?.pretty}{' '}
+          {size.lastValidData && size.lastValidData.size ? (
+            <span
+              style={{ color: '#aaa', fontWeight: 'normal' }}
+              title={`${size.lastValidData.onlyTable} used by the table (including TOAST, free space map, and visibility map) + ${size.lastValidData.indexes} for indexes`}
+            >
+              ({size.lastValidData.onlyTable} + {size.lastValidData.indexes})
+            </span>
+          ) : null}
+        </div>
+      )}
 
       {owner ? (
         <div className="owner" title="OWNER">
