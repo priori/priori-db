@@ -104,6 +104,11 @@ export function NewTableFrame(props: NewTableFrameProps) {
     }));
   };
 
+  const disabled =
+    !state.newTable.name ||
+    !state.newTable.columns.length ||
+    state.newTable.columns.some((c) => !c.name || !c.type);
+
   const colFormRender = (
     c: ColumnNewTable,
     set: (e2: ColumnNewTable) => void,
@@ -637,7 +642,7 @@ IS 'asdf asdf';
                 </OpenCloseCategory><br/>
                         */}
       <br />
-      <button type="button" onClick={() => save()}>
+      <button type="button" onClick={() => save()} disabled={disabled}>
         Save
       </button>
     </div>
