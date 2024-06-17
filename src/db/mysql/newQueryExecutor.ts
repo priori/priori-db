@@ -17,163 +17,197 @@ const fetchSize = 500;
 export function newQueryExecutor(
   _onNotice: (n: Notice) => void,
   onPid: (pid: number | null) => void,
-  // _onError: (e: Error) => void,
+  // onError: (e: Error) => void,
 ): QueryExecutor {
   const pool = hotLoadSafe.mysql;
   assert(pool);
   let pid: number | null = null;
   let conP: Promise<PoolConnectionP> | null = null;
+  let conError: unknown;
   async function openCon() {
-    assert(pool);
-    if (!conP) conP = pool.getConnection();
+    if (!conP) {
+      assert(pool);
+      conP = pool.getConnection().then((con) => {
+        con.on('error', (err2) => {
+          conError = err2;
+        });
+        con.on('end', () => {
+          if (pid) openIds.delete(pid);
+          conP = null;
+          pid = null;
+          onPid(null);
+        });
+        (window as any).con = con;
+        return con;
+      });
+    }
     const con = await conP;
     if (pid !== con.threadId) {
       pid = con.threadId;
       openIds.add(pid);
       onPid(con.threadId);
     }
-    return con.connection as unknown as PoolConnection;
+    return con;
   }
   let prev: any;
   return {
     async query(q: string): Promise<QueryResult> {
-      const con = await openCon();
+      const con0 = await openCon();
       if (prev) {
         prev.resume();
       }
-      return new Promise((resolve, reject) => {
-        const queryExecution = con.query({
-          sql: q,
-          rowsAsArray: true,
-        });
-        const data: SimpleValue[][] = [];
-        let resolved = false;
-        const stream = queryExecution.stream();
-        prev = stream;
-        let fields: QueryResultDataField[] | null = null;
-        stream.on('data', (row: SimpleValue[]) => {
-          if (resolved) return;
-          // eslint-disable-next-line no-underscore-dangle
-          const dataFields = (
-            queryExecution as { _fields?: { name: string; type: number }[][] }
-          )._fields;
-          if (dataFields && dataFields.length) {
-            fields =
-              dataFields[dataFields.length - 1].map((f) => ({
+      if (!/(?<!\n)(\s|\n)*(select|with|show)/gim.test(q)) {
+        return con0
+          .query({
+            sql: q,
+            rowsAsArray: true,
+          })
+          .then(([result, fields]) => {
+            return {
+              rows: result as SimpleValue[][],
+              fields: fields?.map((f) => ({
                 name: f.name,
                 type:
                   f.type === 7 || (f.type && f.type >= 10 && f.type < 14)
                     ? 'date'
                     : undefined,
-              })) || [];
+              })),
+              rowCount: 0,
+            };
+          });
+      }
+      const con = con0.connection as unknown as PoolConnection;
+      return new Promise((resolve, reject) => {
+        try {
+          if (conError) {
+            reject(grantError(conError));
+            conError = null;
+            return;
           }
-          data.push(row);
-          if (data.length % fetchSize === 0) {
-            resolved = true;
-            stream.pause();
-            const fetchMoreRows: () => Promise<{
-              rows: SimpleValue[][];
-              fields: QueryResultDataField[];
-              rowCount: number;
-            }> = () => {
-              return new Promise<{
+          const queryExecution = con.query({
+            sql: q,
+            rowsAsArray: true,
+          });
+          // besides type especification
+          // queryExecution can be undefined here in same cases
+          if (conError) {
+            reject(grantError(conError));
+            conError = null;
+            return;
+          }
+          if (!queryExecution) {
+            reject(new Error('Query execution failed!'));
+            return;
+          }
+          let currentFields: QueryResultDataField[] | null = null;
+          const fields = () => {
+            if (currentFields) return currentFields;
+            // eslint-disable-next-line no-underscore-dangle
+            const dataFields = (
+              queryExecution as {
+                _fields?: { name: string; type: number }[][];
+              }
+            )._fields;
+            if (dataFields && dataFields.length) {
+              currentFields =
+                dataFields[dataFields.length - 1].map((f) => ({
+                  name: f.name,
+                  type:
+                    f.type === 7 || (f.type && f.type >= 10 && f.type < 14)
+                      ? 'date'
+                      : undefined,
+                })) || [];
+              return currentFields;
+            }
+            return null;
+          };
+          const data: SimpleValue[][] = [];
+          let resolved = false;
+          const stream = queryExecution.stream();
+          prev = stream;
+          stream.on('data', (row: SimpleValue[]) => {
+            if (resolved) return;
+            fields();
+            data.push(row);
+            if (data.length % fetchSize === 0) {
+              resolved = true;
+              stream.pause();
+              const fetchMoreRows: () => Promise<{
                 rows: SimpleValue[][];
                 fields: QueryResultDataField[];
                 rowCount: number;
-                fetchMoreRows?: () => Promise<{
+              }> = () => {
+                return new Promise<{
                   rows: SimpleValue[][];
                   fields: QueryResultDataField[];
                   rowCount: number;
-                }>;
-              }>((_resolve, _reject) => {
-                let resolved2 = false;
-                stream.resume();
-                stream.on('data', (row2: SimpleValue[]) => {
-                  if (resolved2) return;
-                  data.push(row2);
-                  if (data.length % fetchSize === 0) {
-                    stream.pause();
-                    resolved2 = true;
+                  fetchMoreRows?: () => Promise<{
+                    rows: SimpleValue[][];
+                    fields: QueryResultDataField[];
+                    rowCount: number;
+                  }>;
+                }>((_resolve, _reject) => {
+                  let resolved2 = false;
+                  stream.resume();
+                  stream.on('data', (row2: SimpleValue[]) => {
+                    if (resolved2) return;
+                    data.push(row2);
+                    if (data.length % fetchSize === 0) {
+                      stream.pause();
+                      resolved2 = true;
+                      _resolve({
+                        fields: fields() || [],
+                        rows: [...data],
+                        rowCount: 0,
+                        fetchMoreRows,
+                      });
+                    }
+                  });
+                  stream.on('end', () => {
+                    if (resolved2) return;
                     _resolve({
-                      fields: fields || [],
+                      fields: fields() || [],
                       rows: [...data],
                       rowCount: 0,
-                      fetchMoreRows,
                     });
-                  }
-                });
-                stream.on('end', () => {
-                  if (resolved2) return;
-                  _resolve({
-                    fields: fields || [],
-                    rows: [...data],
-                    rowCount: 0,
+                  });
+
+                  stream.on('error', (error) => {
+                    _reject(grantError(error));
                   });
                 });
-
-                stream.on('error', (error) => {
-                  _reject(grantError(error));
-                });
+              };
+              resolve({
+                rows: [...data],
+                fields: fields() || [],
+                rowCount: 0,
+                fetchMoreRows,
               });
-            };
+            }
+          });
+          stream.on('end', () => {
+            if (resolved) return;
             resolve({
               rows: [...data],
-              fields: fields || [],
+              fields: fields() || [],
               rowCount: 0,
-              fetchMoreRows,
             });
-          }
-        });
-        stream.on('end', () => {
-          if (resolved) return;
-          resolve({
-            rows: [...data],
-            fields: fields || [],
-            rowCount: 0,
           });
-        });
 
-        stream.on('error', (error) => {
+          stream.on('error', (error) => {
+            reject(grantError(error));
+          });
+        } catch (error) {
           reject(grantError(error));
-        });
+        }
       });
-      /*
-        const all = await qe;
-        const [rows, fields] = all;
-        return {
-          rows: rows instanceof Array ? (rows as SimpleValue[][]) : [],
-          fields:
-            fields?.map((f) => ({
-              name: f.name,
-              type:
-                f.columnType === 7 ||
-                (f.columnType && f.columnType >= 10 && f.columnType < 14)
-                  ? 'date'
-                  : undefined,
-            })) || [],
-          rowCount: 0,
-        };
-        */
     },
     async stopRunningQuery() {
       if (prev) {
         prev.resume();
       }
       if (pid) await execute(`KILL QUERY ${pid}`);
-      if (pid) openIds.delete(pid);
       // mysql allows the reuse of transactions after errors or kills
-      // if (conP) {
-      //   try {
-      //     const con = await conP;
-      //     con.release();
-      //   } finally {
-      //     conP = null;
-      //     if (pid) {
-      //       onPid(null);
-      //       openIds.delete(pid);
-      //     }
-      //   }
-      // }
     },
     async destroy() {
       if (prev) {
@@ -183,7 +217,7 @@ export function newQueryExecutor(
       if (conP) {
         try {
           const con = await conP;
-          con.release();
+          con.destroy();
         } finally {
           conP = null;
           if (pid) {
