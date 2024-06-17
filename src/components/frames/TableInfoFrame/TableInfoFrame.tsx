@@ -280,6 +280,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         notNull: col.not_null,
         length: col.length,
         scale: col.scale,
+        enum: col.enum,
       } as ColumnForm;
 
     return null;
@@ -314,6 +315,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         (form.comment || undefined) !== (updateColumn.comment || undefined)
           ? form.comment || null
           : undefined,
+      enum: form.enum,
     };
     await db().updateColumn(
       props.schema,

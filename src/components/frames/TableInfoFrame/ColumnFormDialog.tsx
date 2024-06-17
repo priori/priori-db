@@ -6,6 +6,7 @@ import { grantError } from 'util/errors';
 import { showError } from 'state/actions';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { db } from 'db/db';
+import { equals } from 'util/equals';
 
 export interface ColumnForm {
   name: string;
@@ -15,6 +16,7 @@ export interface ColumnForm {
   comment: string | null;
   notNull: boolean;
   default?: string;
+  enum?: string[];
 }
 export function ColumnFormDialog({
   onCancel,
@@ -30,7 +32,7 @@ export function ColumnFormDialog({
   const [form, setForm] = useState<ColumnForm>(
     column
       ? { ...column }
-      : { name: '', type: '', notNull: false, comment: null },
+      : { name: '', type: '', notNull: false, comment: null, enum: [''] },
   );
   const [error, setError] = useState<Error | null>(null);
   const { lastValidData } = useService(() => db().types(), []);
@@ -65,7 +67,8 @@ export function ColumnFormDialog({
       column.type === form.type &&
       column.scale === form.scale &&
       column.length === form.length &&
-      (column.default || undefined) === (form.default || undefined));
+      (column.default || undefined) === (form.default || undefined) &&
+      equals(column.enum, form.enum));
   const fieldsDisabled = executing || !!error;
   const type =
     (lastValidData && lastValidData.find((t) => t.name === form.type)) || null;
@@ -112,7 +115,7 @@ export function ColumnFormDialog({
                 });
               }
             }}
-            style={!form.type ? { color: '#777' } : undefined}
+            style={!form.type ? { height: 39, color: '#777' } : { height: 39 }}
           >
             <option value="" style={{ color: '#ccc' }} disabled hidden>
               Type
@@ -124,6 +127,29 @@ export function ColumnFormDialog({
             )) ||
               (form.type && <option value={form.type}>{form.type}</option>)}
           </select>
+          {type?.name.toLowerCase() === 'enum' ? (
+            <div style={{ width: 277 }}>
+              {[...(form.enum ?? []), ''].map((e, i) => (
+                <input
+                  key={i}
+                  type="text"
+                  style={{ height: 39, marginLeft: 5 }}
+                  value={e}
+                  onBlur={() => {
+                    setForm({
+                      ...form,
+                      enum: form.enum!.filter((v) => v.trim()),
+                    });
+                  }}
+                  onChange={(ev) => {
+                    const newEnum = [...(form.enum ?? [])];
+                    newEnum[i] = ev.target.value;
+                    setForm({ ...form, enum: newEnum });
+                  }}
+                />
+              ))}
+            </div>
+          ) : null}
           {type?.allowLength ? (
             <input
               disabled={fieldsDisabled}

@@ -26,6 +26,11 @@ export function fixCol(c: MysqlCol) {
       ? parseInt(c.Type.replace(/.*\((\d+)([,.](\d+))\)/, '$3'), 10)
       : null,
     is_primary: c.Key === 'PRI',
+    enum: c.Type.match(/^enum\((.*)\)$/)
+      ? c.Type.replace(/^enum\((.*)\)$/, '$1')
+          .split(',')
+          .map((x) => x.slice(1, -1))
+      : null,
   };
 }
 

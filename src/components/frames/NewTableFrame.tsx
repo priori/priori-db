@@ -14,6 +14,7 @@ export interface ColumnNewTable {
   notNull: boolean;
   primaryKey: boolean;
   autoIncrement?: boolean;
+  enum?: string[];
 }
 
 export interface NewTable {
@@ -159,6 +160,29 @@ export function NewTableFrame(props: NewTableFrameProps) {
                 set({ ...c, length: (e.target as HTMLInputElement).value })
               }
             />
+          ) : c.type && c.type.name.toLowerCase() === 'enum' ? (
+            <>
+              {[...(c.enum ? c.enum : []), ''].map((enumOption, i) => (
+                <input
+                  key={i}
+                  type="text"
+                  style={{
+                    marginBottom: '2px',
+                    marginLeft: 5,
+                    width: 86,
+                  }}
+                  defaultValue={enumOption}
+                  onChange={(e) => {
+                    const enum2 = c.enum ? [...c.enum] : [];
+                    enum2[i] = (e.target as HTMLInputElement).value;
+                    set({
+                      ...c,
+                      enum: enum2,
+                    });
+                  }}
+                />
+              ))}
+            </>
           ) : null}
         </div>
         <div className="columns-form-column-precision">

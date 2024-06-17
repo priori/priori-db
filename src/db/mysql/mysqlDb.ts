@@ -176,6 +176,7 @@ export const mysqlDb: DBInterface = {
       scale?: number;
       notNull?: boolean;
       default?: string | null;
+      enum?: string[];
     },
   ) {
     const con = await openConnection();
@@ -199,6 +200,10 @@ export const mysqlDb: DBInterface = {
       };
       const q = `ALTER TABLE ${label(schema)}.${label(table)}
           MODIFY COLUMN ${label(column)} ${merge.type} ${
+            merge.type?.toLowerCase() === 'enum'
+              ? `(${update.enum?.map((v) => str(v)).join(', ') ?? ''})`
+              : ''
+          }${
             merge.length
               ? `(${merge.length}${merge.scale ? `, ${merge.scale}` : ''})`
               : ''
@@ -267,13 +272,18 @@ export const mysqlDb: DBInterface = {
       comment: string | null;
       notNull?: boolean;
       default?: string;
+      enum?: string[];
     },
   ): Promise<void> {
-    await execute(
-      `ALTER TABLE ${label(schema)}.${label(table)}
-      ADD COLUMN ${label(col.name)} ${col.type} ${col.length ? `(${col.length}${col.scale ? `, ${col.scale}` : ''})` : ''} ${col.notNull ? 'NOT NULL' : 'NULL'} ${col.default ? `DEFAULT ${col.default}` : ''} ${col.comment ? `COMMENT ?` : ''}`,
-      col.comment ? [col.comment] : [],
-    );
+    const q = `ALTER TABLE ${label(schema)}.${label(table)}
+      ADD COLUMN ${label(col.name)} ${col.type} ${
+        col.enum && col.type.toLowerCase() === 'enum'
+          ? `(${col.enum.map((v) => str(v)).join(', ')})`
+          : ''
+      }${
+        col.length ? `(${col.length}${col.scale ? `, ${col.scale}` : ''})` : ''
+      } ${col.notNull ? 'NOT NULL' : 'NULL'} ${col.default ? `DEFAULT ${col.default}` : ''} ${col.comment ? `COMMENT ?` : ''}`;
+    await execute(q, col.comment ? [col.comment] : []);
   },
 
   async dropTable(schema: string, name: string, cascade = false) {
@@ -458,6 +468,7 @@ export const mysqlDb: DBInterface = {
       'TIMESTAMP',
       'TIME',
       'YEAR',
+      'ENUM',
     ].map((v) => {
       return {
         name: v.replace(/\(.*\)/, ''),
@@ -585,6 +596,7 @@ export const mysqlDb: DBInterface = {
       notNull: boolean;
       primaryKey: boolean;
       autoIncrement: boolean;
+      enum?: string[];
     }[];
   }): Promise<void> {
     const q = `
@@ -592,7 +604,15 @@ export const mysqlDb: DBInterface = {
         ${newTable.columns
           .map(
             (c) =>
-              `${label(c.name)} ${c.type?.name}${c.length ? `(${c.length}${c.precision ? `,${c.precision}` : ''})` : ''}${
+              `${label(c.name)} ${c.type?.name}${
+                c.type?.name.toLowerCase() === 'enum'
+                  ? `(${c.enum?.map((v) => str(v)).join(', ') ?? ''})`
+                  : ''
+              }${
+                c.length
+                  ? `(${c.length}${c.precision ? `,${c.precision}` : ''})`
+                  : ''
+              }${
                 c.notNull ? ' NOT NULL' : ''
               }${c.autoIncrement ? ' AUTO_INCREMENT' : ''}${
                 c.primaryKey ? ' PRIMARY KEY' : ''

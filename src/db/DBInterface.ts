@@ -59,6 +59,7 @@ export interface DBInterface {
       precision: string;
       notNull: boolean;
       primaryKey: boolean;
+      enum?: string[];
     }[];
   }): Promise<void>;
   renameSchema: null | ((schema: string, name: string) => Promise<void>);
@@ -85,6 +86,7 @@ export interface DBInterface {
       scale?: number;
       notNull?: boolean;
       default?: string | null;
+      enum?: string[];
     },
   ): Promise<void>;
   updateTable(

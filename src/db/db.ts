@@ -63,6 +63,7 @@ export interface ColTableInfo {
   length: number | null;
   scale: number | null;
   is_primary: boolean;
+  enum?: string[] | null;
 }
 
 export interface TableInfo {
