@@ -12,6 +12,7 @@ export interface DataGridCoreProps {
     rows: any[];
     fields: QueryResultDataField[];
   };
+  // eslint-disable-next-line react/no-unused-prop-types
   fetchMoreRows?: () => void;
   width: number;
   // eslint-disable-next-line react/no-unused-prop-types
@@ -205,7 +206,7 @@ export function DataGridCore(props: DataGridCoreProps) {
           </div>
         </div>
       </div>
-      {props.fetchMoreRows && fetchingNewRows ? (
+      {fetchingNewRows ? (
         <div className="grid-content--fetch-more-rows">
           <i className="fa fa-circle-o-notch fa-spin fa-3x fa-fw" />
         </div>

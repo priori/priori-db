@@ -499,7 +499,10 @@ export function useDataGridCore(props: DataGridCoreProps) {
       ...s,
       fetchingNewRows: true,
     }));
-    props.fetchMoreRows();
+    setTimeout(() => {
+      if (!props.fetchMoreRows || state.fetchingNewRows) return;
+      props.fetchMoreRows?.();
+    }, 1);
   });
   const fetchMoreRows = props.fetchMoreRows ? fetchMoreRows0 : undefined;
 
