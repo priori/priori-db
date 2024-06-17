@@ -1,11 +1,12 @@
+import { useMoreTime } from 'components/util/DataGrid/dataGridCoreUtils';
 import { NewSchemaForm } from 'components/util/NewSchemaForm';
-import { useDeferredValue, useMemo, useState } from 'react';
+import React, { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { useEvent } from 'util/useEvent';
 import { createSchema, reloadNav } from '../../../../state/actions';
 import { NavSchema, Tab } from '../../../../types';
 import { NavSearch } from './NavSearch';
-import { useTabs } from './navUtils';
 import { NavTree } from './NavTree/NavTree';
+import { useTabs } from './navUtils';
 
 export type Entity = {
   fullText: string;
@@ -85,6 +86,7 @@ export function Nav(props: {
     timeoutMs: 150,
   });
 
+  const [refreshing0, setRefreshing] = useState(false);
   const onKeyDown = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (
       ((e.ctrlKey || (isIOS && e.metaKey)) &&
@@ -93,9 +95,18 @@ export function Nav(props: {
     ) {
       e.preventDefault();
       e.stopPropagation();
+      setRefreshing(true);
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 1);
       reloadNav();
     }
   });
+  const lastSchemas = useRef(props.schemas);
+  if (props.schemas !== lastSchemas.current) {
+    lastSchemas.current = props.schemas;
+  }
+  const refreshing = useMoreTime(refreshing0, 200);
 
   const onNavTreeBlur = useEvent((e: 'next' | 'prev' | 'up' | 'down') => {
     if (e === 'next' || e === 'down') {
@@ -126,7 +137,11 @@ export function Nav(props: {
 
   return useMemo(
     () => (
-      <div className="nav" onKeyDown={onKeyDown} style={props.style}>
+      <div
+        className={`nav${refreshing ? ' refreshing' : ''}`}
+        onKeyDown={onKeyDown}
+        style={props.style}
+      >
         {props.title ? (
           <div className="header--title">{props.title}</div>
         ) : null}
@@ -136,7 +151,7 @@ export function Nav(props: {
           onBlur={onNavSearchBlur}
           disabled={props.disabled}
         />
-        <div className="nav-tree--wrapper">
+        <div className="nav-tree--wrapper" tabIndex={0}>
           <NavTree
             schemas={props.schemas}
             tabs={tabs2}
@@ -160,6 +175,7 @@ export function Nav(props: {
       props.disabled,
       props.title,
       props.rolesOpen,
+      refreshing,
     ],
   );
 }

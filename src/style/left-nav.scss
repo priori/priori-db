@@ -313,3 +313,15 @@ div.nav .nav-search--entity.focused.active span {
   outline: none;
   flex: 1 1 0%;
 }
+.nav.refreshing > div[tabindex] {
+  transition: opacity 0.1s;
+}
+.nav.refreshing > div[tabindex] {
+  opacity: 0.8;
+}
+.nav {
+  transition: color 0.1s;
+}
+.nav.refreshing {
+  color: #333;
+}
