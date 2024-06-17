@@ -16,6 +16,9 @@
 .columns-form-column {
   display: flex;
 }
+.columns-form > .head {
+  align-items: flex-end;
+}
 .columns-form-head-name,
 .columns-form-column-name {
   width: 27%;

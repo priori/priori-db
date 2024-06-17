@@ -283,6 +283,12 @@ export class ListInput<Entry extends object> extends Component<
     lock.style.left = '0';
     lock.style.right = '0';
     lock.style.bottom = '0';
+    const selects2 = clone.querySelectorAll('select');
+    const selects = this.rowEl.querySelectorAll('select');
+    for (let i = 0; i < selects.length; i += 1) {
+      selects2[i].selectedIndex = selects[i].selectedIndex;
+      selects2[i].value = selects[i].value;
+    }
     this.lock = lock;
     this.clone = clone;
     this.lock.addEventListener('mousemove', this.onMouseMove, false);

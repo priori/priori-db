@@ -132,6 +132,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
         >
           <select
             style={db().autoIncrement ? { width: 120 } : undefined}
+            value={c.type ? c.type.name : ''}
             onChange={(e) =>
               set({
                 ...c,
@@ -167,7 +168,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
                   key={i}
                   type="text"
                   style={{
-                    marginBottom: '2px',
+                    marginTop: i ? '4px' : undefined,
                     marginLeft: 5,
                     width: 86,
                   }}
@@ -362,7 +363,9 @@ export function NewTableFrame(props: NewTableFrameProps) {
           <div className="columns-form-head-precision">Precision</div>
           <div className="columns-form-head-notnull">Not Null</div>
           <div className="columns-form-head-pk">Primary Key</div>
-          <div className="columns-form-head-pk">Auto Increment</div>
+          {db().autoIncrement ? (
+            <div className="columns-form-head-pk">Auto Increment</div>
+          ) : null}
         </div>
         <ColumnListInput
           entries={state.newTable.columns}
