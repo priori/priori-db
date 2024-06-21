@@ -638,7 +638,9 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           background: 'transparent',
                           ...(!col.comment
                             ? { textAlign: 'center' }
-                            : undefined),
+                            : col.comment.length < 30
+                              ? { textAlign: 'center' }
+                              : { maxWidth: 140 }),
                         }}
                         className={!col.comment ? 'actions' : undefined}
                       >
@@ -653,7 +655,11 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                               onClick={() =>
                                 set({ ...edit, commentColumn: col.column_name })
                               }
-                              style={{ float: 'right' }}
+                              style={
+                                col.comment && col.comment.length < 30
+                                  ? undefined
+                                  : { float: 'right' }
+                              }
                             >
                               <i className="fa fa-pencil" />
                             </button>
