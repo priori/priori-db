@@ -1,9 +1,12 @@
-import { assert } from 'util/assert';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { assert } from 'util/assert';
+import { equals } from 'util/equals';
+import { grantError } from 'util/errors';
 import { useEvent } from 'util/useEvent';
 import { useEventListener } from 'util/useEventListener';
-import { grantError } from 'util/errors';
 import { activeCellUpdate } from './DataGridActiveCell';
+import { DataGridCoreProps, DataGridState } from './DataGridCore';
+import { useGridColsSizes } from './useGridColsSizes';
 import {
   allowedBottomDistance,
   allowedTopDistance,
@@ -15,12 +18,10 @@ import {
   scrollWidth,
   toCsv,
   toHtml,
-  topRenderOffset,
   toText,
   toTsv,
+  topRenderOffset,
 } from './util';
-import { DataGridCoreProps, DataGridState } from './DataGridCore';
-import { useGridColsSizes } from './useGridColsSizes';
 
 const isIOS = process?.platform === 'darwin';
 
@@ -60,10 +61,20 @@ export function useDataGridCore(props: DataGridCoreProps) {
   let state = state0;
   const resultRef = useRef(props.result);
   const resultLengthRef = useRef(props.result.rows.length);
+
+  const fields = useMemo(
+    () => props.result.fields.map((f) => ({ name: f.name, type: f.type })),
+    [props.result.fields],
+  );
+  const prevFields = useRef(fields);
+  const sameFields = equals(fields, prevFields.current);
+  if (!sameFields) prevFields.current = fields;
+
   if (resultRef.current !== props.result) {
     if (
       state.fetchingNewRows &&
-      props.result.rows.length > resultLengthRef.current
+      props.result.rows.length > resultLengthRef.current &&
+      sameFields
     ) {
       resultRef.current = props.result;
       setState((s) => ({
