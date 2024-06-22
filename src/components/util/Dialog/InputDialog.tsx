@@ -18,7 +18,7 @@ export function InputDialog({
   onUpdate: (v: string) => Promise<void>;
   onCancel: () => void;
   updateText: string;
-  type?: 'text' | 'number' | 'textarea';
+  type?: 'text' | 'number' | 'textarea' | 'password';
   options?: string[];
   relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
 }) {
@@ -103,7 +103,13 @@ export function InputDialog({
         <input
           disabled={!!error || executing}
           type={
-            type === 'number' ? 'number' : type === 'text' ? 'text' : 'text'
+            type === 'number'
+              ? 'number'
+              : type === 'text'
+                ? 'text'
+                : type === 'password'
+                  ? 'password'
+                  : 'text'
           }
           ref={focusRef}
           value={state}

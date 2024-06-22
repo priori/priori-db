@@ -224,6 +224,12 @@ export interface DBInterface {
       host?: string;
       password: string;
     }): Promise<void>;
+    dropPassword?(name: string, host?: string): Promise<void>;
+    updatePassword?(
+      name: string,
+      password?: string,
+      host?: string,
+    ): Promise<void>;
     tablePrivilegesTypes(): Promise<string[]>;
     listRoles(): Promise<
       {

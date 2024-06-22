@@ -1,6 +1,7 @@
 import { Comment } from 'components/util/Comment';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
+import { UpdatePasswordDialog } from 'components/util/Dialog/UpdatePasswordDialog';
 import { db } from 'db/db';
 import React, { useState } from 'react';
 import { closeTab, reloadNav, renameEntity, showError } from 'state/actions';
@@ -51,6 +52,8 @@ export function RoleFrame(props: RoleFrameProps) {
     dropConfirmation: false,
     editComment: false,
     rename: false,
+    dropPasswordConfirmation: false,
+    updatePassword: false,
   });
 
   const drop = useEvent(() => {
@@ -92,6 +95,13 @@ export function RoleFrame(props: RoleFrameProps) {
     renameEntity(props.uid, newName);
     reloadNav();
     set({ ...state, rename: false });
+  });
+
+  const onUpdatePassword = useEvent(async (newName: string) => {
+    await db().privileges!.updatePassword?.(name, newName, props.host);
+    reloadNav();
+    service.reload();
+    set({ ...state, updatePassword: false });
   });
 
   const isMounted = useIsMounted();
@@ -150,6 +160,34 @@ export function RoleFrame(props: RoleFrameProps) {
     [],
   );
 
+  if (!service.lastValidData)
+    return (
+      <div>
+        <h1>
+          <span className="adjustment-icon2">
+            <div />
+          </span>
+          {props.name}
+          {props.host ? (
+            <span
+              style={{
+                opacity: 0.33,
+                fontWeight: 'normal',
+                fontSize: 24,
+              }}
+            >
+              @
+              <span style={{ position: 'relative', top: '-0.04em' }}>
+                {props.host}
+              </span>
+            </span>
+          ) : (
+            ''
+          )}
+        </h1>
+      </div>
+    );
+
   return (
     <div>
       <h1>
@@ -194,6 +232,87 @@ export function RoleFrame(props: RoleFrameProps) {
             onUpdate={onRename}
           />
         ) : null}
+        {isUser ? (
+          <>
+            {db().privileges?.dropPassword && isUser ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    set({
+                      ...state,
+                      dropPasswordConfirmation: true,
+                    });
+                  }}
+                >
+                  Drop Password <i className="fa fa-exclamation-triangle" />
+                </button>
+                {state.dropPasswordConfirmation ? (
+                  <Dialog onBlur={noClick} relativeTo="previousSibling">
+                    Do you really want to drop the user password?
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          db()
+                            .privileges?.dropPassword?.(props.name, props.host)
+                            .then(() => {
+                              set({
+                                ...state,
+                                dropPasswordConfirmation: false,
+                              });
+                              reloadNav();
+                              service.reload();
+                            });
+                        }}
+                      >
+                        Yes
+                      </button>{' '}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          set({
+                            ...state,
+                            dropPasswordConfirmation: false,
+                          });
+                        }}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </Dialog>
+                ) : null}
+              </>
+            ) : null}{' '}
+            {db().privileges?.updatePassword ? (
+              <button
+                type="button"
+                onClick={() => {
+                  set({ ...state, updatePassword: true });
+                }}
+              >
+                Update Password <i className="fa fa-key" />
+              </button>
+            ) : null}
+          </>
+        ) : db().privileges?.updatePassword ? (
+          <button
+            type="button"
+            onClick={() => {
+              set({ ...state, updatePassword: true });
+            }}
+          >
+            Set Password <i className="fa fa-key" />
+          </button>
+        ) : null}
+        {state.updatePassword ? (
+          <UpdatePasswordDialog
+            relativeTo="previousSibling"
+            value=""
+            onCancel={() => set({ ...state, updatePassword: false })}
+            onUpdate={onUpdatePassword}
+          />
+        ) : null}{' '}
         {service.lastValidData ? (
           <>
             <button type="button" onClick={drop}>

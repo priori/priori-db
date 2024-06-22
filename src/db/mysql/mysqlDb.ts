@@ -898,6 +898,17 @@ export const mysqlDb: DBInterface = {
         password ? [password] : [],
       );
     },
+    async updatePassword(name: string, password: string, host: string) {
+      await execute(
+        `ALTER USER ${label(name)}${host ? `@${label(host)}` : ''} IDENTIFIED BY ?`,
+        [password],
+      );
+    },
+    async dropPassword(name: string, host: string) {
+      await execute(
+        `ALTER USER ${label(name)}${host ? `@${label(host)}` : ''} IDENTIFIED BY ''`,
+      );
+    },
     async schemaPrivilegesTypes() {
       return [
         'alter',
@@ -969,10 +980,14 @@ export const mysqlDb: DBInterface = {
           tablesP,
           mysqlDb.privileges!.tablePrivilegesTypes!(),
           first('SELECT DATABASE() "db"', []),
-          first('SELECT * FROM mysql.user WHERE User = ? AND Host = ?', [
-            name,
-            host,
-          ]),
+          first(
+            `SELECT
+              *,
+              authentication_string != '' and
+                authentication_string IS not NULL is_user
+              FROM mysql.user WHERE User = ? AND Host = ?`,
+            [name, host],
+          ),
         ]);
       dbs0.sort((a, b) => {
         if (a.Db === db) return -1;
@@ -984,8 +999,11 @@ export const mysqlDb: DBInterface = {
       for (const k in user) {
         if (k.endsWith('_priv') || user[k] instanceof Buffer) delete user[k];
       }
+      delete user.authentication_string;
+      const isUser = user.is_user;
+      delete user.is_user;
       return {
-        isUser: true,
+        isUser,
         info: {
           'mysq.user': user,
         },

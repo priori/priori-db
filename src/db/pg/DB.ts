@@ -1331,6 +1331,14 @@ export const DB: DBInterface = {
         `CREATE ROLE ${label(name)} ${password ? `WITH LOGIN PASSWORD ${str(password)}` : ''}`,
       );
     },
+    async dropPassword(name: string) {
+      await query(`ALTER ROLE ${label(name)} WITH NOLOGIN`);
+    },
+    async updatePassword(name: string, password: string) {
+      await query(
+        `ALTER ROLE ${label(name)} WITH LOGIN PASSWORD ${str(password)}`,
+      );
+    },
     async tablePrivilegesTypes() {
       return [
         'update',
