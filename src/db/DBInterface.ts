@@ -197,6 +197,7 @@ export interface DBInterface {
       values: { [fieldName: string]: string | null };
     }[],
     inserts: { [fieldName: string]: string | null }[],
+    removals: { [fieldName: string]: string | number | null }[],
   ): Promise<void>;
   createSchema(schemaName: string): Promise<void>;
   dropSchema(schemaName: string, cascade?: boolean): Promise<void>;

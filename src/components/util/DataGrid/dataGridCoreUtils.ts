@@ -89,6 +89,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         editing: false,
         update: {},
         active: undefined,
+        contextMenu: undefined,
         selection: undefined,
         touched: state.touched,
       };
@@ -123,20 +124,25 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const pendingInserts = Object.keys(state.update).filter(
     (i) => parseInt(i, 10) >= props.result.rows.length,
   ).length;
-  const pendingRowsUpdate = Object.keys(state.update).length - pendingInserts;
+
+  const pendingRowsRemoval = Object.values(state.update).filter(
+    (v) => v === 'REMOVE',
+  ).length;
+
+  const pendingRowsUpdate =
+    Object.keys(state.update).length - pendingInserts - pendingRowsRemoval;
 
   const extraBottomSpace =
     (props.fetchMoreRows ? 90 : 0) +
-    (pendingRowsUpdate || pendingInserts
+    (pendingRowsUpdate || pendingInserts || pendingRowsRemoval
       ? 130
       : props.onChangeFilter || props.onChangeSort || props.onUpdate
         ? 68
         : 0);
 
-  const totalChanges = Object.keys(state.update).reduce(
-    (a, b) => a + Object.keys(state.update[b]).length,
-    0,
-  );
+  const totalChanges = Object.keys(state.update)
+    .filter((k) => state.update[k] !== 'REMOVE')
+    .reduce((a, b) => a + Object.keys(state.update[b]).length, 0);
 
   const gridActiveCellUpdate = useEvent(
     (
@@ -233,9 +239,11 @@ export function useDataGridCore(props: DataGridCoreProps) {
       i -= 1;
       const u = state.update[i];
       r.push(
-        u && Object.values(u).length
-          ? props.result.rows.map((_, j) => u?.[j])
-          : [],
+        u === 'REMOVE'
+          ? []
+          : u && Object.values(u).length
+            ? props.result.rows.map((_, j) => u?.[j])
+            : [],
       );
     }
     return r;
@@ -312,6 +320,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         ...state2,
         selection,
         mouseDown: undefined,
+        contextMenu: undefined,
       }));
       elRef.current?.blur();
       return;
@@ -321,6 +330,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       active: { rowIndex, colIndex },
       selection,
       mouseDown: undefined,
+      contextMenu: undefined,
     }));
   });
 
@@ -355,6 +365,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       ...state2,
       selection,
       active: { rowIndex, colIndex },
+      contextMenu: undefined,
     }));
   });
 
@@ -388,6 +399,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
             colIndex: [colIndex, colIndex],
             rowIndex: [rowIndex, rowIndex],
           },
+          contextMenu: undefined,
           editing: newEditing,
           active: { rowIndex, colIndex },
         };
@@ -435,6 +447,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       return {
         ...s,
         editing: newEditing,
+        contextMenu: undefined,
         selection: !selection
           ? undefined
           : !state.selection
@@ -552,6 +565,12 @@ export function useDataGridCore(props: DataGridCoreProps) {
         hasBottomScrollbar,
         hasRightScrollbar,
       });
+    if (state.contextMenu) {
+      setState((s) => ({
+        ...s,
+        contextMenu: undefined,
+      }));
+    }
     const fn = () => {
       lastScrollTimeRef.current = null;
       const currentMiddleIndex = Math.floor(
@@ -595,6 +614,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     e.stopPropagation();
     setState({
       ...state,
+      contextMenu: undefined,
       openSortDialog: true,
     });
   });
@@ -604,6 +624,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     e.stopPropagation();
     setState({
       ...state,
+      contextMenu: undefined,
       openFilterDialog: true,
     });
   });
@@ -617,6 +638,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       ...s,
       editing: true,
       active: { colIndex: 0, rowIndex: i },
+      contextMenu: undefined,
       selection: {
         colIndex: [0, 0],
         rowIndex: [i, i],
@@ -631,6 +653,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         s.active && s.active.rowIndex < props.result.rows.length + 1
           ? s.active
           : undefined,
+      contextMenu: undefined,
       selection: s.selection
         ? {
             rowIndex: [
@@ -672,10 +695,12 @@ export function useDataGridCore(props: DataGridCoreProps) {
       props.onUpdate &&
       (props.pks?.length ||
         (state.active && state.active.rowIndex >= props.result.rows.length)) &&
-      (e.key === 'F2' || e.key === 'Enter')
+      (e.key === 'F2' || e.key === 'Enter') &&
+      (!state.active || state.update?.[state.active.rowIndex] !== 'REMOVE')
     ) {
       setState((s) => ({
         ...s,
+        contextMenu: undefined,
         editing: true,
       }));
       e.preventDefault();
@@ -683,6 +708,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     } else if (e.key === 'a' && (e.ctrlKey || (e.metaKey && isIOS))) {
       setState((s) => ({
         ...s,
+        contextMenu: undefined,
         selection: {
           colIndex: [0, props.result.fields.length - 1],
           rowIndex: [0, props.result.rows.length - 1],
@@ -765,7 +791,8 @@ export function useDataGridCore(props: DataGridCoreProps) {
         e.key.length === 1 &&
         !e.ctrlKey &&
         !e.altKey &&
-        !e.metaKey
+        !e.metaKey &&
+        (!state.active || state.update?.[state.active.rowIndex] !== 'REMOVE')
       ) {
         e.preventDefault();
         e.stopPropagation();
@@ -776,13 +803,19 @@ export function useDataGridCore(props: DataGridCoreProps) {
           ...s,
           touched: true,
           editing: 2,
+          contextMenu: undefined,
           update: s.active
             ? {
                 ...s.update,
-                [s.active.rowIndex]: {
-                  ...s.update?.[s.active.rowIndex],
-                  [s.active.colIndex]: e.key,
-                },
+                [s.active.rowIndex]:
+                  s.update?.[s.active.rowIndex] === 'REMOVE'
+                    ? 'REMOVE'
+                    : {
+                        ...(s.update?.[s.active.rowIndex] as {
+                          [colIndex: string]: string | null;
+                        }),
+                        [s.active.colIndex]: e.key,
+                      },
               }
             : s.update,
         }));
@@ -790,14 +823,51 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }
   });
 
+  const onContextMenuSelectOption = useEvent(
+    (option: string, rowIndex: number) => {
+      if (option === 'mark for removal') {
+        setState((s) => ({
+          ...s,
+          contextMenu: undefined,
+          update: {
+            ...s.update,
+            [rowIndex]: s.update[rowIndex] === 'REMOVE' ? undefined : 'REMOVE',
+          },
+        }));
+      } else if (option === 'unmark for removal') {
+        setState((s) => {
+          const update = {
+            ...s.update,
+          };
+          delete update[rowIndex];
+          return {
+            ...s,
+            contextMenu: undefined,
+            update,
+          };
+        });
+      }
+    },
+  );
+
   const onMouseDown = useEvent((e: React.MouseEvent<HTMLElement>) => {
     if (
       e.button === 1 ||
-      e.button === 2 ||
       (e.target instanceof HTMLElement &&
-        e.target.matches('input, textarea, select, button'))
-    )
+        (e.target.matches('input, textarea, select, button') ||
+          e.target.closest('.context-menu')))
+    ) {
+      if (
+        !(e.target instanceof HTMLElement && e.target.closest('.context-menu'))
+      )
+        if (state.contextMenu) {
+          setState((s) => ({
+            ...s,
+            contextMenu: undefined,
+          }));
+        }
       return;
+    }
     const el = elRef.current as HTMLElement;
     const rect = el.getBoundingClientRect();
     let x = e.clientX - rect.left;
@@ -809,12 +879,51 @@ export function useDataGridCore(props: DataGridCoreProps) {
       y >
         el.offsetHeight - (hasBottomScrollbar ? scrollWidth : 0) - headerHeight
     ) {
+      if (state.contextMenu) {
+        setState((s) => ({
+          ...s,
+          contextMenu: undefined,
+        }));
+      }
       return;
     }
     x += scrollRef.current.left;
     y += scrollRef.current.top;
     const rowIndex = Math.floor(y / rowHeight);
     if (rowIndex >= props.result.rows.length + extraRows) {
+      if (state.contextMenu) {
+        setState((s) => ({
+          ...s,
+          contextMenu: undefined,
+        }));
+      }
+      return;
+    }
+    if (e.button === 2) {
+      if (
+        !props.onUpdate ||
+        !props.pks ||
+        !props.pks.length ||
+        rowIndex >= props.result.rows.length
+      ) {
+        if (state.contextMenu) {
+          setState((s) => ({
+            ...s,
+            contextMenu: undefined,
+          }));
+        }
+        return;
+      }
+      setState((s) => ({
+        ...s,
+        contextMenu: {
+          rowIndex,
+          mouseX: e.clientX,
+          mouseY: e.clientY,
+        },
+        active: undefined,
+        mouseDown: undefined,
+      }));
       return;
     }
     const colIndex = getColIndex(x);
@@ -824,6 +933,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       mouseDown: { rowIndex, colIndex },
       active: { rowIndex, colIndex },
       selection: undefined,
+      contextMenu: undefined,
     }));
   });
 
@@ -860,10 +970,12 @@ export function useDataGridCore(props: DataGridCoreProps) {
     const colIndex = getColIndex(x);
     if (
       colIndex === state.active?.colIndex &&
-      rowIndex === state.active?.rowIndex
+      rowIndex === state.active?.rowIndex &&
+      (!state.active || state.update?.[state.active.rowIndex] !== 'REMOVE')
     ) {
       setState((s) => ({
         ...s,
+        contextMenu: undefined,
         editing: true,
       }));
     }
@@ -872,6 +984,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const onBlur = useEvent(() => {
     setState((s) => ({
       ...s,
+      contextMenu: undefined,
       mouseDown: undefined,
     }));
   });
@@ -879,6 +992,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const onEditBlur = useEvent(() => {
     setState((s) => ({
       ...s,
+      contextMenu: undefined,
       editing: false,
     }));
   });
@@ -894,18 +1008,31 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const onChange = useEvent((value: string | null) => {
     if (!state.active) return;
     if (
-      state.update?.[state.active.rowIndex]?.[state.active.colIndex] === value
+      state.update?.[state.active.rowIndex] === 'REMOVE' ||
+      (
+        state.update?.[state.active.rowIndex] as
+          | {
+              [colIndex: string]: string | null;
+            }
+          | undefined
+      )?.[state.active.colIndex] === value
     )
       return;
     setState((s) => ({
       ...s,
+      contextMenu: undefined,
       update: s.active
         ? {
             ...s.update,
-            [s.active.rowIndex]: {
-              ...s.update?.[s.active.rowIndex],
-              [s.active.colIndex]: value,
-            },
+            [s.active.rowIndex]:
+              state.update?.[s.active.rowIndex] === 'REMOVE'
+                ? 'REMOVE'
+                : {
+                    ...(s.update?.[s.active.rowIndex] as {
+                      [colIndex: string]: string | null;
+                    }),
+                    [s.active.colIndex]: value,
+                  },
           }
         : s.update,
     }));
@@ -930,17 +1057,26 @@ export function useDataGridCore(props: DataGridCoreProps) {
       throw new Error('Primay Keys not found for table!');
     }
     const updates = Object.keys(state.update)
-      .filter((i) => parseInt(i, 10) < props.result.rows.length)
+      .filter(
+        (i) =>
+          state.update[i] !== 'REMOVE' &&
+          parseInt(i, 10) < props.result.rows.length,
+      )
       .map((rowIndex) => {
         const values: { [name: string]: string | null } = {};
-        for (const colIndex in state.update[rowIndex]) {
-          const fieldName =
-            props.result.fields[colIndex as unknown as number].name;
-          const val = state.update[rowIndex][colIndex];
-          assert(typeof fieldName === 'string');
-          assert(val === null || typeof val === 'string');
-          values[fieldName] = val;
-        }
+        if (state.update[rowIndex] !== 'REMOVE' && state.update[rowIndex])
+          for (const colIndex in state.update[rowIndex] as {
+            [k: string]: string | null;
+          }) {
+            const fieldName =
+              props.result.fields[colIndex as unknown as number].name;
+            const val = (
+              state.update[rowIndex] as { [k: string]: string | null }
+            )[colIndex];
+            assert(typeof fieldName === 'string');
+            assert(val === null || typeof val === 'string');
+            values[fieldName] = val;
+          }
         const where: { [n: string]: string | number | null } = {};
         if (pks)
           for (const name of pks) {
@@ -960,28 +1096,61 @@ export function useDataGridCore(props: DataGridCoreProps) {
           values,
         };
       });
+    const removals = Object.keys(state.update)
+      .filter((i) => state.update[i] === 'REMOVE')
+      .map((rowIndex) => {
+        const where: { [n: string]: string | number | null } = {};
+        if (pks)
+          for (const name of pks) {
+            const val =
+              props.result.rows?.[rowIndex as unknown as number]?.[
+                props.result.fields.findIndex((f) => f.name === name)
+              ];
+            assert(
+              typeof val === 'string' ||
+                typeof val === 'number' ||
+                val === null,
+            );
+            where[name] = val;
+          }
+        return where;
+      });
 
     const inserts = Object.keys(state.update)
       .filter((i) => parseInt(i, 10) >= props.result.rows.length)
       .map((rowIndex) => {
         const values: { [name: string]: string | null } = {};
-        for (const colIndex in state.update[rowIndex]) {
-          const fieldName =
-            props.result.fields[colIndex as unknown as number].name;
-          const val = state.update[rowIndex][colIndex];
-          assert(typeof fieldName === 'string');
-          assert(val === null || typeof val === 'string');
-          values[fieldName] = val;
-        }
+        if (state.update[rowIndex] !== 'REMOVE' && state.update[rowIndex])
+          for (const colIndex in state.update[rowIndex] as {
+            [k: string]: string | null;
+          }) {
+            const fieldName =
+              props.result.fields[colIndex as unknown as number].name;
+            const val = (
+              state.update[rowIndex] as {
+                [k: string]: string | null;
+              }
+            )[colIndex];
+            assert(typeof fieldName === 'string');
+            assert(val === null || typeof val === 'string');
+            values[fieldName] = val;
+          }
         return values;
       });
+
     try {
-      setState((s) => ({ ...s, updateRunning: true }));
-      await props.onUpdate({ updates, inserts });
-      setState((s) => ({ ...s, update: {}, updateRunning: false }));
+      setState((s) => ({ ...s, contextMenu: undefined, updateRunning: true }));
+      await props.onUpdate({ updates, inserts, removals });
+      setState((s) => ({
+        ...s,
+        contextMenu: undefined,
+        update: {},
+        updateRunning: false,
+      }));
     } catch (e) {
       setState((s) => ({
         ...s,
+        contextMenu: undefined,
         updateFail: grantError(e),
         updateRunning: false,
       }));
@@ -990,46 +1159,76 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
   const fetchingNewRows = useMoreTime(!!state.fetchingNewRows, 200);
 
+  const activeCellChanged =
+    state.active?.rowIndex !== undefined &&
+    state.update?.[state.active.rowIndex] !== 'REMOVE' &&
+    typeof (
+      state.update?.[state.active.rowIndex] as {
+        [colIndex: string]: string | null;
+      }
+    )?.[state.active.colIndex] !== 'undefined';
+
+  const activeCellValue =
+    state.active?.rowIndex !== undefined &&
+    state.update?.[state.active.rowIndex] !== 'REMOVE' &&
+    typeof state.update[state.active.rowIndex] !== 'undefined' &&
+    typeof (
+      state.update?.[state.active.rowIndex] as {
+        [colIndex: string]: string | null;
+      }
+    )?.[state.active.colIndex] !== 'undefined'
+      ? (
+          state.update?.[state.active.rowIndex] as {
+            [colIndex: string]: string | null;
+          }
+        )?.[state.active.colIndex]
+      : state.active
+        ? props.result.rows[state.active.rowIndex]?.[state.active.colIndex]
+        : undefined;
   return {
-    state,
-    onStartResize,
-    onBlur,
-    onKeyDown,
-    onMouseDown,
-    onDoubleClick,
-    elRef,
-    gridContentTableWidth,
-    headerElRef,
-    colsWidths,
-    pendingRowsUpdate,
-    pendingInserts,
-    scrollRef,
-    hasBottomScrollbar,
-    hasRightScrollbar,
-    onChange,
-    onEditBlur,
+    activeCellChanged,
+    activeCellValue,
     activeElRef,
-    onFilterClose,
-    onScroll,
-    gridContentRef,
-    gridContentMarginTop,
-    gridContentHeight,
-    visibleStartingInEven,
-    visibleRows,
-    gridContentTableTop,
-    onSortClose,
-    onSortClick,
-    onFilterClick,
-    nop,
-    totalChanges,
-    onDiscardClick,
     applyClick,
-    onPlusClick,
-    extraRows,
+    applyingUpdate: state.updateRunning,
+    colsWidths,
+    elRef,
     extraBottomSpace,
-    onDiscardFailClick,
+    extraRows,
     fetchMoreRows,
     fetchingNewRows,
-    applyingUpdate: state.updateRunning,
+    gridContentHeight,
+    gridContentMarginTop,
+    gridContentRef,
+    gridContentTableTop,
+    gridContentTableWidth,
+    hasBottomScrollbar,
+    hasRightScrollbar,
+    headerElRef,
+    nop,
+    onBlur,
+    onChange,
+    onContextMenuSelectOption,
+    onDiscardClick,
+    onDiscardFailClick,
+    onDoubleClick,
+    onEditBlur,
+    onFilterClick,
+    onFilterClose,
+    onKeyDown,
+    onMouseDown,
+    onPlusClick,
+    onScroll,
+    onSortClick,
+    onSortClose,
+    onStartResize,
+    pendingInserts,
+    pendingRowsRemoval,
+    pendingRowsUpdate,
+    scrollRef,
+    state,
+    totalChanges,
+    visibleRows,
+    visibleStartingInEven,
   };
 }

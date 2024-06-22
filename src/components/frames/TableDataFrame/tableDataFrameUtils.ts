@@ -56,17 +56,19 @@ export function useTableDataFrame(props: TableFrameProps) {
     async ({
       updates,
       inserts,
+      removals,
     }: {
       updates: {
         where: { [fieldName: string]: string | number | null };
         values: { [fieldName: string]: string | null };
       }[];
       inserts: { [fieldName: string]: string | null }[];
+      removals: { [fieldName: string]: string | number | null }[];
     }) => {
       if ((!pks.lastValidData || !pks.lastValidData.length) && updates.length) {
         throw new Error('Primay Keys not found for table!!');
       }
-      await db().update(props.schema, props.table, updates, inserts);
+      await db().update(props.schema, props.table, updates, inserts, removals);
       dataService.reload();
       return true;
     },

@@ -21,6 +21,7 @@ export interface GridProps {
       values: { [fieldName: string]: string | null };
     }[];
     inserts: { [fieldName: string]: string | null }[];
+    removals: { [fieldName: string]: string | number | null }[];
   }) => Promise<boolean>;
   pks?: string[];
   currentSort?: Sort;

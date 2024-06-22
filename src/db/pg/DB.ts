@@ -1194,6 +1194,7 @@ export const DB: DBInterface = {
       values: { [fieldName: string]: string | null };
     }[],
     inserts: { [fieldName: string]: string | null }[],
+    removals: { [fieldName: string]: string | null }[],
   ) {
     const c = await openConnection();
     try {
@@ -1210,6 +1211,20 @@ export const DB: DBInterface = {
             .join(' AND ')}`,
           [...Object.values(values), ...Object.values(where)],
         );
+      }
+      if (removals.length) {
+        for (const where of removals) {
+          let count = 1;
+          await c.query(
+            `DELETE FROM ${label(schema)}.${label(table)} WHERE ${Object.keys(
+              where,
+            )
+              // eslint-disable-next-line no-plusplus
+              .map((k) => `${label(k)} = $${count++}`)
+              .join(' AND ')}`,
+            Object.values(where),
+          );
+        }
       }
       for (const insert of inserts) {
         await c.query(

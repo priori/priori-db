@@ -1,23 +1,25 @@
 import { useEvent } from 'util/useEvent';
 
 export function DataGridUpdateInfoDialog({
-  pendingRowsUpdate,
-  pendingInserts,
-  totalChanges,
-  onDiscardClick,
-  onApplyClick,
-  fail,
   applyingUpdate,
+  fail,
+  onApplyClick,
+  onDiscardClick,
   onDiscardFailClick,
+  pendingInserts,
+  pendingRowsRemoval,
+  pendingRowsUpdate,
+  totalChanges,
 }: {
-  pendingRowsUpdate: number;
-  pendingInserts: number;
-  totalChanges: number;
-  onDiscardClick: () => void;
-  onApplyClick: () => void;
-  fail?: Error;
   applyingUpdate?: boolean;
+  fail?: Error;
+  onApplyClick: () => void;
+  onDiscardClick: () => void;
   onDiscardFailClick: () => void;
+  pendingInserts: number;
+  pendingRowsRemoval: number;
+  pendingRowsUpdate: number;
+  totalChanges: number;
 }) {
   const onChangeDialogMouseDown = useEvent((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -44,20 +46,42 @@ export function DataGridUpdateInfoDialog({
         }
       >
         {pendingInserts > 0 && pendingRowsUpdate > 0
-          ? ` ${pendingInserts} insert${
-              pendingInserts > 1 ? 's' : ''
+          ? ` ${pendingInserts} insert${pendingInserts > 1 ? 's' : ''}${
+              pendingRowsRemoval > 0
+                ? `, ${pendingRowsRemoval} removal${
+                    pendingRowsRemoval > 1 ? 's' : ''
+                  }`
+                : ''
             } and ${pendingRowsUpdate} update${
               pendingRowsUpdate > 1 ? 's' : ''
             } pending `
           : pendingInserts > 0
-            ? `${pendingInserts} pending row${
-                pendingInserts > 1 ? 's' : ''
-              } insert${pendingInserts > 1 ? 's' : ''}`
-            : `${pendingRowsUpdate} pending row${
-                pendingRowsUpdate > 1 ? 's' : ''
-              } update`}{' '}
-        ({totalChanges} value
-        {totalChanges > 1 ? 's' : ''})
+            ? `${pendingInserts} pending row insert${pendingInserts > 1 ? 's' : ''}${
+                pendingRowsRemoval > 0
+                  ? `, ${pendingRowsRemoval} removal${
+                      pendingRowsRemoval > 1 ? 's' : ''
+                    }`
+                  : ''
+              }`
+            : pendingRowsUpdate > 0
+              ? `${pendingRowsUpdate} pending row update${
+                  pendingRowsRemoval > 0
+                    ? ` and ${pendingRowsRemoval} removal${
+                        pendingRowsRemoval > 1 ? 's' : ''
+                      }`
+                    : ''
+                }`
+              : pendingRowsRemoval > 0
+                ? `${pendingRowsRemoval} pending row removal${
+                    pendingRowsRemoval > 1 ? 's' : ''
+                  }`
+                : ''}{' '}
+        {totalChanges > 0 ? (
+          <>
+            ({totalChanges} value
+            {totalChanges > 1 ? 's' : ''})
+          </>
+        ) : null}
         {fail ? (
           <div className="data-grid-update-info--error">
             <i className="fa fa-exclamation-triangle" /> {fail.message}

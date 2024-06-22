@@ -650,6 +650,7 @@ export const mysqlDb: DBInterface = {
       values: { [fieldName: string]: string | null };
     }[],
     inserts: { [fieldName: string]: string | null }[],
+    removals: { [fieldName: string]: string | number | null }[],
   ): Promise<void> {
     const con = await openConnection();
     try {
@@ -664,6 +665,18 @@ export const mysqlDb: DBInterface = {
           [...Object.values(values), ...Object.values(where)],
         );
       }
+      if (removals.length > 0)
+        for (const where of removals) {
+          await con.query(
+            `DELETE FROM ${label(schema)}.${label(table)} WHERE ${Object.keys(
+              where,
+            )
+              // eslint-disable-next-line no-plusplus
+              .map((k) => `${label(k)} = ?`)
+              .join(' AND ')}`,
+            [...Object.values(where)],
+          );
+        }
       for (const insert of inserts) {
         await con.query(
           `INSERT INTO ${label(schema)}.${label(table)} (${Object.keys(insert)

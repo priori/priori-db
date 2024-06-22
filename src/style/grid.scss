@@ -578,3 +578,37 @@ th.desc.sortable:hover::before {
 .date {
   color: #36c;
 }
+tr.remove > td:first-of-type:before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  border: 1px solid #e00;
+  margin-top: 10px;
+  opacity: 0.5;
+  z-index: 3;
+}
+tr.remove .cell {
+  color: #bbb;
+}
+.content-table td .context-menu,
+.context-menu {
+  position: fixed !important;
+  background: white;
+  font-family: ui-sans-serif, sans-serif;
+  padding: 5px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  font-size: 13px;
+  height: auto;
+  width: 200px;
+  z-index: 4;
+  & > div {
+    height: auto;
+    width: auto;
+    padding: 4px 10px;
+    cursor: pointer;
+    &:hover {
+      background: #f0f0f0;
+    }
+  }
+}

@@ -26,6 +26,7 @@ export interface DataGridCoreProps {
       values: { [fieldName: string]: string | null };
     }[];
     inserts: { [fieldName: string]: string | null }[];
+    removals: { [fieldName: string]: string | number | null }[];
   }) => Promise<boolean>;
   pks?: string[];
   currentFilter?: Filter;
@@ -41,63 +42,63 @@ export interface DataGridState {
   active?: { rowIndex: number; colIndex: number };
   selection?: { rowIndex: [number, number]; colIndex: [number, number] };
   mouseDown?: { rowIndex: number; colIndex: number };
+  contextMenu?: { rowIndex: number; mouseX: number; mouseY: number };
   openSortDialog: boolean;
   openFilterDialog: boolean;
   editing: boolean | 2 | 1;
-  update: { [rowIndex: string]: { [colIndex: string]: string | null } };
+  update: {
+    [rowIndex: string]: { [colIndex: string]: string | null } | 'REMOVE';
+  };
   updateFail?: Error;
   updateRunning?: boolean;
   fetchingNewRows?: boolean;
   touched: boolean;
 }
 
-// prevent focus for better window drag experience
-function onGridContentMouseDown(e: React.MouseEvent) {
-  if (e.target === e.currentTarget) {
-    e.preventDefault();
-  }
-}
-
 export function DataGridCore(props: DataGridCoreProps) {
   const {
-    state,
-    elRef,
-    gridContentTableWidth,
-    headerElRef,
+    activeCellChanged,
+    activeCellValue,
+    activeElRef,
+    applyClick,
+    applyingUpdate,
     colsWidths,
-    pendingRowsUpdate,
-    pendingInserts,
-    scrollRef,
+    elRef,
+    extraBottomSpace,
+    fetchingNewRows,
+    gridContentHeight,
+    gridContentMarginTop,
+    gridContentRef,
+    gridContentTableTop,
+    gridContentTableWidth,
     hasBottomScrollbar,
     hasRightScrollbar,
-    activeElRef,
-    gridContentRef,
-    gridContentMarginTop,
-    gridContentHeight,
-    visibleStartingInEven,
-    visibleRows,
-    gridContentTableTop,
-    totalChanges,
+    headerElRef,
+    nop,
     onBlur,
+    onChange,
+    onContextMenuSelectOption,
+    onDiscardClick,
+    onDiscardFailClick,
+    onDoubleClick,
+    onEditBlur,
+    onFilterClick,
+    onFilterClose,
     onKeyDown,
     onMouseDown,
-    onDoubleClick,
-    onChange,
-    onEditBlur,
-    onFilterClose,
-    onScroll,
-    onSortClose,
-    onSortClick,
-    onFilterClick,
-    nop,
-    onDiscardClick,
-    applyClick,
     onPlusClick,
-    extraBottomSpace,
-    onDiscardFailClick,
-    applyingUpdate,
+    onScroll,
+    onSortClick,
+    onSortClose,
     onStartResize,
-    fetchingNewRows,
+    pendingInserts,
+    pendingRowsUpdate,
+    scrollRef,
+    pendingRowsRemoval,
+    state,
+    totalChanges,
+    visibleRows,
+    visibleStartingInEven,
   } = useDataGridCore(props);
 
   return (
@@ -142,23 +143,10 @@ export function DataGridCore(props: DataGridCoreProps) {
           hasBottomScrollbar={hasBottomScrollbar}
           hasRightScrollbar={hasRightScrollbar}
           onChange={onChange}
-          changed={
-            typeof state.update?.[state.active.rowIndex]?.[
-              state.active.colIndex
-            ] !== 'undefined'
-          }
+          changed={activeCellChanged}
           onBlur={onEditBlur}
           editing={state.editing}
-          value={
-            typeof state.update[state.active.rowIndex] !== 'undefined' &&
-            typeof state.update[state.active.rowIndex][
-              state.active.colIndex
-            ] !== 'undefined'
-              ? state.update[state.active.rowIndex]?.[state.active.colIndex]
-              : props.result.rows[state.active.rowIndex]?.[
-                  state.active.colIndex
-                ]
-          }
+          value={activeCellValue}
           elRef={activeElRef}
         />
       ) : null}
@@ -166,7 +154,6 @@ export function DataGridCore(props: DataGridCoreProps) {
         className="grid-content"
         onScroll={onScroll}
         ref={gridContentRef}
-        onMouseDown={onGridContentMouseDown}
         style={{
           overflowX: hasBottomScrollbar ? 'scroll' : 'hidden',
           overflowY: hasRightScrollbar ? 'scroll' : 'hidden',
@@ -201,6 +188,8 @@ export function DataGridCore(props: DataGridCoreProps) {
                 fields={props.result.fields}
                 finalWidths={colsWidths}
                 update={state.update}
+                contextMenu={state.contextMenu}
+                onContextMenuSelectOption={onContextMenuSelectOption}
               />
             </div>
           </div>
@@ -262,10 +251,13 @@ export function DataGridCore(props: DataGridCoreProps) {
         <div className="empty-table">
           <div>{props.emptyTable}</div>
         </div>
-      ) : pendingRowsUpdate > 0 || pendingInserts > 0 ? (
+      ) : pendingRowsUpdate > 0 ||
+        pendingInserts > 0 ||
+        pendingRowsRemoval > 0 ? (
         <DataGridUpdateInfoDialog
           onDiscardFailClick={onDiscardFailClick}
           pendingRowsUpdate={pendingRowsUpdate}
+          pendingRowsRemoval={pendingRowsRemoval}
           pendingInserts={pendingInserts}
           totalChanges={totalChanges}
           onDiscardClick={onDiscardClick}

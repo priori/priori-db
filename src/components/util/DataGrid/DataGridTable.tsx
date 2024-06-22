@@ -2,6 +2,7 @@ import { QueryResultDataField } from 'db/db';
 import React from 'react';
 import { equals } from 'util/equals';
 import { cellClassName, getType, getValString } from './util';
+import { ContextMenu } from './ContextMenu';
 
 interface DataGridTableProps {
   visibleStartingInEven: boolean;
@@ -18,6 +19,8 @@ interface DataGridTableProps {
   fields: QueryResultDataField[];
   finalWidths: number[];
   update: { [k: number]: { [k: number]: string | null } };
+  contextMenu?: { rowIndex: number; mouseX: number; mouseY: number };
+  onContextMenuSelectOption?: (option: string, rowIndex: number) => void;
 }
 
 export const DataGridTable = React.memo(
@@ -31,6 +34,8 @@ export const DataGridTable = React.memo(
     fields,
     finalWidths,
     update,
+    contextMenu,
+    onContextMenuSelectOption,
   }: DataGridTableProps) => {
     return (
       <table
@@ -56,16 +61,20 @@ export const DataGridTable = React.memo(
             <tr
               key={rowIndex}
               className={
-                rowIndex === visibleRows.length - 1 &&
-                row.length === 0 &&
-                (!update?.[slice[0] + rowIndex] ||
-                  Object.values(update?.[slice[0] + rowIndex]).length === 0)
-                  ? 'spare'
-                  : undefined
+                update?.[rowIndex] === 'REMOVE'
+                  ? 'remove'
+                  : rowIndex === visibleRows.length - 1 &&
+                      row.length === 0 &&
+                      (!update?.[slice[0] + rowIndex] ||
+                        Object.values(update?.[slice[0] + rowIndex]).length ===
+                          0)
+                    ? 'spare'
+                    : undefined
               }
             >
               {fields.map((field, index) => {
                 const hasChange =
+                  update?.[rowIndex] !== 'REMOVE' &&
                   typeof update?.[slice[0] + rowIndex]?.[index] !== 'undefined';
                 const val = hasChange
                   ? update[slice[0] + rowIndex][index]
@@ -87,6 +96,31 @@ export const DataGridTable = React.memo(
                           : valString}
                       </div>
                     </div>
+                    {contextMenu &&
+                    contextMenu.rowIndex === rowIndex &&
+                    !index ? (
+                      <ContextMenu
+                        onSelectOption={onContextMenuSelectOption}
+                        x={contextMenu.mouseX}
+                        y={contextMenu.mouseY}
+                        rowIndex={contextMenu.rowIndex}
+                        options={
+                          update?.[rowIndex] === 'REMOVE'
+                            ? {
+                                'unmark for removal': {
+                                  title: 'Unmark Row for Removal',
+                                  icon: 'undo',
+                                },
+                              }
+                            : {
+                                'mark for removal': {
+                                  title: 'Mark Row for Removal',
+                                  icon: 'close',
+                                },
+                              }
+                        }
+                      />
+                    ) : null}
                   </td>
                 );
               })}
@@ -107,7 +141,9 @@ export const DataGridTable = React.memo(
       prev.gridContentTableWidth === next.gridContentTableWidth &&
       prev.fields === next.fields &&
       prev.finalWidths === next.finalWidths &&
-      equals(prev.update, next.update)
+      prev.onContextMenuSelectOption === next.onContextMenuSelectOption &&
+      equals(prev.update, next.update) &&
+      equals(prev.contextMenu, next.contextMenu)
     );
   },
 );
