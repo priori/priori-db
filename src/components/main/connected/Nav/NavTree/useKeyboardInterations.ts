@@ -51,6 +51,11 @@ export function useKeyboardInterations(
   const onKeyDown = useEvent((e: React.KeyboardEvent) => {
     if (disabled) return;
     if (e.key === 'Tab' && e.ctrlKey) return;
+    if (
+      e.target instanceof HTMLElement &&
+      e.target.closest('.new-role-dialog, .dialog')
+    )
+      return;
     const strongHit = e.shiftKey || e.altKey || e.ctrlKey || e.metaKey;
     const direction =
       e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)
@@ -193,6 +198,11 @@ export function useKeyboardInterations(
   const onKeyUp = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (disabled) return;
     if (e.key === 'Tab' && e.ctrlKey) return;
+    if (
+      e.target instanceof HTMLElement &&
+      e.target.closest('.new-role-dialog, .dialog')
+    )
+      return;
     const doubleHit =
       (lastKeyUp.current.key === e.key &&
         Date.now() - lastKeyUp.current.time < 300 &&

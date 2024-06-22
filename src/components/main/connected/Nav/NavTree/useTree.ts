@@ -196,6 +196,7 @@ function buildTree(
     const rootRoles: NavTreeItem = {
       title: 'Users & Roles',
       children,
+      includeActions: db().privileges?.createRole ? true : undefined,
       internal: true,
       key: 'roles',
       type: 'roles-folder',

@@ -1326,6 +1326,11 @@ export const DB: DBInterface = {
   updateColumnViewComment: true,
 
   privileges: {
+    async createRole({ name, password }: { name: string; password: string }) {
+      await query(
+        `CREATE ROLE ${label(name)} ${password ? `WITH LOGIN PASSWORD ${str(password)}` : ''}`,
+      );
+    },
     async tablePrivilegesTypes() {
       return [
         'update',

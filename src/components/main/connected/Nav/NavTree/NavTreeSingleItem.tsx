@@ -9,6 +9,7 @@ import {
 import { equals } from 'util/equals';
 import { useEvent } from 'util/useEvent';
 import { NavTreeItem as NavTreeNode } from './useTree';
+import { NewRoleDialog } from './NewRoleDialog';
 
 function grantScrollVisibility(el: HTMLDivElement | null) {
   if (el) {
@@ -56,9 +57,30 @@ function NavTreeSingleItem0({
   onMouseDown: (i: NavTreeNode) => void;
   depth?: number;
 }) {
-  const localOnDblClick = useEvent(() => onDblClick(item));
-  const localOnClick = useEvent(() => onClick(item));
-  const localOnMouseDown = useEvent(() => onMouseDown(item));
+  const localOnDblClick = useEvent((e: React.MouseEvent) => {
+    if (
+      e.target instanceof HTMLElement &&
+      e.target.closest('.new-role-dialog, .dialog')
+    )
+      return;
+    onDblClick(item);
+  });
+  const localOnClick = useEvent((e: React.MouseEvent) => {
+    if (
+      e.target instanceof HTMLElement &&
+      e.target.closest('.new-role-dialog, .dialog')
+    )
+      return;
+    onClick(item);
+  });
+  const localOnMouseDown = useEvent((e: React.MouseEvent) => {
+    if (
+      e.target instanceof HTMLElement &&
+      e.target.closest('.new-role-dialog, .dialog')
+    )
+      return;
+    onMouseDown(item);
+  });
   const onInfoClick = useEvent((e: React.MouseEvent) => {
     if (item.type === 'schema-folder') {
       previewSchemaInfo(item.title);
@@ -83,9 +105,12 @@ function NavTreeSingleItem0({
     }
     e.stopPropagation();
   });
+  const [newRoleDialogOpen, setNewRoleDialogOpen] = React.useState(false);
   const onPlusClick = useEvent((e: React.MouseEvent) => {
     if (item.type === 'schema-folder') {
       newTable(item.title);
+    } else if (item.type === 'roles-folder') {
+      setNewRoleDialogOpen(true);
     }
     e.stopPropagation();
   });
@@ -142,6 +167,9 @@ function NavTreeSingleItem0({
       ) : null}
       {item.includeActions ? (
         <i className="fa fa-plus" onClick={onPlusClick} />
+      ) : null}
+      {newRoleDialogOpen ? (
+        <NewRoleDialog onBlur={() => setNewRoleDialogOpen(false)} />
       ) : null}
       {item.infoAction ? (
         <span

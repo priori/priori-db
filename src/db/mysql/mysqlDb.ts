@@ -868,6 +868,7 @@ export const mysqlDb: DBInterface = {
   },
 
   privileges: {
+    rolesHost: true,
     async tablePrivilegesTypes() {
       return [
         'update',
@@ -881,6 +882,21 @@ export const mysqlDb: DBInterface = {
         'alter',
         'showView',
       ];
+    },
+    async createRole({
+      name,
+      host,
+      password,
+    }: {
+      name: string;
+      host: string;
+      password: string;
+    }): Promise<void> {
+      execute(
+        `CREATE USER ${label(name)}${host ? `@${label(host)}` : ''}
+          ${password ? `IDENTIFIED BY ?` : ''}`,
+        password ? [password] : [],
+      );
     },
     async schemaPrivilegesTypes() {
       return [

@@ -217,7 +217,13 @@ export interface DBInterface {
   updateColumnViewName: boolean;
   updateColumnViewComment: boolean;
   privileges?: {
+    rolesHost?: true;
     schemaPrivilegesTypes?(): Promise<string[]>;
+    createRole(role: {
+      name: string;
+      host?: string;
+      password: string;
+    }): Promise<void>;
     tablePrivilegesTypes(): Promise<string[]>;
     listRoles(): Promise<
       {
