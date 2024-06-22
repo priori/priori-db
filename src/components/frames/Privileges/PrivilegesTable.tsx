@@ -40,7 +40,6 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
     updatePrivilegeHost: null as null | string | undefined,
     updatePrivilegeEntity: null as null | string,
     updatePrivilegeSchema: null as null | string | undefined,
-    hideInternalRoles: true,
   });
 
   const { internals, list } = useInternals(privileges);
@@ -177,9 +176,9 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
             {' '}
             <button
               type="button"
-              key={edit.hideInternalRoles ? 1 : 0}
+              key={internal.isOpen ? 1 : 0}
               className={`simple-button simple-button2 hide-button ${
-                edit.hideInternalRoles ? ' hidden' : ' shown'
+                !internal.isOpen ? ' hidden' : ' shown'
               }`}
               onClick={internal.open}
             >
@@ -317,9 +316,9 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
           <React.Fragment key={internal.name}>
             <button
               type="button"
-              key={edit.hideInternalRoles ? 1 : 0}
+              key={internal.isOpen ? 1 : 0}
               className={`simple-button simple-button2 hide-button ${
-                edit.hideInternalRoles ? ' hidden' : ' shown'
+                !internal.isOpen ? ' hidden' : ' shown'
               }`}
               onClick={internal.open}
             >

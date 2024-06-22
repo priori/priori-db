@@ -29,7 +29,6 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
   const [state, set] = useState({
     grant: false as false | true | { roleName: string; host?: string },
     revoke: false as false | { roleName: string; host?: string },
-    hideInternalRoles: true,
     schema: '',
     entityName: '',
   });
@@ -194,21 +193,21 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
         ))}
         {internals
           ? internals.map((internal) => (
-              <>
+              <React.Fragment key={internal.name}>
                 {' '}
                 <button
                   type="button"
                   className={`simple-button simple-button2 hide-button ${
-                    state.hideInternalRoles ? ' hidden' : ' shown'
+                    !internal.isOpen ? ' hidden' : ' shown'
                   }`}
-                  key={state.hideInternalRoles ? 1 : 0}
+                  key={internal.isOpen ? 1 : 0}
                   onClick={internal.open}
                 >
                   {internal.count} {internal.name}{' '}
                   <i className="fa fa-eye-slash" />
                   <i className="fa fa-eye" />
                 </button>
-              </>
+              </React.Fragment>
             ))
           : null}{' '}
         <button
