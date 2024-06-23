@@ -188,6 +188,7 @@ export const DataGridActiveCell = React.memo(
               onChange={textareaOnChange}
               onBlur={textareaOnBlur}
               onKeyDown={onkeydown}
+              readOnly={!!markedForRemoval}
               ref={textareaRef}
               placeholder={val === null ? 'null' : undefined}
               className="active-cell"
