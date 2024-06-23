@@ -92,15 +92,58 @@ async function listCols(schemaName: string, tableName: string) {
         ) || '' column_default,
         i.indisprimary IS NOT NULL is_primary,
 
-        CASE
-          WHEN
-            (information_schema._pg_char_max_length(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*))) IS NULL AND
-            pg_catalog.format_type(a.atttypid, null) = 'numeric'
-          THEN (information_schema._pg_numeric_precision(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*)))
-          ELSE (information_schema._pg_char_max_length(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*)))
-          END length,
+        CASE WHEN
+          (
+            CASE
+              WHEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typtypmod ELSE a.atttypmod END = '-1'::integer)
+                THEN NULL::integer
+              WHEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typbasetype ELSE a.atttypid END = ANY (ARRAY[(1042)::oid, (1043)::oid]))
+                THEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typtypmod ELSE a.atttypmod END - 4)
+              WHEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typbasetype ELSE a.atttypid END = ANY (ARRAY[(1560)::oid, (1562)::oid]))
+                THEN CASE WHEN t.typtype = 'd'::"char" THEN t.typtypmod ELSE a.atttypmod END
+              ELSE NULL::integer
+            END
+          ) IS NULL AND
+          pg_catalog.format_type(a.atttypid, null) = 'numeric'
+        THEN (
+          CASE
+            CASE WHEN t.typtype = 'd'::"char" THEN t.typbasetype ELSE a.atttypid END
+          WHEN 21 THEN 16
+          WHEN 23 THEN 32
+          WHEN 20 THEN 64
+          WHEN 1700 THEN
+            CASE WHEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typtypmod ELSE a.atttypmod END = '-1'::integer)
+            THEN NULL::integer
+            ELSE (((CASE WHEN t.typtype = 'd'::"char" THEN t.typtypmod ELSE a.atttypmod END - 4) >> 16) & 65535)
+          END
+          WHEN 700
+          THEN 24
+          WHEN 701
+          THEN 53
+          ELSE NULL::integer END
+        ) ELSE (
+          CASE
+            WHEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typtypmod ELSE a.atttypmod END = '-1'::integer)
+              THEN NULL::integer
+            WHEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typbasetype ELSE a.atttypid END = ANY (ARRAY[(1042)::oid, (1043)::oid]))
+              THEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typtypmod ELSE a.atttypmod END - 4)
+            WHEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typbasetype ELSE a.atttypid END = ANY (ARRAY[(1560)::oid, (1562)::oid]))
+              THEN CASE WHEN t.typtype = 'd'::"char" THEN t.typtypmod ELSE a.atttypmod END ELSE NULL::integer
+          END
+        )
+        END length,
 
-        (information_schema._pg_numeric_scale(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*))) scale,
+        (
+          CASE
+            WHEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typbasetype ELSE a.atttypid END = ANY (ARRAY[(21)::oid, (23)::oid, (20)::oid]))
+              THEN 0
+            WHEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typbasetype ELSE a.atttypid END = (1700)::oid)
+            THEN
+              CASE WHEN (CASE WHEN t.typtype = 'd'::"char" THEN t.typtypmod ELSE a.atttypmod END = '-1'::integer)
+                THEN NULL::integer
+              ELSE ((CASE WHEN t.typtype = 'd'::"char" THEN t.typtypmod ELSE a.atttypmod END - 4) & 65535) END
+            ELSE NULL::integer END
+        ) scale,
 
         (
           SELECT
@@ -124,8 +167,7 @@ async function listCols(schemaName: string, tableName: string) {
       WHERE
         a.attrelid = ${regclass} AND
         a.attnum > 0 AND
-        NOT a.attisdropped
-        `,
+        NOT a.attisdropped`,
     [tableName],
   );
   return res as {
