@@ -251,7 +251,7 @@ export function NewTableFrame(props: NewTableFrameProps) {
                 if (e.key === 'Space' || e.key === ' ' || e.key === 'Enter')
                   set({ ...c, primaryKey: true });
               }}
-              onClick={() => set({ ...c, autoIncrement: true })}
+              onClick={() => set({ ...c, primaryKey: true })}
             />
           )}
         </div>
