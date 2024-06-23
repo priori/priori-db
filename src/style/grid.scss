@@ -612,3 +612,10 @@ tr.remove .cell {
     }
   }
 }
+.active-cell--marked-for-removal .active-cell {
+  color: #bbb;
+}
+.grid div:focus .active.active-cell--marked-for-removal,
+.grid div.editing .active.active-cell--marked-for-removal {
+  border: 2px solid #aaa;
+}

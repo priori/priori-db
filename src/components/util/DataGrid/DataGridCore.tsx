@@ -147,6 +147,7 @@ export function DataGridCore(props: DataGridCoreProps) {
           onBlur={onEditBlur}
           editing={state.editing}
           value={activeCellValue}
+          markedForRemoval={state.update[state.active.rowIndex] === 'REMOVE'}
           elRef={activeElRef}
         />
       ) : null}

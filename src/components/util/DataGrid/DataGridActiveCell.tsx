@@ -87,6 +87,7 @@ interface DataGridActiveCellProps {
   changed: boolean;
   onBlur: () => void;
   field?: string;
+  markedForRemoval?: boolean;
 }
 export const DataGridActiveCell = React.memo(
   ({
@@ -105,6 +106,7 @@ export const DataGridActiveCell = React.memo(
     changed,
     onBlur,
     field,
+    markedForRemoval,
   }: DataGridActiveCellProps) => {
     const val = value;
     const type = getType(val, field);
@@ -173,7 +175,9 @@ export const DataGridActiveCell = React.memo(
         }}
         key={key}
         ref={elRef}
-        className={`active active-cell-wrapper ${even ? ' even' : ' odd'}`}
+        className={`active active-cell-wrapper ${even ? ' even' : ' odd'}${
+          markedForRemoval ? ' active-cell--marked-for-removal' : ''
+        }`}
       >
         <div
           style={{ marginLeft: `${-leftCrop}px`, height: `${rowHeight - 1}px` }}
