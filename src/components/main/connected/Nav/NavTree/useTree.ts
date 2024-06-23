@@ -247,14 +247,16 @@ export function useTree(
                   focused.key === v3.key &&
                   focused.schema === v3.schema;
                 const isOpen2 =
-                  (v3.type === 'function' &&
+                  ((v3.type === 'function' || v3.type === 'procedure') &&
                     tabs.open.function(v3.schema, v3.title)) ||
                   (v3.type === 'domain' &&
                     tabs.open.domain(v3.schema, v3.title)) ||
                   (v3.type === 'sequence' &&
                     tabs.open.sequence(v3.schema, v3.title));
                 const isActive2 =
-                  tabs.active?.props.type === v3.type &&
+                  (tabs.active?.props.type === v3.type ||
+                    (tabs.active?.props.type === 'function' &&
+                      v3.type === 'procedure')) &&
                   (tabs.active.props as { name: string }).name === v3.title;
                 if (isOpen2 || isActive2 || hasFocus2) {
                   return {
