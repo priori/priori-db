@@ -109,7 +109,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
           GRANTs
         </span>
       </h2>
-      <div>
+      <div className="privileges-list">
         {list.map((role) => (
           <React.Fragment
             key={
