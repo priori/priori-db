@@ -1,4 +1,6 @@
+import { useTab } from 'components/main/connected/ConnectedApp';
 import { Comment } from 'components/util/Comment';
+import { useMoreTime } from 'components/util/DataGrid/dataGridCoreUtils';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
 import { UpdatePasswordDialog } from 'components/util/Dialog/UpdatePasswordDialog';
@@ -11,8 +13,8 @@ import { grantError } from 'util/errors';
 import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
-import { RolePrivileges } from './Privileges/Privileges';
 import { Info } from './Info';
+import { RolePrivileges } from './Privileges/Privileges';
 
 export function RoleFrame(props: RoleFrameProps) {
   const { name } = props;
@@ -160,6 +162,14 @@ export function RoleFrame(props: RoleFrameProps) {
     [],
   );
 
+  useTab({
+    f5() {
+      service.reload();
+    },
+  });
+
+  const reloading = useMoreTime(service.status === 'reloading', 100);
+
   if (!service.lastValidData)
     return (
       <div>
@@ -189,7 +199,12 @@ export function RoleFrame(props: RoleFrameProps) {
     );
 
   return (
-    <div>
+    <div
+      style={{
+        opacity: reloading ? 0.5 : 1,
+        transition: 'opacity 0.1s',
+      }}
+    >
       <h1>
         <span className="adjustment-icon2">
           <div />

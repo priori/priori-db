@@ -1,5 +1,6 @@
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Comment } from 'components/util/Comment';
+import { useMoreTime } from 'components/util/DataGrid/dataGridCoreUtils';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
@@ -19,8 +20,8 @@ import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
 import { ChangeSchemaDialog } from '../util/Dialog/ChangeSchemaDialog';
-import { Privileges } from './Privileges/Privileges';
 import { Info } from './Info';
+import { Privileges } from './Privileges/Privileges';
 
 function sequenceDb() {
   const db2 = db();
@@ -182,8 +183,15 @@ export function SequenceFrame(props: SequenceFrameProps) {
     },
   );
 
+  const reloading = useMoreTime(service.status === 'reloading', 100);
+
   return (
-    <div>
+    <div
+      style={{
+        opacity: reloading ? 0.5 : 1,
+        transition: 'opacity 0.1s',
+      }}
+    >
       <h1>
         <span className="adjustment-icon2">
           <div />

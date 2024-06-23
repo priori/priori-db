@@ -1,5 +1,6 @@
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { Comment } from 'components/util/Comment';
+import { useMoreTime } from 'components/util/DataGrid/dataGridCoreUtils';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { InputDialog } from 'components/util/Dialog/InputDialog';
 import { RenameDialog } from 'components/util/Dialog/RenameDialog';
@@ -351,6 +352,8 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const { roles } = currentState();
 
+  const reloading = useMoreTime(service.status === 'reloading', 100);
+
   if (!service.lastValidData)
     return (
       <h1 style={{ opacity: 0.5 }}>
@@ -362,7 +365,12 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
     );
 
   return (
-    <>
+    <div
+      style={{
+        transition: 'opacity 0.1s',
+        opacity: reloading ? 0.6 : 1,
+      }}
+    >
       <h1>
         <span className="adjustment-icon2">
           <div />
@@ -1092,6 +1100,6 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           {service.error.message}
         </div>
       )}
-    </>
+    </div>
   );
 }
