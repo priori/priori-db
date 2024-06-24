@@ -28,14 +28,12 @@ export function useTableDataFrame(props: TableFrameProps) {
         currentSort: Sort;
         currentFilter?: Filter;
       }>(() => {});
-
     const result = await db().select({
       schema: props.schema,
       table: props.table,
       sort: selectedSort,
       filter,
     });
-
     return {
       result,
       currentSort: selectedSort as Sort,

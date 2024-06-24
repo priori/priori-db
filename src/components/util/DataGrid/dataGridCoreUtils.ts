@@ -1144,7 +1144,6 @@ export function useDataGridCore(props: DataGridCoreProps) {
       setState((s) => ({
         ...s,
         contextMenu: undefined,
-        update: {},
         updateRunning: false,
       }));
     } catch (e) {
