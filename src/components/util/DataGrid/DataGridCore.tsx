@@ -252,9 +252,8 @@ export function DataGridCore(props: DataGridCoreProps) {
         <div className="empty-table">
           <div>{props.emptyTable}</div>
         </div>
-      ) : pendingRowsUpdate > 0 ||
-        pendingInserts > 0 ||
-        pendingRowsRemoval > 0 ? (
+      ) : null}
+      {pendingRowsUpdate > 0 || pendingInserts > 0 || pendingRowsRemoval > 0 ? (
         <DataGridUpdateInfoDialog
           onDiscardFailClick={onDiscardFailClick}
           pendingRowsUpdate={pendingRowsUpdate}

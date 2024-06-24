@@ -286,6 +286,7 @@ tr:nth-child(2n):hover td.selected { background: #c0c0c0; }
   font-family: sans-serif;
   font-size: 25px;
   color: #ccc;
+  z-index: -1;
 }
 .change-dialog {
   position: absolute;
