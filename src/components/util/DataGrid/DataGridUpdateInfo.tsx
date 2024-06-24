@@ -46,15 +46,19 @@ export function DataGridUpdateInfoDialog({
         }
       >
         {pendingInserts > 0 && pendingRowsUpdate > 0
-          ? ` ${pendingInserts} insert${pendingInserts > 1 ? 's' : ''}${
+          ? `${pendingInserts} insert${pendingInserts > 1 ? 's' : ''}${
               pendingRowsRemoval > 0
-                ? `, ${pendingRowsRemoval} removal${
+                ? `, ${pendingRowsUpdate} update${
+                    pendingRowsUpdate > 1 ? 's' : ''
+                  } (${totalChanges} value${
+                    totalChanges > 1 ? 's' : ''
+                  }) and ${pendingRowsRemoval} removal${
                     pendingRowsRemoval > 1 ? 's' : ''
-                  }`
-                : ''
-            } and ${pendingRowsUpdate} update${
-              pendingRowsUpdate > 1 ? 's' : ''
-            } pending `
+                  } pending`
+                : ` and ${pendingRowsUpdate} update${
+                    pendingRowsUpdate > 1 ? 's' : ''
+                  } pending `
+            }`
           : pendingInserts > 0
             ? `${pendingInserts} pending row insert${pendingInserts > 1 ? 's' : ''}${
                 pendingRowsRemoval > 0
@@ -64,7 +68,7 @@ export function DataGridUpdateInfoDialog({
                   : ''
               }`
             : pendingRowsUpdate > 0
-              ? `${pendingRowsUpdate} pending row update${
+              ? `${pendingRowsUpdate} pending row update${pendingRowsUpdate > 1 ? 's' : ''}${
                   pendingRowsRemoval > 0
                     ? ` and ${pendingRowsRemoval} removal${
                         pendingRowsRemoval > 1 ? 's' : ''
@@ -76,7 +80,7 @@ export function DataGridUpdateInfoDialog({
                     pendingRowsRemoval > 1 ? 's' : ''
                   }`
                 : ''}{' '}
-        {totalChanges > 0 ? (
+        {totalChanges > 0 && !pendingRowsRemoval ? (
           <>
             ({totalChanges} value
             {totalChanges > 1 ? 's' : ''})
