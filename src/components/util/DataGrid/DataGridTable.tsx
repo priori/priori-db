@@ -61,7 +61,7 @@ export const DataGridTable = React.memo(
             <tr
               key={rowIndex}
               className={
-                update?.[rowIndex] === 'REMOVE'
+                update?.[rowIndex + slice[0]] === 'REMOVE'
                   ? 'remove'
                   : rowIndex === visibleRows.length - 1 &&
                       row.length === 0 &&
@@ -74,7 +74,7 @@ export const DataGridTable = React.memo(
             >
               {fields.map((field, index) => {
                 const hasChange =
-                  update?.[rowIndex] !== 'REMOVE' &&
+                  update?.[rowIndex + slice[0]] !== 'REMOVE' &&
                   typeof update?.[slice[0] + rowIndex]?.[index] !== 'undefined';
                 const val = hasChange
                   ? update[slice[0] + rowIndex][index]
@@ -97,7 +97,7 @@ export const DataGridTable = React.memo(
                       </div>
                     </div>
                     {contextMenu &&
-                    contextMenu.rowIndex === rowIndex &&
+                    contextMenu.rowIndex === rowIndex + slice[0] &&
                     !index ? (
                       <ContextMenu
                         onSelectOption={onContextMenuSelectOption}
