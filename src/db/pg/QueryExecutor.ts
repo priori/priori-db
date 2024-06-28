@@ -1,18 +1,19 @@
-import { assert } from 'util/assert';
-import { PoolClient, QueryArrayResult } from 'pg';
-import { CopyStreamQuery, CopyToStreamQuery, from, to } from 'pg-copy-streams';
-import { grantError } from 'util/errors';
-import PgCursor from 'pg-cursor';
-import { createReadStream, createWriteStream } from 'fs';
-import { pipeline } from 'node:stream/promises';
 import {
   Notice,
   QueryExecutor,
   QueryOptions,
-  QueryResultDataField,
   QueryResult,
+  QueryResultDataField,
   SimpleValue,
 } from 'db/db';
+import { ipcRenderer } from 'electron';
+import { createReadStream, createWriteStream } from 'fs';
+import { pipeline } from 'node:stream/promises';
+import { PoolClient, QueryArrayResult } from 'pg';
+import { CopyStreamQuery, CopyToStreamQuery, from, to } from 'pg-copy-streams';
+import PgCursor from 'pg-cursor';
+import { assert } from 'util/assert';
+import { grantError } from 'util/errors';
 import { openConnection } from './Connection';
 import { cancelBackend } from './DB';
 
@@ -32,15 +33,45 @@ function isMultipleQueries(q: string) {
 
 function hasToStdOut(query: string) {
   return (
-    !!query.match(/(?<!\n)^([^']|'([^']|'')*')*COPY\s+/gim) &&
-    !!query.match(/(?<!\n)^([^']|'([^']|'')*')*to\s+stdout/gim)
+    !!query.match(
+      /(?<!\n)^([^'/-]|'([^']|'')*'|-[^-]|--[^\n]*(\n|$)|\/[^*]|\/\*.*\*\/)*COPY/gim,
+    ) &&
+    !!query.match(
+      /(?<!\n)^([^'/-]|'([^']|'')*'|-[^-]|--[^\n]*(\n|$)|\/[^*]|\/\*.*\*\/)*to\s+stdout/gim,
+    )
   );
 }
 
 function hasFromStdIn(query: string) {
   return (
-    !!query.match(/(?<!\n)^([^']|'([^']|'')*')*COPY\s+/gim) &&
-    !!query.match(/(?<!\n)^([^']|'([^']|'')*')*from\s+stdin/gim)
+    !!query.match(
+      /(?<!\n)^([^'/-]|'([^']|'')*'|-[^-]|--[^\n]*(\n|$)|\/[^*]|\/\*.*\*\/)*COPY/gim,
+    ) &&
+    !!query.match(
+      /(?<!\n)^([^'/-]|'([^']|'')*'|-[^-]|--[^\n]*(\n|$)|\/[^*]|\/\*.*\*\/)*from\s+stdin/gim,
+    )
+  );
+}
+
+function hasMultipleToStdOut(query: string) {
+  return (
+    !!query.match(
+      /(?<!\n)^(([^'/-]|'([^']|'')*'|-[^-]|--[^\n]*(\n|$)|\/[^*]|\/\*.*\*\/)*COPY){2}/gim,
+    ) &&
+    !!query.match(
+      /(?<!\n)^(([^'/-]|'([^']|'')*'|-[^-]|--[^\n]*(\n|$)|\/[^*]|\/\*.*\*\/)*to\s+stdout){2}/gim,
+    )
+  );
+}
+
+function hasMultipleFromStdIn(query: string) {
+  return (
+    !!query.match(
+      /(?<!\n)^(([^'/-]|'([^']|'')*'|-[^-]|--[^\n]*(\n|$)|\/[^*]|\/\*.*\*\/)*COPY){2}/gim,
+    ) &&
+    !!query.match(
+      /(?<!\n)^(([^'/-]|'([^']|'')*'|-[^-]|--[^\n]*(\n|$)|\/[^*]|\/\*.*\*\/)*from\s+stdin){2}/gim,
+    )
   );
 }
 
@@ -50,13 +81,6 @@ export class PgQueryExecutor implements QueryExecutor {
   private db: PoolClient | null = null;
 
   private pid: number | undefined;
-
-  private pending: {
-    resolve: (r: QueryResult) => void;
-    reject: (e: unknown) => void;
-    query: string;
-    ops?: QueryOptions;
-  }[] = [];
 
   private onNotice: (n: Notice) => void;
 
@@ -118,148 +142,153 @@ export class PgQueryExecutor implements QueryExecutor {
 
   private lastCursor: PgCursor | null = null;
 
+  private openConnectionP: Promise<void> | null = null;
+
   async query(q: string, ops?: QueryOptions): Promise<QueryResult> {
     if (this.lastCursor) {
       await this.lastCursor.close();
       this.lastCursor = null;
     }
-    if (this.db) {
-      const stdOutMode = ops?.stdOutFile && hasToStdOut(q);
-      const stdInMode = ops?.stdInFile && hasFromStdIn(q);
-      if (stdOutMode && stdInMode)
-        throw new Error('Cannot use STDIN and STDOUT at the same time');
-      if (stdOutMode || stdInMode) {
-        const res = stdOutMode
-          ? ((await this.db.query(to(q))) as unknown as
-              | QueryArrayResult
-              | (CopyStreamQuery & { fields: undefined })
-              | (CopyToStreamQuery & { fields: undefined }))
-          : ((await this.db.query(from(q))) as unknown as
-              | QueryArrayResult
-              | (CopyStreamQuery & { fields: undefined })
-              | (CopyToStreamQuery & { fields: undefined }));
+    if (!this.db) {
+      if (!this.openConnectionP) this.openConnectionP = this.openConnection();
+      await this.openConnectionP;
+    }
+    assert(this.db);
+    const queryHastoStdOut = hasToStdOut(q);
+    const queryHasFromStdIn = hasFromStdIn(q);
 
-        if (stdOutMode && ops?.stdOutFile)
-          await pipeline(
-            res as CopyToStreamQuery,
-            createWriteStream(ops.stdOutFile),
-          );
-        if (stdInMode && ops?.stdInFile) {
-          const stream = res as CopyStreamQuery;
-          const fileStream = createReadStream(ops.stdInFile);
-          fileStream.pipe(stream);
-          await new Promise((resolve, reject) => {
-            fileStream.on('error', reject);
-            stream.on('error', reject);
-            stream.on('finish', resolve);
-          });
-        }
-        return {
-          ...(stdOutMode
-            ? {
-                stdOutResult: ops.stdOutFile as string,
-                stdOutMode: true,
-              }
-            : {}),
-          ...(stdInMode
-            ? {
-                stdInMode: true,
-              }
-            : {}),
-          rows: [],
-          fields: [],
-          rowCount: res.rowCount || 0,
-        };
-      }
-      if (isMultipleQueries(q)) {
-        const res2 = await this.db.query({
-          text: q as string,
-          rowMode: 'array',
-          values: [],
+    if (queryHasFromStdIn && queryHastoStdOut)
+      throw new Error('Cannot use STDIN and STDOUT at the same time');
+    if (queryHastoStdOut && hasMultipleToStdOut(q))
+      throw new Error('Cannot use multiple COPY TO STDOUT at the same time');
+    if (queryHasFromStdIn && hasMultipleFromStdIn(q))
+      throw new Error('Cannot use multiple COPY FROM STDIN at the same time');
+
+    let stdOutFile = ops?.stdOutFile;
+    let stdInFile = ops?.stdInFile;
+    if (!stdOutFile && queryHastoStdOut) {
+      stdOutFile = await ipcRenderer.invoke('dialog:saveAny');
+    } else if (!stdInFile && queryHasFromStdIn) {
+      stdInFile = await ipcRenderer.invoke('dialog:openAny');
+    }
+
+    const stdOutMode = stdOutFile && queryHastoStdOut;
+    const stdInMode = stdInFile && queryHasFromStdIn;
+
+    if (stdOutMode || stdInMode) {
+      const res = stdOutMode
+        ? (this.db.query(to(q)) as unknown as
+            | QueryArrayResult
+            | (CopyStreamQuery & { fields: undefined })
+            | (CopyToStreamQuery & { fields: undefined }))
+        : (this.db.query(from(q)) as unknown as
+            | QueryArrayResult
+            | (CopyStreamQuery & { fields: undefined })
+            | (CopyToStreamQuery & { fields: undefined }));
+
+      if (stdOutMode && stdOutFile)
+        await pipeline(res as CopyToStreamQuery, createWriteStream(stdOutFile));
+      if (stdInMode && stdInFile) {
+        const stream = res as CopyStreamQuery;
+        const fileStream = createReadStream(stdInFile);
+        fileStream.pipe(stream);
+        await new Promise((resolve, reject) => {
+          fileStream.on('error', reject);
+          stream.on('error', reject);
+          stream.on('finish', resolve);
         });
-        return {
-          rows: res2.rows,
-          fields: res2.fields as unknown as QueryResultDataField[],
-          rowCount: res2.rowCount || 0,
-        };
       }
-      const c = this.db.query(new PgCursor(q, [], { rowMode: 'array' }));
-      this.lastCursor = c;
-      if ('state' in c && c.state === 'error') {
-        await c.close();
-        // eslint-disable-next-line no-underscore-dangle
-        throw grantError('_error' in c ? c._error : c);
-      }
-      return new Promise((resolve, reject) => {
-        c.read(fetchSize, (err: unknown, rows: SimpleValue[][]) => {
-          if (err) {
-            this.lastCursor = c;
-            // eslint-disable-next-line promise/no-promise-in-callback
-            c.close().then(() => reject(grantError(err)));
-            return;
-          }
-          const ret = {
-            rows,
-            // eslint-disable-next-line no-underscore-dangle
-            fields: (c as any)._result.fields as QueryResultDataField[],
-            // eslint-disable-next-line no-underscore-dangle
-            rowCount: (c as any)._result.rowCount,
-            fetchMoreRows:
-              rows.length === fetchSize
-                ? () => {
-                    return new Promise<{
-                      rows: SimpleValue[][];
-                      fields: QueryResultDataField[];
-                      rowCount: number;
-                    }>((_resolve, _reject) => {
-                      c.read(
-                        fetchSize,
-                        (err2: unknown, newRows: SimpleValue[][]) => {
-                          if (err2) {
-                            c.close();
-                            this.lastCursor = null;
-                            _reject(grantError(err2));
-                            return;
-                          }
-                          ret.rows = [...ret.rows, ...newRows];
-                          ret.fetchMoreRows =
-                            newRows.length === fetchSize
-                              ? ret.fetchMoreRows
-                              : undefined;
-                          _resolve({
-                            ...ret,
-                          });
-                        },
-                      );
-                    });
-                  }
-                : undefined,
-          };
-          resolve({ ...ret });
-        });
+      return {
+        ...(stdOutMode
+          ? {
+              stdOutResult: stdOutFile as string,
+              stdOutMode: true,
+            }
+          : {}),
+        ...(stdInMode
+          ? {
+              stdInMode: true,
+            }
+          : {}),
+        rows: [],
+        fields: [],
+        rowCount: res.rowCount || 0,
+      };
+    }
+    if (isMultipleQueries(q)) {
+      const res2 = await this.db.query({
+        text: q as string,
+        rowMode: 'array',
+        values: [],
       });
-      /* */
+      return {
+        rows: res2.rows,
+        fields: res2.fields as unknown as QueryResultDataField[],
+        rowCount: res2.rowCount || 0,
+      };
+    }
+    const c = this.db.query(new PgCursor(q, [], { rowMode: 'array' }));
+    this.lastCursor = c;
+    if ('state' in c && c.state === 'error') {
+      await c.close();
+      // eslint-disable-next-line no-underscore-dangle
+      throw grantError('_error' in c ? c._error : c);
     }
     return new Promise((resolve, reject) => {
-      this.pending.push({
-        resolve,
-        reject,
-        query: q,
-        ops,
+      c.read(fetchSize, (err: unknown, rows: SimpleValue[][]) => {
+        if (err) {
+          this.lastCursor = c;
+          // eslint-disable-next-line promise/no-promise-in-callback
+          c.close().then(() => reject(grantError(err)));
+          return;
+        }
+        const ret = {
+          rows,
+          // eslint-disable-next-line no-underscore-dangle
+          fields: (c as any)._result.fields as QueryResultDataField[],
+          // eslint-disable-next-line no-underscore-dangle
+          rowCount: (c as any)._result.rowCount,
+          fetchMoreRows:
+            rows.length === fetchSize
+              ? () => {
+                  return new Promise<{
+                    rows: SimpleValue[][];
+                    fields: QueryResultDataField[];
+                    rowCount: number;
+                  }>((_resolve, _reject) => {
+                    c.read(
+                      fetchSize,
+                      (err2: unknown, newRows: SimpleValue[][]) => {
+                        if (err2) {
+                          c.close();
+                          this.lastCursor = null;
+                          _reject(grantError(err2));
+                          return;
+                        }
+                        ret.rows = [...ret.rows, ...newRows];
+                        ret.fetchMoreRows =
+                          newRows.length === fetchSize
+                            ? ret.fetchMoreRows
+                            : undefined;
+                        _resolve({
+                          ...ret,
+                        });
+                      },
+                    );
+                  });
+                }
+              : undefined,
+        };
+        resolve({ ...ret });
       });
-      if (this.pending.length === 1) this.openConnection();
     });
   }
 
   private async openConnection() {
-    const { pending } = this;
     try {
       const db = await openConnection();
-      const result = await db.query({
-        text: 'SELECT pg_backend_pid()',
-        rowMode: 'array',
-      });
-      const pid = result.rows[0][0];
+      const pid = (db as { processID?: number }).processID;
+      assert(typeof pid === 'number');
       this.pid = pid as number;
       this.onPid(this.pid);
       this.db = db;
@@ -283,21 +312,7 @@ export class PgQueryExecutor implements QueryExecutor {
         this.onError(err);
       });
     } catch (err) {
-      for (const { reject } of pending) {
-        reject(err);
-      }
-      return;
-    } finally {
-      this.pending = [];
-    }
-    for (const e of pending) {
-      assert(!!this.db);
-      try {
-        const ret = await this.query(e.query, e.ops);
-        e.resolve(ret);
-      } catch (err) {
-        e.reject(err);
-      }
+      throw grantError(err);
     }
   }
 }
