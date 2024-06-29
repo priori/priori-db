@@ -130,7 +130,13 @@ export function DataGridCore(props: DataGridCoreProps) {
             pks={props.pks}
             colsWidths={colsWidths}
             currentSort={props.currentSort}
-            onChangeSort={pendingRowsUpdate ? undefined : props.onChangeSort}
+            onChangeSort={
+              pendingRowsUpdate > 0 ||
+              pendingInserts > 0 ||
+              pendingRowsRemoval > 0
+                ? undefined
+                : props.onChangeSort
+            }
             onStartResize={onStartResize}
           />
         </table>
