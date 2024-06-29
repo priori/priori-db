@@ -32,6 +32,8 @@ export interface GridProps {
   className?: string;
   onChangeFilter?: (filter: Filter) => void;
   onTouch?: () => void;
+  limit?: 1000 | 10000 | 'unlimited';
+  onChangeLimit?: (limit: 1000 | 10000 | 'unlimited') => void;
 }
 
 export const DataGrid = memo(
@@ -57,6 +59,8 @@ export const DataGrid = memo(
               onChangeFilter={props.onChangeFilter}
               fetchMoreRows={props.fetchMoreRows}
               onTouch={props.onTouch}
+              limit={props.limit}
+              onChangeLimit={props.onChangeLimit}
             />
           )}
         />
@@ -75,5 +79,7 @@ export const DataGrid = memo(
     a.onScroll === b.onScroll &&
     a.currentFilter === b.currentFilter &&
     a.fetchMoreRows === b.fetchMoreRows &&
-    a.onChangeFilter === b.onChangeFilter,
+    a.onChangeFilter === b.onChangeFilter &&
+    a.limit === b.limit &&
+    a.onChangeLimit === b.onChangeLimit,
 );

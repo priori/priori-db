@@ -1,13 +1,18 @@
 import { DBInterface } from 'db/DBInterface';
 import { buildFilterWhere, buildFinalQueryWhere } from 'db/util';
+import PgCursor from 'pg-cursor';
+import { assert } from 'util/assert';
 import { grantError } from 'util/errors';
+import hotLoadSafe from 'util/hotLoadSafe';
 import { EntityType, TableColumnType } from '../../types';
 import {
   DomainInfo,
   Filter,
   Notice,
   QueryResultData,
+  QueryResultDataField,
   SequenceInfo,
+  SimpleValue,
   Sort,
   TableInfo,
 } from '../db';
@@ -336,11 +341,13 @@ export const DB: DBInterface = {
     table,
     sort,
     filter,
+    limit,
   }: {
     schema: string;
     table: string;
     sort: Sort | null;
     filter: Filter | undefined;
+    limit: 1000 | 10_000 | 'unlimited';
   }): Promise<QueryResultData> {
     const { where, params } = filter
       ? buildFinalQueryWhere(label, str, filter)
@@ -356,7 +363,78 @@ export const DB: DBInterface = {
             )
             .join(', ')} `
         : ''
-    }LIMIT 1000`;
+    }${typeof limit === 'number' ? `LIMIT ${limit}` : ''}`;
+
+    if (limit === 'unlimited') {
+      const p = hotLoadSafe.pool;
+      assert(p);
+      const con = await p.connect();
+      const c = con.query(new PgCursor(sql, params, { rowMode: 'array' }));
+      const ret0 = await new Promise((resolve, reject) => {
+        c.read(500, (err: unknown, rows: SimpleValue[][]) => {
+          if (err) {
+            // eslint-disable-next-line promise/no-promise-in-callback
+            c.close().then(() => reject(grantError(err)));
+            return;
+          }
+
+          const ret = {
+            rows,
+            // eslint-disable-next-line no-underscore-dangle
+            fields: (c as any)._result.fields as QueryResultDataField[],
+            release:
+              rows.length === 500
+                ? () => {
+                    c.close();
+                    con.release(true);
+                  }
+                : undefined,
+            fetchMoreRows:
+              rows.length === 500
+                ? () => {
+                    return new Promise<{
+                      rows: SimpleValue[][];
+                      fields: QueryResultDataField[];
+                      release?: () => void;
+                      fetchMoreRows?: () => Promise<{
+                        rows: SimpleValue[][];
+                        fields: QueryResultDataField[];
+                        release?: () => void;
+                      }>;
+                    }>((_resolve, _reject) => {
+                      c.read(500, (err2: unknown, newRows: SimpleValue[][]) => {
+                        if (err2) {
+                          c.close();
+                          _reject(grantError(err2));
+                          return;
+                        }
+                        ret.rows = [...ret.rows, ...newRows];
+                        ret.fetchMoreRows =
+                          newRows.length === 500
+                            ? ret.fetchMoreRows
+                            : undefined;
+                        if (newRows.length !== 500 && ret.release)
+                          ret.release();
+                        _resolve({
+                          ...ret,
+                          release:
+                            newRows.length === 500 ? ret.release : undefined,
+                          fetchMoreRows:
+                            newRows.length === 500
+                              ? ret.fetchMoreRows
+                              : undefined,
+                        });
+                      });
+                    });
+                  }
+                : undefined,
+          };
+          resolve({ ...ret });
+        });
+      });
+      return ret0 as QueryResultData;
+    }
+
     const result = await query(sql, params, true);
     return {
       rows: result.rows,

@@ -545,7 +545,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     };
     if (
       container.scrollTop + container.offsetHeight >=
-      container.scrollHeight - 40
+      container.scrollHeight - 40 - extraBottomSpace
     ) {
       fetchMoreRows0();
     }
@@ -1184,6 +1184,19 @@ export function useDataGridCore(props: DataGridCoreProps) {
       : state.active
         ? props.result.rows[state.active.rowIndex]?.[state.active.colIndex]
         : undefined;
+
+  const onChangeLimit0 = useEvent((e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!props.onChangeLimit) return;
+    if (e.target.value === 'unlimited') {
+      props.onChangeLimit('unlimited');
+    } else {
+      props.onChangeLimit(parseInt(e.target.value, 10) as 1000 | 10000);
+    }
+  });
+
+  const onChangeLimit =
+    props.limit && props.onChangeLimit ? onChangeLimit0 : undefined;
+
   return {
     activeCellChanged,
     activeCellValue,
@@ -1207,6 +1220,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     nop,
     onBlur,
     onChange,
+    onChangeLimit,
     onContextMenuSelectOption,
     onDiscardClick,
     onDiscardFailClick,

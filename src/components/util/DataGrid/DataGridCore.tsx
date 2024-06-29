@@ -35,6 +35,9 @@ export interface DataGridCoreProps {
   onChangeFilter?: (filter: Filter) => void;
   // eslint-disable-next-line react/no-unused-prop-types
   onTouch?: () => void;
+  limit?: 1000 | 10000 | 'unlimited';
+  // eslint-disable-next-line react/no-unused-prop-types
+  onChangeLimit?: (limit: 1000 | 10000 | 'unlimited') => void;
 }
 
 export interface DataGridState {
@@ -99,6 +102,7 @@ export function DataGridCore(props: DataGridCoreProps) {
     totalChanges,
     visibleRows,
     visibleStartingInEven,
+    onChangeLimit,
   } = useDataGridCore(props);
 
   return (
@@ -193,6 +197,31 @@ export function DataGridCore(props: DataGridCoreProps) {
                 onContextMenuSelectOption={onContextMenuSelectOption}
               />
             </div>
+            {onChangeLimit && props.limit ? (
+              <div
+                style={{
+                  top: gridContentHeight + gridContentMarginTop,
+                }}
+                className="grid-content--footer"
+              >
+                <select
+                  value={props.limit}
+                  disabled={
+                    props.result.rows.length < 1000 ||
+                    pendingRowsUpdate > 0 ||
+                    pendingInserts > 0 ||
+                    pendingRowsRemoval > 0
+                  }
+                  onChange={onChangeLimit}
+                >
+                  <option value="1000">LIMIT 1000</option>
+                  <option value="10000">LIMIT 10000</option>
+                  <option value="unlimited">
+                    UNLIMITED (incremental fetching)
+                  </option>
+                </select>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -243,7 +272,20 @@ export function DataGridCore(props: DataGridCoreProps) {
             <i className="fa fa-filter" onMouseDown={onFilterClick} />
           ) : null}
           {props.onUpdate ? (
-            <i className="fa fa-plus" onMouseDown={onPlusClick} />
+            props.fetchMoreRows ? (
+              <i
+                className="fa fa-plus disabled"
+                style={{
+                  cursor: 'default',
+                  color: 'gray',
+                  background: '#f7f7f7',
+                  opacity: 0.7,
+                }}
+                onMouseDown={nop}
+              />
+            ) : (
+              <i className="fa fa-plus" onMouseDown={onPlusClick} />
+            )
           ) : null}
         </>
       )}

@@ -471,7 +471,7 @@ th.desc.sortable:hover::before {
 .grid .dialog {
   input,
   textarea {
-    border: solid 1px #ccc;
+    border: 1px solid #e1e1e1;
     border-radius: 3px;
     outline: none;
     &:focus {
@@ -619,4 +619,45 @@ tr.remove .cell {
 .grid div:focus .active.active-cell--marked-for-removal,
 .grid div.editing .active.active-cell--marked-for-removal {
   border: 2px solid #aaa;
+}
+.hint {
+  position: absolute;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.77);
+  backdrop-filter: blur(1px);
+  margin-top: -50px;
+  color: white;
+  height: auto;
+  padding: 5px 7px;
+  font-family: sans-serif;
+  font-size: 13px;
+  border-radius: 6px;
+  margin-left: 4px;
+  pointer-events: all;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.3em;
+}
+
+.grid-content--table-wrapper-outer select {
+  margin-top: 22px;
+  background: transparent;
+  border: solid 1px #ccc;
+  padding: 2px;
+  text-align: center;
+  &:focus,
+  &:active {
+    border: solid 1px #1976d2;
+  }
+  &:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+.grid-content--footer {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  text-align: center;
+  font-size: 13px;
+  padding-top: 8px;
 }

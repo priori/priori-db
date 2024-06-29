@@ -105,7 +105,7 @@ export const DataGridTable = React.memo(
                         y={contextMenu.mouseY}
                         rowIndex={contextMenu.rowIndex}
                         options={
-                          update?.[rowIndex] === 'REMOVE'
+                          update?.[rowIndex + slice[0]] === 'REMOVE'
                             ? {
                                 'unmark for removal': {
                                   title: 'Unmark Row for Removal',

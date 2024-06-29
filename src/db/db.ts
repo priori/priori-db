@@ -131,6 +131,11 @@ export interface Notice {
 export interface QueryResultData {
   rows: SimpleValue[][];
   fields: QueryResultDataField[];
+  fetchMoreRows?: () => Promise<{
+    rows: SimpleValue[][];
+    fields: QueryResultDataField[];
+  }>;
+  release?: () => void;
 }
 
 export interface QueryOptions {

@@ -1,14 +1,18 @@
+import { useTab } from 'components/main/connected/ConnectedApp';
+import { Filter, QueryResultData, Sort, db } from 'db/db';
+import { useEffect, useRef, useState } from 'react';
 import { keepTabOpen } from 'state/actions';
+import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
-import { useTab } from 'components/main/connected/ConnectedApp';
-import { db, Filter, Sort, QueryResultData } from 'db/db';
-import { useState } from 'react';
 import { TableFrameProps } from '../../../types';
 
 export function useTableDataFrame(props: TableFrameProps) {
   const [sort, setSort] = useState<Sort | undefined>(undefined);
   const [filter, setFilter] = useState<Filter | undefined>(undefined);
+  const [lastIncrementalRows, setLastIncrementalRows] = useState<
+    QueryResultData | undefined
+  >(undefined);
 
   const defaultSortService = useService(
     () => db().defaultSort(props.schema, props.table) as Promise<Sort>,
@@ -21,7 +25,16 @@ export function useTableDataFrame(props: TableFrameProps) {
 
   const selectedSort = sort || defaultSortService.lastValidData;
 
+  const [limit, setLimit] = useState<1000 | 10000 | 'unlimited'>(1000);
+
+  const onChangeLimit = useEvent((l: 1000 | 10000 | 'unlimited') => {
+    setLimit(l);
+  });
+
+  const isMounted = useIsMounted();
+
   const dataService = useService(async () => {
+    setLastIncrementalRows(undefined);
     if (!sortReady)
       return new Promise<{
         result: QueryResultData;
@@ -33,13 +46,32 @@ export function useTableDataFrame(props: TableFrameProps) {
       table: props.table,
       sort: selectedSort,
       filter,
+      limit,
     });
+    if (!isMounted() && result.release) {
+      result.release();
+    }
     return {
       result,
       currentSort: selectedSort as Sort,
       currentFilter: filter,
     };
-  }, [props.schema, props.table, selectedSort, sortReady, filter]);
+  }, [props.schema, props.table, selectedSort, sortReady, filter, limit]);
+
+  const lastIncrementalRowsRef = useRef(lastIncrementalRows);
+  lastIncrementalRowsRef.current = lastIncrementalRows;
+  useEffect(() => {
+    return () => {
+      const last = lastIncrementalRowsRef.current;
+      if (last?.release) {
+        last.release();
+      }
+      if (dataService.lastValidData?.result?.release) {
+        if (dataService.lastValidData.result.release !== last?.release)
+          dataService.lastValidData.result.release();
+      }
+    };
+  }, [dataService.lastValidData?.result]);
 
   const pks = useService(
     () => db().pks(props.schema, props.table),
@@ -92,12 +124,33 @@ export function useTableDataFrame(props: TableFrameProps) {
     },
   });
 
+  const fetchMoreRows0 = useEvent(async () => {
+    if (lastIncrementalRows) {
+      lastIncrementalRows.fetchMoreRows?.().then((res) => {
+        setLastIncrementalRows(res);
+      });
+    } else
+      dataService.lastValidData?.result?.fetchMoreRows?.().then((res) => {
+        setLastIncrementalRows(res);
+      });
+  });
+
+  const fetchMoreRows = lastIncrementalRows
+    ? lastIncrementalRows.fetchMoreRows
+      ? fetchMoreRows0
+      : undefined
+    : dataService.lastValidData?.result?.fetchMoreRows
+      ? fetchMoreRows0
+      : undefined;
+
+  const dataResult = lastIncrementalRows ?? dataService.lastValidData?.result;
+
   return {
     onScroll,
     onUpdate,
     onTouch,
     pks: pks.lastValidData ?? undefined,
-    dataResult: dataService.lastValidData?.result,
+    dataResult,
     error: dataService.error,
     currentFilter: dataService.lastValidData?.currentFilter,
     status: dataService.status,
@@ -106,5 +159,8 @@ export function useTableDataFrame(props: TableFrameProps) {
     dataStatus: dataService.status,
     onChangeSort,
     onChangeFilter,
+    limit,
+    onChangeLimit,
+    fetchMoreRows,
   };
 }

@@ -38,7 +38,16 @@ export function DataGridSortDialog(props: DataGridSortDialogProps) {
       }}
       className="form"
     >
-      <h1 style={{ margin: 0, marginBottom: 20, lineHeight: '1em' }}>Sort</h1>
+      <h1
+        style={{
+          margin: 0,
+          marginBottom: 20,
+          lineHeight: '1em',
+          fontFamily: 'sans-serif',
+        }}
+      >
+        Sort
+      </h1>
       {[...form, null].map((formField, i) => (
         <div
           style={{

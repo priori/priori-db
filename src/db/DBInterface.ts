@@ -37,11 +37,13 @@ export interface DBInterface {
     table,
     sort,
     filter,
+    limit,
   }: {
     schema: string;
     table: string;
     sort: Sort | null;
     filter: Filter | undefined;
+    limit: 1000 | 10_000 | 'unlimited';
   }): Promise<QueryResultData>;
 
   autoIncrement: boolean;

@@ -13,6 +13,7 @@ import { assert } from 'util/assert';
 import hotLoadSafe from 'util/hotLoadSafe';
 import { execute, first, list, openConnection, val } from './mysql';
 import { newQueryExecutor } from './newQueryExecutor';
+import { selectExecution } from './selectExecution';
 import { MysqlCol, fixCol, tableInfo } from './tableInfo';
 
 function prettyBytes(bytes: number) {
@@ -338,11 +339,13 @@ export const mysqlDb: DBInterface = {
     table,
     sort,
     filter,
+    limit,
   }: {
     schema: string;
     table: string;
     sort: Sort | null;
     filter: Filter | undefined;
+    limit: 1000 | 10000 | 'unlimited';
   }): Promise<QueryResultData> {
     const { where, params } = filter
       ? buildFinalQueryWhere(label, str, filter)
@@ -358,9 +361,12 @@ export const mysqlDb: DBInterface = {
             )
             .join(', ')} `
         : ''
-    }LIMIT 1000`;
+    }${typeof limit === 'number' ? `LIMIT ${limit}` : ''}`;
     const pool = hotLoadSafe.mysql;
     assert(pool);
+    if (limit === 'unlimited') {
+      return selectExecution(sql, params);
+    }
     const [rows, cols] = await pool.query({
       sql,
       values: params,

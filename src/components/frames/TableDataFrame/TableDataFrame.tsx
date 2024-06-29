@@ -17,6 +17,9 @@ export function TableDataFrame(props: TableFrameProps): JSX.Element {
     dataStatus,
     onChangeFilter,
     onTouch,
+    limit,
+    onChangeLimit,
+    fetchMoreRows,
   } = useTableDataFrame(props);
 
   return (
@@ -32,6 +35,7 @@ export function TableDataFrame(props: TableFrameProps): JSX.Element {
           bottom: 0,
           right: 0,
         }}
+        fetchMoreRows={fetchMoreRows}
         onUpdate={onUpdate}
         currentFilter={currentFilter}
         defaultSort={defaultSort}
@@ -41,6 +45,8 @@ export function TableDataFrame(props: TableFrameProps): JSX.Element {
         result={dataResult}
         emptyTable="Empty Table"
         onTouch={onTouch}
+        limit={limit}
+        onChangeLimit={onChangeLimit}
       />
     )) ||
     (error?.message && (
