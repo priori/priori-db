@@ -1,9 +1,12 @@
+import { db } from 'db/db';
 import React, { useRef } from 'react';
 import {
+  extraTableTab,
   keepDomain,
   keepFunction,
   keepOpenRole,
   keepSequence,
+  newTable,
   openDomains,
   openFunctions,
   openRoles,
@@ -12,9 +15,10 @@ import {
   previewDomain,
   previewFunction,
   previewRole,
+  previewSchemaInfo,
   previewSequence,
   previewTable,
-  extraTableTab,
+  previewTableInfo,
 } from 'state/actions';
 import { NavSchema } from 'types';
 import { assert } from 'util/assert';
@@ -29,6 +33,7 @@ export function useKeyboardInterations(
   blur: (e: 'next' | 'prev' | 'up' | 'down') => void,
   setFocused: (v: Focus | null) => void,
   schemas: NavSchema[],
+  onMouseLeave: () => void,
   disabled?: boolean,
 ) {
   const rows = React.useMemo(() => {
@@ -48,8 +53,10 @@ export function useKeyboardInterations(
     }
     return rows2;
   }, [tree]);
+
   const onKeyDown = useEvent((e: React.KeyboardEvent) => {
     if (disabled) return;
+    onMouseLeave();
     if (e.key === 'Tab' && e.ctrlKey) return;
     if (
       e.target instanceof HTMLElement &&
@@ -102,21 +109,106 @@ export function useKeyboardInterations(
     if (index === -1) return;
     const item = rows[index];
     if (direction === 1 || direction === -1) {
-      const next = rows[index + direction];
-      if (next) {
+      if (focused.contextMenu === 2 && direction === -1) {
         setFocused({
-          type: next.type,
-          key: next.key,
-          schema: next.schema,
-          name: next.title,
-        } as Focus);
-      } else if (direction === -1) {
-        blur('up');
+          ...focused,
+          contextMenu: 1,
+        });
+      } else if (
+        focused.contextMenu === 1 &&
+        direction === 1 &&
+        focused.type !== 'roles-folder'
+      ) {
+        setFocused({
+          ...focused,
+          contextMenu: 2,
+        });
+      } else {
+        const next = rows[index + direction];
+        if (next) {
+          setFocused({
+            type: next.type,
+            key: next.key,
+            schema: next.schema,
+            name: next.title,
+            // contextMenu:
+            //   (next.type === 'table' ||
+            //     next.type === 'view' ||
+            //     next.type === 'mview') &&
+            //   focused.contextMenu === 2 &&
+            //   direction === 1
+            //     ? 1
+            //     : (next.type === 'table' ||
+            //           next.type === 'view' ||
+            //           next.type === 'mview') &&
+            //         focused.contextMenu === 1 &&
+            //         direction === -1
+            //       ? 2
+            //       : undefined,
+          } as Focus);
+        } else if (direction === -1) {
+          blur('up');
+        }
       }
       return;
       // open or close folders
     }
-    if (
+    if (enter && (focused.contextMenu === 1 || focused.contextMenu === 2)) {
+      if (focused.type === 'schema-folder' && focused.contextMenu === 1) {
+        newTable(focused.name);
+      } else if (
+        focused.type === 'schema-folder' &&
+        focused.contextMenu === 2
+      ) {
+        previewSchemaInfo(focused.name);
+      } else if (
+        (focused.type === 'table' ||
+          focused.type === 'view' ||
+          focused.type === 'mview') &&
+        focused.contextMenu === 1
+      ) {
+        previewTableInfo(focused.schema, focused.name);
+      } else if (
+        (focused.type === 'table' ||
+          focused.type === 'view' ||
+          focused.type === 'mview') &&
+        focused.contextMenu === 2
+      ) {
+        previewTable(focused.schema, {
+          name: focused.name,
+          type: focused.type,
+        });
+      } else if (focused.type === 'roles-folder' && focused.contextMenu === 1) {
+        setFocused({
+          ...focused,
+          newRole: true,
+        });
+        return;
+      }
+      setFocused({
+        ...focused,
+        contextMenu: undefined,
+      });
+    } else if (
+      e.key === 'ArrowLeft' &&
+      (focused.contextMenu === 1 || focused.contextMenu === 2)
+    ) {
+      setFocused({
+        ...focused,
+        contextMenu: undefined,
+      });
+    } else if (
+      e.key === 'ArrowRight' &&
+      (item.type === 'schema-folder' ||
+        (item.type === 'roles-folder' && db().privileges?.createRole)) &&
+      item.isOpen &&
+      !item.contextMenu
+    ) {
+      setFocused({
+        ...focused,
+        contextMenu: 1,
+      });
+    } else if (
       item.children &&
       ((!item.isOpen && e.key === 'ArrowRight') ||
         (item.isOpen && e.key === 'ArrowLeft') ||
@@ -145,19 +237,26 @@ export function useKeyboardInterations(
       item.type !== 'schema-folder' &&
       item.type !== 'roles-folder'
     ) {
-      const goToSchemaFolder = !!(item.children && item.schema);
-      for (let i = index - 1; i >= 0; i -= 1) {
-        if (
-          (rows[i].children && !goToSchemaFolder) ||
-          rows[i].type === 'schema-folder'
-        ) {
-          setFocused({
-            type: rows[i].type,
-            key: rows[i].key,
-            schema: rows[i].schema,
-            name: rows[i].title,
-          } as Focus);
-          return;
+      if (item.contextMenu === 1 || item.contextMenu === 2) {
+        setFocused({
+          ...focused,
+          contextMenu: undefined,
+        });
+      } else {
+        const goToSchemaFolder = !!(item.children && item.schema);
+        for (let i = index - 1; i >= 0; i -= 1) {
+          if (
+            (rows[i].children && !goToSchemaFolder) ||
+            rows[i].type === 'schema-folder'
+          ) {
+            setFocused({
+              type: rows[i].type,
+              key: rows[i].key,
+              schema: rows[i].schema,
+              name: rows[i].title,
+            } as Focus);
+            return;
+          }
         }
       }
     } else if (enter) {
@@ -186,6 +285,17 @@ export function useKeyboardInterations(
         if (strongHit) keepOpenRole(focused.name);
         else previewRole(focused.name);
       }
+    } else if (
+      e.key === 'ArrowRight' &&
+      (item.type === 'table' || item.type === 'view' || item.type === 'mview')
+    ) {
+      setFocused({
+        type: item.type,
+        key: item.key,
+        schema: item.schema,
+        name: item.title,
+        contextMenu: 1,
+      });
     }
   });
 
@@ -197,6 +307,7 @@ export function useKeyboardInterations(
 
   const onKeyUp = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (disabled) return;
+    onMouseLeave();
     if (e.key === 'Tab' && e.ctrlKey) return;
     if (
       e.target instanceof HTMLElement &&

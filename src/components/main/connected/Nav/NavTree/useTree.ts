@@ -41,6 +41,7 @@ export type NavTreeItem =
       isOpen?: boolean;
       schema: string;
       rowsOpen: number;
+      contextMenu?: { x: number; y: number } | true | 1 | 2;
     }
   | {
       title: string;
@@ -57,6 +58,7 @@ export type NavTreeItem =
       schema?: string;
       rowsOpen: number;
       host?: string;
+      contextMenu?: { x: number; y: number } | true;
     }
   | {
       title: string;
@@ -77,6 +79,8 @@ export type NavTreeItem =
         | 'domains-folder'
         | 'sequences-folder'
         | 'schema-folder';
+      contextMenu?: { x: number; y: number } | true | 1 | 2;
+      newRole?: boolean;
     };
 
 function buildTree(
@@ -228,6 +232,7 @@ export function useTree(
       return {
         ...v,
         hasFocus: schemaHasFocus,
+        contextMenu: schemaHasFocus ? focused.contextMenu : undefined,
         // tables and roles
         children: v.children?.map((v2) => {
           if (v2.children) {
@@ -239,6 +244,7 @@ export function useTree(
             return {
               ...v2,
               hasFocus: folderHasFocus,
+              contextMenu: folderHasFocus ? focused.contextMenu : undefined,
               // functions, domains, sequences
               children: v2.children.map((v3) => {
                 const hasFocus2 =
@@ -264,6 +270,7 @@ export function useTree(
                     isOpen: isOpen2,
                     isActive: isActive2,
                     hasFocus: hasFocus2,
+                    contextMenu: hasFocus2 ? focused.contextMenu : undefined,
                   };
                 }
                 return v3;
@@ -300,9 +307,15 @@ export function useTree(
                 isOpen,
                 isActive,
                 hasFocus,
+                contextMenu: hasFocus ? focused.contextMenu : undefined,
               }
             : v2;
         }),
+        newRole:
+          v.type === 'roles-folder' &&
+          v.includeActions &&
+          focused?.type === 'roles-folder' &&
+          focused?.newRole,
       };
     });
   }, [tree0, tabs, focused]) as NavTreeItem[];

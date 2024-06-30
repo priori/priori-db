@@ -5,17 +5,23 @@ import { NavTreeSingleItem } from './NavTreeSingleItem';
 import { NavTreeItem } from './useTree';
 
 function NavTreeNode0({
-  item,
   depth,
-  onDblClick,
+  item,
+  longMouseOver,
   onClick,
+  onDblClick,
+  onLongMouseOver,
   onMouseDown,
+  onNavContextMenuClose,
 }: {
-  item: NavTreeItem;
-  onDblClick: (i: NavTreeItem) => void;
-  onClick: (i: NavTreeItem) => void;
-  onMouseDown: (i: NavTreeItem) => void;
   depth?: number;
+  item: NavTreeItem;
+  longMouseOver: boolean;
+  onClick: (i: NavTreeItem) => void;
+  onDblClick: (i: NavTreeItem) => void;
+  onLongMouseOver: () => void;
+  onMouseDown: (i: NavTreeItem, e: React.MouseEvent) => void;
+  onNavContextMenuClose: () => void;
 }) {
   const isClosing = useMoreTime(!!item.isOpen, 500);
   return (
@@ -26,6 +32,9 @@ function NavTreeNode0({
         onDblClick={onDblClick}
         onClick={onClick}
         onMouseDown={onMouseDown}
+        onLongMouseOver={onLongMouseOver}
+        longMouseOver={longMouseOver}
+        onNavContextMenuClose={onNavContextMenuClose}
       />
       {item.children ? (
         <div
@@ -45,6 +54,9 @@ function NavTreeNode0({
                   onDblClick={onDblClick}
                   onClick={onClick}
                   onMouseDown={onMouseDown}
+                  onLongMouseOver={onLongMouseOver}
+                  longMouseOver={longMouseOver}
+                  onNavContextMenuClose={onNavContextMenuClose}
                 />
               ))
             : null}
@@ -54,6 +66,8 @@ function NavTreeNode0({
   );
 }
 
-export const NavTreeNode = React.memo(NavTreeNode0, (prev, next) =>
-  equals(prev.item, next.item),
+export const NavTreeNode = React.memo(
+  NavTreeNode0,
+  (prev, next) =>
+    equals(prev.item, next.item) && prev.longMouseOver === next.longMouseOver,
 );

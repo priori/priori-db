@@ -73,6 +73,12 @@ function NavNewSchema({ disabled }: { disabled?: boolean }) {
   );
 }
 
+declare module 'react' {
+  interface CSSProperties {
+    '--scroll-y'?: string;
+  }
+}
+
 export function Nav(props: {
   schemas: NavSchema[];
   tabs: Tab[];
@@ -151,16 +157,14 @@ export function Nav(props: {
           onBlur={onNavSearchBlur}
           disabled={props.disabled}
         />
-        <div className="nav-tree--wrapper" tabIndex={0}>
-          <NavTree
-            schemas={props.schemas}
-            tabs={tabs2}
-            roles={props.roles}
-            onBlur={onNavTreeBlur}
-            disabled={props.disabled}
-            rolesOpen={props.rolesOpen}
-          />
-        </div>
+        <NavTree
+          schemas={props.schemas}
+          tabs={tabs2}
+          roles={props.roles}
+          onBlur={onNavTreeBlur}
+          disabled={props.disabled}
+          rolesOpen={props.rolesOpen}
+        />
         <NavNewSchema />
       </div>
     ),

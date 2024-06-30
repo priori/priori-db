@@ -20,6 +20,7 @@ export type Focus =
       key: string;
       schema: string;
       name: string;
+      contextMenu?: { x: number; y: number } | true | 1 | 2;
     }
   | {
       type:
@@ -32,6 +33,8 @@ export type Focus =
       key: string;
       schema?: string;
       name: string;
+      contextMenu?: { x: number; y: number } | true | 1 | 2;
+      newRole?: boolean;
     };
 
 export function useNavTree(
@@ -43,13 +46,6 @@ export function useNavTree(
   disabled?: boolean,
 ) {
   const [focused, setFocused] = React.useState<Focus | null>(null);
-
-  const onDivBlur = useEvent(() => {
-    if (disabled) return;
-    if (document.activeElement instanceof HTMLElement)
-      document.activeElement.blur();
-    setFocused(null);
-  });
 
   const blur = useEvent((e: 'next' | 'prev' | 'up' | 'down') => {
     if (document.activeElement instanceof HTMLElement)
@@ -63,11 +59,34 @@ export function useNavTree(
 
   const tree = useTree(schemas, roles, rolesOpen, tabs, focused);
 
-  const { onMouseDown, onClick, onDblClick } = useMouseInterations(
-    setFocused,
-    schemas,
-    disabled,
-  );
+  const {
+    longMouseOver,
+    onClick,
+    onDblClick,
+    onLongMouseOver,
+    onMouseDown,
+    onMouseLeave,
+  } = useMouseInterations(setFocused, schemas, focused, disabled);
+
+  const onNavContextMenuClose = useEvent(() => {
+    onMouseLeave();
+    setFocused((f) =>
+      f
+        ? {
+            ...f,
+            contextMenu: undefined,
+          }
+        : null,
+    );
+  });
+
+  const onDivBlur = useEvent(() => {
+    // onMouseLeave();
+    if (disabled) return;
+    if (document.activeElement instanceof HTMLElement)
+      document.activeElement.blur();
+    setFocused(null);
+  });
 
   const { onKeyUp, onKeyDown, rows } = useKeyboardInterations(
     tree,
@@ -75,11 +94,18 @@ export function useNavTree(
     blur,
     setFocused,
     schemas,
+    onMouseLeave,
     disabled,
   );
 
-  const onFocus = useEvent(() => {
+  const onFocus = useEvent((e: React.FocusEvent) => {
     if (disabled) return;
+    if (
+      e.target instanceof HTMLElement &&
+      e.target.closest('.dialog, .nav-context-menu')
+    ) {
+      return;
+    }
     if (focused === null) {
       const f = rows[0];
       setFocused(
@@ -96,13 +122,17 @@ export function useNavTree(
   });
 
   return {
-    onDivBlur,
-    tree,
-    onMouseDown,
-    onKeyDown,
-    onDblClick,
+    longMouseOver: !focused?.contextMenu ? longMouseOver : false,
     onClick,
-    onKeyUp,
+    onDblClick,
+    onDivBlur,
     onFocus,
+    onKeyDown,
+    onKeyUp,
+    onLongMouseOver,
+    onMouseDown,
+    onMouseLeave,
+    onNavContextMenuClose,
+    tree,
   };
 }

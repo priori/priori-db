@@ -1,4 +1,6 @@
+import React from 'react';
 import {
+  extraTableTab,
   keepDomain,
   keepFunction,
   keepOpenRole,
@@ -13,25 +15,51 @@ import {
   previewRole,
   previewSequence,
   previewTable,
-  extraTableTab,
 } from 'state/actions';
 import { NavSchema } from 'types';
 import { assert } from 'util/assert';
 import { useEvent } from 'util/useEvent';
-import { NavTreeItem } from './useTree';
 import { Focus } from './useNavTree';
+import { NavTreeItem } from './useTree';
 
 export function useMouseInterations(
   setFocused: (v: Focus) => void,
   schemas: NavSchema[],
+  focused: Focus | null,
   disabled?: boolean,
 ) {
-  const onMouseDown = useEvent((e: NavTreeItem) => {
+  const [longMouseOver, setLongMouseOver] = React.useState(false);
+
+  const onLongMouseOver = useEvent(() => {
+    if (focused?.contextMenu) return;
+    setLongMouseOver(true);
+  });
+
+  const onMouseLeave = useEvent(() => {
+    setLongMouseOver(false);
+  });
+
+  const onMouseDown = useEvent((e: NavTreeItem, ev: React.MouseEvent) => {
+    if (ev.button === 2) {
+      setLongMouseOver(false);
+    }
     setFocused({
       type: e.type,
       key: e.key,
       schema: e.schema,
       name: e.title,
+      contextMenu:
+        ev.button === 2 &&
+        (e.type === 'table' ||
+          e.type === 'view' ||
+          e.type === 'mview' ||
+          e.type === 'schema-folder' ||
+          e.type === 'roles-folder')
+          ? {
+              x: ev.clientX,
+              y: ev.clientY,
+            }
+          : undefined,
     } as Focus);
   });
 
@@ -55,25 +83,29 @@ export function useMouseInterations(
       } else if (e.type === 'roles-folder') {
         openRoles();
       }
-    } else if (e.type === 'table' || e.type === 'view' || e.type === 'mview') {
-      const t = schemas
-        .find((v) => v.name === e.schema)
-        ?.tables.find((v) => v.name === e.title);
-      assert(t);
-      previewTable(e.schema, { name: e.title, type: t.type });
-    } else if (e.type === 'function' || e.type === 'procedure') {
-      previewFunction(e.schema, e.title);
-    } else if (e.type === 'domain') {
-      previewDomain(e.schema, e.title);
-    } else if (e.type === 'sequence') {
-      previewSequence(e.schema, e.title);
-    } else if (e.type === 'role' || e.type === 'user') {
-      previewRole(e.title, e.host);
+    } else {
+      if (longMouseOver) onMouseLeave();
+      if (e.type === 'table' || e.type === 'view' || e.type === 'mview') {
+        const t = schemas
+          .find((v) => v.name === e.schema)
+          ?.tables.find((v) => v.name === e.title);
+        assert(t);
+        previewTable(e.schema, { name: e.title, type: t.type });
+      } else if (e.type === 'function' || e.type === 'procedure') {
+        previewFunction(e.schema, e.title);
+      } else if (e.type === 'domain') {
+        previewDomain(e.schema, e.title);
+      } else if (e.type === 'sequence') {
+        previewSequence(e.schema, e.title);
+      } else if (e.type === 'role' || e.type === 'user') {
+        previewRole(e.title, e.host);
+      }
     }
   });
 
   const onDblClick = useEvent((e: NavTreeItem) => {
     if (disabled) return;
+    if (longMouseOver) onMouseLeave();
     if (e.type === 'table' || e.type === 'view' || e.type === 'mview') {
       const t = schemas
         .find((v) => v.name === e.schema)
@@ -98,5 +130,8 @@ export function useMouseInterations(
     onMouseDown,
     onClick,
     onDblClick,
+    onLongMouseOver,
+    longMouseOver,
+    onMouseLeave,
   };
 }
