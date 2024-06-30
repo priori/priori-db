@@ -416,7 +416,7 @@ export function updateHeaderTabsDisplayOrder(
 
 export function newTable(current: AppState, schema: string) {
   return newFrame(current, (uid) => ({
-    title: 'Nova Tabela',
+    title: 'New Table',
     active: true,
     keep: true,
     props: {

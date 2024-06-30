@@ -28,29 +28,108 @@ export interface TabsHeaderState {
   initialClientX: number;
   offset: number;
   editing: Tab | null;
+  longOver?: Tab | null;
+  firstLongOver?: boolean;
 }
 
 export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
-  static tabsDoubleClick(e: React.MouseEvent<HTMLSpanElement, MouseEvent>) {
-    const el = e.target;
-    if (el instanceof HTMLElement) {
-      if (el.matches('.tabs-header__tabs')) {
-        newQueryTabInTheEnd();
-      }
-    }
+  static hintRender(t: Tab) {
+    return (
+      <>
+        {TabsHeader.statusRender(t, {
+          right: '9px',
+          top: '3px',
+          left: 'unset',
+          position: 'absolute',
+          fontSize: '21px',
+        })}
+
+        <h1>
+          {' '}
+          {t.props.type === 'role' ||
+          t.props.type === 'domain' ||
+          t.props.type === 'function' ||
+          t.props.type === 'sequence' ||
+          t.props.type === 'tableinfo' ||
+          t.props.type === 'schemainfo' ? (
+            <span
+              className="adjustment-icon"
+              style={{
+                display: 'inline-block',
+                opacity: 1,
+                marginRight: 5,
+                position: 'relative',
+                top: -1,
+              }}
+            >
+              <div />
+            </span>
+          ) : t.props.type === 'query' ? (
+            <span
+              style={{
+                fontFamily: 'Inconsolata',
+                marginRight: '3px',
+                letterSpacing: '-0.5px',
+                position: 'relative',
+                top: '-1px',
+                left: '-1px',
+              }}
+            >
+              &lt;/&gt;
+            </span>
+          ) : t.props.type === 'table' ? (
+            <i
+              className="fa fa-database"
+              style={{ position: 'relative', top: -1, marginRight: 4 }}
+            />
+          ) : t.props.type === 'newtable' ? (
+            <i
+              className="fa fa-plus"
+              style={{ position: 'relative', top: -1, marginRight: 4 }}
+            />
+          ) : null}
+          {t.props.type === 'table'
+            ? 'Table Data'
+            : t.props.type === 'query'
+              ? 'Query'
+              : t.props.type === 'role'
+                ? 'Role Settings'
+                : t.props.type === 'domain'
+                  ? 'Domain Settings'
+                  : t.props.type === 'function'
+                    ? 'Function Settings'
+                    : t.props.type === 'newtable'
+                      ? 'New Table'
+                      : t.props.type === 'sequence'
+                        ? 'Sequence Settings'
+                        : t.props.type === 'tableinfo'
+                          ? 'Table Settings'
+                          : t.props.type === 'schemainfo'
+                            ? 'Schema Settings'
+                            : ''}
+        </h1>
+        {t.title && t.props.type !== 'newtable' ? (
+          <h2>{t.title}</h2>
+        ) : t.title2 ? (
+          <h2>{t.title2}</h2>
+        ) : null}
+      </>
+    );
   }
 
-  static statusRender(t: Tab) {
+  static statusRender(t: Tab, style?: React.CSSProperties) {
     if (!t.status) return null;
     return (
       <span
-        style={{
-          position: 'relative',
-          fontSize: 14,
-          top: -1,
-          left: -25,
-          color: 'rgba(0,0,0,.2)',
-        }}
+        style={
+          style ?? {
+            position: 'relative',
+            fontSize: 14,
+            top: -1,
+            left: -25,
+            color: 'rgba(0,0,0,.2)',
+          }
+        }
       >
         {t.status === 'running' ? (
           <i
@@ -82,6 +161,8 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
   }
 
   prevEl: HTMLInputElement | null = null;
+
+  mouseOverTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(props: TabsHeaderProps) {
     super(props);
@@ -179,14 +260,33 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
   };
 
   onDoubleClick(t: Tab) {
+    if (this.mouseOverTimeout) clearTimeout(this.mouseOverTimeout);
     if (t.props.type === 'query') {
       this.setState((state) => ({
         ...state,
         editing: t,
+        longOver: null,
+        firstLongOver: false,
       }));
     } else if (t.active && t.props.type === 'table' && t.active && t.keep) {
+      if (this.state.longOver) {
+        this.setState((state) => ({
+          ...state,
+          longOver: null,
+          firstLongOver: false,
+        }));
+      }
       extraTableTab(t.props.schema, t.props.table);
-    } else keepTabOpen(t);
+    } else {
+      if (this.state.longOver) {
+        this.setState((state) => ({
+          ...state,
+          longOver: null,
+          firstLongOver: false,
+        }));
+      }
+      keepTabOpen(t);
+    }
   }
 
   blurInput(input: HTMLInputElement) {
@@ -194,10 +294,29 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
     assert(editing);
     if (input.value || editing.title)
       updateTabText(editing.props.uid, input.value);
+    if (this.mouseOverTimeout) clearTimeout(this.mouseOverTimeout);
     this.setState((state) => ({
       ...state,
       editing: null,
+      longOver: null,
+      firstLongOver: false,
     }));
+  }
+
+  tabsDoubleClick(e: React.MouseEvent<HTMLSpanElement, MouseEvent>) {
+    if (this.mouseOverTimeout) clearTimeout(this.mouseOverTimeout);
+    if (this.state.longOver)
+      this.setState((state) => ({
+        ...state,
+        longOver: null,
+        firstLongOver: false,
+      }));
+    const el = e.target;
+    if (el instanceof HTMLElement) {
+      if (el.matches('.tabs-header__tabs')) {
+        newQueryTabInTheEnd();
+      }
+    }
   }
 
   private fit() {
@@ -217,11 +336,13 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
       this.props.onActiveTabMouseDown();
     }
     activateTab(t);
+    if (this.mouseOverTimeout) clearTimeout(this.mouseOverTimeout);
     this.setState((state) => ({
       ...state,
       sorting: true,
       initialClientX: e.clientX,
       offset: 0,
+      longOver: null,
     }));
   }
 
@@ -280,7 +401,9 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
         <div className="tabs-header" style={{ left: this.props.left }}>
           <span
             className="tabs-header__tabs"
-            onDoubleClick={TabsHeader.tabsDoubleClick}
+            onDoubleClick={(e) => {
+              this.tabsDoubleClick(e);
+            }}
           >
             {this.props.tabs.map((t, index) => {
               const { width } = this.state.tabs[index];
@@ -299,6 +422,26 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
                     }
                   }}
                   onDoubleClick={() => this.onDoubleClick(t)}
+                  onMouseLeave={() => {
+                    if (this.mouseOverTimeout)
+                      clearTimeout(this.mouseOverTimeout);
+                    if (this.state.longOver) {
+                      this.mouseOverTimeout = setTimeout(() => {
+                        this.setState({ longOver: null, firstLongOver: false });
+                      }, 50);
+                    }
+                  }}
+                  onMouseEnter={() => {
+                    if (this.mouseOverTimeout)
+                      clearTimeout(this.mouseOverTimeout);
+                    if (this.state.longOver) {
+                      this.setState({ longOver: t, firstLongOver: false });
+                    } else {
+                      this.mouseOverTimeout = setTimeout(() => {
+                        this.setState({ longOver: t, firstLongOver: true });
+                      }, 1000);
+                    }
+                  }}
                   style={{ width, zIndex: 9 }}
                 >
                   {this.state.editing === t ? (
@@ -337,11 +480,45 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
                       className="tabs-header__close fa fa-close"
                       onMouseDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
+                        if (this.mouseOverTimeout)
+                          clearTimeout(this.mouseOverTimeout);
+                        if (this.state.longOver) {
+                          this.setState((state) => ({
+                            ...state,
+                            longOver: null,
+                            firstLongOver: false,
+                          }));
+                        }
                         askToCloseTab(t.props);
                         e.stopPropagation();
                       }}
                     />
-                  )}
+                  )}{' '}
+                  {this.state.longOver && this.state.longOver === t ? (
+                    <div
+                      className="tabs-header__tab__hint"
+                      style={
+                        this.state.firstLongOver
+                          ? {
+                              animation: 'show 0.5s',
+                            }
+                          : undefined
+                      }
+                      ref={(el) => {
+                        if (
+                          el &&
+                          el.getBoundingClientRect().right > window.innerWidth
+                        ) {
+                          el.style.left = 'auto';
+                          el.style.right = '10px';
+                        } else if (el && index === 0) {
+                          el.style.marginLeft = '10px';
+                        }
+                      }}
+                    >
+                      {TabsHeader.hintRender(t)}
+                    </div>
+                  ) : null}
                 </span>
               );
             })}

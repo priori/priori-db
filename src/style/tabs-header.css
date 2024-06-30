@@ -114,3 +114,31 @@ input.tabs-header__input:focus {
 .tabs-header__tab .fa-check {
   color: #484;
 }
+
+.tabs-header__tab__hint {
+  position: fixed;
+  top: 46px;
+  width: 250px;
+  overflow: hidden;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  padding: 10px 9px;
+  word-wrap: break-word;
+  line-height: 1;
+  background: white;
+  border-radius: 5px;
+}
+.tabs-header__tab__hint h1,
+.tabs-header__tab__hint h2 {
+  margin: 0;
+}
+.tabs-header__tab__hint h1 {
+  font-size: 0.9em;
+}
+.tabs-header__tab__hint h2 {
+  font-weight: normal;
+  font-size: 1.2em;
+  margin-top: 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
