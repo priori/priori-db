@@ -7,6 +7,7 @@ import { showError } from 'state/actions';
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { db } from 'db/db';
 import { equals } from 'util/equals';
+import { validSql } from 'components/util/DataGrid/DataGridFilterDialog';
 
 export interface ColumnForm {
   name: string;
@@ -68,7 +69,8 @@ export function ColumnFormDialog({
       column.scale === form.scale &&
       column.length === form.length &&
       (column.default || undefined) === (form.default || undefined) &&
-      equals(column.enum, form.enum));
+      equals(column.enum, form.enum)) ||
+    (!!form.default && !validSql(form.default));
   const fieldsDisabled = executing || !!error;
   const type =
     (lastValidData && lastValidData.find((t) => t.name === form.type)) || null;
@@ -231,6 +233,7 @@ export function ColumnFormDialog({
             type="text"
             placeholder="Default"
             value={form.default || ''}
+            className={!validSql(form.default || '') ? 'invalid' : undefined}
             onChange={(e) => setForm({ ...form, default: e.target.value })}
           />
         </span>

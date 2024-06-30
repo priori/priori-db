@@ -205,6 +205,10 @@ textarea.data-grid-filter-dialog--sql-where {
     border: 2px solid #1976d2 !important;
     padding: 14px 18px !important;
   }
+  .data-grid-filter-dialog--sql-invalid &:focus,
+  .data-grid-filter-dialog--sql-invalid &:active {
+    border: 2px solid #d22 !important;
+  }
 }
 
 .app-content button.data-grid-filter-dialog--edit-button {
@@ -238,6 +242,7 @@ textarea.data-grid-filter-dialog--sql-where {
     border-color: #d22 !important;
     color: #d22 !important;
     &:focus {
+      border: 2px solid #d22 !important;
       box-shadow:
         inset 1px 1px 0 0 #d22,
         inset -1px 1px 0 0 #d22,

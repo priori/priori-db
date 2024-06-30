@@ -77,9 +77,19 @@ const scopesMap = {
 function validSqlCalc(s: string) {
   const scopes: ('(' | '[' | '{')[] = [];
   let inString: false | "'" | '"' = false;
+  let inSingleLineComment = false;
+  let inCommentBlock = false;
   for (let i = 0; i < s.length; i += 1) {
     const ch = s[i];
-    if (inString) {
+    if (inSingleLineComment) {
+      if (ch === '\n' && inSingleLineComment) {
+        inSingleLineComment = false;
+      }
+    } else if (inCommentBlock) {
+      if (ch === '/' && s[i - 1] === '*') {
+        inCommentBlock = false;
+      }
+    } else if (inString) {
       if (ch === inString) inString = false;
     } else if (ch === "'" || ch === '"') {
       inString = ch;
@@ -89,13 +99,17 @@ function validSqlCalc(s: string) {
       if (scopes.length === 0) return false;
       if (ch !== scopesMap[scopes[scopes.length - 1]]) return false;
       scopes.pop();
+    } else if (ch === '-' && s[i - 1] === '-') {
+      inSingleLineComment = true;
+    } else if (ch === '*' && s[i - 1] === '/') {
+      inCommentBlock = true;
     }
   }
-  return !inString && scopes.length === 0;
+  return !inString && scopes.length === 0 && !inCommentBlock;
 }
 const cache = new Map<string, boolean>();
 let timeout: ReturnType<typeof setTimeout> | null = null;
-function validSql(s: string) {
+export function validSql(s: string) {
   if (timeout) clearTimeout(timeout);
   timeout = setTimeout(() => {
     cache.clear();

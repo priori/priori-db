@@ -287,14 +287,30 @@ div.comment {
   outline: none;
 }
 .dialog input:focus {
-  border: 2px #1976d2 solid;
   padding: 9px;
+  border: 2px #1976d2 solid;
   box-shadow:
     0 1px #1976d2,
     0 -1px #1976d2,
     1px 0 #1976d2,
     -1px 0 #1976d2;
+  &.invalid {
+    border: 2px #d22 solid !important;
+    box-shadow:
+      0 1px #d22,
+      0 -1px #d22,
+      1px 0 #d22,
+      -1px 0 #d22;
+  }
 }
+input.invalid {
+  border-color: #d22;
+  color: #d22;
+}
+span.default-input:has(.invalid):before {
+  background: #d22;
+}
+
 button[disabled] {
   opacity: 0.33;
   cursor: default;
