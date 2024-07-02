@@ -24,6 +24,7 @@ import { Frame } from './Frame';
 import { useLeftArea } from './leftArea';
 import { Nav } from './Nav/Nav';
 import { TabsHeader } from './TabsHeader';
+import { Launcher } from './Nav/Launcher/Launcher';
 
 const classNames: Record<FrameType, string> = {
   query: 'query-tab',
@@ -72,6 +73,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
   assert(state.currentConnectionConfiguration);
 
   const [close, setClose] = React.useState<{ func: () => void } | null>(null);
+  const [launcherOpen, setLauncherOpen] = React.useState(false);
 
   const tabsConfigurations = React.useMemo(
     () => ({}) as { [n: number]: UseTabConfiguration },
@@ -92,12 +94,15 @@ export function ConnectedApp({ state }: { state: AppState }) {
 
   useShortcuts({
     nextTab() {
+      if (launcherOpen) return;
       nextTab();
     },
     prevTab() {
+      if (launcherOpen) return;
       prevTab();
     },
     open() {
+      if (launcherOpen) return;
       if (active) {
         const activeConf = tabsConfigurations[active];
         if (activeConf && activeConf.open) {
@@ -109,6 +114,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
       return false;
     },
     save() {
+      if (launcherOpen) return;
       if (active) {
         const activeConf = tabsConfigurations[active];
         if (activeConf && activeConf.save) {
@@ -120,19 +126,25 @@ export function ConnectedApp({ state }: { state: AppState }) {
       return false;
     },
     closeTab() {
+      if (launcherOpen) return;
       askToCloseCurrent();
     },
     newTab() {
+      if (launcherOpen) return;
       newQueryTab();
     },
     f11() {
       fullScreen();
     },
     f5() {
+      if (launcherOpen) return;
       if (active) {
         const activeConf = tabsConfigurations[active];
         if (activeConf && activeConf.f5) activeConf.f5();
       }
+    },
+    launcher() {
+      setLauncherOpen(true);
     },
   });
 
@@ -356,6 +368,15 @@ export function ConnectedApp({ state }: { state: AppState }) {
           ))}
         </TabsContext.Provider>
       </div>
+      {launcherOpen ? (
+        <Launcher
+          onClose={() => {
+            setLauncherOpen(false);
+          }}
+          schemas={state.schemas}
+          tabs={state.tabs}
+        />
+      ) : null}
     </div>
   );
 }

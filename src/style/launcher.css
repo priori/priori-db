@@ -1,0 +1,78 @@
+/*
+dialog.launcher::backdrop {
+   backdrop-filter: blur(0.3px);
+   background: rgba(2555, 255, 255, 0.3);
+}
+*/
+dialog.launcher::backdrop {
+  background: transparent;
+}
+.launcher {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.launcher input,
+dialog.launcher > div:has(.nav-search) {
+  width: 450px;
+  position: fixed;
+  left: 50%;
+  margin-left: -225px;
+}
+.launcher input {
+  top: 50px;
+  background: white;
+}
+.launcher input:focus,
+.launcher input {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  box-shadow: none;
+  border: #1976d2 3px solid !important;
+}
+dialog.launcher i.fa.fa-close,
+dialog.launcher i.fa.fa-search {
+  display: none;
+}
+dialog.launcher > div:has(.nav-search) {
+  background: #fff;
+  padding: 7px 3px 7px 0;
+  top: 95px;
+  border-radius: 7px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+dialog.launcher .nav-search {
+  border-bottom: none;
+}
+dialog.launcher .focused {
+  background: #eee;
+}
+dialog.launcher .nav-search .nav-search--entity {
+  height: 25px;
+  line-height: 23px;
+}
+dialog.launcher .nav-search--entity.focused:before {
+  margin-top: 8px;
+}
+dialog.launcher .nav-search i {
+  top: 3px;
+}
+dialog.launcher .nav-search--entity.focused.active:before,
+dialog.launcher .nav-search--entity.focused:before {
+  border-left-color: #000;
+}
+
+dialog.launcher .adjustment-icon {
+  margin-top: 8px;
+}
+dialog.launcher .nav-search .nav-search--entity:hover {
+  background: #eee;
+  --bg: #eee;
+}
+dialog.launcher .nav-search .nav-search--entity:focused {
+  background: #eee;
+  --bg: #eee;
+}
+dialog.launcher .more {
+  text-align: center;
+}

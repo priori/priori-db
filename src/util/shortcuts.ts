@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useEvent } from './useEvent';
 
-const isIOS = process?.platform === 'darwin';
+const isMac = process?.platform === 'darwin';
 
 export function useShortcuts({
   nextTab,
@@ -12,6 +12,7 @@ export function useShortcuts({
   save,
   open,
   f5,
+  launcher,
 }: {
   nextTab?: () => void;
   prevTab?: () => void;
@@ -21,12 +22,13 @@ export function useShortcuts({
   f5?: () => void;
   save?: () => void | false;
   open?: () => void | false;
+  launcher?: () => void;
 }) {
   const listener = useEvent((e: KeyboardEvent) => {
     if (
       save &&
       ((e.ctrlKey && (e.key === 's' || e.key === 'S')) ||
-        (isIOS && e.metaKey && (e.key === 's' || e.key === 'S')))
+        (isMac && e.metaKey && (e.key === 's' || e.key === 'S')))
     ) {
       const r = save();
       if (r === false) return;
@@ -35,7 +37,7 @@ export function useShortcuts({
     } else if (
       open &&
       ((e.ctrlKey && (e.key === 'o' || e.key === 'O')) ||
-        (isIOS && e.metaKey && (e.key === 'o' || e.key === 'O')))
+        (isMac && e.metaKey && (e.key === 'o' || e.key === 'O')))
     ) {
       const r = open();
       if (r === false) return;
@@ -48,15 +50,15 @@ export function useShortcuts({
       e.preventDefault();
       e.stopPropagation();
     } else if (
-      ((e.ctrlKey || (isIOS && e.metaKey)) &&
+      ((e.ctrlKey || (isMac && e.metaKey)) &&
         (e.key === 'w' || e.key === 'W')) ||
-      ((e.ctrlKey || (isIOS && e.metaKey)) && e.key === 'F4')
+      ((e.ctrlKey || (isMac && e.metaKey)) && e.key === 'F4')
     ) {
       if (closeTab) closeTab();
       e.preventDefault();
       e.stopPropagation();
     } else if (
-      ((e.ctrlKey || (isIOS && e.metaKey)) &&
+      ((e.ctrlKey || (isMac && e.metaKey)) &&
         (e.key === 'r' || e.key === 'R' || e.key === 'Enter')) ||
       e.key === 'F5'
     ) {
@@ -64,17 +66,26 @@ export function useShortcuts({
       e.preventDefault();
       e.stopPropagation();
     } else if (
-      (e.ctrlKey || (isIOS && e.metaKey)) &&
+      (e.ctrlKey || (isMac && e.metaKey)) &&
       (e.key === 't' || e.key === 'T')
     ) {
       if (newTab) newTab();
     } else if (e.key === 'F11') {
       if (f11) f11();
     } else if (
-      (isIOS && (e.key === 'q' || e.key === 'Q') && e.metaKey) ||
+      (isMac && (e.key === 'q' || e.key === 'Q') && e.metaKey) ||
       (e.altKey && e.key === 'F4')
     ) {
       window.close();
+    } else if (
+      (e.ctrlKey && e.key === 'p') ||
+      (e.key === 'p' && isMac && e.metaKey)
+    ) {
+      if (launcher) {
+        launcher();
+      }
+      e.preventDefault();
+      e.stopPropagation();
     }
   });
   useEffect(() => {

@@ -24,11 +24,13 @@ export function NavSearch({
   tabs,
   onBlur,
   disabled,
+  onDone = () => {},
 }: {
   schemas: NavSchema[];
   tabs: Tabs;
   onBlur: (e: 'next' | 'prev' | 'up' | 'down') => void;
   disabled?: boolean;
+  onDone?: () => void;
 }) {
   const [focusedEntity, setFocusedEntity] = useState<Entity | null>(null);
   const [index, setIndex] = useState(0);
@@ -89,19 +91,25 @@ export function NavSearch({
       focusedEntity &&
       (key === 'Enter' || (!input && (key === ' ' || key === 'Espace')))
     ) {
-      if (focusedEntity.type === 'SCHEMA') keepSchemaInfo(focusedEntity.name);
-      else if (
+      if (focusedEntity.type === 'SCHEMA') {
+        keepSchemaInfo(focusedEntity.name);
+        onDone();
+      } else if (
         focusedEntity.type === 'BASE TABLE' ||
         focusedEntity.type === 'MATERIALIZED VIEW' ||
         focusedEntity.type === 'VIEW'
       ) {
         extraTableTab(focusedEntity.schema, focusedEntity.name);
+        onDone();
       } else if (focusedEntity.type === 'DOMAIN') {
         keepDomain(focusedEntity.schema, focusedEntity.name);
+        onDone();
       } else if (focusedEntity.type === 'FUNCTION') {
         keepFunction(focusedEntity.schema, focusedEntity.name);
+        onDone();
       } else if (focusedEntity.type === 'SEQUENCE') {
         keepSequence(focusedEntity.schema, focusedEntity.name);
+        onDone();
       }
     }
   });
@@ -147,6 +155,7 @@ export function NavSearch({
         if (focusedEntity.type === 'SCHEMA') {
           if (strongHit) keepSchemaInfo(focusedEntity.name);
           else previewSchemaInfo(focusedEntity.name);
+          onDone();
         } else if (
           focusedEntity.type === 'BASE TABLE' ||
           focusedEntity.type === 'MATERIALIZED VIEW' ||
@@ -159,15 +168,19 @@ export function NavSearch({
               type: focusedEntity.type,
               name: focusedEntity.name,
             });
+          onDone();
         } else if (focusedEntity.type === 'DOMAIN') {
           if (strongHit) keepDomain(focusedEntity.schema, focusedEntity.name);
           else previewDomain(focusedEntity.schema, focusedEntity.name);
+          onDone();
         } else if (focusedEntity.type === 'FUNCTION') {
           if (strongHit) keepFunction(focusedEntity.schema, focusedEntity.name);
           else previewFunction(focusedEntity.schema, focusedEntity.name);
+          onDone();
         } else if (focusedEntity.type === 'SEQUENCE') {
           if (strongHit) keepSequence(focusedEntity.schema, focusedEntity.name);
           else previewSequence(focusedEntity.schema, focusedEntity.name);
+          onDone();
         }
       }
     } else if (
