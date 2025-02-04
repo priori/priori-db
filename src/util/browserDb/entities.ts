@@ -1,5 +1,5 @@
 import { ConnectionConfiguration, ConnectionType } from 'types';
-import { migrate, oldWebSqlData } from './migration';
+import { migrate } from './migration';
 import { openIndexedDb, Store, transaction0 } from './util';
 
 export interface QueryEntryIDB {
@@ -92,34 +92,30 @@ export type Stores = {
   connectionGroup: Store<ConnectionGroupEntryIDB>;
 };
 
-export const openIndexedDbP = oldWebSqlData()
-  .then(() =>
-    openIndexedDb([
-      ['favoriteQuery', ['connectionGroupId']],
-      ['appExecution', ['connectionConfigurationId', 'connectionGroupId']],
-      ['connectionConfiguration'],
-      ['connectionGroup'],
-      [
-        'queryGroup',
-        [
-          'queryCreatedAt',
-          ['connectionGroupId', 'queryCreatedAt'],
-          ['executionId', 'tabId'],
-        ],
-      ],
-      ['query', ['queryGroupId', ['queryGroupId', 'version']]],
-    ]),
-  )
-  .then(async (db) => {
-    await transaction0<unknown, (typeof names)[number][0]>(
-      db,
-      names as unknown as (typeof names)[number][],
-      migrate as (stores: {
-        [k in (typeof names)[number][0]]: Store<unknown>;
-      }) => Promise<unknown>,
-    );
-    return db;
-  });
+export const openIndexedDbP = openIndexedDb([
+  ['favoriteQuery', ['connectionGroupId']],
+  ['appExecution', ['connectionConfigurationId', 'connectionGroupId']],
+  ['connectionConfiguration'],
+  ['connectionGroup'],
+  [
+    'queryGroup',
+    [
+      'queryCreatedAt',
+      ['connectionGroupId', 'queryCreatedAt'],
+      ['executionId', 'tabId'],
+    ],
+  ],
+  ['query', ['queryGroupId', ['queryGroupId', 'version']]],
+]).then(async (db) => {
+  await transaction0<unknown, (typeof names)[number][0]>(
+    db,
+    names as unknown as (typeof names)[number][],
+    migrate as (stores: {
+      [k in (typeof names)[number][0]]: Store<unknown>;
+    }) => Promise<unknown>,
+  );
+  return db;
+});
 
 export async function transaction<R>(fn: (stores: Stores) => Promise<R>) {
   const idb = await openIndexedDbP;

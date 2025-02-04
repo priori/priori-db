@@ -83,6 +83,13 @@ const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
   }
+  const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, '../../assets');
+
+  const getAssetPath = (...paths: string[]): string => {
+    return path.join(RESOURCES_PATH, ...paths);
+  };
   windowsCount += 1;
   const window = new BrowserWindow({
     width: 800,
@@ -90,11 +97,11 @@ const createWindow = async () => {
     minWidth: 600,
     minHeight: 440,
     title: 'Priori DB',
-    icon: 'icon.png',
+    icon: getAssetPath('icon.png'),
     fullscreenable: true,
     webPreferences: {
-      nodeIntegration: true, // opt out to node integration
-      contextIsolation: false, // opt out to node integration
+      nodeIntegration: true, // opt in to node integration
+      contextIsolation: false, // opt in to node integration
     },
   });
   window.setMenu(null);

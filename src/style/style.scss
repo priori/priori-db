@@ -1,20 +1,21 @@
+@use 'sass:meta';
 @font-face {
   font-family: 'Inconsolata';
   src: url('./Inconsolata-Regular.ttf');
 }
 
-@import 'basic-style';
-@import 'grid';
-@import 'left-nav';
-@import 'nav-tree';
-@import 'main-area';
-@import 'main-components';
-@import 'tabs-header';
+@include meta.load-css('basic-style.scss');
+@include meta.load-css('grid.scss');
+@include meta.load-css('left-nav.scss');
+@include meta.load-css('nav-tree.scss');
+@include meta.load-css('main-area.scss');
+@include meta.load-css('main-components.scss');
+@import './tabs-header.css';
 
-@import 'frames/home';
-@import 'frames/table-data';
-@import 'frames/new-table-frame';
-@import 'frames/query-frame';
-@import 'frames/query-selector';
-@import 'frames/table-info';
-@import 'launcher';
+@include meta.load-css('frames/home.scss');
+@include meta.load-css('frames/table-data.scss');
+@include meta.load-css('frames/new-table-frame.scss');
+@include meta.load-css('frames/query-frame.scss');
+@include meta.load-css('frames/query-selector.scss');
+@include meta.load-css('frames/table-info.scss');
+@import './launcher.css';

@@ -23,6 +23,8 @@ const configuration: webpack.Configuration = {
 
   mode: 'production',
 
+  // opt in to node integration
+  // target: ['web', 'electron-renderer'],
   target: 'electron-renderer',
 
   entry: [path.join(webpackPaths.srcRendererPath, 'index.tsx')],
@@ -31,6 +33,10 @@ const configuration: webpack.Configuration = {
     path: webpackPaths.distRendererPath,
     publicPath: './',
     filename: 'renderer.js',
+    // opt in to node integration
+    // library: {
+    //   type: 'umd',
+    // },
   },
 
   module: {

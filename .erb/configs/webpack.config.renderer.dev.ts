@@ -43,6 +43,8 @@ const configuration: webpack.Configuration = {
 
   mode: 'development',
 
+  // opt in to node integration
+  // target: ['web', 'electron-renderer'],
   target: 'electron-renderer',
 
   entry: [
@@ -55,6 +57,10 @@ const configuration: webpack.Configuration = {
     path: webpackPaths.distRendererPath,
     publicPath: '/',
     filename: 'renderer.dev.js',
+    // opt in to node integration
+    // library: {
+    //   type: 'umd',
+    // },
   },
 
   module: {

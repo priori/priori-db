@@ -569,8 +569,8 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                 formField?.operator === 'notnull' ||
                                 formField?.operator === 'null'
                                   ? ''
-                                  : (formField as { value: string } | null)
-                                      ?.value ?? ''
+                                  : ((formField as { value: string } | null)
+                                      ?.value ?? '')
                               }
                               disabled={
                                 formField?.operator === 'notnull' ||
@@ -721,13 +721,13 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                                           }
                                                         ).value === null
                                                       ? ''
-                                                      : (
+                                                      : ((
                                                           formField as {
                                                             value:
                                                               | string
                                                               | null;
                                                           }
-                                                        ).value ?? '',
+                                                        ).value ?? ''),
                                                 sql: e.target.value === 'sql',
                                                 values:
                                                   formField?.operator ===
@@ -908,13 +908,13 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                                                           }
                                                         ).value2 === null
                                                       ? ''
-                                                      : (
+                                                      : ((
                                                           formField as {
                                                             value2:
                                                               | string
                                                               | null;
                                                           }
-                                                        ).value2 ?? '',
+                                                        ).value2 ?? ''),
                                                 sql2: e.target.value === 'sql',
                                                 values: undefined,
                                               }

@@ -22,6 +22,7 @@ interface NewConnectionProps {
   onSaveAndConnect: (c: ConnectionConfiguration) => void;
   onJustSave: (c: ConnectionConfiguration) => void;
 }
+
 export function ConnectionConfigurationForm(props: NewConnectionProps) {
   const { connection } = props;
   const [state, setState] = useState({

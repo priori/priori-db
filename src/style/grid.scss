@@ -1,3 +1,4 @@
+@use 'sass:meta';
 .grid > div {
   outline: none;
   position: absolute;
@@ -466,7 +467,7 @@ th.desc.sortable:hover::before {
   align-items: center;
 }
 
-@import './grid--filter-dialog.scss';
+@include meta.load-css('grid--filter-dialog.scss');
 
 .grid .dialog {
   input,
