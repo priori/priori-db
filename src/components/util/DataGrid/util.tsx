@@ -53,46 +53,7 @@ export function getType(val: unknown, field?: string) {
           : undefined;
 }
 
-export function cellClassName(
-  colIndex: number,
-  rowIndex: number,
-  selection:
-    | {
-        colIndex: [number, number];
-        rowIndex: [number, number];
-      }
-    | undefined,
-  hasChange: boolean,
-): string | undefined {
-  if (!selection) {
-    if (hasChange) return 'changed';
-    return undefined;
-  }
-  if (
-    selection.colIndex[0] <= colIndex &&
-    colIndex <= selection.colIndex[1] &&
-    selection.rowIndex[0] <= rowIndex &&
-    rowIndex <= selection.rowIndex[1]
-  ) {
-    return `selected${
-      (selection.rowIndex[0] === rowIndex ? ' selection-first-row' : '') +
-      (selection.colIndex[1] === colIndex ? ' selection-last-col' : '')
-    }${hasChange ? ' changed' : ''}`;
-  }
-  if (
-    selection.colIndex[0] === colIndex + 1 &&
-    selection.rowIndex[0] <= rowIndex &&
-    rowIndex <= selection.rowIndex[1]
-  ) {
-    return `selection-left${hasChange ? ' changed' : ''}`;
-  }
-  if (
-    selection.colIndex[0] <= colIndex &&
-    colIndex <= selection.colIndex[1] &&
-    selection.rowIndex[1] === rowIndex - 1
-  ) {
-    return `selection-bottom${hasChange ? ' changed' : ''}`;
-  }
+export function cellClassName(hasChange: boolean): string | undefined {
   if (hasChange) return 'changed';
   return undefined;
 }

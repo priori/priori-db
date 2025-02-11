@@ -6,6 +6,7 @@ import { DataGridSortDialog } from './DataGridSortDialog';
 import { DataGridFilterDialog } from './DataGridFilterDialog';
 import { useDataGridCore } from './dataGridCoreUtils';
 import { DataGridUpdateInfoDialog } from './DataGridUpdateInfo';
+import { DataGridSelection } from './DataGridSelection';
 
 export interface DataGridCoreProps {
   result: {
@@ -193,7 +194,6 @@ export function DataGridCore(props: DataGridCoreProps) {
                 visibleStartingInEven={visibleStartingInEven}
                 visibleRows={visibleRows}
                 slice={state.slice}
-                selection={state.selection}
                 gridContentTableTop={gridContentTableTop}
                 gridContentTableWidth={gridContentTableWidth}
                 fields={props.result.fields}
@@ -202,6 +202,12 @@ export function DataGridCore(props: DataGridCoreProps) {
                 contextMenu={state.contextMenu}
                 onContextMenuSelectOption={onContextMenuSelectOption}
               />
+              {state.selection ? (
+                <DataGridSelection
+                  colsWidths={colsWidths}
+                  selection={state.selection}
+                />
+              ) : undefined}
             </div>
             {onChangeLimit && props.limit ? (
               <div

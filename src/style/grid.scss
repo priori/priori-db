@@ -178,49 +178,22 @@ textarea.active-cell {
   animation: 0.6s 0.2s show forwards;
 }
 
-td.selected {
-  background: rgba(0, 0, 0, 0.12);
-  border-color: #c4c4c4;
-}
 td.changed {
   background: rgba(256, 240, 0, 0.2);
 }
-td.selected.changed {
-  background: rgba(120, 110, 0, 0.25);
-}
-.grid tbody tr:hover td.selected {
-  border-color: #bbb;
-}
 
-$selectionBorder: #bbb;
-td.selection-left {
-  border-right-color: $selectionBorder;
+.grid--selection {
+  position: absolute;
+  top: 412px;
+  left: 164px;
+  width: 332px;
+  height: 185px;
+  pointer-events: none;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: contrast(1.05);
+  // backdrop-filter: brightness(0.85) contrast(1.1);
 }
-.grid tbody tr:hover td.selection-left {
-  border-right-color: $selectionBorder;
-}
-td.selection-bottom {
-  border-top-color: $selectionBorder;
-}
-.grid tbody tr:hover td.selection-bottom {
-  border-top-color: $selectionBorder;
-}
-tr:last-child .selected {
-  border-bottom: 1px solid $selectionBorder;
-}
-td.selection-first-row,
-.grid tbody tr:hover + tr td.selected.selection-first-row {
-  border-top: solid 1px $selectionBorder;
-}
-td.selection-last-col {
-  border-right: 1px solid $selectionBorder;
-}
-/*
-td.selected { background: #e0e0e0; border-color: #ccc; }
-tr:nth-child(2n) td.selected{ background: #d2d2d2; }
-tr:hover td.selected { background-color: #c6c6c6;}
-tr:nth-child(2n):hover td.selected { background: #c0c0c0; }
-*/
 
 .grid .active {
   margin-top: -2px;
@@ -497,7 +470,7 @@ th.desc.sortable:hover::before {
 .grid tbody tr:last-of-type {
   border-bottom: 0;
 }
-.grid tbody tr:last-of-type td:not(.selected) {
+.grid tbody tr:last-of-type td {
   border-bottom: 1px solid #ddd;
 }
 .grid tbody tr:last-of-type:hover td {
