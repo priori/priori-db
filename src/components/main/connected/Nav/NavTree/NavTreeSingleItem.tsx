@@ -325,7 +325,11 @@ function NavTreeSingleItem0({
       onMouseLeave={localOnMouseLeave}
     >
       <div
-        style={{ flex: 1, display: 'flex' }}
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+        }}
         onMouseEnter={localOnMouseEnter}
         onMouseLeave={localOnMouseLeave2}
       >

@@ -146,6 +146,7 @@
     flex-wrap: wrap;
     padding: 5px;
     user-select: text;
+    width: calc(100% + 20px);
     .field {
       margin-right: 20px;
       width: 217px;
