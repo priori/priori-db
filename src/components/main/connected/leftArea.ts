@@ -11,6 +11,7 @@ let headerMenuEl: HTMLElement | null = null;
 let headerMenuElI: HTMLElement | null = null;
 let rootEl: HTMLElement | null = null;
 let resizeIndicatorEl: HTMLElement | null = null;
+let appAdjustmentIconEl: HTMLElement | null = null;
 
 function updateElsLeftWidth(leftWidth: number) {
   assert(tabsHeaderEL);
@@ -18,6 +19,7 @@ function updateElsLeftWidth(leftWidth: number) {
   assert(headerEl);
   assert(appContentEl);
   assert(headerMenuEl);
+  assert(appAdjustmentIconEl);
   if (!resizeIndicatorEl) {
     resizeIndicatorEl = document.querySelector('.resize--indicator');
   }
@@ -27,6 +29,7 @@ function updateElsLeftWidth(leftWidth: number) {
   headerEl.style.width = `${Math.max(leftWidth, 33)}px`;
   headerMenuEl.style.left =
     leftWidth <= 40 ? '0' : `${Math.max(leftWidth - 37, 0)}px`;
+  appAdjustmentIconEl.style.left = `${Math.max(leftWidth > 40 ? Math.max(leftWidth - 37, 0) - 37 : -37, -37)}px`;
   headerMenuEl.style.opacity = leftWidth <= 40 ? '1' : '';
   headerMenuEl.style.width = leftWidth <= 40 ? '40px' : '';
   headerMenuElI.className = `fa ${
@@ -54,6 +57,7 @@ export function useLeftArea() {
     appContentEl = document.querySelector('.app-content');
     headerMenuEl = document.querySelector('.header--menu');
     headerMenuElI = document.querySelector('.header--menu>i');
+    appAdjustmentIconEl = document.querySelector('.settings-button');
     rootEl = document.querySelector('#root>div');
     assert(tabsHeaderEL);
     assert(rootEl);

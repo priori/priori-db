@@ -7,7 +7,8 @@ export type FrameType =
   | 'function'
   | 'sequence'
   | 'domain'
-  | 'role';
+  | 'role'
+  | 'settings';
 
 export interface AbstractTabProps<T extends FrameType> {
   readonly type: T;
@@ -57,6 +58,8 @@ export interface SchemaInfoFrameProps extends AbstractTabProps<'schemainfo'> {
   readonly schema: string;
 }
 
+export interface SettingsFrameProps extends AbstractTabProps<'settings'> {}
+
 export type FrameProps0<T extends FrameType> = T extends 'query'
   ? QueryFrameProps
   : T extends 'table'
@@ -75,7 +78,9 @@ export type FrameProps0<T extends FrameType> = T extends 'query'
                 ? DomainFrameProps
                 : T extends 'role'
                   ? RoleFrameProps
-                  : never;
+                  : T extends 'settings'
+                    ? SettingsFrameProps
+                    : never;
 
 export type FrameProps = FrameProps0<FrameType>;
 

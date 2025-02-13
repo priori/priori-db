@@ -546,6 +546,24 @@ export function newQueryTab(current: AppState) {
   }));
 }
 
+export function openSettings(current: AppState) {
+  if (current.tabs.find((t) => t.props.type === 'settings')) {
+    return activateTab(
+      current,
+      current.tabs.find((t) => t.props.type === 'settings') as Tab,
+    );
+  }
+  return newFrame(current, (uid) => ({
+    title: 'Settings',
+    active: true,
+    keep: true,
+    props: {
+      uid,
+      type: 'settings',
+    },
+  }));
+}
+
 export function connected(
   current: AppState,
   currentConnectionConfiguration: ConnectionConfiguration,

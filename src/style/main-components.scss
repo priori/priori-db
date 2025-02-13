@@ -237,7 +237,8 @@ button:hover:not([disabled]) {
   .tabs-header,
   .header,
   .header .header--menu,
-  .nav {
+  .nav,
+  .settings-button {
     transition: none !important;
   }
 }

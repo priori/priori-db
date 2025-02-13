@@ -45,6 +45,7 @@ export const {
   previewRole,
   renameSchema,
   newTable,
+  openSettings,
 } = state;
 
 export async function reloadNav() {

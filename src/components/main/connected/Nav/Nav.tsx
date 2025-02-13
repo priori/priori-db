@@ -7,6 +7,7 @@ import { NavSchema, Tab } from '../../../../types';
 import { NavSearch } from './NavSearch';
 import { NavTree } from './NavTree/NavTree';
 import { useTabs } from './navUtils';
+import { SettingsButton } from '../SettingsButton';
 
 export type Entity = {
   fullText: string;
@@ -149,7 +150,10 @@ export function Nav(props: {
         style={props.style}
       >
         {props.title ? (
-          <div className="header--title">{props.title}</div>
+          <div className="header--title">
+            {props.title}
+            <SettingsButton />
+          </div>
         ) : null}
         <NavSearch
           schemas={props.schemas}

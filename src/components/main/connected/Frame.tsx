@@ -6,6 +6,7 @@ import { SequenceFrame } from 'components/frames/SequenceFrame';
 import { DomainFrame } from 'components/frames/DomainFrame';
 import { FunctionFrame } from 'components/frames/FunctionFrame';
 import { RoleFrame } from 'components/frames/RoleFrame';
+import { SettingsFrame } from 'components/frames/SettingsFrame/SettingsFrame';
 import { QueryFrame } from '../../frames/QueryFrame/QueryFrame';
 import { TableDataFrame } from '../../frames/TableDataFrame/TableDataFrame';
 import { NewTableFrame } from '../../frames/NewTableFrame';
@@ -26,6 +27,7 @@ const framesTypes: FramesTypesMap<FrameType> = {
   domain: DomainFrame,
   function: FunctionFrame,
   role: RoleFrame,
+  settings: SettingsFrame,
 };
 
 export const Frame = React.memo(

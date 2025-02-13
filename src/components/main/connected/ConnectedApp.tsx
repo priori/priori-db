@@ -25,6 +25,7 @@ import { useLeftArea } from './leftArea';
 import { Nav } from './Nav/Nav';
 import { TabsHeader } from './TabsHeader';
 import { Launcher } from './Nav/Launcher/Launcher';
+import { SettingsButton } from './SettingsButton';
 
 const classNames: Record<FrameType, string> = {
   query: 'query-tab',
@@ -36,6 +37,7 @@ const classNames: Record<FrameType, string> = {
   domain: 'domain',
   sequence: 'sequence',
   role: 'role',
+  settings: 'settings',
 };
 
 interface UseTabConfiguration {
@@ -287,6 +289,9 @@ export function ConnectedApp({ state }: { state: AppState }) {
       <div className="header-and--nav">
         <div className="header" style={{ width: Math.max(leftWidth, 33) }}>
           {title}
+          <SettingsButton
+            left={leftWidth > 40 ? Math.max(leftWidth - 37, 0) - 37 : -37}
+          />
           <span
             className="header--menu"
             onMouseEnter={onHeaderMouseEnter}

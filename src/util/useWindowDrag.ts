@@ -3,7 +3,7 @@ import { useRef } from 'react';
 import { useEventListener } from './useEventListener';
 
 const dontDragSelector =
-  'a, button, input, textarea, [tabindex]:not(.frame), select, .query-selector--query, .tabs-header__tab, .tabs-header__add, .header--menu, .favorite, .resize-helper, .query-frame--resize-helper, .bases-wrapper, .new-schema-form, .owner .fa-pencil, .columns-form-column';
+  'a, button, input, textarea, [tabindex]:not(.frame), select, .query-selector--query, .tabs-header__tab, .tabs-header__add, .header--menu, .settings-button, .favorite, .resize-helper, .query-frame--resize-helper, .bases-wrapper, .new-schema-form, .owner .fa-pencil, .columns-form-column';
 
 // for double click events to work
 const noOverlaySelector = '.tabs-header, .frame, .app-content';
