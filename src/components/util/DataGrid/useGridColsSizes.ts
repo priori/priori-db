@@ -11,6 +11,7 @@ import {
   rowHeight,
   scrollWidth,
 } from './util';
+import { buildStyle } from './DataGridSelection';
 
 type ResizeState = {
   widths: number[];
@@ -82,6 +83,7 @@ export function useGridColsSizes({
   height,
   elRef,
   activeCellUpdate,
+  selection,
 }: {
   result: {
     rows: any[];
@@ -92,6 +94,10 @@ export function useGridColsSizes({
   height: number;
   extraBottomSpace: number;
   elRef: React.MutableRefObject<HTMLDivElement | null>;
+  selection?: {
+    rowIndex: [number, number];
+    colIndex: [number, number];
+  };
   activeCellUpdate: (
     widths: number[],
     hasBottomScrollbar: boolean,
@@ -176,6 +182,9 @@ export function useGridColsSizes({
     const outer = d.querySelector(
       '.grid-content--table-wrapper-outer',
     ) as HTMLElement | null;
+    const selectionEl = d.querySelector(
+      '.grid-content .grid--selection',
+    ) as HTMLElement | null;
     assert(t, `.grid-content table is null`);
     assert(table1, `table.grid-header is null`);
     assert(table2, `.grid-content table is null`);
@@ -202,11 +211,15 @@ export function useGridColsSizes({
         table2.style.width = `${widthSum}px`;
         ths1[index - 1].style.width = `${colWidth}px`;
         ths2[index - 1].style.width = `${colWidth}px`;
-        activeCellUpdate(
-          colsWidths.map((w, i) => (i === index - 1 ? colWidth : w)),
-          hasBottomScrollbar,
-          hasRightScrollbar,
+        const newColsWidths = colsWidths.map((w, i) =>
+          i === index - 1 ? colWidth : w,
         );
+        activeCellUpdate(newColsWidths, hasBottomScrollbar, hasRightScrollbar);
+        if (selectionEl && selection) {
+          const style = buildStyle({ selection, colsWidths: newColsWidths });
+          selectionEl.style.left = `${style.left}px`;
+          selectionEl.style.width = `${style.width}px`;
+        }
         return true;
       },
       t,

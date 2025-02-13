@@ -179,6 +179,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     extraBottomSpace,
     elRef,
     activeCellUpdate: gridActiveCellUpdate,
+    selection: state.selection,
   });
 
   useEffect(() => {
