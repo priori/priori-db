@@ -7,6 +7,8 @@ import { currentState } from 'state/state';
 import { useIsMounted } from 'util/hooks';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
+import { useMoreTime } from 'components/util/DataGrid/dataGridCoreUtils';
+import { useTab } from 'components/main/connected/ConnectedApp';
 import {
   closeTab,
   reloadNav,
@@ -159,8 +161,21 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
     },
   );
 
+  useTab({
+    f5() {
+      service.reload();
+    },
+  });
+
+  const reloading = useMoreTime(service.status === 'reloading', 100);
+
   return (
-    <div>
+    <div
+      style={{
+        transition: 'opacity 0.1s',
+        opacity: reloading ? 0.6 : 1,
+      }}
+    >
       <h1>
         <span className="adjustment-icon2">
           <div />
