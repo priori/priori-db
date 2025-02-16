@@ -4,20 +4,31 @@ import { useService } from 'util/useService';
 import React from 'react';
 import { useMoreTime } from 'components/util/DataGrid/dataGridCoreUtils';
 import { db } from 'db/db';
+import { Dialog } from 'components/util/Dialog/Dialog';
+import { ConnectionConfigurationForm } from 'components/main/home/ConnectionConfigurationForm';
+import {
+  listConnectionConfigurations,
+  updateConnectionConfiguration,
+} from 'util/browserDb/actions';
+import { ConnectionConfiguration } from 'types';
 import { SettingsParams } from './SettingsParams';
 import { Info } from '../Info';
 
 export function SettingsFrame() {
+  const [edit, setEdit] = React.useState(false);
   const state = currentState();
   const c = state.currentConnectionConfiguration!;
   const service = useService(async () => {
-    const [basicDbInfo, params, extraInfo] = await Promise.all([
+    const [basicDbInfo, params, extraInfo, conList] = await Promise.all([
       db().basicInfo(),
       db().variables.load(),
       db().extraInfo(),
+      listConnectionConfigurations(),
     ]);
-    return { ...basicDbInfo, params, extraInfo };
+    const currentCon = conList.find((c2) => c.id === c2.id);
+    return { ...basicDbInfo, params, extraInfo, currentCon };
   }, []);
+  const c2 = service.lastValidData?.currentCon;
   useTab({
     f5() {
       service.reload();
@@ -68,28 +79,99 @@ export function SettingsFrame() {
                 marginRight: 7,
               }}
             >
-              {c.user}
-              <wbr />@<wbr />
-              {c.host}
-              <wbr />
-              {c.port !== 5432 ? (
+              {c2 &&
+              (c2.user !== c.user ||
+                c2.host !== c.host ||
+                c2.port !== c.port ||
+                c2.database !== c.database) ? (
                 <>
-                  :<wbr />
-                  {c.port}
+                  <div style={{ color: '#bbb' }}>
+                    <i
+                      className="fa fa-chain"
+                      style={{
+                        color: '#1976d2',
+                        position: 'relative',
+                        bottom: -1,
+                      }}
+                    />{' '}
+                    {c.user}
+                    <wbr />@<wbr />
+                    {c.host}
+                    <wbr />
+                    {c.port !== 5432 ? (
+                      <>
+                        :<wbr />
+                        {c.port}
+                      </>
+                    ) : (
+                      ''
+                    )}
+                    <wbr />/<wbr />
+                    {state.database}
+                  </div>
+                  <div style={{ fontStyle: 'italic', fontSize: 12 }}>
+                    {c2.user}
+                    <wbr />@<wbr />
+                    {c2.host}
+                    <wbr />
+                    {c2.port !== 5432 ? (
+                      <>
+                        :<wbr />
+                        {c2.port}
+                      </>
+                    ) : (
+                      ''
+                    )}
+                    <wbr />/<wbr />
+                    {state.database} <i className="fa fa-pencil" />
+                  </div>
                 </>
               ) : (
-                ''
+                <>
+                  {c.user}
+                  <wbr />@<wbr />
+                  {c.host}
+                  <wbr />
+                  {c.port !== 5432 ? (
+                    <>
+                      :<wbr />
+                      {c.port}
+                    </>
+                  ) : (
+                    ''
+                  )}
+                  <wbr />/<wbr />
+                  {state.database}
+                </>
               )}
-              <wbr />/<wbr />
-              {state.database}
             </span>
             <button
               type="button"
               style={{ marginRight: 7, marginBottom: 7 }}
-              disabled
+              onClick={() => setEdit(true)}
             >
               Edit <i className="fa fa-pencil" />
-            </button>{' '}
+            </button>
+            {edit ? (
+              <Dialog
+                relativeTo="previousSibling"
+                onBlur={() => setEdit(false)}
+              >
+                <div style={{ height: 400, textAlign: 'left' }}>
+                  <ConnectionConfigurationForm
+                    connection={service.lastValidData?.currentCon}
+                    onCancel={() => {
+                      setEdit(false);
+                    }}
+                    onJustSave={async (e: ConnectionConfiguration) => {
+                      await updateConnectionConfiguration(e);
+                      service.reload();
+                      setEdit(false);
+                    }}
+                  />
+                </div>
+              </Dialog>
+            ) : null}{' '}
             <button type="button" disabled>
               Disconnect <i className="fa fa-chain-broken" />
             </button>

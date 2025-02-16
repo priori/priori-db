@@ -15,15 +15,17 @@ export interface NewConectionState {
   requireSsl?: boolean;
   type?: ConnectionType | null;
 }
+
 interface NewConnectionProps {
   connection: undefined | ConnectionConfiguration;
-  onRemove: undefined | (() => void);
+  onRemove?: () => void;
   onCancel: undefined | (() => void);
-  onSaveAndConnect: (c: ConnectionConfiguration) => void;
+  onSaveAndConnect?: (c: ConnectionConfiguration) => void;
   onJustSave: (c: ConnectionConfiguration) => void;
 }
 
 export function ConnectionConfigurationForm(props: NewConnectionProps) {
+  const alreadyConnected = !props.onSaveAndConnect;
   const { connection } = props;
   const [state, setState] = useState({
     port: connection ? `${connection.port}` : '',
@@ -88,7 +90,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
           : null;
     if (!type || Number.isNaN(port)) return;
     assert(port);
-    props.onSaveAndConnect({
+    props.onSaveAndConnect!({
       ...(connection?.id ? { id: connection.id } : {}),
       database: database || 'postgres',
       host: host || 'localhost',
@@ -101,7 +103,13 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
   }
 
   function onTestClick(ev: React.MouseEvent<HTMLButtonElement>) {
-    if (ev.target instanceof HTMLButtonElement) ev.target.blur();
+    if (ev.target instanceof HTMLButtonElement) {
+      ev.target.blur();
+      const parent = ev.target.closest('[tabindex]');
+      if (parent instanceof HTMLElement) {
+        parent.focus();
+      }
+    }
     const { database, host, user, password, type, requireSsl } = state;
     const port = state.port
       ? parseInt(state.port, 10)
@@ -300,13 +308,15 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
           ) : null}
         </div>
         <div style={{ marginBottom: '4px' }}>
-          <button
-            onClick={() => saveAndConnect()}
-            type="button"
-            disabled={!state.type}
-          >
-            <i className="fa fa-chain" /> Save &amp; Connect
-          </button>{' '}
+          {alreadyConnected ? null : (
+            <button
+              onClick={() => saveAndConnect()}
+              type="button"
+              disabled={!state.type}
+            >
+              <i className="fa fa-chain" /> Save &amp; Connect
+            </button>
+          )}{' '}
           {props.onCancel ? (
             <button onClick={() => cancel()} type="button">
               <i className="fa fa-rotate-left" /> Cancel
@@ -314,7 +324,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
           ) : null}
         </div>
         <button onClick={() => save()} type="button" disabled={!state.type}>
-          <i className="fa fa-save" /> Just Save
+          <i className="fa fa-save" /> {alreadyConnected ? '' : 'Just '}Save
         </button>{' '}
         {removeConfirmation ? (
           <Dialog onBlur={noClick} relativeTo="nextSibling">

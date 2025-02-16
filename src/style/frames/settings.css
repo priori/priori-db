@@ -69,3 +69,6 @@
 .param.param--more:hover {
   background: #eee;
 }
+.settings .new-connection {
+  height: 420px;
+}
