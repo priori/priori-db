@@ -12,6 +12,23 @@ import {
 import { DomainInfo, SequenceInfo, TableInfo } from './db';
 
 export interface DBInterface {
+  basicInfo(): Promise<{ version: string; size?: string }>;
+  extraInfo(): Promise<{
+    [title: string]: {
+      [key: string]: SimpleValue;
+    };
+  }>;
+  variables: {
+    update(name: string, value: string): Promise<void>;
+    title: string;
+    load(): Promise<
+      {
+        name: string;
+        setting: string;
+        description: string;
+      }[]
+    >;
+  };
   schema(name: string): Promise<{
     privileges?: {
       roleName: string;

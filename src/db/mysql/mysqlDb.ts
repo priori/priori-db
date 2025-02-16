@@ -69,6 +69,31 @@ function privsToPrivileges(
 export const openIds = new Set<number>();
 
 export const mysqlDb: DBInterface = {
+  async basicInfo() {
+    const versionAndSize = await first('SELECT version() version');
+    return { version: `MySQL Version: ${versionAndSize.version}` };
+  },
+  async extraInfo() {
+    return {};
+  },
+  variables: {
+    async update(name: string, value: string) {
+      await execute(`SET GLOBAL ${name} = ${str(value)}`);
+    },
+    async load() {
+      const paramsRes = await list('SHOW VARIABLES');
+      const params = paramsRes as {
+        Variable_name: string;
+        Value: string;
+      }[];
+      return params.map((p) => ({
+        name: p.Variable_name,
+        setting: p.Value,
+        description: '',
+      }));
+    },
+    title: 'Params',
+  },
   async listAll(): Promise<
     {
       name: string;

@@ -1,0 +1,71 @@
+[data-hint] {
+  position: relative;
+}
+[data-hint]::after {
+  content: attr(data-hint);
+  position: absolute;
+
+  line-height: 1.2;
+  transform: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 3px 7px;
+  border-radius: 8px;
+  max-width: 200px;
+  width: max-content;
+  overflow-wrap: break-word;
+  white-space: break-spaces;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+  position: anchored;
+  anchor-name: my-hint;
+  inset-block-start: 25px;
+  inset-inline-start: 0;
+  pointer-events: none;
+}
+
+[data-hint]:hover::after {
+  opacity: 1;
+}
+.params--search {
+  padding: 3px;
+}
+.params--search:focus {
+  padding: 2px;
+}
+
+.param {
+  line-height: 28px;
+  background: #eee;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  border-radius: 5px;
+  white-space: nowrap;
+  user-select: text;
+  cursor: pointer;
+}
+.param .fa-pencil {
+  opacity: 0.4;
+  position: relative;
+  top: -1px;
+  right: -2px;
+  cursor: pointer;
+}
+
+.param :hover {
+  background: #ddd;
+}
+.param:hover .fa-pencil {
+  opacity: 1;
+}
+.param.param--more {
+  background: transparent;
+  user-select: none;
+  font-size: 14px !important;
+}
+.param.param--more:hover {
+  background: #eee;
+}

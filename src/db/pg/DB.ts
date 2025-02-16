@@ -263,6 +263,37 @@ async function updateEntity(
 }
 
 export const DB: DBInterface = {
+  async basicInfo() {
+    const versionAndSize = await first(
+      'SELECT version(),pg_size_pretty(pg_database_size(current_database())) AS database_size;',
+    );
+    const size = versionAndSize.database_size as string;
+    return { size, version: versionAndSize.version as string };
+  },
+  async extraInfo() {
+    const info = await first(
+      'SELECT * FROM pg_catalog.pg_database WHERE datname = current_database()',
+    );
+    return {
+      'pg_catelog.pg_database': info,
+    };
+  },
+  variables: {
+    async update(name: string, value: string) {
+      await query(`SET ${name} TO ${str(value)}`);
+    },
+    async load() {
+      const paramsRes = await list('SHOW ALL');
+      const params = paramsRes as {
+        name: string;
+        setting: string;
+        description: string;
+      }[];
+      return params;
+    },
+    title: 'Params',
+  },
+
   async schema(name: string) {
     async function schemaPrivileges(s: string) {
       const res = await list(

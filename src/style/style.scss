@@ -18,5 +18,6 @@
 @include meta.load-css('frames/query-frame.scss');
 @include meta.load-css('frames/query-selector.scss');
 @include meta.load-css('frames/table-info.scss');
+@import './frames/settings.css';
 @import './launcher.css';
 @import './settings-button.css';
