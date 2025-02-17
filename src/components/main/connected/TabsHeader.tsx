@@ -51,7 +51,8 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
           t.props.type === 'function' ||
           t.props.type === 'sequence' ||
           t.props.type === 'tableinfo' ||
-          t.props.type === 'schemainfo' ? (
+          t.props.type === 'schemainfo' ||
+          t.props.type === 'settings' ? (
             <span
               className="adjustment-icon"
               style={{
@@ -106,9 +107,13 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
                           ? 'Table Settings'
                           : t.props.type === 'schemainfo'
                             ? 'Schema Settings'
-                            : ''}
+                            : t.props.type === 'settings'
+                              ? 'Settings'
+                              : ''}
         </h1>
-        {t.title && t.props.type !== 'newtable' ? (
+        {t.props.type === 'settings' ? (
+          <h2>DB &amp; App Settings</h2>
+        ) : t.title && t.props.type !== 'newtable' ? (
           <h2>{t.title}</h2>
         ) : t.title2 ? (
           <h2>{t.title2}</h2>
@@ -525,6 +530,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
           </span>
           <span
             className="tabs-header__add"
+            data-hint="New Query"
             onClick={() => newQueryTabInTheEnd()}
           >
             <i className="tabs-header__plus fa fa-plus" />
@@ -567,6 +573,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
           </span>
           <span
             className="tabs-header__add"
+            data-hint="New Query"
             onClick={() => newQueryTabInTheEnd()}
           >
             <i className="tabs-header__plus fa fa-plus" />
