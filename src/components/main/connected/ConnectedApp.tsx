@@ -15,6 +15,7 @@ import {
   keepTabOpen,
   newQueryTab,
   nextTab,
+  openSettings,
   prevTab,
   useAskToClose,
 } from '../../../state/actions';
@@ -147,6 +148,9 @@ export function ConnectedApp({ state }: { state: AppState }) {
     },
     launcher() {
       setLauncherOpen(true);
+    },
+    settings() {
+      openSettings();
     },
   });
 

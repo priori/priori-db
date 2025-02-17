@@ -13,6 +13,7 @@ export function useShortcuts({
   open,
   f5,
   launcher,
+  settings,
 }: {
   nextTab?: () => void;
   prevTab?: () => void;
@@ -23,6 +24,7 @@ export function useShortcuts({
   save?: () => void | false;
   open?: () => void | false;
   launcher?: () => void;
+  settings?: () => void;
 }) {
   const listener = useEvent((e: KeyboardEvent) => {
     if (
@@ -83,6 +85,15 @@ export function useShortcuts({
     ) {
       if (launcher) {
         launcher();
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    } else if (
+      (e.ctrlKey && e.key === ',') ||
+      (e.key === ',' && isMac && e.metaKey)
+    ) {
+      if (settings) {
+        settings();
       }
       e.preventDefault();
       e.stopPropagation();
