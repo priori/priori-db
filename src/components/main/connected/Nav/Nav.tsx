@@ -60,6 +60,7 @@ function NavNewSchema({ disabled }: { disabled?: boolean }) {
         onClick={() => setNewSchemaOpen(true)}
         tabIndex={disabled ? -1 : 0}
         role="button"
+        data-hint="Create new schema"
         onKeyDown={onNewSchemaKeyDown}
       >
         <i className="fa fa-plus" />

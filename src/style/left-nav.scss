@@ -31,6 +31,16 @@ div.nav {
     color: #04b;
     opacity: 1;
   }
+  .new-schema[data-hint]::after {
+    font-size: 15px;
+    padding: 5px 8px;
+    margin-top: -54px;
+    margin-left: -117px;
+  }
+  .new-schema[data-hint]:focus:after,
+  .new-schema[data-hint]:active:after {
+    display: none;
+  }
 
   .nav-search--entity {
     &:hover,

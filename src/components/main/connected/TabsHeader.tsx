@@ -30,6 +30,7 @@ export interface TabsHeaderState {
   editing: Tab | null;
   longOver?: Tab | null;
   firstLongOver?: boolean;
+  addButtonTouched: boolean;
 }
 
 export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
@@ -189,6 +190,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
       initialClientX: 0,
       offset: 0,
       editing: null,
+      addButtonTouched: false,
     };
     this.fit = this.fit.bind(this);
     this.windowMouseMove = this.windowMouseMove.bind(this);
@@ -530,8 +532,20 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
           </span>
           <span
             className="tabs-header__add"
-            data-hint="New Query"
-            onClick={() => newQueryTabInTheEnd()}
+            data-hint={this.state.addButtonTouched ? undefined : 'New Query'}
+            onMouseLeave={() => {
+              this.setState((state) => ({
+                ...state,
+                addButtonTouched: false,
+              }));
+            }}
+            onClick={() => {
+              this.setState((state) => ({
+                ...state,
+                addButtonTouched: true,
+              }));
+              newQueryTabInTheEnd();
+            }}
           >
             <i className="tabs-header__plus fa fa-plus" />
           </span>

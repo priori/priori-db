@@ -111,3 +111,11 @@
   border-radius: 0 15px 0 0;
   padding-top: 1px;
 }
+
+.settings-button[data-hint]::after {
+  font-size: 15px;
+  padding: 5px 8px;
+  top: 44px;
+  margin-left: -16px;
+  font-weight: normal;
+}
