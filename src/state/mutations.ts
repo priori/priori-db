@@ -8,20 +8,6 @@ import {
   Tab0,
 } from 'types';
 
-export function cancelAskToCloseWindow(current: AppState) {
-  return {
-    ...current,
-    askToCloseWindow: false,
-  } as AppState;
-}
-
-export function askToCloseWindow(current: AppState) {
-  return {
-    ...current,
-    askToCloseWindow: true,
-  } as AppState;
-}
-
 export function openRoles(current: AppState) {
   return {
     ...current,

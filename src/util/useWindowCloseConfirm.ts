@@ -1,26 +1,31 @@
 import { useEffect } from 'react';
 
-let state = 'on' as 'on' | 'close' | 'reload';
+let state = 'initial' as 'initial' | 'confirm' | 'reload';
 const closeNow = () => {
-  state = 'close';
+  state = 'confirm';
   window.close();
 };
 
 const reloadNow = () => {
-  state = 'close';
+  state = 'confirm';
   window.location.reload();
 };
 
-export function useWindowCloseConfirm(fn: (f: () => void) => void) {
+export function useWindowCloseConfirm(
+  fn: (close: () => void, decline: () => void) => void,
+) {
   useEffect(() => {
     const listener = (e: BeforeUnloadEvent) => {
-      if (state === 'close') return;
+      if (state === 'confirm') return;
       e.preventDefault();
       e.returnValue = '';
       fn(
         (process.env.NODE_ENV && !document.hasFocus()) || state === 'reload'
           ? reloadNow
           : closeNow,
+        () => {
+          state = 'initial';
+        },
       );
     };
     window.addEventListener(`beforeunload`, listener);
@@ -34,6 +39,6 @@ export function reload() {
 }
 
 export function forceClose() {
-  state = 'close';
+  state = 'confirm';
   window.close();
 }

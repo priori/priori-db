@@ -12,8 +12,6 @@ export const {
   openDomains,
   openSequences,
   openRoles,
-  askToCloseWindow,
-  cancelAskToCloseWindow,
   updateTabText,
   previewSchemaInfo,
   keepSchemaInfo,

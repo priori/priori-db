@@ -136,7 +136,6 @@ export interface ConnectionConfiguration {
 
 export interface AppState {
   uidCounter: number;
-  askToCloseWindow: boolean;
   connected: boolean;
   tabs: Tab[];
   tabsOpenOrder: number[];

@@ -10,8 +10,6 @@ import { useEvent } from 'util/useEvent';
 import { useWindowCloseConfirm } from 'util/useWindowCloseConfirm';
 import {
   askToCloseCurrent,
-  askToCloseWindow,
-  cancelAskToCloseWindow,
   keepTabOpen,
   newQueryTab,
   nextTab,
@@ -75,7 +73,10 @@ export function ConnectedApp({ state }: { state: AppState }) {
   assert(state.schemas);
   assert(state.currentConnectionConfiguration);
 
-  const [close, setClose] = React.useState<{ func: () => void } | null>(null);
+  const [closeState, setCloseState] = React.useState<{
+    close: () => void;
+    decline: () => void;
+  } | null>(null);
   const [launcherOpen, setLauncherOpen] = React.useState(false);
 
   const tabsConfigurations = React.useMemo(
@@ -197,20 +198,19 @@ export function ConnectedApp({ state }: { state: AppState }) {
     return sortedTabs;
   }, [state.tabs]);
 
-  useWindowCloseConfirm(async (doit) => {
+  useWindowCloseConfirm(async (close, decline) => {
     // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, 100));
     if (await db().hasOpenConnection()) {
-      setClose({ func: doit });
-      askToCloseWindow();
+      setCloseState({ close, decline });
     } else {
-      doit();
+      close();
     }
   });
 
   const onDecline = useEvent(() => {
-    setClose(null);
-    cancelAskToCloseWindow();
+    setCloseState(null);
+    closeState?.decline();
   });
 
   const onBlurCapture = useEvent((e: React.FocusEvent<HTMLDivElement>) => {
@@ -287,8 +287,8 @@ export function ConnectedApp({ state }: { state: AppState }) {
   return (
     <div>
       <Errors errors={state.errors} />
-      {close && (
-        <CloseConfirmation onConfirm={close.func} onDecline={onDecline} />
+      {closeState && (
+        <CloseConfirmation onConfirm={closeState.close} onDecline={onDecline} />
       )}
       <div className="header-and--nav">
         <div className="header" style={{ width: Math.max(leftWidth, 33) }}>

@@ -6,7 +6,6 @@ import * as mutations from './mutations';
 import hls from '../util/hotLoadSafe';
 
 let current: AppState = hls.current || {
-  askToCloseWindow: false,
   uidCounter: 0,
   connected: false,
   rolesOpen: false,
