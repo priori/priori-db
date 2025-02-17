@@ -58,11 +58,10 @@ export function SettingsParams({
       </div>
       <div>
         {(showAll ? searchResult : searchResult.slice(0, 20)).map((param) => (
-          <>
+          <React.Fragment key={param.name}>
             <span
               className="param"
               style={{ marginRight: 5 }}
-              key={param.name}
               data-hint={
                 param.description
                   ? `${param.name}: ${param.description}`
@@ -151,7 +150,7 @@ export function SettingsParams({
                 </div>
               </Dialog>
             ) : null}
-          </>
+          </React.Fragment>
         ))}
         {searchResult.length > 20 ? (
           showAll ? (
