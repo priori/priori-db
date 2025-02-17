@@ -11,6 +11,7 @@ import {
   updateConnectionConfiguration,
 } from 'util/browserDb/actions';
 import { ConnectionConfiguration } from 'types';
+import { reload } from 'util/useWindowCloseConfirm';
 import { SettingsParams } from './SettingsParams';
 import { Info } from '../Info';
 
@@ -172,7 +173,12 @@ export function SettingsFrame() {
                 </div>
               </Dialog>
             ) : null}{' '}
-            <button type="button" disabled>
+            <button
+              type="button"
+              onClick={() => {
+                reload();
+              }}
+            >
               Disconnect <i className="fa fa-chain-broken" />
             </button>
           </div>

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-let state = 'on' as 'on' | 'close';
+let state = 'on' as 'on' | 'close' | 'reload';
 const closeNow = () => {
   state = 'close';
   window.close();
@@ -17,11 +17,20 @@ export function useWindowCloseConfirm(fn: (f: () => void) => void) {
       if (state === 'close') return;
       e.preventDefault();
       e.returnValue = '';
-      fn(process.env.NODE_ENV && !document.hasFocus() ? reloadNow : closeNow);
+      fn(
+        (process.env.NODE_ENV && !document.hasFocus()) || state === 'reload'
+          ? reloadNow
+          : closeNow,
+      );
     };
     window.addEventListener(`beforeunload`, listener);
     return () => window.removeEventListener(`beforeunload`, listener);
   }, [fn]);
+}
+
+export function reload() {
+  state = 'reload';
+  window.location.reload();
 }
 
 export function forceClose() {
