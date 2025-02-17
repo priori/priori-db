@@ -115,7 +115,8 @@
   top: 0;
   background: #e4e4e4;
 }
-.app-content button {
+.app-content button,
+.dialog--close-window button {
   background: #e8e8e8;
   border-radius: 5px;
   border: 0;
@@ -127,7 +128,8 @@ button:hover:not([disabled]) {
   background: #f0f0f0;
   color: #000;
 }
-.app-content button:active:not([disabled]) {
+.app-content button:active:not([disabled]),
+.dialog--close-window button:active:not([disabled]) {
   background: #c4c4c4;
 }
 .errors {
