@@ -149,3 +149,14 @@ input.tabs-header__input:focus {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.tabs-header__tabs:not(:empty):after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: -5px;
+  left: -3px;
+  bottom: 0;
+  box-shadow: inset 0 0 13px rgba(0, 0, 0, 0.15);
+  right: 0;
+  pointer-events: none;
+}

@@ -8,6 +8,11 @@ const container = document.getElementById('root');
 assert(container !== null);
 createRoot(container).render(<AppWrapper />);
 
+window.onstorage = () => {
+  document.body.className = localStorage.getItem('theme') || 'soft-gray-theme';
+};
+document.body.className = localStorage.getItem('theme') || 'soft-gray-theme';
+
 ipcRenderer.on('close', () => {
   window.close();
 });

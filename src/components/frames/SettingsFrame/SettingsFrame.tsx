@@ -1,7 +1,7 @@
 import { useTab } from 'components/main/connected/ConnectedApp';
 import { currentState } from 'state/state';
 import { useService } from 'util/useService';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useMoreTime } from 'components/util/DataGrid/dataGridCoreUtils';
 import { db } from 'db/db';
 import { Dialog } from 'components/util/Dialog/Dialog';
@@ -12,6 +12,7 @@ import {
 } from 'util/browserDb/actions';
 import { ConnectionConfiguration } from 'types';
 import { reload } from 'util/useWindowCloseConfirm';
+import { useEventListener } from 'util/useEventListener';
 import { SettingsParams } from './SettingsParams';
 import { Info } from '../Info';
 
@@ -36,6 +37,17 @@ export function SettingsFrame() {
     },
   });
   const reloading = useMoreTime(service.status === 'reloading', 100);
+  const [theme, setTheme] = React.useState(
+    localStorage.getItem('theme') || 'soft-gray-theme',
+  );
+  useEffect(() => {
+    document.body.className = theme;
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  useEventListener(window, 'storage', () => {
+    setTheme(localStorage.getItem('theme') || 'soft-gray-theme');
+  });
   if (service.status === 'starting') {
     return (
       <div
@@ -53,6 +65,7 @@ export function SettingsFrame() {
       </div>
     );
   }
+
   return (
     <div
       style={{
@@ -247,10 +260,17 @@ export function SettingsFrame() {
 
       <h2>App Settings</h2>
       <p>Theme:</p>
-      <select disabled>
-        <option value="default">Soft Gray (Default)</option>
-        <option value="light">Bright Light</option>
-        <option value="dark">Dark</option>
+      <select
+        value={theme}
+        onChange={(e) => {
+          setTheme(e.target.value);
+        }}
+      >
+        <option value="soft-gray-theme">Soft Gray (Default)</option>
+        <option value="glacial-white-theme">Glacial White</option>
+        <option value="dark" disabled>
+          Dark
+        </option>
       </select>
     </div>
   );
