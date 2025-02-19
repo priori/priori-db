@@ -249,14 +249,6 @@ div.frame.settings {
     padding-top: 4px;
     padding-right: 5px;
   }
-  button.simple-button {
-    padding: 3px 8px !important;
-    font-size: 12px !important;
-    box-shadow: none;
-  }
-  .privileges-list button.simple-button {
-    padding: 4px 8px !important;
-  }
   table td.actions {
     text-align: right;
     user-select: none;
@@ -313,11 +305,6 @@ input.invalid {
 }
 span.default-input:has(.invalid):before {
   background: #d22;
-}
-
-button[disabled] {
-  opacity: 0.33;
-  cursor: default;
 }
 
 .dialog-error {

@@ -109,7 +109,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
           GRANTs
         </span>
       </h2>
-      <div className="privileges-list">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
         {list.map((role) => (
           <React.Fragment
             key={
@@ -119,7 +119,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
             }
           >
             <span
-              className="privileges-role"
+              className="pill"
               style={role.internal ? { opacity: 0.4 } : undefined}
             >
               {'roleName' in role ? (
@@ -172,11 +172,11 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
               >
                 Do you really want to revoke this role?
                 <div>
-                  <button type="button" onClick={revokeYesClick}>
+                  <button className="button" onClick={revokeYesClick}>
                     Yes
                   </button>
                   <button
-                    type="button"
+                    className="button"
                     onClick={() =>
                       set({
                         ...state,
@@ -196,10 +196,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
               <React.Fragment key={internal.name}>
                 {' '}
                 <button
-                  type="button"
-                  className={`simple-button simple-button2 hide-button ${
-                    !internal.isOpen ? ' hidden' : ' shown'
-                  }`}
+                  className={`pill-button hide-button ${internal.isOpen ? 'shown' : 'hidden'}`}
                   key={internal.isOpen ? 1 : 0}
                   onClick={internal.open}
                 >
@@ -211,8 +208,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
             ))
           : null}{' '}
         <button
-          type="button"
-          className="simple-button new-privileges-role"
+          className="pill-button"
           disabled={roles?.length === props.privileges.length}
           onClick={() => set({ ...state, grant: true })}
         >
@@ -301,8 +297,8 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
             )}
             <div>
               <button
+                className="button"
                 style={{ fontWeight: 'normal' }}
-                type="button"
                 onClick={() =>
                   set({
                     ...state,
@@ -313,7 +309,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
                 Cancel
               </button>
               <button
-                type="button"
+                className="button"
                 onClick={grantClick}
                 disabled={typeof state.grant !== 'object' && !state.entityName}
               >

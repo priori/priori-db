@@ -15,8 +15,11 @@
     background: #ddd;
   }
 }
-button.connections--edit-button,
-button.connections--add-button {
+.connections--edit-button,
+.connections--add-button {
+  border: 0;
+  padding: 10px;
+  cursor: pointer;
   bottom: 12px;
   font-size: 32px;
   vertical-align: middle;
@@ -106,9 +109,10 @@ button.connections--add-button {
   overflow: auto;
   box-shadow: 0 4px 40px rgba(0, 0, 0, 0.35);
 }
-.connections {
-}
 .connections--edit-button2 {
+  border: 0;
+  padding: 10px;
+  cursor: pointer;
   left: 50%;
   margin-left: 220px;
   background: #f9f9f9;
@@ -118,13 +122,10 @@ button.connections--add-button {
   border-radius: 30px;
   height: 60px;
   width: 60px;
-  background: white;
-  &:hover {
-    background: #f8f8f8;
-  }
-}
-button.connections--edit-button2:hover {
   background: #fff;
+  color: #555;
+}
+.connections--edit-button2:hover {
   color: black;
 }
 

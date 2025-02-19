@@ -18,6 +18,7 @@ module.exports = {
     'react/destructuring-assignment': 'off',
     'react/jsx-props-no-spreading': 'off',
     'react/require-default-props': 'off',
+    'react/button-has-type': 'off',
     'import/no-cycle': 'off',
     '@typescript-eslint/no-loop-func': 'off',
     'jsx-a11y/control-has-associated-label': 'off',

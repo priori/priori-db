@@ -190,7 +190,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
       </h1>
       <div className="table-info-frame__actions">
         <button
-          type="button"
+          className="button"
           onClick={() => set({ ...state, editComment: true })}
         >
           Comment <i className="fa fa-file-text-o" />
@@ -198,7 +198,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
         {functionsDb()?.rename ? (
           <>
             <button
-              type="button"
+              className="button"
               onClick={() => set({ ...state, rename: true })}
             >
               Rename <i className="fa fa-pencil" />
@@ -216,7 +216,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
         {functionsDb()?.move ? (
           <>
             <button
-              type="button"
+              className="button"
               onClick={() => set({ ...state, changeSchema: true })}
             >
               Change Schema{' '}
@@ -238,7 +238,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
         {isProcedure === undefined ? null : (
           <>
             <button
-              type="button"
+              className="button"
               onClick={
                 state.dropCascadeConfirmation || state.dropConfirmation
                   ? undefined
@@ -261,10 +261,10 @@ export function FunctionFrame(props: FunctionFrameProps) {
                   ? 'Do you really want to drop cascade this function?'
                   : 'Do you really want to drop this function?'}
                 <div>
-                  <button type="button" onClick={yesClick}>
+                  <button className="button" onClick={yesClick}>
                     Yes
                   </button>{' '}
-                  <button type="button" onClick={noClick}>
+                  <button className="button" onClick={noClick}>
                     No
                   </button>
                 </div>
@@ -272,7 +272,7 @@ export function FunctionFrame(props: FunctionFrameProps) {
             ) : null}
             {functionsDb()?.dropCascade && (
               <button
-                type="button"
+                className="button"
                 onClick={
                   state.dropCascadeConfirmation || state.dropConfirmation
                     ? undefined
@@ -330,13 +330,13 @@ export function FunctionFrame(props: FunctionFrameProps) {
                   </select>
                   <div>
                     <button
+                      className="button"
                       style={{ fontWeight: 'normal' }}
                       onClick={() => set({ ...state, editOwner: false })}
-                      type="button"
                     >
                       Cancel
                     </button>
-                    <button onClick={saveOwner} type="button">
+                    <button className="button" onClick={saveOwner}>
                       Save
                       <i className="fa fa-check" />
                     </button>

@@ -65,17 +65,19 @@ body.glacial-white-theme .tabs-header__tab--active:hover {
 }
 
 /* buttons */
-body.glacial-white-theme .app-content button,
-body.glacial-white-theme .dialog--close-window button {
+body.glacial-white-theme .button {
   background: #f8f8f8;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   color: #333;
 }
-body.glacial-white-theme .app-content button:hover,
-body.glacial-white-theme .dialog--close-window button:hover {
+body.glacial-white-theme .button:hover {
   background: #fcfcfc;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   color: #000;
+}
+body.glacial-white-theme .button:active:not([disabled]) {
+  background: #f4f4f4;
+  box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.2);
 }
 body.glacial-white-theme .param {
   background: #f8f8f8;
@@ -83,35 +85,42 @@ body.glacial-white-theme .param {
 body.glacial-white-theme .owner {
   background: #f8f8f8;
 }
-body.glacial-white-theme
-  body.glacial-white-theme
-  .app-content
-  button.simple-button2 {
+body.glacial-white-theme .pill-button,
+body.glacial-white-theme .pill {
   background: #f8f8f8;
+  box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.1);
+  color: #333;
 }
-body.glacial-white-theme .privileges-role {
-  background: #f8f8f8;
+body.glacial-white-theme .pill-button:not([disabled]):hover {
+  background: #fcfcfc;
+  box-shadow:
+    inset 0 -1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 2px rgba(255, 255, 255, 1);
+  color: #000;
 }
-body.glacial-white-theme button.query-tab--up,
-body.glacial-white-theme button.query-frame--code {
+body.glacial-white-theme .query-frame__up-button,
+body.glacial-white-theme .query-frame__code-button {
   box-shadow: none;
   background: white;
 }
-body.glacial-white-theme button.query-frame--apply2 {
+body.glacial-white-theme .query-frame__play-button {
   background: #31bb4d;
   box-shadow: none;
   color: white;
 }
-body.glacial-white-theme button.query-frame--apply2:hover {
+body.glacial-white-theme .query-frame__play-button:hover {
   background: #31ad4a !important;
   color: white;
 }
-body.glacial-white-theme .query-tab button.query-tab--execute {
+body.glacial-white-theme .query-frame__execute-button {
   box-shadow: 0 0;
   color: white;
   background: #31bb4d;
 }
-body.glacial-white-theme button.query-tab--up:hover {
+body.glacial-white-theme .query-frame__execute-button:hover {
+  background: #31ad4a;
+}
+body.glacial-white-theme button.query-frame__up-button:hover {
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
 }
 

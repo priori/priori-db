@@ -177,17 +177,22 @@ export function Home(props: AppState) {
               textAlign: 'center',
             }}
           >
-            <span style={{ userSelect: 'text' }}>{error.message}</span>{' '}
+            <div
+              style={{ userSelect: 'text', marginBottom: 18, marginTop: 13 }}
+            >
+              {error.message}
+            </div>{' '}
             <button
-              style={{ marginTop: '5px' }}
+              className="button"
+              style={{ marginTop: '5px', marginRight: 10 }}
               onClick={() => {
                 setState((s) => ({ ...s, error: null, openConnection: null }));
               }}
-              type="button"
             >
-              Close
+              Close <i className="fa fa-undo" />
             </button>{' '}
             <button
+              className="button"
               style={{ marginTop: '5px' }}
               onClick={() => {
                 setState((s) => ({
@@ -197,9 +202,8 @@ export function Home(props: AppState) {
                   editConnection: s.openConnection,
                 }));
               }}
-              type="button"
             >
-              Edit
+              Edit <i className="fa fa-pencil" />
             </button>
           </div>
         </div>
@@ -291,6 +295,7 @@ export function Home(props: AppState) {
         >
           <div className="bases">
             <button
+              className="connections--edit-button2"
               onClick={
                 state.connecting
                   ? undefined
@@ -302,8 +307,6 @@ export function Home(props: AppState) {
                       }));
                     }
               }
-              className="connections--edit-button2"
-              type="button"
             >
               <i className="fa fa-pencil" />
             </button>
@@ -397,7 +400,6 @@ export function Home(props: AppState) {
                 });
               }
         }
-        type="button"
         className="connections--edit-button"
       >
         <i className="fa fa-pencil" />
@@ -414,7 +416,6 @@ export function Home(props: AppState) {
                 });
               }
         }
-        type="button"
         className="connections--add-button"
       >
         <i className="fa fa-plus" />

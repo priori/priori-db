@@ -12,10 +12,12 @@
   font-size: 13px;
   line-height: 1.1em;
 }
+.dialog.new-role-dialog {
+  padding: 10px;
+}
 .new-role-dialog .new-role-dialog--field {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
 }
 .new-role-dialog .new-role-dialog--label {
   width: 60px;
@@ -36,7 +38,7 @@
 }
 .new-role-dialog .new-role-dialog--actions {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 .new-role-dialog .new-role-dialog--actions button {
   margin: 0 5px;

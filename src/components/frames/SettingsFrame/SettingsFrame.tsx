@@ -160,7 +160,7 @@ export function SettingsFrame() {
               )}
             </span>
             <button
-              type="button"
+              className="button"
               style={{ marginRight: 7, marginBottom: 7 }}
               onClick={() => setEdit(true)}
             >
@@ -187,7 +187,7 @@ export function SettingsFrame() {
               </Dialog>
             ) : null}{' '}
             <button
-              type="button"
+              className="button"
               onClick={() => {
                 reload();
               }}

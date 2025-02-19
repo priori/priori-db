@@ -80,7 +80,7 @@ export function ColumnFormDialog({
         <div className="dialog-form--error">
           <div className="dialog-form--error-message">{error.message}</div>
           <div className="dialog-form--error-buttons">
-            <button type="button" onClick={() => setError(null)}>
+            <button className="button" onClick={() => setError(null)}>
               Ok
             </button>
           </div>
@@ -239,16 +239,16 @@ export function ColumnFormDialog({
         </span>
         <div>
           <button
+            className="button"
             disabled={fieldsDisabled}
             style={{ fontWeight: 'normal' }}
-            type="button"
             onClick={onCancel}
           >
             Cancel
           </button>{' '}
           <button
+            className="button"
             disabled={updateDisabled}
-            type="button"
             onClick={updateDisabled ? undefined : onSave}
           >
             Save <i className="fa fa-check" />

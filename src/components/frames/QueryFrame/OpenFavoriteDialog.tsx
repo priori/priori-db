@@ -127,7 +127,7 @@ export function OpenFavoriteDialog({
         </div>
         <div>
           <button
-            type="button"
+            className="button"
             onClick={onBlur}
             style={{ fontWeight: 'normal' }}
           >

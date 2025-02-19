@@ -43,7 +43,7 @@ export function SettingsParams({
           className="params--search"
           onChange={(e) => setSearchQuery(e.target.value)}
         />{' '}
-        <i className="fa fa-search" />
+        <i className="fa fa-search" style={{ position: 'static' }} />
         {searchQuery ? (
           searchResult.length === 0 ? (
             <span style={{ color: '#d11', fontSize: 13, marginLeft: 4 }}>
@@ -56,12 +56,12 @@ export function SettingsParams({
           )
         ) : null}
       </div>
-      <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
         {(showAll ? searchResult : searchResult.slice(0, 20)).map((param) => (
           <React.Fragment key={param.name}>
             <span
-              className="param"
-              style={{ marginRight: 5 }}
+              className="pill-button"
+              style={{ fontWeight: 'normal' }}
               data-hint={
                 param.description
                   ? `${param.name}: ${param.description}`
@@ -133,14 +133,14 @@ export function SettingsParams({
                   </div>
                   <div>
                     <button
-                      type="button"
+                      className="button"
                       style={{ fontWeight: 'normal', userSelect: 'none' }}
                       onClick={() => setForm(null)}
                     >
                       Cancel <i className="fa fa-rotate-left" />
                     </button>
                     <button
-                      type="button"
+                      className="button"
                       onClick={save}
                       style={{ userSelect: 'none' }}
                     >
@@ -155,7 +155,7 @@ export function SettingsParams({
         {searchResult.length > 20 ? (
           showAll ? (
             <span
-              className="param param--more"
+              className="pill-button param--more"
               onClick={() => setShowAll(false)}
             >
               <strong>
@@ -163,10 +163,7 @@ export function SettingsParams({
               </strong>
             </span>
           ) : (
-            <span
-              className="param param--more"
-              onClick={() => setShowAll(true)}
-            >
+            <span className="pill-button" onClick={() => setShowAll(true)}>
               <strong>+{searchResult.length - 20} more...</strong>
             </span>
           )

@@ -124,13 +124,13 @@ export function DataGridSortDialog(props: DataGridSortDialogProps) {
       ))}
       <div>
         <button
+          className="button"
           style={{ fontWeight: 'normal' }}
-          type="button"
           onClick={onCancelClick}
         >
           Cancel
         </button>
-        <button onClick={onApplyClick} disabled={disabled} type="button">
+        <button className="button" onClick={onApplyClick} disabled={disabled}>
           Apply <i className="fa fa-check" />
         </button>
       </div>

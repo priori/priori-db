@@ -112,23 +112,7 @@
   inset: 0;
   background: #e4e4e4;
 }
-.app-content button,
-.dialog--close-window button {
-  background: #e8e8e8;
-  border-radius: 5px;
-  border: 0;
-  font-size: 15px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  padding: 8px 16px;
-}
-button:hover:not([disabled]) {
-  background: #f0f0f0;
-  color: #000;
-}
-.app-content button:active:not([disabled]),
-.dialog--close-window button:active:not([disabled]) {
-  background: #c4c4c4;
-}
+
 .errors {
   position: fixed;
   z-index: 99999;
@@ -177,35 +161,8 @@ button:hover:not([disabled]) {
     color: #c21;
   }
 }
-
-.privileges-role {
-  line-height: 2.3;
-  background: #eee;
-  padding: 4px 8px !important;
-  font-size: 12px !important;
-  border-radius: 5px;
-  white-space: nowrap;
-  user-select: text;
-  .fa-close {
-    opacity: 0.1;
-    position: relative;
-    top: -3px;
-    right: -3px;
-    cursor: pointer;
-    &:hover {
-      opacity: 1;
-    }
-  }
-}
 .nav {
   transition: width 0.3s;
-}
-.app-content button.simple-button2 {
-  background: #eee;
-}
-.new-privileges-role {
-  padding: 2px 4px;
-  font-size: 13px;
 }
 .hide-button {
   &.hidden:not(:hover) .fa-eye {

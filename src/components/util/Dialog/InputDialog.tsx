@@ -61,8 +61,8 @@ export function InputDialog({
           </div>
           <div className="dialog-error--buttons">
             <button
+              className="button"
               onClick={() => setError(null)}
-              type="button"
               style={{
                 padding: '6px 14px !important',
                 boxShadow: 'none',
@@ -126,16 +126,16 @@ export function InputDialog({
         />
       )}
       <button
+        className="button"
         disabled={!!error || executing}
         style={{ fontWeight: 'normal' }}
-        type="button"
         onClick={onCancel}
       >
         Cancel
       </button>{' '}
       <button
+        className="button"
         disabled={!!error || executing || state === value}
-        type="button"
         onClick={state === value ? undefined : onSave}
       >
         {updateText} <i className="fa fa-check" />

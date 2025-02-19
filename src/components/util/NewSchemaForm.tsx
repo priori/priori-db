@@ -55,14 +55,22 @@ export function NewSchemaForm({
           }}
         />{' '}
         <button
+          className="button"
           disabled={!schemaName}
-          style={schemaName ? undefined : { opacity: 0.5 }}
-          type="button"
+          style={
+            schemaName
+              ? { marginLeft: 2, paddingInline: 9 }
+              : { opacity: 0.5, marginLeft: 2, paddingInline: 9 }
+          }
           onClick={schemaName ? () => onCreateSchema(schemaName) : undefined}
         >
           Ok
         </button>{' '}
-        <button type="button" onClick={() => onClose()}>
+        <button
+          className="button"
+          onClick={() => onClose()}
+          style={{ marginLeft: 4, paddingInline: 8 }}
+        >
           Cancel
         </button>
       </div>

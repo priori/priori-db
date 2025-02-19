@@ -14,23 +14,66 @@ body {
   overflow: hidden;
   user-select: none;
 }
-button {
-  background: rgba(0, 0, 0, 0.1);
-  padding: 10px;
-  border: none;
+
+.button {
   outline: none;
-  font-weight: bold;
   color: #555;
   cursor: pointer;
+  background: #e8e8e8;
+  font-weight: bold;
+  border-radius: 5px;
+  border: 0;
+  font-size: 15px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  padding: 8px 16px;
 }
-button:not([disabled]):hover {
-  background: #f0f0f0;
-  color: #000;
-}
-button:focus {
+.button:focus {
   color: #018;
   background: rgba(0, 0, 0, 0.15);
 }
+.button:hover:not([disabled]) {
+  background: #f0f0f0;
+  color: #000;
+}
+.pill-button,
+.pill {
+  white-space: nowrap;
+  color: #555;
+  background: #e8e8e8;
+  border-radius: 5px;
+  border: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  display: inline-block;
+}
+.pill-button {
+  outline: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+.pill-button:not([disabled]):hover {
+  background: #f0f0f0;
+  color: #000;
+}
+.button:active:not([disabled]) {
+  background: #c4c4c4;
+}
+.button[disabled],
+.pill-button[disabled] {
+  opacity: 0.33;
+  cursor: default;
+}
+.pill .fa-close {
+  opacity: 0.1;
+  position: relative;
+  top: -3px;
+  right: -3px;
+  cursor: pointer;
+}
+.pill .fa-close:hover {
+  opacity: 1;
+}
+
 input {
   border: solid 1px #e1e1e1;
   outline: none;

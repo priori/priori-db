@@ -136,8 +136,7 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
       <div className="empty">
         No privileges found for {rolePriviliges ? 'role' : entityType}.{' '}
         <button
-          type="button"
-          className="simple-button"
+          className="pill-button"
           onClick={() => set({ ...edit, newPrivilege: true })}
         >
           Grant new privilege <i className="fa fa-plus" />
@@ -175,9 +174,8 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
           <React.Fragment key={internal.name}>
             {' '}
             <button
-              type="button"
               key={internal.isOpen ? 1 : 0}
-              className={`simple-button simple-button2 hide-button ${
+              className={`pill-button hide-button ${
                 !internal.isOpen ? ' hidden' : ' shown'
               }`}
               onClick={internal.open}
@@ -245,8 +243,7 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
               ))}
               <td className="actions">
                 <button
-                  type="button"
-                  className="simple-button"
+                  className="pill-button"
                   onClick={() => {
                     if ('roleName' in p)
                       set({
@@ -315,9 +312,8 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
         {internals.map((internal) => (
           <React.Fragment key={internal.name}>
             <button
-              type="button"
               key={internal.isOpen ? 1 : 0}
-              className={`simple-button simple-button2 hide-button ${
+              className={`pill-button hide-button ${
                 !internal.isOpen ? ' hidden' : ' shown'
               }`}
               onClick={internal.open}
@@ -328,8 +324,7 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
           </React.Fragment>
         ))}
         <button
-          type="button"
-          className="simple-button"
+          className="pill-button"
           onClick={() => set({ ...edit, newPrivilege: true })}
         >
           New <i className="fa fa-plus" />

@@ -31,10 +31,10 @@ export function CloseConfirmation({
           There is some running query or idle connection in transacion, are you
           sure you want to close?
         </div>
-        <button onClick={onDecline} type="button">
+        <button className="button" onClick={onDecline}>
           No
         </button>{' '}
-        <button onClick={onConfirm} type="button">
+        <button className="button" onClick={onConfirm}>
           Yes
         </button>
       </div>

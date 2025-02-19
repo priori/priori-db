@@ -198,7 +198,6 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
     >
       <h1 style={{ margin: 0, marginBottom: 20, lineHeight: '1em' }}>Filter</h1>
       <button
-        type="button"
         className={`data-grid-filter-dialog--where-sql${
           sqlVisible ? ' active' : ''
         }`}
@@ -242,7 +241,6 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
               }}
             />
             <button
-              type="button"
               className="data-grid-filter-dialog--edit-button"
               style={updatedSqlQuery ? { opacity: 0.1 } : undefined}
               onClick={() => {
@@ -261,7 +259,6 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
               readOnly
             />
             <button
-              type="button"
               className="data-grid-filter-dialog--edit-button"
               style={
                 !('type' in filter) &&
@@ -984,7 +981,6 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                   }}
                 >
                   <button
-                    type="button"
                     className="data-grid-filter-dialog--or"
                     onClick={() => {
                       setFilter([...filter, []]);
@@ -1002,13 +998,13 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
 
       <div>
         <button
+          className="button"
           style={{ fontWeight: 'normal' }}
-          type="button"
           onClick={onCancelClick}
         >
           Cancel
         </button>
-        <button onClick={onApplyClick} disabled={disabled} type="button">
+        <button className="button" onClick={onApplyClick} disabled={disabled}>
           Apply <i className="fa fa-check" />
         </button>
       </div>

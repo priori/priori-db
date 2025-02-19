@@ -21,7 +21,7 @@ export function NewRoleDialog({ onBlur }: { onBlur: () => void }) {
       {error ? (
         <div className="new-role-dialog--error">
           <span style={{ userSelect: 'text' }}>{error.message}</span>{' '}
-          <button type="button" onClick={() => setError(null)}>
+          <button className="button" onClick={() => setError(null)}>
             Dismiss
           </button>
         </div>
@@ -58,11 +58,23 @@ export function NewRoleDialog({ onBlur }: { onBlur: () => void }) {
         </div>
       </div>
       <div className="new-role-dialog--actions">
-        <button type="button" onClick={onBlur}>
-          Cancel
+        <button
+          className="button"
+          style={{
+            width: 80,
+            paddingLeft: 8,
+            fontWeight: 'normal',
+          }}
+          onClick={onBlur}
+        >
+          Cancel <i className="fa fa-undo" />
         </button>
         <button
-          type="button"
+          className="button"
+          style={{
+            width: 80,
+            paddingLeft: 8,
+          }}
           disabled={!name}
           onClick={() => {
             setError(null);
@@ -77,7 +89,7 @@ export function NewRoleDialog({ onBlur }: { onBlur: () => void }) {
               );
           }}
         >
-          Create
+          Create <i className="fa fa-check" />
         </button>
       </div>
     </Dialog>

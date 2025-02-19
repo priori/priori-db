@@ -669,7 +669,7 @@ IS 'asdf asdf';
                 </OpenCloseCategory><br/>
                         */}
       <br />
-      <button type="button" onClick={() => save()} disabled={disabled}>
+      <button className="button" onClick={() => save()} disabled={disabled}>
         Save
       </button>
     </div>

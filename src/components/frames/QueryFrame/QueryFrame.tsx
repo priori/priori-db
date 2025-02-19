@@ -50,6 +50,7 @@ function AddToFavoritesDialogButton({
           }}
         />{' '}
         <button
+          className="button"
           onBlur={() => {
             if (divRef.current)
               setTimeout(() => {
@@ -66,7 +67,6 @@ function AddToFavoritesDialogButton({
             marginBottom: 0,
             width: 70,
           }}
-          type="button"
           disabled={!value}
           onClick={() => {
             if (value) {
@@ -82,8 +82,7 @@ function AddToFavoritesDialogButton({
   }
   return (
     <button
-      className="query-tab--save-stdout"
-      type="button"
+      className="button query-tab--save-stdout"
       onClick={() => {
         setOpen(true);
       }}
@@ -211,9 +210,8 @@ export function QueryFrame({ uid }: { uid: number }) {
             ) : undefined}
 
             <button
-              className="query-frame--apply2"
+              className="query-frame__play-button"
               onClick={execute}
-              type="button"
               style={
                 running || popup
                   ? {
@@ -238,7 +236,9 @@ export function QueryFrame({ uid }: { uid: number }) {
           onMouseEnter={popup ? onPopupMouseEnter : undefined}
           onMouseLeave={popup ? onPopupMouseLeave : undefined}
           className={
-            popup ? 'query-frame--popup' : 'query-frame--code-editor-area'
+            popup
+              ? 'query-frame__code-editor--popup'
+              : 'query-frame__code-editor--no-popup'
           }
           style={
             popup
@@ -267,10 +267,10 @@ export function QueryFrame({ uid }: { uid: number }) {
                 : 'A query is running.'}{' '}
               Do you wish to cancel it?
               <div>
-                <button type="button" onClick={yesClick}>
+                <button className="button" onClick={yesClick}>
                   Yes
                 </button>{' '}
-                <button type="button" onClick={noClick}>
+                <button className="button" onClick={noClick}>
                   No
                 </button>
               </div>
@@ -284,9 +284,8 @@ export function QueryFrame({ uid }: { uid: number }) {
           {saveDialogOpen ? (
             <Dialog relativeTo="previousSibling" onBlur={onDialogBlur}>
               <button
+                className="button query-tab--save-sql"
                 onClick={onSaveSqlQueryToFileClick}
-                className="query-tab--save-sql"
-                type="button"
                 ref={focus}
               >
                 Save SQL query to a file (.sql)
@@ -295,9 +294,8 @@ export function QueryFrame({ uid }: { uid: number }) {
               {currentState()?.currentConnectionConfiguration?.type ===
               'postgres' ? (
                 <button
+                  className="button query-tab--save-stdout"
                   style={{ marginTop: 15 }}
-                  className="query-tab--save-stdout"
-                  type="button"
                   onClick={onStdOutFileClick}
                 >
                   Export query response to a file (PostgreSQL STDOUT)
@@ -308,23 +306,20 @@ export function QueryFrame({ uid }: { uid: number }) {
           {openDialogOpen ? (
             <Dialog relativeTo="previousSibling" onBlur={onDialogBlur}>
               <button
+                className="button query-tab--save-sql"
                 ref={focus}
-                type="button"
-                className="query-tab--save-sql"
                 onClick={onOpenSqlQueryFileClick}
               >
                 Open SQL query from a file (.sql)
               </button>
               <button
-                type="button"
-                className="query-tab--save-sql"
+                className="button query-tab--save-sql"
                 onClick={onOpenFavoriteClick}
               >
                 Open Favorite
               </button>
               <button
-                type="button"
-                className="query-tab--save-sql"
+                className="button query-tab--save-sql"
                 onClick={onOpenRecentQueryClick}
               >
                 Open Recent Query
@@ -332,8 +327,7 @@ export function QueryFrame({ uid }: { uid: number }) {
               {currentState()?.currentConnectionConfiguration?.type ===
               'postgres' ? (
                 <button
-                  type="button"
-                  className="query-tab--save-stdout"
+                  className="button query-tab--save-stdout"
                   onClick={onStdInFileClick}
                 >
                   Import data from a file (PostgreSQL STDIN)
@@ -374,8 +368,7 @@ export function QueryFrame({ uid }: { uid: number }) {
           {/* <span className="mensagem error"></span> */}
           {stdOutFile ? (
             <button
-              type="button"
-              className="query-tab--stdout"
+              className="button query-tab--stdout"
               style={{ marginTop: -86 }}
               title={stdOutFile}
             >
@@ -384,23 +377,21 @@ export function QueryFrame({ uid }: { uid: number }) {
           ) : null}
           {stdInFile ? (
             <button
-              type="button"
+              className="button query-tab--stdout"
               style={{ marginTop: -120 }}
-              className="query-tab--stdout"
               title={stdInFile}
             >
               STDIN <i className="fa fa-file-o" />
             </button>
           ) : null}
           {running0 ? (
-            <button type="button" disabled className="query-tab--execute">
+            <button className="query-frame__execute-button" disabled>
               Execute <i className="fa fa-play" />
             </button>
           ) : (
             <button
-              type="button"
               onClick={execute}
-              className="query-tab--execute"
+              className="query-frame__execute-button"
               disabled={topHeight === 40 && !popup}
             >
               Execute <i className="fa fa-play" />
@@ -427,8 +418,7 @@ export function QueryFrame({ uid }: { uid: number }) {
         </div>
         {topHeight === 40 ? (
           <button
-            className="query-frame--code"
-            type="button"
+            className="query-frame__code-button"
             onMouseEnter={onCodeMouseEnter}
             onMouseLeave={onPopupMouseLeave}
             style={
@@ -448,8 +438,7 @@ export function QueryFrame({ uid }: { uid: number }) {
           </button>
         ) : undefined}
         <button
-          type="button"
-          className="query-tab--up"
+          className="query-frame__up-button"
           onMouseEnter={topHeight === 40 ? upMouseEnter : undefined}
           onMouseLeave={topHeight === 40 ? onPopupMouseLeave : undefined}
           style={
@@ -496,11 +485,11 @@ export function QueryFrame({ uid }: { uid: number }) {
           <div className="error">
             {error.code ? `#${error.code}` : ''} {error.message}{' '}
             {error.code === '25P02' ? (
-              <button type="button" onClick={onRollbackClick}>
+              <button className="button" onClick={onRollbackClick}>
                 Rollback transaction
               </button>
             ) : (connectionError || error) && !pid ? (
-              <button type="button" onClick={onOpenNewConnectionClick}>
+              <button className="button" onClick={onOpenNewConnectionClick}>
                 Open new connection
               </button>
             ) : null}

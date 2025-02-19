@@ -230,13 +230,16 @@ export function RoleFrame(props: RoleFrameProps) {
       <div className="table-info-frame__actions">
         {db().privileges?.updateRoleComment ? (
           <button
-            type="button"
+            className="button"
             onClick={() => set({ ...state, editComment: true })}
           >
             Comment <i className="fa fa-file-text-o" />
           </button>
         ) : null}{' '}
-        <button type="button" onClick={() => set({ ...state, rename: true })}>
+        <button
+          className="button"
+          onClick={() => set({ ...state, rename: true })}
+        >
           Rename <i className="fa fa-pencil" />
         </button>{' '}
         {state.rename ? (
@@ -252,7 +255,7 @@ export function RoleFrame(props: RoleFrameProps) {
             {db().privileges?.dropPassword && isUser ? (
               <>
                 <button
-                  type="button"
+                  className="button"
                   onClick={() => {
                     set({
                       ...state,
@@ -263,11 +266,19 @@ export function RoleFrame(props: RoleFrameProps) {
                   Drop Password <i className="fa fa-exclamation-triangle" />
                 </button>
                 {state.dropPasswordConfirmation ? (
-                  <Dialog onBlur={noClick} relativeTo="previousSibling">
+                  <Dialog
+                    onBlur={() => {
+                      set({
+                        ...state,
+                        dropPasswordConfirmation: false,
+                      });
+                    }}
+                    relativeTo="previousSibling"
+                  >
                     Do you really want to drop the user password?
                     <div>
                       <button
-                        type="button"
+                        className="button"
                         onClick={() => {
                           db()
                             .privileges?.dropPassword?.(props.name, props.host)
@@ -284,7 +295,7 @@ export function RoleFrame(props: RoleFrameProps) {
                         Yes
                       </button>{' '}
                       <button
-                        type="button"
+                        className="button"
                         onClick={() => {
                           set({
                             ...state,
@@ -301,7 +312,7 @@ export function RoleFrame(props: RoleFrameProps) {
             ) : null}{' '}
             {db().privileges?.updatePassword ? (
               <button
-                type="button"
+                className="button"
                 onClick={() => {
                   set({ ...state, updatePassword: true });
                 }}
@@ -312,7 +323,7 @@ export function RoleFrame(props: RoleFrameProps) {
           </>
         ) : db().privileges?.updatePassword ? (
           <button
-            type="button"
+            className="button"
             onClick={() => {
               set({ ...state, updatePassword: true });
             }}
@@ -330,17 +341,17 @@ export function RoleFrame(props: RoleFrameProps) {
         ) : null}{' '}
         {service.lastValidData ? (
           <>
-            <button type="button" onClick={drop}>
+            <button className="button" onClick={drop}>
               Drop {isUser ? 'User' : 'Role'} <i className="fa fa-close" />
             </button>{' '}
             {state.dropConfirmation ? (
               <Dialog onBlur={noClick} relativeTo="previousSibling">
                 Do you really want to drop this {isUser ? 'user' : 'role'}?
                 <div>
-                  <button type="button" onClick={yesClick}>
+                  <button className="button" onClick={yesClick}>
                     Yes
                   </button>{' '}
-                  <button type="button" onClick={noClick}>
+                  <button className="button" onClick={noClick}>
                     No
                   </button>
                 </div>

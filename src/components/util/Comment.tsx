@@ -37,11 +37,11 @@ export function Comment({
           onChange={(e) => setState(e.target.value)}
           ref={focusRef}
         />
-        <button type="button" onClick={() => onUpdate(state)}>
+        <button className="button" onClick={() => onUpdate(state)}>
           Save <i className="fa fa-check" />
         </button>
         <button
-          type="button"
+          className="button"
           onClick={() => onCancel()}
           style={{ fontWeight: 'normal' }}
         >

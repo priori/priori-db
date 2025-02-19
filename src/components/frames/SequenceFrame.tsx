@@ -207,7 +207,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
         </div>
         <div>
           <button
-            type="button"
+            className="button"
             onClick={() => set({ ...state, updateValue: true })}
           >
             Update Current Value <i className="fa fa-retweet" />
@@ -226,12 +226,15 @@ export function SequenceFrame(props: SequenceFrameProps) {
       </div>
       <div className="table-info-frame__actions">
         <button
-          type="button"
+          className="button"
           onClick={() => set({ ...state, editComment: true })}
         >
           Comment <i className="fa fa-file-text-o" />
         </button>{' '}
-        <button type="button" onClick={() => set({ ...state, rename: true })}>
+        <button
+          className="button"
+          onClick={() => set({ ...state, rename: true })}
+        >
           Rename <i className="fa fa-pencil" />
         </button>{' '}
         {state.rename ? (
@@ -243,7 +246,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
           />
         ) : null}
         <button
-          type="button"
+          className="button"
           onClick={() => set({ ...state, changeSchema: true })}
         >
           Change Schema{' '}
@@ -261,7 +264,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
           />
         ) : null}
         <button
-          type="button"
+          className="button"
           onClick={
             state.dropCascadeConfirmation || state.dropConfirmation
               ? undefined
@@ -281,17 +284,17 @@ export function SequenceFrame(props: SequenceFrameProps) {
               ? 'Do you really want to drop cascade this sequence?'
               : 'Do you really want to drop this sequence?'}
             <div>
-              <button type="button" onClick={yesClick}>
+              <button className="button" onClick={yesClick}>
                 Yes
               </button>{' '}
-              <button type="button" onClick={noClick}>
+              <button className="button" onClick={noClick}>
                 No
               </button>
             </div>
           </Dialog>
         ) : null}
         <button
-          type="button"
+          className="button"
           onClick={
             state.dropCascadeConfirmation || state.dropConfirmation
               ? undefined
@@ -337,13 +340,13 @@ export function SequenceFrame(props: SequenceFrameProps) {
                   </select>
                   <div>
                     <button
+                      className="button"
                       style={{ fontWeight: 'normal' }}
                       onClick={() => set({ ...state, editOwner: false })}
-                      type="button"
                     >
                       Cancel
                     </button>
-                    <button onClick={saveOwner} type="button">
+                    <button className="button" onClick={saveOwner}>
                       Save
                       <i className="fa fa-check" />
                     </button>

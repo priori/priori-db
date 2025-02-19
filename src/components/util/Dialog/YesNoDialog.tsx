@@ -42,8 +42,8 @@ export function YesNoDialog({
           </div>
           <div className="dialog-error--buttons">
             <button
+              className="button"
               onClick={() => setState({ error: null, executing: false })}
-              type="button"
               style={{
                 padding: '6px 14px !important',
                 boxShadow: 'none',
@@ -57,14 +57,14 @@ export function YesNoDialog({
       {question}
       <div>
         <button
-          type="button"
+          className="button"
           onClick={onYesClick}
           disabled={state.executing || !!state.error}
         >
           Yes
         </button>{' '}
         <button
-          type="button"
+          className="button"
           onClick={onNo}
           disabled={state.executing || !!state.error}
         >

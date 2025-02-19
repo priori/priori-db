@@ -85,14 +85,14 @@ export function FavoriteControl({
           />
           <div className="actions">
             <button
-              type="button"
+              className="pill-button"
               onClick={close}
               style={{ fontWeight: 'normal' }}
             >
               Cancel <i className="fa fa-undo" />
             </button>
             <button
-              type="button"
+              className="pill-button"
               disabled={disabled}
               onClick={disabled ? undefined : onSaveClick}
             >

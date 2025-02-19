@@ -186,7 +186,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
         {db().updateSchemaComment ? (
           <>
             <button
-              type="button"
+              className="button"
               onClick={() => set({ ...state, editComment: true })}
             >
               Comment <i className="fa fa-file-text-o" />
@@ -196,7 +196,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
         {db().renameSchema ? (
           <>
             <button
-              type="button"
+              className="button"
               onClick={() => set({ ...state, rename: true })}
             >
               Rename <i className="fa fa-pencil" />
@@ -212,7 +212,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
           />
         ) : null}{' '}
         <button
-          type="button"
+          className="button"
           onClick={
             state.dropCascadeConfirmation || state.dropConfirmation
               ? undefined
@@ -232,17 +232,17 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
               ? 'Do you really want to drop cascade this schema?'
               : 'Do you really want to drop this schema?'}
             <div>
-              <button type="button" onClick={yesClick}>
+              <button className="button" onClick={yesClick}>
                 Yes
               </button>{' '}
-              <button type="button" onClick={noClick}>
+              <button className="button" onClick={noClick}>
                 No
               </button>
             </div>
           </Dialog>
         ) : null}
         <button
-          type="button"
+          className="button"
           onClick={
             state.dropCascadeConfirmation || state.dropConfirmation
               ? undefined
@@ -294,13 +294,13 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
                   </select>
                   <div>
                     <button
+                      className="button"
                       style={{ fontWeight: 'normal' }}
                       onClick={() => set({ ...state, editOwner: false })}
-                      type="button"
                     >
                       Cancel
                     </button>
-                    <button onClick={saveOwner} type="button">
+                    <button className="button" onClick={saveOwner}>
                       Save
                       <i className="fa fa-check" />
                     </button>

@@ -285,7 +285,11 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
           style={{ display: 'flex', paddingBottom: 5, position: 'relative' }}
         >
           <div style={{ marginRight: 10 }}>
-            <button type="button" onClick={onTestClick} disabled={!state.type}>
+            <button
+              className="button"
+              onClick={onTestClick}
+              disabled={!state.type}
+            >
               Test...
             </button>{' '}
           </div>
@@ -310,20 +314,24 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
         <div style={{ marginBottom: '4px' }}>
           {alreadyConnected ? null : (
             <button
+              className="button"
               onClick={() => saveAndConnect()}
-              type="button"
               disabled={!state.type}
             >
               <i className="fa fa-chain" /> Save &amp; Connect
             </button>
           )}{' '}
           {props.onCancel ? (
-            <button onClick={() => cancel()} type="button">
+            <button className="button" onClick={() => cancel()}>
               <i className="fa fa-rotate-left" /> Cancel
             </button>
           ) : null}
         </div>
-        <button onClick={() => save()} type="button" disabled={!state.type}>
+        <button
+          className="button"
+          onClick={() => save()}
+          disabled={!state.type}
+        >
           <i className="fa fa-save" /> {alreadyConnected ? '' : 'Just '}Save
         </button>{' '}
         {removeConfirmation ? (
@@ -334,10 +342,10 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
               connection configuration?
             </div>
             <div>
-              <button type="button" onClick={yesClick}>
+              <button className="button" onClick={yesClick}>
                 Yes
               </button>{' '}
-              <button type="button" onClick={noClick}>
+              <button className="button" onClick={noClick}>
                 No
               </button>
             </div>
@@ -345,9 +353,9 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
         ) : null}
         {props.onRemove ? (
           <button
+            className="button"
             style={{ color: '#e00' }}
             onClick={() => remove()}
-            type="button"
           >
             <i className="fa fa-remove" /> Remove
           </button>

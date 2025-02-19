@@ -381,14 +381,14 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         {(state.subType === 'view' || state.subType === 'mview') &&
         db().updateViewComment === false ? null : (
           <button
-            type="button"
+            className="button"
             onClick={() => set({ ...edit, editComment: true })}
           >
             Comment <i className="fa fa-file-text-o" />
           </button>
         )}{' '}
         <button
-          type="button"
+          className="button"
           onClick={() => {
             set({ ...edit, rename: true });
           }}
@@ -407,7 +407,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         db().updateViewSchema === false ? null : (
           <>
             <button
-              type="button"
+              className="button"
               onClick={() => set({ ...edit, updateSchema: true })}
             >
               Change Schema{' '}
@@ -427,7 +427,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           </>
         )}
         <button
-          type="button"
+          className="button"
           onClick={
             edit.dropCascadeConfirmation || edit.dropConfirmation
               ? undefined
@@ -453,17 +453,17 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
               ? 'Do you really want to drop cascade this table?'
               : 'Do you really want to drop this table?'}
             <div>
-              <button type="button" onClick={yesClick}>
+              <button className="button" onClick={yesClick}>
                 Yes
               </button>{' '}
-              <button type="button" onClick={noClick}>
+              <button className="button" onClick={noClick}>
                 No
               </button>
             </div>
           </Dialog>
         ) : null}
         <button
-          type="button"
+          className="button"
           onClick={
             edit.dropCascadeConfirmation || edit.dropConfirmation
               ? undefined
@@ -543,13 +543,13 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                   </select>
                   <div>
                     <button
+                      className="button"
                       style={{ fontWeight: 'normal' }}
                       onClick={() => set({ ...edit, editOwner: false })}
-                      type="button"
                     >
                       Cancel
                     </button>
-                    <button onClick={saveOwner} type="button">
+                    <button className="button" onClick={saveOwner}>
                       Save
                       <i className="fa fa-check" />
                     </button>
@@ -601,8 +601,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           db().updateColumnViewName ? (
                             <div>
                               <button
-                                type="button"
-                                className="simple-button"
+                                className="pill-button"
                                 style={{ float: 'right' }}
                                 onClick={() =>
                                   set({
@@ -658,8 +657,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           <>
                             {' '}
                             <button
-                              type="button"
-                              className="simple-button"
+                              className="pill-button"
                               onClick={() =>
                                 set({ ...edit, commentColumn: col.column_name })
                               }
@@ -675,8 +673,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         ) : state.subType === 'table' ||
                           db().updateColumnViewName ? (
                           <button
-                            type="button"
-                            className="simple-button"
+                            className="pill-button"
                             onClick={() =>
                               set({ ...edit, commentColumn: col.column_name })
                             }
@@ -722,8 +719,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           }}
                         >
                           <button
-                            type="button"
-                            className="simple-button"
+                            className="pill-button"
                             onClick={() =>
                               set({ ...edit, updateColumn: col.column_name })
                             }
@@ -742,8 +738,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                             />
                           ) : null}{' '}
                           <button
-                            type="button"
-                            className="simple-button"
+                            className="pill-button"
                             onClick={() =>
                               set({ ...edit, removeColumn: col.column_name })
                             }
@@ -768,8 +763,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
             <div className="empty">
               No columns found for table.{' '}
               <button
-                type="button"
-                className="simple-button"
+                className="pill-button"
                 onClick={() => set({ ...edit, newColumn: true })}
               >
                 Create new column <i className="fa fa-plus" />
@@ -788,8 +782,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       {state.cols?.length && state.subType === 'table' ? (
         <div className="actions">
           <button
-            type="button"
-            className="simple-button"
+            className="pill-button"
             onClick={() => set({ ...edit, newColumn: true })}
           >
             New <i className="fa fa-plus" />
@@ -832,8 +825,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         <div style={{ flex: 1 }}>{index.name}</div>
                         <div>
                           <button
-                            type="button"
-                            className="simple-button"
+                            className="pill-button"
                             style={{ float: 'right' }}
                             onClick={() =>
                               set({ ...edit, renameIndex: index.name })
@@ -880,8 +872,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         <>
                           {' '}
                           <button
-                            type="button"
-                            className="simple-button"
+                            className="pill-button"
                             onClick={() =>
                               set({ ...edit, commentIndex: index.name })
                             }
@@ -892,8 +883,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         </>
                       ) : db().commentIndex ? (
                         <button
-                          type="button"
-                          className="simple-button"
+                          className="pill-button"
                           onClick={() =>
                             set({ ...edit, commentIndex: index.name })
                           }
@@ -947,7 +937,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                           />
                           <div>
                             <button
-                              type="button"
+                              className="button"
                               onClick={() =>
                                 set({ ...edit, openIndexComment: null })
                               }
@@ -980,8 +970,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                     </td>
                     <td className="actions">
                       <button
-                        type="button"
-                        className="simple-button"
+                        className="pill-button"
                         onClick={() =>
                           set({ ...edit, removeIndex: index.name })
                         }
@@ -1003,8 +992,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           </table>
           <div className="actions">
             <button
-              type="button"
-              className="simple-button"
+              className="pill-button"
               onClick={() => set({ ...edit, newIndex: true })}
             >
               New <i className="fa fa-plus" />
@@ -1025,8 +1013,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
           <div className="empty">
             No indexes found for table.{' '}
             <button
-              type="button"
-              className="simple-button"
+              className="pill-button"
               onClick={() => set({ ...edit, newIndex: true })}
             >
               Create new index <i className="fa fa-plus" />

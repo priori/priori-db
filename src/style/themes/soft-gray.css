@@ -52,35 +52,41 @@ body.soft-gray-theme .tabs-header__add {
 }
 
 /* buttons */
-body.soft-gray-theme .app-content button,
-body.soft-gray-theme .dialog--close-window button {
+body.soft-gray-theme .button,
+body.soft-gray-theme .button {
   background: #e8e8e8;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 body.soft-gray-theme .owner {
   background: #eee;
 }
-body.soft-gray-theme .app-content button.simple-button2 {
+body.soft-gray-theme .pill-button,
+body.soft-gray-theme .pill {
   background: #eee;
 }
-body.soft-gray-theme .privileges-role {
-  background: #eee;
+body.soft-gray-theme .pill-button:not([disabled]):hover {
+  background: #f0f0f0;
+  color: #000;
 }
-body.soft-gray-theme button.query-tab--up,
-body.soft-gray-theme button.query-frame--code {
+body.soft-gray-theme button.query-frame__up-button,
+body.soft-gray-theme button.query-frame__code-button {
   box-shadow: none;
   background: white;
 }
-body.soft-gray-theme button.query-frame--apply2 {
+body.soft-gray-theme .query-frame__play-button {
   background: #31bb4d;
   box-shadow: none;
 }
-body.soft-gray-theme .query-tab button.query-tab--execute {
+body.soft-gray-theme .query-frame__execute-button {
   box-shadow: 0 0;
   color: white;
   background: #31bb4d;
 }
-body.soft-gray-theme button.query-tab--up:hover {
+body.soft-gray-theme .query-frame__execute-button:hover,
+body.soft-gray-theme .query-frame__play-button:hover {
+  background: #2aa13f;
+}
+body.soft-gray-theme button.query-frame__up-button:hover {
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
 }
 

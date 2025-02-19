@@ -56,14 +56,21 @@
   line-height: 1.3em;
   white-space: pre-wrap;
 }
-.query-tab button.query-tab--execute {
+.query-frame__up-button,
+.query-frame__code-button,
+.query-frame__play-button {
+  border: 0;
+  cursor: pointer;
+  outline: none;
+}
+.query-frame__execute-button {
   position: absolute;
   right: 60px;
   margin-top: -54px;
   z-index: 2;
   cursor: pointer;
 }
-.query-tab button.query-tab--execute {
+.query-frame__execute-button {
   box-shadow: 0 0;
   color: white;
   letter-spacing: 0.5px;
@@ -303,7 +310,7 @@ button.query-tab--stdout {
 .query-frame--animating-top-height .editor {
   transition: height 0.3s;
 }
-button.query-tab--up {
+.query-frame__up-button {
   right: 0;
   position: absolute;
   bottom: 0;
@@ -330,7 +337,7 @@ button.query-tab--up {
     color: #000;
   }
 }
-.query-frame--open button.query-tab--up {
+.query-frame--open .query-frame__up-button {
   .fa.fa-chevron-down {
     display: none;
   }
@@ -338,7 +345,7 @@ button.query-tab--up {
     display: inline;
   }
 }
-.query-frame--closed button.query-tab--up {
+.query-frame--closed .query-frame__up-button {
   .fa.fa-chevron-down {
     display: inline;
   }
@@ -346,8 +353,10 @@ button.query-tab--up {
     display: none;
   }
 }
-button.query-frame--code {
+.query-frame__code-button {
   padding: 0 !important;
+  outline: none;
+  font-weight: bold;
   background: white;
   box-shadow: none;
   position: absolute;
@@ -374,7 +383,7 @@ button.query-frame--code {
     z-index: 9;
   }
 }
-button.query-frame--apply2 {
+.query-frame__play-button {
   padding: 0 !important;
   height: 40px;
   background: #31bb4d;
@@ -416,16 +425,25 @@ button.query-frame--apply2 {
   border-radius: 3px;
   margin-bottom: 2px;
 }
-.query-frame--code-editor-area {
+.query-frame__code-editor--no-popup {
   position: absolute;
   inset: 0;
 }
-.query-frame--popup {
+.query-frame__execute-button {
+  outline: none;
+  border-radius: 5px;
+  border: 0;
+  font-size: 15px;
+}
+.query-frame__execute-button:hover {
+  background: #31ad4a;
+}
+.query-frame__code-editor--popup {
   position: absolute;
   z-index: 11;
   top: 40px;
   box-shadow: 0 3px 20px rgba(0, 0, 0, 0.2);
-  button.query-tab--execute {
+  .query-frame__execute-button {
     right: 20px;
   }
   .mensagem {
@@ -454,7 +472,7 @@ div.CodeMirror-gutters {
   border-right: 1px solid #ddd;
 }
 
-.query-frame--code-editor-area .query-selector--query {
+.query-frame__code-editor--no-popup .query-selector--query {
   position: absolute;
   z-index: 1;
   border: 1px solid #eee;
