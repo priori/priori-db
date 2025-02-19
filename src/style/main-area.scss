@@ -24,10 +24,7 @@ table.table > * > th {
 .new-schema-form {
   z-index: 10000;
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  top: 0;
+  inset: 0;
   background: rgba(256, 256, 256, 0.75);
   backdrop-filter: blur(0.5px);
 }

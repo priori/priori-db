@@ -157,10 +157,7 @@ export function Home(props: AppState) {
         <div
           style={{
             position: 'fixed',
-            left: 0,
-            right: 0,
-            bottom: 0,
-            top: 0,
+            inset: 0,
             background: 'rgba(235, 235, 235, 0.65)',
             backdropFilter: 'blur(0.75px)',
             zIndex: 1,
@@ -426,10 +423,7 @@ export function Home(props: AppState) {
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            inset: 0,
             zIndex: 1,
           }}
         >

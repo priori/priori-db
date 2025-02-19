@@ -55,7 +55,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
           t.props.type === 'schemainfo' ||
           t.props.type === 'settings' ? (
             <span
-              className="adjustment-icon"
+              className="adjustment-icon--small"
               style={{
                 display: 'inline-block',
                 opacity: 1,

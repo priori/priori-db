@@ -6,7 +6,8 @@ export function CloseConfirmation({
   onDecline: () => void;
 }) {
   return (
-    <div className="dialog--close-window--overlay">
+    <div className="dialog--close-window--wrapper">
+      <div className="dialog--close-window--overlay" />
       <div
         className="dialog--close-window"
         onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {

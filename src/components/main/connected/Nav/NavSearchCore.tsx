@@ -61,7 +61,14 @@ export const NavSearchCore = React.memo(
           .map((m, i) => {
             if (i === 80 && !showAll)
               return (
-                <div className="more" onClick={() => setShowAll(true)}>
+                <div
+                  className="nav-search__more"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onClick={() => setShowAll(true)}
+                >
                   <i className="fa fa-ellipsis-h" />
                 </div>
               );

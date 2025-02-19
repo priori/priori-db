@@ -14,7 +14,7 @@ export function SettingsButton({ left }: { left?: number }) {
         setTouched(true);
       }}
     >
-      <span className="adjustment-icon3">
+      <span className="adjustment-icon--medium">
         <div />
       </span>
     </div>

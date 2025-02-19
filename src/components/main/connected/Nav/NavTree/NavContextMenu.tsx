@@ -85,7 +85,7 @@ export function NavContextMenu({
             className={`nav-context-menu--item${item.contextMenu === 1 ? ' selected' : ''}`}
             onClick={onTableSettingsClick}
           >
-            <span className="adjustment-icon" />
+            <span className="adjustment-icon--small" />
             <span>Table Settings</span>
           </div>
           <div
@@ -112,7 +112,7 @@ export function NavContextMenu({
               className={`nav-context-menu--item${item.contextMenu === 2 ? ' selected' : ''}`}
               onClick={onSchemaSettingsClick}
             >
-              <span className="adjustment-icon" />
+              <span className="adjustment-icon--small" />
               <span>Schema Settings</span>
             </div>
           ) : null}

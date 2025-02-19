@@ -57,7 +57,7 @@ export function SettingsFrame() {
         }}
       >
         <h1>
-          <span className="adjustment-icon2">
+          <span className="adjustment-icon--big">
             <div />
           </span>
           Settings
@@ -74,7 +74,7 @@ export function SettingsFrame() {
       }}
     >
       <h1>
-        <span className="adjustment-icon2">
+        <span className="adjustment-icon--big">
           <div />
         </span>
         Settings

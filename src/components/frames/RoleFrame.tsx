@@ -174,7 +174,7 @@ export function RoleFrame(props: RoleFrameProps) {
     return (
       <div>
         <h1>
-          <span className="adjustment-icon2">
+          <span className="adjustment-icon--big">
             <div />
           </span>
           {props.name}
@@ -206,7 +206,7 @@ export function RoleFrame(props: RoleFrameProps) {
       }}
     >
       <h1>
-        <span className="adjustment-icon2">
+        <span className="adjustment-icon--big">
           <div />
         </span>
         {props.name}

@@ -130,10 +130,7 @@ button.connections--edit-button2:hover {
 
 .bases-wrapper {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: 0;
+  inset: 0;
   background: rgba(235, 235, 235, 0.65);
   backdrop-filter: blur(0.75px);
   z-index: 1;

@@ -1,0 +1,30 @@
+.new-schema,
+.new-schema[data-hint] {
+  position: absolute;
+  bottom: 3px;
+  right: 20px;
+  font-size: 26px;
+  padding: 4px;
+  opacity: 0.5;
+  z-index: 2;
+  outline: none;
+  cursor: pointer;
+}
+.new-schema:hover {
+  opacity: 1;
+}
+.new-schema:focus {
+  transform: scale(1.14);
+  color: #04b;
+  opacity: 1;
+}
+.new-schema[data-hint]::after {
+  font-size: 15px;
+  padding: 5px 8px;
+  margin-top: -54px;
+  margin-left: -117px;
+}
+.new-schema[data-hint]:focus:after,
+.new-schema[data-hint]:active:after {
+  display: none;
+}

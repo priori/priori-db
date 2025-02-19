@@ -58,22 +58,24 @@ input:focus {
     transform: scale(1);
   }
 }
-.dialog--close-window--overlay {
+.dialog--close-window--wrapper {
   height: 100%;
-  inset: 0px;
+  inset: 0;
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: 0;
-  background: rgba(235, 235, 235, 0.65);
-  backdrop-filter: blur(0.75px);
   display: flex;
   justify-content: center;
   align-items: safe center;
-  overflow-y: scroll;
+  overflow-y: auto;
   padding: 28px 0;
   z-index: 99;
+}
+.dialog--close-window--overlay {
+  background: rgba(235, 235, 235, 0.65);
+  backdrop-filter: blur(0.75px);
+  opacity: 0;
+  animation: show 0.5s forwards;
+  position: fixed;
+  inset: 0;
 }
 .dialog--close-window {
   background: white;

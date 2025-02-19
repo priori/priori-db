@@ -1,0 +1,133 @@
+/* small */
+.adjustment-icon--small {
+  width: 15px;
+  border-top: solid 2px;
+  border-bottom: solid 2px;
+  height: 8px;
+  display: inline-block;
+  position: relative;
+}
+.adjustment-icon--small:before,
+.adjustment-icon--small:after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  display: inline-block;
+  border-radius: 50%;
+  top: -4px;
+  position: absolute;
+  left: 3px;
+  width: 2px;
+  height: 2px;
+  background: var(--bg, #f4f4f4);
+  border: solid 2px;
+}
+.adjustment-icon--small:after {
+  top: 2px;
+  left: 9px;
+}
+
+/* medium */
+.adjustment-icon--medium {
+  border-top: solid 2px;
+  border-bottom: solid 2px;
+  height: 16px;
+  position: relative;
+  width: 20px;
+  display: inline-block;
+}
+.adjustment-icon--medium:before,
+.adjustment-icon--medium:after {
+  content: '';
+  width: 2px;
+  height: 2px;
+  display: inline-block;
+  border-radius: 50%;
+  top: -4px;
+  position: absolute;
+  left: 4px;
+  border: solid 2px;
+  background: var(--bg, white);
+}
+.adjustment-icon--medium > div {
+  border-top: 2px solid;
+  top: 5px;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+.adjustment-icon--medium > div:after {
+  width: 2px;
+  height: 2px;
+  content: '';
+  display: block;
+  background: var(--bg, white);
+  position: absolute;
+  top: -4px;
+  right: 0px;
+  border-radius: 50%;
+  border: 2px solid;
+}
+.adjustment-icon--medium:before,
+.adjustment-icon--medium:after {
+  content: '';
+  width: 2px;
+  height: 2px;
+  display: inline-block;
+  border-radius: 50%;
+  top: -4px;
+  position: absolute;
+  left: 4px;
+  border: solid 2px;
+  background: var(--bg, white);
+}
+.adjustment-icon--medium:after {
+  top: 10px;
+  left: 4px;
+}
+
+/* big */
+.adjustment-icon--big {
+  border-top: solid 3px;
+  border-bottom: solid 3px;
+  height: 19px;
+  position: relative;
+  width: 26px;
+  display: inline-block;
+}
+.adjustment-icon--big:before,
+.adjustment-icon--big:after {
+  content: '';
+  width: 3px;
+  height: 3px;
+  display: inline-block;
+  border-radius: 50%;
+  top: -6px;
+  position: absolute;
+  left: 4px;
+  border: solid 3px;
+  background: var(--bg, white);
+}
+.adjustment-icon--big:after {
+  top: 10px;
+  left: 4px;
+}
+.adjustment-icon--big > div {
+  border-top: solid 3px;
+  top: 5px;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+.adjustment-icon--big > div:after {
+  width: 3px;
+  height: 3px;
+  content: '';
+  display: block;
+  background: var(--bg, white);
+  position: absolute;
+  top: -6px;
+  right: 0px;
+  border-radius: 50%;
+  border: 3px solid;
+}

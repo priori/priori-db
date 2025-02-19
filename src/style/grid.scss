@@ -2,10 +2,7 @@
 .grid > div {
   outline: none;
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  right: 0;
+  inset: 0;
 }
 .grid-header {
   position: absolute;
@@ -503,18 +500,12 @@ th.desc.sortable:hover::before {
 
 .resize--lock {
   position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  right: 0;
+  inset: 0;
   z-index: 10;
 }
 
 .resize--indicator {
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  inset: 0;
   background: #15c;
   position: absolute;
   width: 3px;
@@ -629,8 +620,8 @@ tr.remove .cell {
 }
 .grid-content--footer {
   position: absolute;
-  left: 0px;
-  right: 0px;
+  left: 0;
+  right: 0;
   text-align: center;
   font-size: 13px;
   padding-top: 8px;

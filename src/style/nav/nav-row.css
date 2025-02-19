@@ -1,0 +1,282 @@
+.nav-row {
+  height: 20px;
+  overflow: hidden;
+  line-height: 20px;
+  vertical-align: middle;
+  display: flex;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: sans-serif;
+  flex: 1 1 0%;
+}
+.nav-row__main-mouse-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+.nav-row--folder {
+  font-size: 12px;
+}
+.nav-row--internal.nav-row--folder {
+  font-style: italic;
+}
+.nav-row__host-sufix {
+  opacity: 0.5;
+  font-size: 11px;
+  line-height: 11px;
+  position: relative;
+  top: -0.1;
+}
+.nav-row__host-name {
+  position: relative;
+  top: -0.3px;
+}
+.nav-row--important {
+  font-weight: 900;
+  letter-spacing: -0.25px;
+}
+
+.nav-row__title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-row__arrow {
+  width: 10px;
+  margin-top: 4px;
+  position: relative;
+}
+.nav-row__arrow:after {
+  content: '';
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  height: 0;
+  display: block;
+  transition: transform 0.25s;
+  position: absolute;
+  border-left: 6px solid;
+}
+.nav-row__arrow.open:after {
+  transform: rotate(90deg);
+}
+.nav-row__count {
+  padding-right: 10px;
+  font-weight: bold;
+}
+.nav-row__icon {
+  width: 13px;
+  margin-right: 5px;
+  display: inline-block;
+}
+.nav-row__icon--mview.nav-row__icon,
+.nav-row__icon--view.nav-row__icon,
+.nav-row__icon--table.nav-row__icon {
+  margin-top: 2px;
+  position: relative;
+  top: 1px;
+  font-size: 14px;
+  text-align: center;
+}
+.nav-row__icon--sequence.nav-row__icon {
+  margin-top: 3px;
+}
+.nav-row__icon--domain.nav-row__icon {
+  margin-top: 3px;
+}
+.nav-row__icon--function,
+.nav-row__icon--procedure {
+  display: flex;
+  margin-top: -1px;
+}
+.nav-row__icon--function > span:first-of-type,
+.nav-row__icon--procedure > span:first-of-type {
+  font-weight: 900;
+  letter-spacing: -2px;
+  font-size: 13px;
+  opacity: 0.75;
+  min-width: 8px;
+}
+.nav-row__icon--function > span:last-of-type,
+.nav-row__icon--procedure > span:last-of-type {
+  font-size: 9px;
+  margin-top: 1px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+}
+.nav-row__icon--procedure.nav-row__icon > span:first-of-type {
+  font-size: 17px;
+  margin-top: -1px;
+  font-family: 'Inconsolata', monospace;
+}
+.nav-row__icon--user.nav-row__icon {
+  font-size: 14px;
+  margin-top: 3px;
+}
+.nav-row__icon--role.nav-row__icon {
+  font-size: 14px;
+  margin-top: 3px;
+}
+
+.nav-row .fa-plus {
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  margin-top: 3px;
+  display: none;
+}
+.nav-row:hover .fa-plus {
+  display: block;
+}
+.nav-row .adjustment-icon--small {
+  display: none;
+  cursor: pointer;
+  margin-right: 6px;
+  margin-top: 6px;
+}
+.nav-row:hover .adjustment-icon--small {
+  display: block;
+}
+
+.nav-row--search-result.focused:before {
+  content: '';
+  position: absolute;
+  margin-left: -11px;
+  border-top: solid transparent 5px;
+  border-bottom: solid transparent 5px;
+  border-left: solid #04b 7px;
+  height: 0;
+  margin-top: 5px;
+}
+.nav-row--search-result.focused.active:before {
+  border-left-color: white;
+}
+.nav-row--search-result.focused .nav-row__title {
+  color: #04b;
+}
+.nav-row--search-result.focused.active .nav-row__title {
+  color: white;
+}
+.nav-row--search-result.focused {
+  background: #dfdfdf;
+  --bg: #dfdfdf;
+}
+.nav-row mark {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  border-radius: 3px;
+  padding: 1px 1px 0 1px;
+  margin: 0 -1px;
+  text-shadow: none;
+}
+
+/* colors and background for different states (open, active, focus) */
+.nav-row mark {
+  background: #fe0;
+}
+.nav-row:hover {
+  background: #dfdfdf;
+  --bg: #dfdfdf;
+}
+.nav-row--internal.nav-row--folder {
+  color: #aaa;
+}
+.nav-row--empty {
+  color: rgba(0, 0, 0, 0.4);
+}
+.nav-row__arrow:after {
+  border-left-color: #444;
+}
+.nav-row--empty .nav-row__arrow:after {
+  border-left-color: rgba(0, 0, 0, 0.4);
+}
+.nav-row--internal.nav-row--leaf {
+  opacity: 0.3;
+}
+.nav-row--internal.nav-row--leaf:hover {
+  opacity: 0.5;
+}
+.nav-row--internal.nav-row--leaf.open {
+  opacity: 0.7;
+}
+.nav-row--internal.nav-row--leaf.active {
+  opacity: 0.8;
+}
+.nav-row--internal .nav-row__arrow:after {
+  border-left-color: #bbb;
+}
+.nav-row__count {
+  color: rgba(0, 0, 0, 0.2);
+}
+.nav-row__icon--table.nav-row__icon {
+  color: #007;
+}
+.nav-row__icon--view.nav-row__icon {
+  color: #181;
+}
+.nav-row__icon--mview.nav-row__icon {
+  color: #060;
+}
+.nav-row__icon--user.nav-row__icon {
+  color: #007;
+}
+.nav-row__icon--role.nav-row__icon {
+  color: #181;
+}
+.nav-row.focus {
+  background: #dfdfdf;
+  --bg: #dfdfdf;
+}
+.nav-row.focus .nav-row__arrow:after {
+  border-left-color: #04b;
+}
+.nav-row.open {
+  background: #eaeaea;
+  --bg: #eaeaea;
+}
+.nav-row.open .nav-row__title {
+  color: #04b;
+}
+.nav-row.open:hover {
+  background: #dfdfdf;
+  --bg: #dfdfdf;
+}
+.nav-row.active {
+  background: #1976d2;
+  --bg: #1976d2;
+  color: white;
+  text-shadow: 0 1px 1px #15c;
+}
+.nav-row.active .nav-row__title,
+.nav-row.active .fa,
+.nav-row.active .fa.fa-table.nav-row__icon--table.nav-row__icon,
+.nav-row.active .fa.fa-table.nav-row__icon--view.nav-row__icon,
+.nav-row.active .fa.fa-table.nav-row__icon--mview.nav-row__icon {
+  color: inherit;
+}
+.nav-row.active:hover {
+  background: #15d;
+  --bg: #15d;
+}
+.nav-row.focus {
+  color: #04b;
+}
+.nav-row.active.focus {
+  color: #fe0;
+}
+.nav-row .fa-plus,
+.nav-row .adjustment-icon--small {
+  color: #bbb;
+}
+.nav-row .fa-plus:hover,
+.nav-row .adjustment-icon--small:hover {
+  color: #000;
+}
+.nav-row.active .adjustment-icon--small {
+  color: rgba(256, 256, 256, 0.7);
+}
+.nav-row.active .adjustment-icon--small:hover {
+  color: white;
+}

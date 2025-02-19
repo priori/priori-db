@@ -47,32 +47,31 @@ dialog.launcher .nav-search {
 dialog.launcher .focused {
   background: #eee;
 }
-dialog.launcher .nav-search .nav-search--entity {
-  height: 25px;
-  line-height: 23px;
-}
-dialog.launcher .nav-search--entity.focused:before {
-  margin-top: 8px;
-}
 dialog.launcher .nav-search i {
   top: 3px;
 }
-dialog.launcher .nav-search--entity.focused.active:before,
-dialog.launcher .nav-search--entity.focused:before {
-  border-left-color: #000;
+dialog.launcher .nav-search .nav-row {
+  height: 25px;
+  line-height: 23px;
 }
-
-dialog.launcher .adjustment-icon {
+dialog.launcher .nav-row.focused:before {
   margin-top: 8px;
 }
-dialog.launcher .nav-search .nav-search--entity:hover {
+dialog.launcher .nav-row.focused.active:before,
+dialog.launcher .nav-row.focused:before {
+  border-left-color: #000;
+}
+dialog.launcher .nav-search .nav-row:hover {
   background: #eee;
   --bg: #eee;
 }
-dialog.launcher .nav-search .nav-search--entity:focused {
+dialog.launcher .nav-search .nav-row:focused {
   background: #eee;
   --bg: #eee;
 }
-dialog.launcher .more {
+dialog.launcher .adjustment-icon--small {
+  margin-top: 8px;
+}
+dialog.launcher .nav-search__more {
   text-align: center;
 }

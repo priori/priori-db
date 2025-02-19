@@ -1,0 +1,17 @@
+.nav-hint {
+  background: rgba(0, 0, 0, 0.777);
+  color: white;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: normal;
+  position: absolute;
+  width: 140px;
+  right: -145px;
+  z-index: 3;
+  text-shadow: none;
+  padding: 5px;
+  text-align: center;
+  border-radius: 5px;
+  -webkit-font-smoothing: antialiased;
+  backdrop-filter: blur(0.5px);
+}

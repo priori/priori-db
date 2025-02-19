@@ -177,7 +177,7 @@ export function SchemaInfoFrame(props: SchemaInfoFrameProps) {
       }}
     >
       <h1>
-        <span className="adjustment-icon2">
+        <span className="adjustment-icon--big">
           <div />
         </span>
         {props.schema}

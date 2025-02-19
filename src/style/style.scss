@@ -3,11 +3,15 @@
   font-family: 'Inconsolata';
   src: url('./Inconsolata-Regular.ttf');
 }
-
+@import './adjustment-icons.css';
 @include meta.load-css('basic-style.scss');
 @include meta.load-css('grid.scss');
-@include meta.load-css('left-nav.scss');
-@include meta.load-css('nav-tree.scss');
+@import './nav/left-nav.css';
+@import './nav/nav-row.css';
+@import './nav/new-schema.css';
+@import './nav/new-role.css';
+@include meta.load-css('./nav/context-menu.scss');
+@import './nav/hint.css';
 @include meta.load-css('main-area.scss');
 @include meta.load-css('main-components.scss');
 @import './tabs-header.css';

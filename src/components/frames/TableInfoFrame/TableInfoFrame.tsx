@@ -357,7 +357,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
   if (!service.lastValidData)
     return (
       <h1 style={{ opacity: 0.5 }}>
-        <span className="adjustment-icon2">
+        <span className="adjustment-icon--big">
           <div />
         </span>
         {props.schema}.{props.table}
@@ -372,7 +372,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       }}
     >
       <h1>
-        <span className="adjustment-icon2">
+        <span className="adjustment-icon--big">
           <div />
         </span>
         {props.schema}.{props.table}

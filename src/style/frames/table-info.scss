@@ -7,10 +7,7 @@
 .frame.role,
 .frame.settings {
   position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  bottom: 0;
+  inset: 0;
   padding: 20px;
   background: white;
   overflow: auto;
@@ -232,7 +229,8 @@ div.frame.schema-info,
 div.frame.sequence,
 div.frame.domain,
 div.frame.function,
-div.frame.role {
+div.frame.role,
+div.frame.settings {
   h1 {
     user-select: text;
     width: fit-content;
@@ -240,6 +238,10 @@ div.frame.role {
     margin-right: -30px;
     padding-left: 10px;
     margin-left: -10px;
+  }
+  h1 .adjustment-icon--big {
+    margin-top: 5px;
+    margin-right: 10px;
   }
   div.actions {
     user-select: none;
@@ -323,10 +325,7 @@ button[disabled] {
   line-height: 1.3em;
   position: absolute;
   padding: 10px 5px 0 5px;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  inset: 0;
   color: #e10;
   background: white;
   display: flex;
@@ -408,10 +407,7 @@ body div.frame.role div.dialog-form {
 }
 .dialog-form--error {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: white;
   z-index: 2;
   color: #d10;

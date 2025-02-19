@@ -15,17 +15,20 @@ import {
 import { useEvent } from 'util/useEvent';
 import { assert } from 'util/assert';
 import { Entity } from './Nav';
+import { icons } from './NavTree/NavTreeSingleItem';
 
-const icons = {
-  SEQUENCE: 'fa fa-list-ol',
-  DOMAIN: 'fa fa-list-ul',
-  ENUM: 'fa fa-list-ul',
-  'BASE TABLE': 'fa fa-table',
-  VIEW: 'fa fa-table',
-  'MATERIALIZED VIEW': 'fa fa-table',
-  SCHEMA: 'fa fa-database',
-  FUNCTION: 'function-icon',
-  PROCEDURE: 'procedure-icon',
+const iconsMap = {
+  SEQUENCE: icons.sequence,
+  DOMAIN: icons.domain,
+  ENUM: icons.domain,
+  'BASE TABLE': icons.table,
+  VIEW: icons.view,
+  'MATERIALIZED VIEW': icons.mview,
+  SCHEMA: (
+    <i className="fa fa-database nav-row__icon--database nav-row__icon" />
+  ),
+  FUNCTION: icons.function,
+  PROCEDURE: icons.procedure,
 } as const;
 
 function grantScrollVisibility(el: HTMLDivElement | null) {
@@ -106,24 +109,24 @@ export function NavItem({
 
   return (
     <div
-      className={`nav-search--entity${isActive ? ' active' : ''}${
+      className={`nav-row nav-row--leaf nav-row--search-result${isActive ? ' active' : ''}${
         isOpen ? ' open' : ''
       }${entity.type === 'VIEW' ? ' view' : ''}${focus ? ' focused' : ''}`}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onMouseDown={onDivMouseDown}
       ref={focus ? grantScrollVisibility : undefined}
+      style={{ paddingLeft: 20 }}
     >
-      {entity.type && icons[entity.type] ? (
-        <i className={icons[entity.type]} />
-      ) : null}
-      <span>{children}</span>
+      <div className="nav-row__main-mouse-area">
+        {entity.type && iconsMap[entity.type] ? iconsMap[entity.type] : null}
+        <div className="nav-row__title">{children}</div>
+      </div>
       {entity.type === 'BASE TABLE' ||
       entity.type === 'MATERIALIZED VIEW' ||
       entity.type === 'VIEW' ? (
         <div
-          className="adjustment-icon"
-          title={`${entity.type} INFO`}
+          className="adjustment-icon--small"
           onClick={onInfoClick}
           onDoubleClick={onInfoDoubleClick}
         />

@@ -1,0 +1,57 @@
+.nav-context-menu {
+  position: absolute;
+  background: white;
+  width: 170px;
+  z-index: 100;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+  padding: 5px 0;
+  font-size: 14px;
+  text-shadow: none;
+  font-style: normal;
+  font-weight: normal;
+  .adjustment-icon--small {
+    display: block !important;
+    opacity: 1 !important;
+    --bg: white;
+    color: black !important;
+  }
+  color: #000;
+  & > div {
+    display: flex;
+    align-items: center;
+    padding: 4px 10px;
+    cursor: pointer;
+    &:hover,
+    &.selected {
+      background: #f4f4f4;
+      .ajustment-icon {
+        --bg: #f4f4f4;
+      }
+    }
+    .fa {
+      font-size: 14px;
+      text-align: center;
+    }
+    .adjustment-icon--small {
+      margin-top: -1px;
+    }
+    .fa,
+    .adjustment-icon--small {
+      width: 16px;
+      margin-right: 7px;
+    }
+    i.fa.fa-plus {
+      display: block;
+      color: black;
+      margin-top: -1px;
+      text-align: left;
+      padding-left: 2px;
+    }
+    &.selected {
+      color: #007;
+      .adjustment-icon--small {
+        color: #007 !important;
+      }
+    }
+  }
+}

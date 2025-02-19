@@ -168,10 +168,7 @@ export function QueryFrame({ uid }: { uid: number }) {
             style={{
               zIndex: 7,
               position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
+              inset: 0,
               background: 'white',
               animation: 'show 0.3s forwards',
             }}
@@ -525,10 +522,7 @@ export function QueryFrame({ uid }: { uid: number }) {
               <DataGrid
                 style={{
                   position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  bottom: 0,
-                  right: 0,
+                  inset: 0,
                 }}
                 fetchMoreRows={fetchMoreRows}
                 result={res}
@@ -538,10 +532,7 @@ export function QueryFrame({ uid }: { uid: number }) {
             <DataGrid
               style={{
                 position: 'absolute',
-                top: 0,
-                left: 0,
-                bottom: 0,
-                right: 0,
+                inset: 0,
               }}
               fetchMoreRows={fetchMoreRows}
               result={res}

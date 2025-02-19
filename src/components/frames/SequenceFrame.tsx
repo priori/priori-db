@@ -193,7 +193,7 @@ export function SequenceFrame(props: SequenceFrameProps) {
       }}
     >
       <h1>
-        <span className="adjustment-icon2">
+        <span className="adjustment-icon--big">
           <div />
         </span>
         {props.schema}.{props.name}
