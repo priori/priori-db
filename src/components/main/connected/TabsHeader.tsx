@@ -449,7 +449,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
                       }, 1000);
                     }
                   }}
-                  style={{ width, zIndex: 9 }}
+                  style={{ width }}
                 >
                   {this.state.editing === t ? (
                     <span style={{ flex: 1 }}>
@@ -485,7 +485,10 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
                   ) : (
                     <i
                       className="tabs-header__close fa fa-close"
-                      onMouseDown={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => {
+                        activateTab(t);
+                        e.stopPropagation();
+                      }}
                       onClick={(e) => {
                         if (this.mouseOverTimeout)
                           clearTimeout(this.mouseOverTimeout);
@@ -556,11 +559,8 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
     const { tabs, width } = this.calculate();
     return (
       <>
-        <div
-          className="tabs-header"
-          style={{ left: this.props.left, zIndex: 8 }}
-        >
-          <span className="tabs-header__tabs" style={{ zIndex: 8 }}>
+        <div className="tabs-header" style={{ left: this.props.left }}>
+          <span className="tabs-header__tabs">
             {tabs.map((t, index) => (
               <span
                 className={`tabs-header__tab${
@@ -600,7 +600,6 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
             left: 0,
             width: '100vw',
             height: '100vh',
-            zIndex: 7,
           }}
         />
       </>
