@@ -67,7 +67,7 @@ export function NavSearch({
       e.key.length === 1 &&
       !(e.ctrlKey || e.altKey || e.metaKey)
     ) {
-      const input = document.querySelector('.nav--search input');
+      const input = document.querySelector('.nav-search__field input');
       if (input instanceof HTMLInputElement) {
         setSearchText('');
         input.focus();
@@ -127,7 +127,7 @@ export function NavSearch({
       }
     } else if (e.key === 'Tab') {
       if (e.shiftKey) {
-        const i = document.querySelector('.nav--search input');
+        const i = document.querySelector('.nav-search__field input');
         if (i instanceof HTMLInputElement) i.focus();
       } else onBlur('next');
       e.preventDefault();
@@ -136,7 +136,7 @@ export function NavSearch({
       if (index > 0) {
         setIndex(index - 1);
       } else if (!(e.target instanceof HTMLInputElement)) {
-        const i = document.querySelector('.nav--search input');
+        const i = document.querySelector('.nav-search__field input');
         if (i instanceof HTMLInputElement) i.focus();
       }
       e.preventDefault();
@@ -189,7 +189,7 @@ export function NavSearch({
       e.key !== 'Espace' &&
       (e.key.length <= 1 || e.key === 'Backspace' || e.key === 'Delete')
     ) {
-      const input = document.querySelector('.nav--search input');
+      const input = document.querySelector('.nav-search__field input');
       if (input instanceof HTMLInputElement) {
         input.focus();
       }
@@ -260,7 +260,7 @@ export function NavSearch({
 
   return (
     <>
-      <div className={`nav--search ${focus ? 'focus' : ''}`}>
+      <div className={`nav-search__field ${focus ? 'focus' : ''}`}>
         <input
           type="text"
           onChange={onChange}

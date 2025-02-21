@@ -156,6 +156,9 @@
   color: #444;
   cursor: pointer;
 }
+.base--connecting {
+  color: rgba(0, 0, 0, 0.3);
+}
 .base.base--default {
   color: #000;
   font-weight: bold;
@@ -416,4 +419,20 @@ span.connection--user:before {
   content: 'pg';
   border-color: #46b;
   color: #000;
+}
+.home-connection-error-dialog__wrapper {
+  position: fixed;
+  inset: 0px;
+  background: rgba(235, 235, 235, 0.65);
+  backdrop-filter: blur(0.75px);
+  z-index: 1;
+}
+.home-connection-error-dialog {
+  padding: 30px 20px;
+  background: white;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 4px 40px;
+  max-width: 500px;
+  color: rgb(221, 51, 51);
+  margin: 20px auto;
+  text-align: center;
 }

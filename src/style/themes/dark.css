@@ -1,0 +1,603 @@
+body.dark {
+  background: #1c1c1c;
+  .tabs-header__tab-name {
+    -webkit-font-smoothing: antialiased;
+  }
+  .app-content {
+    background: #222;
+  }
+  .nav {
+    background: #1c1c1c;
+    --bg: #1c1c1c;
+    color: #fff;
+  }
+  .nav-row__count {
+    color: rgba(255, 255, 255, 0.3);
+  }
+  .nav-row__icon--table.nav-row__icon {
+    color: rgb(144 173 246);
+  }
+  .nav-row__icon--view.nav-row__icon {
+    color: rgb(60, 216, 60);
+  }
+  .nav-row__icon--mview.nav-row__icon {
+    color: rgb(90, 192, 90);
+  }
+  .nav-row__icon--user.nav-row__icon {
+    color: rgb(144 173 246);
+  }
+  .nav-row__icon--role.nav-row__icon {
+    color: rgb(60, 216, 60);
+  }
+  .nav-row__arrow:after {
+    border-left-color: white;
+  }
+  .nav-row--folder.nav-row--internal .nav-row__arrow:after {
+    border-left-color: #777;
+  }
+  .nav-row--internal.nav-row--folder {
+    color: #777;
+  }
+  .nav-row:hover,
+  .nav-row.open,
+  .nav-row.focus,
+  .nav-row--search-result.focused {
+    background: #242424;
+    --bg: #242424;
+  }
+  .nav-row--search-result.focused::before {
+    border-left-color: #fe0;
+  }
+  .nav-row--search-result.focused .nav-row__title {
+    color: #fe0;
+  }
+  .nav-row.open .nav-row__title {
+    color: #fff;
+  }
+  .nav-row .fa-plus,
+  .nav-row .adjustment-icon--small {
+    color: #555;
+  }
+  .nav-row .fa-plus:hover,
+  .nav-row .adjustment-icon--small:hover {
+    color: #fff;
+  }
+  .nav-row--empty {
+    color: #777;
+  }
+  .nav-row.focus {
+    color: #fe0;
+  }
+  .nav-row.focus .nav-row__arrow:after {
+    border-left-color: #fe0;
+  }
+  .nav-row.active {
+    background: #fe0;
+    --bg: #fe0;
+    &,
+    .nav-row__title {
+      color: black;
+    }
+    text-shadow: none;
+    .fa-plus,
+    .adjustment-icon--small {
+      color: #cb0;
+      &:hover {
+        color: #000;
+      }
+    }
+    &.focus,
+    &.focus .nav-row__title {
+      color: #04b;
+    }
+  }
+
+  .nav-search__field {
+    background: #444;
+  }
+  .header,
+  .tabs-header__add {
+    background: #1c1c1c;
+    color: white;
+  }
+  .settings-button,
+  .header .nav-button,
+  .tabs-header__add {
+    background: #1c1c1c;
+  }
+
+  @keyframes dark-header-nav-before {
+    0% {
+      background: #1c1c1c;
+    }
+    100% {
+      background: #444;
+    }
+  }
+  .header .nav:before {
+    animation: dark-header-nav-before 0.3s forwards;
+  }
+  .nav-button .nav::after {
+    border-bottom-color: #1c1c1c;
+  }
+  .nav__title {
+    background: #1c1c1c;
+  }
+
+  .header > .settings-button .adjustment-icon--medium,
+  .nav__title > .settings-button .adjustment-icon--medium,
+  .header .fa-chevron-left {
+    color: #555;
+    --bg: #1c1c1c;
+  }
+  .tabs-header__add:hover,
+  .settings-button:hover,
+  .header .nav-button:hover {
+    background: #444;
+    box-shadow: 0 1px 15px rgba(0, 0, 0, 1);
+    color: white;
+  }
+  .header > .settings-button:hover .adjustment-icon--medium,
+  .nav__title > .settings-button:hover .adjustment-icon--medium,
+  .header .nav-button:hover .fa-chevron-left {
+    color: #fff;
+  }
+  .tabs-header {
+    background: #111;
+  }
+  .new-schema,
+  .new-schema[data-hint] {
+    opacity: 0.2;
+  }
+  .new-schema:hover,
+  .new-schema[data-hint]:hover {
+    opacity: 1;
+  }
+  .tabs-header__tab:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .tabs-header__tab-name {
+    color: #888;
+    text-shadow: none;
+  }
+  .tabs-header__tab--active,
+  .tabs-header__tab--active:hover {
+    background: #262626;
+    .tabs-header__tab-name {
+      color: white;
+    }
+  }
+  .tabs-header__tabs:not(:empty):after {
+    box-shadow:
+      inset 0 0 13px rgba(0, 0, 0, 1),
+      inset 0 0 13px rgba(0, 0, 0, 1);
+  }
+
+  /* frames */
+  .frame.table-info,
+  .frame.schema-info,
+  .frame.new-table,
+  .frame.function,
+  .frame.domain,
+  .frame.sequence,
+  .frame.role,
+  .frame.settings,
+  .frame {
+    background: #262626;
+    --bg: #262626;
+    color: white;
+    -webkit-font-smoothing: antialiased;
+  }
+  .frame.table-info td,
+  .frame.table-info th,
+  .frame.schema-info td,
+  .frame.schema-info th,
+  .frame.new-table td,
+  .frame.new-table th,
+  .frame.function td,
+  .frame.function th,
+  .frame.domain td,
+  .frame.domain th,
+  .frame.sequence td,
+  .frame.sequence th,
+  .frame.role td,
+  .frame.role th,
+  .frame.settings td,
+  .frame.settings th {
+    border-bottom-color: #333;
+  }
+  .frame.table-info .fields .field,
+  .frame.schema-info .fields .field,
+  .frame.new-table .fields .field,
+  .frame.function .fields .field,
+  .frame.domain .fields .field,
+  .frame.sequence .fields .field,
+  .frame.role .fields .field,
+  .frame.settings .fields .field {
+    border-left-color: #333;
+  }
+  .frame.table-info .empty,
+  .frame.schema-info .empty,
+  .frame.new-table .empty,
+  .frame.function .empty,
+  .frame.domain .empty,
+  .frame.sequence .empty,
+  .frame.role .empty,
+  .frame.settings .empty {
+    background: #202020;
+  }
+  .frame.table-info h2,
+  .frame.schema-info h2,
+  .frame.new-table h2,
+  .frame.function h2,
+  .frame.domain h2,
+  .frame.sequence h2,
+  .frame.role h2,
+  .frame.settings h2 {
+    color: #3997f4;
+    text-shadow: 0 1px 2px black;
+  }
+  .error-message {
+    border-color: #333;
+  }
+  .owner {
+    background: #333;
+  }
+  .frame.table-info div.view,
+  .frame.schema-info div.view,
+  .frame.new-table div.view,
+  .frame.function div.view,
+  .frame.domain div.view,
+  .frame.sequence div.view,
+  .frame.role div.view,
+  .frame.settings div.view {
+    background: #202020;
+    color: white;
+  }
+  .new-role-dialog,
+  .dialog--close-window {
+    color: white;
+  }
+  .dialog,
+  .new-schema-form > div,
+  .change-dialog,
+  .favorite-dialog,
+  .dialog--close-window {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(2px);
+  }
+  span.column {
+    background: #111;
+    color: white;
+  }
+  .change-dialog .data-grid-update-info--buttons {
+    border-top-color: #333;
+  }
+  div.frame.table-info div.dialog-form div[tabindex]:focus,
+  div.frame.role div.dialog-form div[tabindex]:focus {
+    color: #fe0;
+  }
+  .new-schema-form,
+  .dialog--close-window--overlay {
+    background: rgba(50, 50, 50, 0.7);
+    backdrop-filter: blur(0.5px);
+  }
+  .dialog input {
+    background: #2d2d2d;
+    color: white;
+    border-color: #383838;
+  }
+  .dialog input:focus {
+    border: solid 2px #fe0 !important;
+    box-shadow:
+      0 1px #fe0,
+      0 -1px #fe0,
+      1px 0 #fe0,
+      -1px 0 #fe0;
+  }
+  .nav .fa-search {
+    color: rgba(255, 255, 255, 0.3);
+  }
+  .nav-search__field {
+    background: #2d2d2d;
+  }
+  textarea:focus {
+    border: 1px solid transparent;
+  }
+  input,
+  select,
+  .nav-search__field input,
+  textarea,
+  .grid .dialog textarea {
+    background: #2d2d2d;
+    border-color: #383838;
+    color: white;
+    &:focus {
+      border-color: #fe0 !important;
+      box-shadow:
+        0 1px #fe0,
+        0 -1px #fe0,
+        1px 0 #fe0,
+        -1px 0 #fe0 !important;
+    }
+  }
+  .app-content button.data-grid-filter-dialog--where-sql,
+  .app-content button.data-grid-filter-dialog--or,
+  .app-content .data-grid-filter-dialog--edit-button {
+    color: #ddd;
+    cursor: pointer;
+    border-color: #666;
+    border-radius: 4px;
+    .fa-plus {
+      color: inherit;
+      background: transparent;
+    }
+  }
+  .app-content button.data-grid-filter-dialog--where-sql:hover,
+  .app-content button.data-grid-filter-dialog--or:hover,
+  .app-content .data-grid-filter-dialog--edit-button:hover {
+    background: #333 !important;
+    color: white;
+    border-color: #777;
+  }
+  .app-content button.data-grid-filter-dialog--where-sql.active {
+    background: #1976d2 !important;
+  }
+
+  /* data grid */
+  .grid-content,
+  .active-cell-wrapper2:not(:has(textarea)) {
+    filter: contrast(0.8) invert(1) brightness(0.9);
+  }
+  .active-cell-wrapper2 textarea {
+    color: white;
+    background: #000;
+  }
+  /* .grid .active {
+    border: #fe0 2px solid;
+  } */
+  .grid .fa-sort,
+  .grid .fa-filter,
+  .grid .fa-plus {
+    background: black;
+    color: #ddd;
+  }
+  .grid .fa-sort:hover,
+  .grid .fa-filter:hover,
+  .grid .fa-plus:hover {
+    color: #fe0;
+  }
+  .data-grid-filter-dialog--big-form.dialog
+    .data-grid-filter-dialog--and-group {
+    border-color: #222;
+  }
+
+  /* query editor */
+  .app-content > .frame.query-tab {
+    background: #2a2a2a;
+  }
+  .editor {
+    filter: brightness(0.87) invert(1);
+  }
+  .grid div .active {
+    border-color: #eee;
+  }
+  .query-frame__up-button--closed {
+    border-left-color: #333;
+    border-top-color: #333;
+  }
+  .grid div:focus .active,
+  .grid div.editing .active {
+    border-color: #fe0;
+  }
+  .query-frame__up-button {
+    background: #262626;
+  }
+  .query-frame__up-button:hover {
+    background: #444 !important;
+    box-shadow: 0 1px 15px rgba(0, 0, 0, 1);
+    color: white;
+  }
+  .query-frame--top-area--closed {
+    background: #262626;
+  }
+  .query-tab .mensagem {
+    background: #262626;
+    color: white;
+  }
+  .query-frame__code-button {
+    background: #262626 !important;
+    border-top-color: #222;
+    border-left-color: #111 !important;
+  }
+  .query-frame__code-button:hover {
+    box-shadow: 0 1px 15px rgba(0, 0, 0, 1);
+    color: white !important;
+  }
+  .pid {
+    background: #000;
+    .fa {
+      color: #ae0;
+    }
+  }
+  .running span {
+    background: #000;
+  }
+  .running i.fa.fa-circle-o-notch.fa-spin {
+    color: #fe0;
+  }
+  .query-tab .error,
+  .tabs-header__tab--active .fa-exclamation-triangle {
+    color: #e44;
+  }
+
+  /* buttons */
+  .button {
+    color: #ddd;
+    background: #333;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  .button:focus-visible {
+    color: #fff;
+    background: #2d2d2d;
+  }
+  .button:focus-visible,
+  .pill-button:focus-visible {
+    color: #fe0;
+  }
+  .button:hover:not([disabled]) {
+    color: #fff;
+    background: #383838;
+  }
+  .pill-button,
+  .pill {
+    color: #ddd;
+    background: #333;
+  }
+  .pill-button:not([disabled]):hover {
+    background: #383838;
+    color: #fff;
+  }
+  .button:active:not([disabled]),
+  .pill-button:active:not([disabled]) {
+    background: #2d2d2d;
+  }
+  div.frame.table-info h1,
+  div.frame.schema-info h1,
+  div.frame.sequence h1,
+  div.frame.domain h1,
+  div.frame.function h1,
+  div.frame.role h1,
+  div.frame.settings h1 {
+    text-shadow:
+      0 1px 3px black,
+      0 1px 4px black;
+  }
+
+  /* query selector */
+  .dialog h1 {
+    color: white;
+  }
+  .query-selector--query h1,
+  .query-selector .fa-star {
+    color: #95b3ff;
+  }
+  .query-selector,
+  .query-selector--sticky-helper > div,
+  .query-selector--queries,
+  .query-selector--favorites {
+    background: #2a2a2a;
+  }
+  .query-selector > h1:first-of-type {
+    border-color: #2a2a2a;
+    border-top-color: #2a2a2a;
+  }
+  .query-selector > h1 {
+    color: white;
+    background: #2a2a2a;
+    border-color: #2a2a2a;
+  }
+  .query-selector--queries:not(:empty) {
+    border-bottom-color: #2a2a2a;
+  }
+  .query-selector--query {
+    background: #222;
+  }
+  .query-selector--query .query-selector--sql {
+    color: #fff;
+  }
+  .query-selector--query:hover {
+    background: #111;
+  }
+  .query-selector--query .query-selector--pagination {
+    background: #222;
+  }
+  .query-selector--query:hover .query-selector--pagination {
+    background: #111;
+  }
+
+  /* connections */
+  .new-connection__field-select {
+    background: #333;
+  }
+  .new-connection__field-option {
+    background: #333;
+    color: #777;
+  }
+  .new-connection__field-option--selected {
+    background: #25b;
+    color: white;
+  }
+  .connection:hover {
+    background: #333;
+  }
+  #root:has(.connections) {
+    background: #262626;
+    color: white;
+  }
+  .new-connection {
+    color: white;
+  }
+  .new-connection__require-ssl:focus-visible {
+    color: #fe0;
+    background: #222;
+  }
+  .connection:first-of-type {
+    border-top-color: #111;
+  }
+  .connection {
+    border-bottom-color: #111;
+  }
+  .pg span.connection--user:before {
+    color: white;
+  }
+  .mysql span.connection--user:before {
+    color: #7ca1ff;
+  }
+  .bases-wrapper,
+  .home-connection-error-dialog__wrapper {
+    background: rgba(50, 50, 50, 0.7);
+    backdrop-filter: blur(0.5px);
+  }
+  .home-connection-error-dialog {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(2px);
+  }
+  .base {
+    background: #333;
+    color: white;
+    border-bottom-color: #222;
+  }
+  .base--connecting {
+    color: rgba(256, 256, 256, 0.7);
+  }
+  .base:hover {
+    background: #444;
+  }
+  .connections--edit-button2 {
+    background: rgba(100, 100, 100, 0.25);
+    color: #aaa;
+  }
+  .connections--edit-button2:hover {
+    background: rgba(100, 100, 100, 0.4);
+    color: #fff;
+  }
+  .connection-test-success {
+    color: #41da57;
+  }
+  .new-connection button:focus {
+    color: #fe0;
+  }
+  .base.base--default::after {
+    color: #58abff;
+  }
+  .base.base--default.selected {
+    background: #222;
+  }
+  .bases-wrapper .fa-spin {
+    color: #ddd;
+  }
+}
+body.dark:has(.connections) {
+  background: #111;
+}

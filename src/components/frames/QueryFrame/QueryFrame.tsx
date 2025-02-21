@@ -163,15 +163,7 @@ export function QueryFrame({ uid }: { uid: number }) {
         }}
       >
         {topHeight === 40 ? (
-          <div
-            style={{
-              zIndex: 7,
-              position: 'absolute',
-              inset: 0,
-              background: 'white',
-              animation: 'show 0.3s forwards',
-            }}
-          >
+          <div className="query-frame--top-area--closed">
             {hasPid || (res && res.fields && res.fields.length) ? (
               <span
                 className="query-frame--mensagem2"
@@ -438,15 +430,14 @@ export function QueryFrame({ uid }: { uid: number }) {
           </button>
         ) : undefined}
         <button
-          className="query-frame__up-button"
+          className={`query-frame__up-button${
+            topHeight === 40 ? ' query-frame__up-button--closed' : ''
+          }`}
           onMouseEnter={topHeight === 40 ? upMouseEnter : undefined}
           onMouseLeave={topHeight === 40 ? onPopupMouseLeave : undefined}
           style={
             topHeight === 40
               ? {
-                  zIndex: 8,
-                  borderLeft: '1px solid #eee',
-                  borderTop: '1px solid #eee',
                   ...(popup && popup.right === 0
                     ? {
                         zIndex: 11,

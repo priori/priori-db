@@ -13,7 +13,7 @@ dialog.launcher::backdrop {
   background: transparent;
 }
 .launcher input,
-dialog.launcher > div:has(.nav-search) {
+dialog.launcher > div:has(.nav-search__result) {
   width: 450px;
   position: fixed;
   left: 50%;
@@ -34,23 +34,23 @@ dialog.launcher i.fa.fa-close,
 dialog.launcher i.fa.fa-search {
   display: none;
 }
-dialog.launcher > div:has(.nav-search) {
+dialog.launcher > div:has(.nav-search__result) {
   background: #fff;
   padding: 7px 3px 7px 0;
   top: 95px;
   border-radius: 7px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
-dialog.launcher .nav-search {
+dialog.launcher .nav-search__result {
   border-bottom: none;
 }
 dialog.launcher .focused {
   background: #eee;
 }
-dialog.launcher .nav-search i {
+dialog.launcher .nav-search__result i {
   top: 3px;
 }
-dialog.launcher .nav-search .nav-row {
+dialog.launcher .nav-search__result .nav-row {
   height: 25px;
   line-height: 23px;
 }
@@ -61,11 +61,11 @@ dialog.launcher .nav-row.focused.active:before,
 dialog.launcher .nav-row.focused:before {
   border-left-color: #000;
 }
-dialog.launcher .nav-search .nav-row:hover {
+dialog.launcher .nav-search__result .nav-row:hover {
   background: #eee;
   --bg: #eee;
 }
-dialog.launcher .nav-search .nav-row:focused {
+dialog.launcher .nav-search__result .nav-row:focused {
   background: #eee;
   --bg: #eee;
 }

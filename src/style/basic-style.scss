@@ -55,6 +55,12 @@ body {
   background: #f0f0f0;
   color: #000;
 }
+.pill-button:not([disabled]) .fa-pencil {
+  opacity: 0.5;
+}
+.pill-button:not([disabled]):hover .fa-pencil {
+  opacity: 1;
+}
 .button:active:not([disabled]) {
   background: #c4c4c4;
 }

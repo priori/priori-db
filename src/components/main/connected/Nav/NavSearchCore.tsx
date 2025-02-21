@@ -35,7 +35,7 @@ export const NavSearchCore = React.memo(
     // if (focus && !search) {
     //   return (
     //     <div
-    //       className="nav-search"
+    //       className="nav-search__result"
     //       ref={height120}
     //       style={{
     //         display: 'flex',
@@ -53,7 +53,7 @@ export const NavSearchCore = React.memo(
     assert(matches);
     const { active } = tabs;
     return (
-      <div className="nav-search" onScroll={onScroll} ref={height304}>
+      <div className="nav-search__result" onScroll={onScroll} ref={height304}>
         {matches
           .filter(
             (_, i) => i <= 80 || showAll || (index !== undefined && index > 80),

@@ -268,9 +268,7 @@ export function SettingsFrame() {
       >
         <option value="soft-gray-theme">Soft Gray (Default)</option>
         <option value="glacial-white-theme">Glacial White</option>
-        <option value="dark" disabled>
-          Dark
-        </option>
+        <option value="dark">Dark</option>
       </select>
     </div>
   );

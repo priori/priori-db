@@ -265,7 +265,7 @@ export function ConnectedApp({ state }: { state: AppState }) {
   const onHeaderMenuClick = useEvent((e: React.MouseEvent) => {
     if (
       e.target instanceof HTMLElement &&
-      !e.target.closest('.nav, .header--title')
+      !e.target.closest('.nav, .nav__title')
     ) {
       toggleLeftArea();
       setHover(false);
@@ -290,21 +290,23 @@ export function ConnectedApp({ state }: { state: AppState }) {
       {closeState && (
         <CloseConfirmation onConfirm={closeState.close} onDecline={onDecline} />
       )}
-      <div className="header-and--nav">
+      <div className="header-and-nav">
         <div className="header" style={{ width: Math.max(leftWidth, 33) }}>
           {title}
           <SettingsButton
             left={leftWidth > 40 ? Math.max(leftWidth - 37, 0) - 37 : -37}
           />
           <span
-            className="header--menu"
+            className={`nav-button${leftWidth <= 40 ? ` nav-button--hidden` : ''}`}
             onMouseEnter={onHeaderMouseEnter}
             onMouseLeave={onHeaderMouseLeave}
-            style={{
-              left: leftWidth <= 40 ? 0 : Math.max(leftWidth - 37, 0),
-              opacity: leftWidth <= 40 ? 1 : undefined,
-              width: leftWidth <= 40 ? 40 : undefined,
-            }}
+            style={
+              leftWidth <= 40
+                ? undefined
+                : {
+                    left: Math.max(leftWidth - 37, 0),
+                  }
+            }
             onClick={onHeaderMenuClick}
           >
             <i

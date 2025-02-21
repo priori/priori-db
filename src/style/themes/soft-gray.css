@@ -8,10 +8,7 @@ body.soft-gray-theme .settings-button {
   background: #e4e4e4;
 }
 body.soft-gray-theme .header > .settings-button .adjustment-icon--medium,
-body.soft-gray-theme
-  .header--title
-  > .settings-button
-  .adjustment-icon--medium {
+body.soft-gray-theme .nav__title > .settings-button .adjustment-icon--medium {
   --bg: #e4e4e4;
 }
 body.soft-gray-theme .settings-button:hover {
@@ -22,13 +19,13 @@ body.soft-gray-theme .settings-button:active {
   background: #e4e4e4;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.3);
 }
-body.soft-gray-theme .header .header--menu {
+body.soft-gray-theme .header .nav-button {
   background: #e4e4e4;
 }
-body.soft-gray-theme .header .header--menu:hover {
+body.soft-gray-theme .header .nav-button:hover {
   background: #fff;
 }
-body.soft-gray-theme .nav .nav--search {
+body.soft-gray-theme .nav-search__field {
   background: #ccc;
 }
 

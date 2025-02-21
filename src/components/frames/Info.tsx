@@ -40,7 +40,7 @@ function Info0({
                 {v === null ? (
                   <span
                     style={{
-                      color: 'rgba(0,0,0,.3)',
+                      opacity: 0.5,
                       fontSize: 12,
                       fontWeight: 'bold',
                       marginTop: 1,

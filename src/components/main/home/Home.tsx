@@ -155,28 +155,12 @@ export function Home(props: AppState) {
       <Errors errors={props.errors} />
       {error ? (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(235, 235, 235, 0.65)',
-            backdropFilter: 'blur(0.75px)',
-            zIndex: 1,
-          }}
+          className="home-connection-error-dialog__wrapper"
           onClick={() =>
             setState((s) => ({ ...s, error: null, openConnection: null }))
           }
         >
-          <div
-            style={{
-              padding: '30px 20px',
-              background: 'white',
-              boxShadow: '0 4px 40px rgba(0, 0, 0, 0.35)',
-              maxWidth: '500px',
-              color: '#d33',
-              margin: '20px auto',
-              textAlign: 'center',
-            }}
-          >
+          <div className="home-connection-error-dialog">
             <div
               style={{ userSelect: 'text', marginBottom: 18, marginTop: 13 }}
             >
@@ -315,13 +299,10 @@ export function Home(props: AppState) {
                 <div
                   className={`base${
                     b === state.openConnection?.database ? ' base--default' : ''
-                  }${state.connecting ? ' selected' : ''}`}
+                  }${state.connecting ? ' base--connecting' : ''}`}
                   key={b}
                   tabIndex={0}
                   role="button"
-                  style={
-                    state.connecting ? { color: 'rgba(0,0,0,.3)' } : undefined
-                  }
                   onKeyDown={
                     state.connecting
                       ? undefined
@@ -339,6 +320,7 @@ export function Home(props: AppState) {
                               setState((s) => ({
                                 ...s,
                                 connecting: false,
+                                openConnection: null,
                                 error: grantError(err),
                               }));
                             }
@@ -357,6 +339,7 @@ export function Home(props: AppState) {
                             setState((s) => ({
                               ...s,
                               connecting: false,
+                              openConnection: null,
                               error: grantError(err),
                             }));
                           }

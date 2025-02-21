@@ -95,6 +95,7 @@ export function DataGridUpdateInfoDialog({
       </div>
       <div className="data-grid-update-info--buttons">
         <button
+          className="pill-button"
           onClick={onDiscardClick}
           disabled={applyingUpdate}
           style={{
@@ -105,6 +106,7 @@ export function DataGridUpdateInfoDialog({
           Discard <i className="fa fa-undo" />
         </button>
         <button
+          className="pill-button"
           disabled={applyingUpdate}
           style={{ fontWeight: 'bold' }}
           onClick={onApplyClick}

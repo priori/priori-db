@@ -3,10 +3,10 @@ import { useRef } from 'react';
 import { useEventListener } from './useEventListener';
 
 const dontDragSelector =
-  'a, button, input, textarea, [tabindex]:not(.frame), select, .query-selector--query, .tabs-header__tab, .tabs-header__add, .header--menu, .settings-button, .favorite, .resize-helper, .query-frame--resize-helper, .bases-wrapper, .new-schema-form, .owner .fa-pencil, .columns-form-column';
+  'a, button, input, textarea, [tabindex]:not(.frame), select, .query-selector--query, .tabs-header__tab, .tabs-header__add, .nav-button, .settings-button, .favorite, .resize-helper, .query-frame--resize-helper, .bases-wrapper, .new-schema-form, .owner .fa-pencil, .columns-form-column';
 
 // for double click events to work
-const noOverlaySelector = '.tabs-header, .frame, .app-content';
+const noOverlaySelector = '.tabs-header, .frame, .app-content, .nav-button';
 
 const dragExceptionSelector =
   '.grid > div, .grid-content--table-wrapper-outer, .empty-table, .empty-table *, .grid-content, .nav-tree--wrapper, .grid-content--footer';
@@ -33,6 +33,13 @@ export function useWindowDrag() {
     window,
     'mousedown',
     (e: MouseEvent) => {
+      if (e.target instanceof HTMLElement || e.target === null)
+        console.log(
+          dontDragSelector,
+          e.target?.closest(dontDragSelector),
+          dragExceptionSelector,
+          e.target?.matches(dragExceptionSelector),
+        );
       const target = e.target as HTMLElement;
       if (
         !target.matches(dragExceptionSelector) &&

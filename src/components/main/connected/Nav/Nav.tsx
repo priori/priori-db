@@ -95,6 +95,7 @@ export function Nav(props: {
   });
 
   const [refreshing0, setRefreshing] = useState(false);
+
   const onKeyDown = useEvent((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (
       ((e.ctrlKey || (isIOS && e.metaKey)) &&
@@ -110,10 +111,13 @@ export function Nav(props: {
       reloadNav();
     }
   });
+
   const lastSchemas = useRef(props.schemas);
+
   if (props.schemas !== lastSchemas.current) {
     lastSchemas.current = props.schemas;
   }
+
   const refreshing = useMoreTime(refreshing0, 200);
 
   const onNavTreeBlur = useEvent((e: 'next' | 'prev' | 'up' | 'down') => {
@@ -121,7 +125,7 @@ export function Nav(props: {
       const el = document.querySelector('.new-schema');
       if (el instanceof HTMLElement) el.focus();
     } else if (e === 'up' || e === 'prev') {
-      const el = document.querySelector('.nav--search input');
+      const el = document.querySelector('.nav-search__field input');
       if (el instanceof HTMLElement) el.focus();
     }
   });
@@ -151,7 +155,7 @@ export function Nav(props: {
         style={props.style}
       >
         {props.title ? (
-          <div className="header--title">
+          <div className="nav__title">
             {props.title}
             <SettingsButton />
           </div>

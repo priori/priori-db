@@ -59,7 +59,7 @@ export function SettingsParams({
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
         {(showAll ? searchResult : searchResult.slice(0, 20)).map((param) => (
           <React.Fragment key={param.name}>
-            <span
+            <button
               className="pill-button"
               style={{ fontWeight: 'normal' }}
               data-hint={
@@ -85,7 +85,7 @@ export function SettingsParams({
                 param.setting || <strong style={{ opacity: 0.3 }}>-</strong>
               )}
               <i className="fa fa-pencil" style={{ marginLeft: 4 }} />
-            </span>
+            </button>
             {form?.name === param.name ? (
               <Dialog onBlur={() => setForm(null)} relativeTo="previousSibling">
                 <div style={{ userSelect: 'text' }}>
@@ -154,18 +154,18 @@ export function SettingsParams({
         ))}
         {searchResult.length > 20 ? (
           showAll ? (
-            <span
+            <button
               className="pill-button param--more"
               onClick={() => setShowAll(false)}
             >
               <strong>
                 Show Less <i className="fa fa-caret-up" />
               </strong>
-            </span>
+            </button>
           ) : (
-            <span className="pill-button" onClick={() => setShowAll(true)}>
+            <button className="pill-button" onClick={() => setShowAll(true)}>
               <strong>+{searchResult.length - 20} more...</strong>
-            </span>
+            </button>
           )
         ) : null}
       </div>

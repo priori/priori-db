@@ -55,8 +55,8 @@ export function useLeftArea() {
     navEL = document.querySelector('.nav');
     headerEl = document.querySelector('.header');
     appContentEl = document.querySelector('.app-content');
-    headerMenuEl = document.querySelector('.header--menu');
-    headerMenuElI = document.querySelector('.header--menu>i');
+    headerMenuEl = document.querySelector('.nav-button');
+    headerMenuElI = document.querySelector('.nav-button>i');
     appAdjustmentIconEl = document.querySelector('.settings-button');
     rootEl = document.querySelector('#root>div');
     assert(tabsHeaderEL);

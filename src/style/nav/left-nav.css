@@ -15,7 +15,7 @@
 .nav-search__more {
   text-align: center;
 }
-.nav-search .nav-search__more i {
+.nav-search__result .nav-search__more i {
   display: inline-block;
   margin-right: 5px;
   margin-top: 3px;
@@ -25,19 +25,22 @@
   width: 13px;
   text-align: center;
 }
-.header--menu .nav {
+.nav-button .nav {
   display: none;
 }
-.header--menu:hover .nav {
+.nav-button:hover .nav {
   display: flex;
 }
 .nav {
   overflow: visible;
 }
-.nav .nav--search {
+.nav-search__field {
   background: #ccc;
 }
-.nav .nav--search input {
+.nav-search__field:has(input:disabled) {
+  overflow: hidden;
+}
+.nav-search__field input {
   border: 0;
   padding: 4px 1px 3px 9px;
   line-height: 12px;
@@ -47,11 +50,11 @@
   font-size: 12px;
   background-color: transparent;
 }
-.nav .nav--search input:focus {
+.nav-search__field input:focus {
   padding: 2px 0 1px 7px;
   background: white;
 }
-.nav .nav--search input:focus:after {
+.nav-search__field input:focus:after {
   content: '';
   background: white;
   position: absolute;
@@ -74,7 +77,7 @@
 .nav input:focus + .fa-close {
   color: #000;
 }
-.nav-search {
+.nav-search__result {
   font-size: 13px;
   border-bottom: 1px solid #ddd;
   white-space: nowrap;
@@ -84,11 +87,11 @@
   overflow-x: hidden;
   position: relative;
 }
-.nav-search .fa-database {
+.nav-search__result .fa-database {
   color: rgba(0, 0, 0, 0.5);
   margin-top: 2px;
 }
-.nav-search i {
+.nav-search__result i {
   display: inline-block;
   margin-right: 5px;
   margin-top: 3px;
@@ -98,7 +101,7 @@
   width: 13px;
   text-align: center;
 }
-.nav-search i.fa.fa-search {
+.nav-search__result i.fa.fa-search {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -114,13 +117,13 @@
   pointer-events: none;
   color: rgba(0, 0, 0, 0.2);
 }
-.header--menu .nav {
+.nav-button .nav {
   border-radius: 15px;
 }
-.header--menu .header--title {
+.nav-button .nav__title {
   border-radius: 15px 15px 0 0;
 }
-.header--menu .nav::after {
+.nav-button .nav::after {
   content: '';
   height: 10px;
   width: 0;

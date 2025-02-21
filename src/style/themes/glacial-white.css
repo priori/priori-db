@@ -16,7 +16,7 @@ body.glacial-white-theme .settings-button {
 }
 body.glacial-white-theme .header > .settings-button .adjustment-icon--medium,
 body.glacial-white-theme
-  .header--title
+  .nav__title
   > .settings-button
   .adjustment-icon--medium {
   --bg: #fafafa;
@@ -29,23 +29,34 @@ body.glacial-white-theme .settings-button:active {
   background: #fafafa;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.12);
 }
-body.glacial-white-theme .header .header--menu {
+body.glacial-white-theme .header .nav-button {
   background: #fafafa;
 }
-body.glacial-white-theme .header .header--menu:hover {
+body.glacial-white-theme .header .nav-button:hover {
   background: #fff;
 }
-body.glacial-white-theme .nav .nav--search {
+body.glacial-white-theme .nav-search__field {
   background: #e8e8e8;
 }
-body.glacial-white-theme .header--title {
+body.glacial-white-theme .nav__title {
   background: #fafafa;
-}
-body.glacial-white-theme .header--menu .nav::after {
-  border-bottom-color: #fafafa;
 }
 body.glacial-white-theme .tabs-header__add {
   background: #fafafa;
+}
+@keyframes glacial-header-nav-before {
+  0% {
+    background: #fafafa;
+  }
+  100% {
+    background: #fff;
+  }
+}
+body.glacial-white-theme .header .nav:before {
+  animation: dark-header-nav-before 0.3s forwards;
+}
+body.glacial-white-theme .nav-button .nav::after {
+  border-bottom-color: #fafafa;
 }
 
 /* tabs */
@@ -122,6 +133,36 @@ body.glacial-white-theme .query-frame__execute-button:hover {
 }
 body.glacial-white-theme button.query-frame__up-button:hover {
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
+}
+body.glacial-white-theme .grid .dialog input,
+body.glacial-white-theme .grid .dialog textarea,
+body.glacial-white-theme select,
+body.glacial-white-theme input {
+  border-color: #f0f0f0;
+}
+body.glacial-white-theme .nav-search__field input:focus,
+body.glacial-white-theme .grid .dialog input:focus,
+body.glacial-white-theme .grid .dialog textarea:focus,
+body.glacial-white-theme select:focus,
+body.glacial-white-theme input:focus {
+  border-color: #1976d2;
+  box-shadow:
+    0 1px #1976d2,
+    0 -1px #1976d2,
+    1px 0 #1976d2,
+    -1px 0 #1976d2;
+}
+body.glacial-white-theme select:active,
+body.glacial-white-theme select:focus {
+  box-shadow:
+    1px 1px #1976d2,
+    -1px -1px #1976d2,
+    -1px 1px #1976d2,
+    1px -1px #1976d2,
+    inset #1976d2 1px 1px,
+    inset #1976d2 -1px -1px,
+    inset #1976d2 -1px 1px,
+    inset #1976d2 1px -1px;
 }
 
 /* frames */
