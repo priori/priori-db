@@ -23,15 +23,7 @@
   .dialog.executing {
     color: #bbb;
   }
-  div.comment {
-    white-space: break-spaces;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 1px 10px rgb(0 0 0 / 20%);
-    font-size: 21px;
-    user-select: text;
-  }
-  textarea.comment {
+  textarea.comment-textarea {
     white-space: break-spaces;
     font-family: inherit;
     padding: 20px;
@@ -45,32 +37,6 @@
     width: 100%;
     resize: none;
     outline: none;
-  }
-  div.view {
-    font-family: 'Inconsolata', monospace;
-    padding: 10px;
-    background: #eee;
-    line-height: 1.4em;
-    word-break: break-word;
-    white-space: pre-wrap;
-    user-select: text;
-    font-size: 13px;
-  }
-  textarea.view {
-    font-family: 'Inconsolata', monospace;
-    padding: 10px;
-    background: #eee;
-    line-height: 1.4em;
-    word-break: break-word;
-    white-space: pre-wrap;
-    user-select: text;
-    display: block;
-    border: 0;
-    min-height: 195px;
-    resize: none;
-    outline: none;
-    width: 100%;
-    font-size: 13px;
   }
   tbody td {
     font-size: 13px;
@@ -168,6 +134,26 @@
     font-size: 14px;
     letter-spacing: -0.5px;
   }
+}
+.definition {
+  font-family: 'Inconsolata', monospace;
+  padding: 10px;
+  background: #eee;
+  line-height: 1.4em;
+  word-break: break-word;
+  white-space: pre-wrap;
+  user-select: text;
+  font-size: 13px;
+}
+.comment {
+  white-space: break-spaces;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 1px 10px rgb(0 0 0 / 20%);
+  font-size: 21px;
+  user-select: text;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 .table-info-frame__actions {
   button {
@@ -269,10 +255,6 @@ div.frame.settings {
   button {
     margin-right: 5px;
   }
-}
-div.comment {
-  margin-top: 20px;
-  margin-bottom: 20px;
 }
 .dialog input,
 .dialog select {

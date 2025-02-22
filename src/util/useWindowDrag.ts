@@ -33,13 +33,6 @@ export function useWindowDrag() {
     window,
     'mousedown',
     (e: MouseEvent) => {
-      if (e.target instanceof HTMLElement || e.target === null)
-        console.log(
-          dontDragSelector,
-          e.target?.closest(dontDragSelector),
-          dragExceptionSelector,
-          e.target?.matches(dragExceptionSelector),
-        );
       const target = e.target as HTMLElement;
       if (
         !target.matches(dragExceptionSelector) &&
@@ -47,8 +40,9 @@ export function useWindowDrag() {
       ) {
         return;
       }
-      const isSelectable = getComputedStyle(target).userSelect;
-      if (isSelectable === 'text' || isSelectable === 'auto') {
+      const { userSelect } = getComputedStyle(target);
+      const isSelectable = userSelect === 'text' || userSelect === 'auto';
+      if (isSelectable) {
         return;
       }
       if (!target.closest(noOverlaySelector)) {

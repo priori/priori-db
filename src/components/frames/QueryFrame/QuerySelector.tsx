@@ -158,75 +158,78 @@ function QuerySelector0({
   } = useQuerySelector(onSelect);
 
   return (
-    <div className="query-selector" style={style} onScroll={onScroll}>
-      <div className="query-selector--header">
-        <input
-          type="text"
-          readOnly
-          disabled
-          style={{
-            pointerEvents: 'none',
-            background: 'white',
-            border: '1px solid #ddd',
-          }}
-        />
-        <select
-          value={configValue}
-          onChange={onConfigsSelectChange}
-          style={{ width: 300 }}
-        >
-          <option value="-1" />
-          {configs.map((p, i) => (
-            <option value={i} key={i}>{`${p.user}@${p.host}${
-              p.port !== 5432 ? `:${p.port}` : ''
-            }/${p.database}`}</option>
-          ))}
-        </select>
-      </div>
-      {favorites?.length || queries?.length ? (
-        <div className="query-selector--sticky-helper">
-          <div />
-        </div>
-      ) : null}
-      {favorites?.length ? (
-        <h1>
-          <i className="fa fa-star" />
-          Favorites
-        </h1>
-      ) : null}
-      <div className="query-selector--favorites">
-        {favorites?.map((q) => (
-          <div
-            className={`query-selector--query ${selected && selected === `favorite${q.id}` ? ' selected' : ''}`}
-            key={q.id}
-            onClick={() => {
-              onFavoriteClick(q);
+    <>
+      <select
+        className="query-selector__select"
+        value={configValue}
+        onChange={onConfigsSelectChange}
+      >
+        <option value="-1" />
+        {configs.map((p, i) => (
+          <option value={i} key={i}>{`${p.user}@${p.host}${
+            p.port !== 5432 ? `:${p.port}` : ''
+          }/${p.database}`}</option>
+        ))}
+      </select>
+      <div className="query-selector" style={style} onScroll={onScroll}>
+        <div className="query-selector--header">
+          <input
+            type="text"
+            readOnly
+            disabled
+            style={{
+              pointerEvents: 'none',
+              background: 'white',
+              border: '1px solid #ddd',
             }}
-          >
-            <h1>
-              {q.title ? <div>{q.title}</div> : null}
-              <span>{fDate(new Date(q.created_at))}</span>
-            </h1>
-            <div className="query-selector--sql">{q.sql}</div>
-          </div>
-        ))}
-      </div>
-      {queries?.length ? (
-        <h1 style={favorites?.length ? undefined : { marginTop: -2 }}>
-          Last Executed Queries
-        </h1>
-      ) : null}
-      <div className="query-selector--queries">
-        {queries?.map((g) => (
-          <QuerySelectorGroup
-            key={g.id}
-            group={g}
-            onSelect={onGroupSelect}
-            selected={!!selected && selected === `group${g.id}`}
           />
-        ))}
+          <span className="query-selector__select__space" />
+        </div>
+        {favorites?.length || queries?.length ? (
+          <div className="query-selector--sticky-helper">
+            <div />
+          </div>
+        ) : null}
+        {favorites?.length ? (
+          <h1>
+            <i className="fa fa-star" />
+            Favorites
+          </h1>
+        ) : null}
+        <div className="query-selector--favorites">
+          {favorites?.map((q) => (
+            <div
+              className={`query-selector--query ${selected && selected === `favorite${q.id}` ? ' selected' : ''}`}
+              key={q.id}
+              onClick={() => {
+                onFavoriteClick(q);
+              }}
+            >
+              <h1>
+                {q.title ? <div>{q.title}</div> : null}
+                <span>{fDate(new Date(q.created_at))}</span>
+              </h1>
+              <div className="query-selector--sql">{q.sql}</div>
+            </div>
+          ))}
+        </div>
+        {queries?.length ? (
+          <h1 style={favorites?.length ? undefined : { marginTop: -2 }}>
+            Last Executed Queries
+          </h1>
+        ) : null}
+        <div className="query-selector--queries">
+          {queries?.map((g) => (
+            <QuerySelectorGroup
+              key={g.id}
+              group={g}
+              onSelect={onGroupSelect}
+              selected={!!selected && selected === `group${g.id}`}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

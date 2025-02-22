@@ -259,11 +259,15 @@ export function SettingsFrame() {
       ) : null}
 
       <h2>App Settings</h2>
-      <p>Theme:</p>
+      <div style={{ marginTop: 12, fontSize: 15, marginBottom: 7 }}>Theme:</div>
       <select
         value={theme}
         onChange={(e) => {
           setTheme(e.target.value);
+        }}
+        style={{
+          padding: '4px 5px',
+          fontSize: 14,
         }}
       >
         <option value="soft-gray-theme">Soft Gray (Default)</option>

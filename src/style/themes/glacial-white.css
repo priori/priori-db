@@ -109,7 +109,7 @@ body.glacial-white-theme .pill-button:not([disabled]):hover {
     inset 0 1px 2px rgba(255, 255, 255, 1);
   color: #000;
 }
-body.glacial-white-theme .query-frame__up-button,
+body.glacial-white-theme .query-frame__up-down-button,
 body.glacial-white-theme .query-frame__code-button {
   box-shadow: none;
   background: white;
@@ -131,7 +131,7 @@ body.glacial-white-theme .query-frame__execute-button {
 body.glacial-white-theme .query-frame__execute-button:hover {
   background: #31ad4a;
 }
-body.glacial-white-theme button.query-frame__up-button:hover {
+body.glacial-white-theme button.query-frame__up-down-button:hover {
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
 }
 body.glacial-white-theme .grid .dialog input,
@@ -166,14 +166,7 @@ body.glacial-white-theme select:focus {
 }
 
 /* frames */
-body.glacial-white-theme .frame.table-info div.view,
-body.glacial-white-theme .frame.schema-info div.view,
-body.glacial-white-theme .frame.new-table div.view,
-body.glacial-white-theme .frame.function div.view,
-body.glacial-white-theme .frame.domain div.view,
-body.glacial-white-theme .frame.sequence div.view,
-body.glacial-white-theme .frame.role div.view,
-body.glacial-white-theme .frame.settings div.view {
+body.glacial-white-theme .definition {
   background: #f8f8f8;
 }
 

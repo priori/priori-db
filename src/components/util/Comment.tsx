@@ -31,7 +31,7 @@ export function Comment({
     return (
       <div className="comment--form">
         <textarea
-          className="comment"
+          className="comment-textarea"
           value={state}
           onKeyDown={onkeydown}
           onChange={(e) => setState(e.target.value)}

@@ -410,44 +410,23 @@ export function QueryFrame({ uid }: { uid: number }) {
         </div>
         {topHeight === 40 ? (
           <button
-            className="query-frame__code-button"
+            className={`query-frame__code-button${popup && popup.right === 80 ? ` query-frame__code-button--open` : ''}`}
             onMouseEnter={onCodeMouseEnter}
             onMouseLeave={onPopupMouseLeave}
-            style={
-              popup && popup.right === 80
-                ? {
-                    zIndex: 11,
-                    color: 'black',
-                    boxShadow: 'none',
-                    background: 'white !important',
-                    borderLeft: '1px solid #eee',
-                    width: 41,
-                  }
-                : undefined
-            }
           >
             &lt;/&gt;
           </button>
         ) : undefined}
         <button
-          className={`query-frame__up-button${
-            topHeight === 40 ? ' query-frame__up-button--closed' : ''
+          className={`query-frame__up-down-button${
+            topHeight === 40 ? ' query-frame__up-down-button--closed' : ''
+          }${
+            topHeight === 40 && popup && popup.right === 0
+              ? ' query-frame__up-down-button--open'
+              : ''
           }`}
           onMouseEnter={topHeight === 40 ? upMouseEnter : undefined}
           onMouseLeave={topHeight === 40 ? onPopupMouseLeave : undefined}
-          style={
-            topHeight === 40
-              ? {
-                  ...(popup && popup.right === 0
-                    ? {
-                        zIndex: 11,
-                        color: 'black',
-                        boxShadow: 'none',
-                      }
-                    : {}),
-                }
-              : undefined
-          }
           onClick={upButtonClick}
         >
           <i className="fa fa-chevron-up" />

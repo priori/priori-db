@@ -562,7 +562,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
       ) : null}
 
       {service.lastValidData?.definition ? (
-        <div className="view">{service.lastValidData.definition}</div>
+        <div className="definition">{service.lastValidData.definition}</div>
       ) : null}
       {state.cols ? (
         <>

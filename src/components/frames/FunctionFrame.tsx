@@ -285,7 +285,9 @@ export function FunctionFrame(props: FunctionFrameProps) {
           </>
         )}
       </div>
-      {info?.definition ? <div className="view">{info.definition}</div> : null}
+      {info?.definition ? (
+        <div className="definition">{info.definition}</div>
+      ) : null}
       {info?.comment || state.editComment ? (
         <Comment
           value={info?.comment || ''}

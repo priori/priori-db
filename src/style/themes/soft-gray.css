@@ -65,7 +65,7 @@ body.soft-gray-theme .pill-button:not([disabled]):hover {
   background: #f0f0f0;
   color: #000;
 }
-body.soft-gray-theme button.query-frame__up-button,
+body.soft-gray-theme button.query-frame__up-down-button,
 body.soft-gray-theme button.query-frame__code-button {
   box-shadow: none;
   background: white;
@@ -83,19 +83,12 @@ body.soft-gray-theme .query-frame__execute-button:hover,
 body.soft-gray-theme .query-frame__play-button:hover {
   background: #2aa13f;
 }
-body.soft-gray-theme button.query-frame__up-button:hover {
+body.soft-gray-theme button.query-frame__up-down-button:hover {
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
 }
 
 /* frames */
-body.soft-gray-theme .frame.table-info div.view,
-body.soft-gray-theme .frame.schema-info div.view,
-body.soft-gray-theme .frame.new-table div.view,
-body.soft-gray-theme .frame.function div.view,
-body.soft-gray-theme .frame.domain div.view,
-body.soft-gray-theme .frame.sequence div.view,
-body.soft-gray-theme .frame.role div.view,
-body.soft-gray-theme .frame.settings div.view {
+body.soft-gray-theme .definition {
   background: #eee;
 }
 
