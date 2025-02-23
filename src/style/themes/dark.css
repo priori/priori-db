@@ -633,6 +633,18 @@ body.dark {
   .bases-wrapper .fa-spin {
     color: #ddd;
   }
+  .connections--edit-button,
+  .connections--add-button {
+    background: #555;
+    color: #fff;
+  }
+  .connections--edit-button:hover,
+  .connections--add-button:hover {
+    background: #666;
+  }
+  .connection--editing {
+    color: #1a4;
+  }
 }
 body.dark:has(.connections) {
   background: #222;
