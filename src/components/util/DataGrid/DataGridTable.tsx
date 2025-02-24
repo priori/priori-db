@@ -2,7 +2,6 @@ import { QueryResultDataField } from 'db/db';
 import React from 'react';
 import { equals } from 'util/equals';
 import { cellClassName, getType, getValString } from './util';
-import { ContextMenu } from './ContextMenu';
 
 interface DataGridTableProps {
   visibleStartingInEven: boolean;
@@ -13,8 +12,7 @@ interface DataGridTableProps {
   fields: QueryResultDataField[];
   finalWidths: number[];
   update: { [k: number]: { [k: number]: string | null } };
-  contextMenu?: { rowIndex: number; mouseX: number; mouseY: number };
-  onContextMenuSelectOption?: (option: string, rowIndex: number) => void;
+  hoverRowIndex: number | undefined;
 }
 
 export const DataGridTable = React.memo(
@@ -27,8 +25,7 @@ export const DataGridTable = React.memo(
     fields,
     finalWidths,
     update,
-    contextMenu,
-    onContextMenuSelectOption,
+    hoverRowIndex,
   }: DataGridTableProps) => {
     return (
       <table
@@ -50,70 +47,46 @@ export const DataGridTable = React.memo(
         </thead>
         <tbody>
           {visibleStartingInEven ? <tr style={{ display: 'none' }} /> : null}
-          {visibleRows.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className={
-                update?.[rowIndex + slice[0]] === 'REMOVE'
-                  ? 'remove'
-                  : rowIndex === visibleRows.length - 1 &&
-                      row.length === 0 &&
-                      (!update?.[slice[0] + rowIndex] ||
-                        Object.values(update?.[slice[0] + rowIndex]).length ===
-                          0)
-                    ? 'spare'
-                    : undefined
-              }
-            >
-              {fields.map((field, index) => {
-                const hasChange =
-                  update?.[rowIndex + slice[0]] !== 'REMOVE' &&
-                  typeof update?.[slice[0] + rowIndex]?.[index] !== 'undefined';
-                const val = hasChange
-                  ? update[slice[0] + rowIndex][index]
-                  : row[index];
-                const type = getType(val, field.type);
-                const valString = getValString(val);
-                const className = cellClassName(hasChange);
-                return (
-                  <td key={index} className={className}>
-                    <div className={type}>
-                      <div className="cell">
-                        {valString && valString.length > 200
-                          ? `${valString.substring(0, 200)}...`
-                          : valString}
+          {visibleRows.map((row, rowIndex) => {
+            const trClassName =
+              update?.[rowIndex + slice[0]] === 'REMOVE'
+                ? `remove${hoverRowIndex === rowIndex ? ' hover' : ''}`
+                : rowIndex === visibleRows.length - 1 &&
+                    row.length === 0 &&
+                    (!update?.[slice[0] + rowIndex] ||
+                      Object.values(update?.[slice[0] + rowIndex]).length === 0)
+                  ? `spare${hoverRowIndex === rowIndex ? ' hover' : ''}`
+                  : hoverRowIndex === rowIndex
+                    ? 'hover'
+                    : undefined;
+            return (
+              <tr key={rowIndex} className={trClassName}>
+                {fields.map((field, index) => {
+                  const hasChange =
+                    update?.[rowIndex + slice[0]] !== 'REMOVE' &&
+                    typeof update?.[slice[0] + rowIndex]?.[index] !==
+                      'undefined';
+                  const val = hasChange
+                    ? update[slice[0] + rowIndex][index]
+                    : row[index];
+                  const type = getType(val, field.type);
+                  const valString = getValString(val);
+                  const className = cellClassName(hasChange);
+                  return (
+                    <td key={index} className={className}>
+                      <div className={type}>
+                        <div className="cell">
+                          {valString && valString.length > 200
+                            ? `${valString.substring(0, 200)}...`
+                            : valString}
+                        </div>
                       </div>
-                    </div>
-                    {contextMenu &&
-                    contextMenu.rowIndex === rowIndex + slice[0] &&
-                    !index ? (
-                      <ContextMenu
-                        onSelectOption={onContextMenuSelectOption}
-                        x={contextMenu.mouseX}
-                        y={contextMenu.mouseY}
-                        rowIndex={contextMenu.rowIndex}
-                        options={
-                          update?.[rowIndex + slice[0]] === 'REMOVE'
-                            ? {
-                                'unmark for removal': {
-                                  title: 'Unmark Row for Removal',
-                                  icon: 'undo',
-                                },
-                              }
-                            : {
-                                'mark for removal': {
-                                  title: 'Mark Row for Removal',
-                                  icon: 'close',
-                                },
-                              }
-                        }
-                      />
-                    ) : null}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     );
@@ -128,9 +101,8 @@ export const DataGridTable = React.memo(
       prev.gridContentTableWidth === next.gridContentTableWidth &&
       prev.fields === next.fields &&
       prev.finalWidths === next.finalWidths &&
-      prev.onContextMenuSelectOption === next.onContextMenuSelectOption &&
-      equals(prev.update, next.update) &&
-      equals(prev.contextMenu, next.contextMenu)
+      prev.hoverRowIndex === next.hoverRowIndex &&
+      equals(prev.update, next.update)
     );
   },
 );

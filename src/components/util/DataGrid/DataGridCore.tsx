@@ -7,6 +7,7 @@ import { DataGridFilterDialog } from './DataGridFilterDialog';
 import { useDataGridCore } from './dataGridCoreUtils';
 import { DataGridUpdateInfoDialog } from './DataGridUpdateInfo';
 import { DataGridSelection } from './DataGridSelection';
+import { ContextMenu } from './ContextMenu';
 
 export interface DataGridCoreProps {
   result: {
@@ -46,7 +47,12 @@ export interface DataGridState {
   active?: { rowIndex: number; colIndex: number };
   selection?: { rowIndex: [number, number]; colIndex: [number, number] };
   mouseDown?: { rowIndex: number; colIndex: number };
-  contextMenu?: { rowIndex: number; mouseX: number; mouseY: number };
+  contextMenu?: {
+    rowIndex: number;
+    colIndex: number;
+    mouseX: number;
+    mouseY: number;
+  };
   openSortDialog: boolean;
   openFilterDialog: boolean;
   editing: boolean | 2 | 1;
@@ -142,6 +148,7 @@ export function DataGridCore(props: DataGridCoreProps) {
           />
         </table>
       </div>
+
       {state.active ? (
         <DataGridActiveCell
           field={props.result.fields[state.active.colIndex].type}
@@ -162,6 +169,7 @@ export function DataGridCore(props: DataGridCoreProps) {
           elRef={activeElRef}
         />
       ) : null}
+
       <div
         className="grid-content"
         onScroll={onScroll}
@@ -199,8 +207,7 @@ export function DataGridCore(props: DataGridCoreProps) {
                 fields={props.result.fields}
                 finalWidths={colsWidths}
                 update={state.update}
-                contextMenu={state.contextMenu}
-                onContextMenuSelectOption={onContextMenuSelectOption}
+                hoverRowIndex={state.contextMenu?.rowIndex}
               />
               {state.selection ? (
                 <DataGridSelection
@@ -208,6 +215,21 @@ export function DataGridCore(props: DataGridCoreProps) {
                   selection={state.selection}
                 />
               ) : undefined}
+              {state.selection &&
+              state.contextMenu &&
+              state.contextMenu.rowIndex >= state.selection.rowIndex[0] &&
+              state.contextMenu.rowIndex <= state.selection.rowIndex[1] &&
+              state.contextMenu.colIndex >= state.selection.colIndex[0] &&
+              state.contextMenu.colIndex <= state.selection.colIndex[1] ? (
+                <DataGridSelection
+                  className="grid--selection--rows"
+                  colsWidths={colsWidths}
+                  selection={{
+                    colIndex: [0, props.result.fields.length - 1],
+                    rowIndex: state.selection.rowIndex,
+                  }}
+                />
+              ) : null}
             </div>
             {onChangeLimit && props.limit ? (
               <div
@@ -237,6 +259,7 @@ export function DataGridCore(props: DataGridCoreProps) {
           </div>
         </div>
       </div>
+
       {fetchingNewRows ? (
         <div className="grid-content--fetch-more-rows">
           <i className="fa fa-circle-o-notch fa-spin fa-3x fa-fw" />
@@ -307,6 +330,7 @@ export function DataGridCore(props: DataGridCoreProps) {
           <div>{props.emptyTable}</div>
         </div>
       ) : null}
+
       {pendingRowsUpdate > 0 || pendingInserts > 0 || pendingRowsRemoval > 0 ? (
         <DataGridUpdateInfoDialog
           onDiscardFailClick={onDiscardFailClick}
@@ -318,6 +342,18 @@ export function DataGridCore(props: DataGridCoreProps) {
           onApplyClick={applyClick}
           fail={state.updateFail}
           applyingUpdate={applyingUpdate}
+        />
+      ) : null}
+
+      {state.contextMenu ? (
+        <ContextMenu
+          onSelectOption={onContextMenuSelectOption}
+          x={state.contextMenu.mouseX}
+          y={state.contextMenu.mouseY}
+          rowIndex={state.contextMenu.rowIndex}
+          colIndex={state.contextMenu.colIndex}
+          update={state.update}
+          selection={state.selection}
         />
       ) : null}
     </div>

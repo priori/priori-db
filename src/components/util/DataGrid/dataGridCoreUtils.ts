@@ -22,6 +22,7 @@ import {
   toTsv,
   topRenderOffset,
 } from './util';
+import { ContextMenuEvent } from './ContextMenu';
 
 const isIOS = process?.platform === 'darwin';
 
@@ -824,32 +825,70 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }
   });
 
-  const onContextMenuSelectOption = useEvent(
-    (option: string, rowIndex: number) => {
-      if (option === 'mark for removal') {
-        setState((s) => ({
-          ...s,
-          contextMenu: undefined,
-          update: {
-            ...s.update,
-            [rowIndex]: s.update[rowIndex] === 'REMOVE' ? undefined : 'REMOVE',
-          },
-        }));
-      } else if (option === 'unmark for removal') {
-        setState((s) => {
-          const update = {
-            ...s.update,
-          };
-          delete update[rowIndex];
-          return {
-            ...s,
-            contextMenu: undefined,
-            update,
-          };
-        });
+  const onContextMenuSelectOption = useEvent((e: ContextMenuEvent) => {
+    if (e.type === 'undo delete') {
+      const update2 = { ...state.update };
+      for (let i = e.rowIndex[0]; i <= e.rowIndex[1]; i += 1) {
+        if (update2[i] === 'REMOVE') delete update2[i];
       }
-    },
-  );
+      setState((s) => ({
+        ...s,
+        contextMenu: undefined,
+        update: update2,
+      }));
+    } else if (e.type === 'delete') {
+      const update2 = { ...state.update };
+      for (let i = e.rowIndex[0]; i <= e.rowIndex[1]; i += 1) {
+        update2[i] = 'REMOVE';
+      }
+      setState((s) => ({
+        ...s,
+        contextMenu: undefined,
+        update: update2,
+      }));
+    } else if (e.type === 'undo update') {
+      const update2 = { ...state.update };
+      for (let i = e.rowIndex[0]; i <= e.rowIndex[1]; i += 1) {
+        const u = update2[i];
+        if (u !== 'REMOVE' && u) {
+          for (let i2 = e.colIndex[0]; i2 <= e.colIndex[1]; i2 += 1) {
+            if (u[i2]) delete u[i2];
+          }
+          if (!Object.keys(update2[i]).length) delete update2[i];
+        }
+      }
+      setState((s) => ({
+        ...s,
+        contextMenu: undefined,
+        update: update2,
+      }));
+    } else if (e.type === 'undo all') {
+      const update2 = { ...state.update };
+      for (let i = e.rowIndex[0]; i <= e.rowIndex[1]; i += 1) {
+        const u = update2[i];
+        if (u === 'REMOVE') {
+          delete update2[i];
+        } else if (u) {
+          for (let i2 = e.colIndex[0]; i2 <= e.colIndex[1]; i2 += 1) {
+            delete u[i2];
+          }
+          if (!Object.keys(update2[i]).length) delete update2[i];
+        }
+      }
+      setState((s) => ({
+        ...s,
+        contextMenu: undefined,
+        update: update2,
+      }));
+    } else if (e.type === 'update') {
+      setState((s) => ({
+        ...s,
+        contextMenu: undefined,
+        editing: true,
+        active: { rowIndex: e.rowIndex, colIndex: e.colIndex },
+      }));
+    }
+  });
 
   const onMouseDown = useEvent((e: React.MouseEvent<HTMLElement>) => {
     if (
@@ -900,6 +939,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       }
       return;
     }
+    const colIndex = getColIndex(x);
     if (e.button === 2) {
       if (
         !props.onUpdate ||
@@ -919,6 +959,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         ...s,
         contextMenu: {
           rowIndex,
+          colIndex,
           mouseX: e.clientX,
           mouseY: e.clientY,
         },
@@ -927,7 +968,6 @@ export function useDataGridCore(props: DataGridCoreProps) {
       }));
       return;
     }
-    const colIndex = getColIndex(x);
     // if shift is pressed, select a range
     setState((state2) => ({
       ...state2,

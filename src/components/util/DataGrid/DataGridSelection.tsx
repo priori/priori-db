@@ -24,15 +24,17 @@ export const DataGridSelection = React.memo(
   ({
     selection,
     colsWidths,
+    className,
   }: {
     selection: {
       rowIndex: [number, number];
       colIndex: [number, number];
     };
     colsWidths: number[];
+    className?: 'grid--selection--rows';
   }) => (
     <div
-      className="grid--selection"
+      className={`grid--selection${className ? ` ${className}` : ''}`}
       style={{
         top: headerHeight + selection.rowIndex[0] * rowHeight,
         height:
