@@ -23,6 +23,10 @@ export type ContextMenuEvent =
       type: 'undo all';
       rowIndex: [number, number];
       colIndex: [number, number];
+    }
+  | {
+      type: 'undo inserts';
+      rowIndex: [number, number];
     };
 
 const optionHeight = 30;
@@ -37,6 +41,7 @@ export function ContextMenu({
   colIndex,
   update,
   selection,
+  rowsLength,
 }: {
   x: number;
   y: number;
@@ -49,6 +54,7 @@ export function ContextMenu({
     | undefined;
   rowIndex: number;
   colIndex: number;
+  rowsLength: number;
   update: {
     [rowIndex: string]: { [colIndex: string]: string | null } | 'REMOVE';
   };
@@ -87,7 +93,7 @@ export function ContextMenu({
       const updateIndex = parseInt(updateIndex0, 10);
       if (
         updateIndex >= selection.rowIndex[0] &&
-        updateIndex <= selection.rowIndex[1]
+        updateIndex <= Math.max(selection.rowIndex[1], rowsLength - 1)
       ) {
         if (updateRow !== 'REMOVE') {
           for (const [updateColIndex0, updateCol] of Object.entries(
@@ -122,9 +128,10 @@ export function ContextMenu({
     onMouseLeave?: () => void;
   }[] = [];
   const selectionRowsSize = selection?.rowIndex
-    ? selection.rowIndex[1] - selection.rowIndex[0] + 1
+    ? Math.min(selection.rowIndex[1], rowsLength - 1) -
+      selection.rowIndex[0] +
+      1
     : 0;
-
   if (updates === 1 && currentCellUpdate) {
     options.push({
       title: `Undo value update `,
@@ -149,7 +156,10 @@ export function ContextMenu({
       },
     });
   }
-  if ((isInSelection && selectionRowsSize === 1) || !isInSelection) {
+  if (
+    (isInSelection && selectionRowsSize === 1) ||
+    (!isInSelection && rowIndex < rowsLength)
+  ) {
     options.push({
       title: `Mark row for removal `,
       icon: 'close',
@@ -182,7 +192,10 @@ export function ContextMenu({
         action: () => {
           onSelectOption({
             type: 'undo delete',
-            ...selection,
+            rowIndex: [
+              selection.rowIndex[0],
+              Math.min(selection.rowIndex[1], rowsLength - 1),
+            ],
           });
         },
       });
@@ -195,7 +208,10 @@ export function ContextMenu({
         action: () => {
           onSelectOption({
             type: 'delete',
-            rowIndex: selection.rowIndex,
+            rowIndex: [
+              selection.rowIndex[0],
+              Math.min(selection.rowIndex[1], rowsLength - 1),
+            ],
           });
         },
       });
@@ -225,6 +241,40 @@ export function ContextMenu({
         });
       },
     });
+  }
+  if (update[rowsLength]) {
+    if (isInSelection && selection.rowIndex[1] >= rowsLength) {
+      const quantity =
+        selection.rowIndex[1] -
+        Math.max(selection.rowIndex[0], rowsLength) +
+        (update?.[selection.rowIndex[1]] ? 1 : 0);
+      options.push({
+        title: `Undo ${quantity} row insert${quantity > 1 ? 's' : ''} `,
+        icon: 'undo',
+        ...rowsListeners,
+        action: () => {
+          onSelectOption({
+            type: 'undo inserts',
+            rowIndex: [
+              Math.max(selection.rowIndex[0], rowsLength),
+              selection.rowIndex[1] - (update?.[selection.rowIndex[1]] ? 0 : 1),
+            ],
+          });
+        },
+      });
+    } else if (rowIndex >= rowsLength) {
+      options.push({
+        ...rowsListeners,
+        title: `Undo row insert `,
+        icon: 'undo',
+        action: () => {
+          onSelectOption({
+            type: 'undo inserts',
+            rowIndex: [rowIndex, rowIndex],
+          });
+        },
+      });
+    }
   }
   useEffect(() => {
     if (hoverElRef.current) {

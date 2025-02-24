@@ -44,6 +44,56 @@ export function useMoreTime(b: boolean, timeout: number) {
   return b2;
 }
 
+function fixInsertRows(
+  update: {
+    [x: string]:
+      | {
+          [colIndex: string]: string | null;
+        }
+      | 'REMOVE';
+  },
+  indexStart: number,
+  indexEnd: number,
+  rowsLength: number,
+) {
+  if (indexEnd >= rowsLength) {
+    const start = Math.max(rowsLength, indexStart);
+    let removedCount = 0;
+    for (let i = start; i <= indexEnd || update[i]; i += 1) {
+      if (!update[i]) {
+        removedCount += 1;
+      } else if (removedCount) {
+        update[i - removedCount] = update[i];
+        delete update[i];
+      }
+    }
+    return removedCount;
+  }
+  return 0;
+}
+
+function fixSelection(
+  selection:
+    | {
+        rowIndex: [number, number];
+        colIndex: [number, number];
+      }
+    | undefined,
+  fixedCount: number,
+) {
+  return selection && fixedCount
+    ? selection.rowIndex[1] - fixedCount >= selection.rowIndex[0]
+      ? {
+          rowIndex: [
+            selection.rowIndex[0],
+            selection.rowIndex[1] - fixedCount,
+          ] as [number, number],
+          colIndex: selection.colIndex,
+        }
+      : undefined
+    : selection;
+}
+
 export function useDataGridCore(props: DataGridCoreProps) {
   const [state0, setState] = useState<DataGridState>({
     slice: [0, rowsByRender],
@@ -857,10 +907,17 @@ export function useDataGridCore(props: DataGridCoreProps) {
           if (!Object.keys(update2[i]).length) delete update2[i];
         }
       }
+      const fixedCount = fixInsertRows(
+        update2,
+        e.rowIndex[0],
+        e.rowIndex[1],
+        props.result.rows.length,
+      );
       setState((s) => ({
         ...s,
         contextMenu: undefined,
         update: update2,
+        selection: fixSelection(s.selection, fixedCount),
       }));
     } else if (e.type === 'undo all') {
       const update2 = { ...state.update };
@@ -875,10 +932,17 @@ export function useDataGridCore(props: DataGridCoreProps) {
           if (!Object.keys(update2[i]).length) delete update2[i];
         }
       }
+      const fixedCount = fixInsertRows(
+        update2,
+        e.rowIndex[0],
+        e.rowIndex[1],
+        props.result.rows.length,
+      );
       setState((s) => ({
         ...s,
         contextMenu: undefined,
         update: update2,
+        selection: fixSelection(s.selection, fixedCount),
       }));
     } else if (e.type === 'update') {
       setState((s) => ({
@@ -886,6 +950,38 @@ export function useDataGridCore(props: DataGridCoreProps) {
         contextMenu: undefined,
         editing: true,
         active: { rowIndex: e.rowIndex, colIndex: e.colIndex },
+      }));
+    } else if (e.type === 'undo inserts') {
+      const update2 = { ...state.update };
+      for (let i = e.rowIndex[0]; i <= e.rowIndex[1]; i += 1) {
+        if (update2[i]) delete update2[i];
+      }
+      const removes = e.rowIndex[1] - e.rowIndex[0] + 1;
+      let i = e.rowIndex[1] + 1;
+      while (update2[i]) {
+        update2[i - removes] = update2[i];
+        delete update2[i];
+        i += 1;
+      }
+      const selection =
+        state.selection &&
+        (state.selection.rowIndex[0] <= e.rowIndex[0] ||
+          state.selection.rowIndex[1] >= e.rowIndex[1]) &&
+        (state.selection.rowIndex[0] < e.rowIndex[0] ||
+          state.selection.rowIndex[1] > e.rowIndex[1])
+          ? {
+              colIndex: state.selection.colIndex,
+              rowIndex: [
+                state.selection.rowIndex[0],
+                state.selection.rowIndex[1] - removes,
+              ] as [number, number],
+            }
+          : undefined;
+      setState((s) => ({
+        ...s,
+        contextMenu: undefined,
+        update: update2,
+        selection,
       }));
     }
   });
@@ -945,7 +1041,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         !props.onUpdate ||
         !props.pks ||
         !props.pks.length ||
-        rowIndex >= props.result.rows.length
+        rowIndex >= props.result.rows.length + extraRows
       ) {
         if (state.contextMenu) {
           setState((s) => ({

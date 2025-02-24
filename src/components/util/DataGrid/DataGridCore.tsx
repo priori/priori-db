@@ -354,6 +354,7 @@ export function DataGridCore(props: DataGridCoreProps) {
           colIndex={state.contextMenu.colIndex}
           update={state.update}
           selection={state.selection}
+          rowsLength={props.result.rows.length}
         />
       ) : null}
     </div>
