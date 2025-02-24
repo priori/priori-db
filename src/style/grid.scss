@@ -209,7 +209,6 @@ td.changed {
   transition:
     box-shadow 0.5s,
     transform 0.5s;
-  overflow: hidden;
 }
 .active-cell-wrapper2 {
   position: relative;
@@ -592,6 +591,16 @@ tr.remove .cell {
 .grid div:focus .active.active-cell--marked-for-removal,
 .grid div.editing .active.active-cell--marked-for-removal {
   border: 2px solid #aaa;
+}
+.active__stroke {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  left: -2px;
+  height: 2px;
+  right: -2px;
+  background: #e00;
+  opacity: 0.5;
 }
 .hint {
   position: absolute;

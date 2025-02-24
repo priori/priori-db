@@ -45,20 +45,33 @@ export function activeCellUpdate({
     );
   activeEl.style.top = `${top}px`;
   activeEl.style.left = `${left}px`;
-  const wrapper2El = activeEl.firstChild as HTMLDivElement;
+  const wrapper2El = activeEl.querySelector(
+    '.active-cell-wrapper2',
+  ) as HTMLDivElement;
+  const strokeEl = activeEl.querySelector(
+    '.active__stroke',
+  ) as HTMLDivElement | null;
   wrapper2El.style.marginLeft = `-${leftCrop}px`;
   activeEl.style.width = `${wrapperWidth + 4}px`;
   if (topCrop) {
     wrapper2El.style.marginTop = `-${topCrop}px`;
+    if (strokeEl) {
+      strokeEl.style.marginTop = `-${topCrop}px`;
+      if (topCrop > 10) strokeEl.style.display = 'none';
+      else strokeEl.style.display = '';
+    }
   } else if (wrapper2El.style.marginTop) {
     wrapper2El.style.marginTop = '';
+    if (strokeEl) {
+      strokeEl.style.marginTop = '';
+      strokeEl.style.display = '';
+    }
   }
   if (wrapperHeight) {
     activeEl.style.height = `${wrapperHeight}px`;
   } else if (activeEl.style.height) {
     activeEl.style.height = '';
   }
-  // activeEl.style.height = `${width + 4}px`;
   activeEl.style.display =
     wrapperHeight === 0 ||
     top < 0 ||
@@ -179,29 +192,35 @@ export const DataGridActiveCell = React.memo(
           markedForRemoval ? ' active-cell--marked-for-removal' : ''
         }`}
       >
-        <div
-          style={{ marginLeft: `${-leftCrop}px`, height: `${rowHeight - 1}px` }}
-          className={`active-cell-wrapper2 ${type}`}
-        >
-          {editing ? (
-            <textarea
-              onChange={textareaOnChange}
-              onBlur={textareaOnBlur}
-              onKeyDown={onkeydown}
-              readOnly={!!markedForRemoval}
-              ref={textareaRef}
-              placeholder={val === null ? 'null' : undefined}
-              className="active-cell"
-              defaultValue={val === null ? '' : valString}
-            />
-          ) : (
-            <div className={`active-cell${changed ? ' changed' : ''}`}>
-              {valString && valString.length > 200
-                ? `${valString.substring(0, 200)}...`
-                : valString}
-            </div>
-          )}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+          <div
+            style={{
+              marginLeft: `${-leftCrop}px`,
+              height: `${rowHeight - 1}px`,
+            }}
+            className={`active-cell-wrapper2 ${type}`}
+          >
+            {editing ? (
+              <textarea
+                onChange={textareaOnChange}
+                onBlur={textareaOnBlur}
+                onKeyDown={onkeydown}
+                readOnly={!!markedForRemoval}
+                ref={textareaRef}
+                placeholder={val === null ? 'null' : undefined}
+                className="active-cell"
+                defaultValue={val === null ? '' : valString}
+              />
+            ) : (
+              <div className={`active-cell${changed ? ' changed' : ''}`}>
+                {valString && valString.length > 200
+                  ? `${valString.substring(0, 200)}...`
+                  : valString}
+              </div>
+            )}
+          </div>
         </div>
+        {markedForRemoval ? <div className="active__stroke" /> : null}
       </div>
     );
   },
