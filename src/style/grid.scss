@@ -561,6 +561,8 @@ tr.remove .cell {
 }
 .content-table td .context-menu,
 .context-menu {
+  line-height: normal;
+  text-align: left;
   position: fixed !important;
   background: white;
   font-family: ui-sans-serif, sans-serif;

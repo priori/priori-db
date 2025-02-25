@@ -97,6 +97,19 @@ export async function saveFavoriteQuery(
   );
 }
 
+export async function updateFavoriteQueryTitle(id: number, title: string) {
+  return transaction(({ favoriteQuery }) =>
+    favoriteQuery.patch({
+      id,
+      title,
+    }),
+  );
+}
+
+export async function deleteFavoriteQuery(id: number) {
+  return transaction(({ favoriteQuery }) => favoriteQuery.remove(id));
+}
+
 export async function saveQuery(
   sql: string,
   tabId: number,

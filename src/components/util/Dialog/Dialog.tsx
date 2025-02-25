@@ -60,8 +60,14 @@ function positionRelativeTo(
         : left0 + w > containerRight - safeMargin
           ? containerRight - w - safeMargin
           : left0;
-  el.style.top = `${top}px`;
-  el.style.left = `${left}px`;
+  const posContainer = to.closest('.dialog');
+  const boundingClientRect = posContainer
+    ? posContainer.getBoundingClientRect()
+    : { left: 0, top: 0 };
+  const containerPosTop = boundingClientRect.top;
+  const containerPosLeft = boundingClientRect.left;
+  el.style.top = `${top - containerPosTop}px`;
+  el.style.left = `${left - containerPosLeft}px`;
 }
 
 export function Dialog({

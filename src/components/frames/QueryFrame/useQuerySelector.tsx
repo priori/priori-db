@@ -2,10 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { currentState } from 'state/state';
 import { showError } from 'state/actions';
 import {
+  deleteFavoriteQuery,
   favorites,
   getQuery,
   lastQueries,
   listConnectionConfigurations,
+  updateFavoriteQueryTitle,
 } from 'util/browserDb/actions';
 import { useEvent } from 'util/useEvent';
 import { useService } from 'util/useService';
@@ -121,6 +123,7 @@ async function cachedGetQuery(id: number, p: number) {
     return q;
   });
 }
+
 export function useEditorQuerySelectorGroup(
   props: EditorQuerySelectorGroupProps,
 ) {
@@ -214,19 +217,25 @@ export function useQuerySelector(
   ) => void,
 ) {
   const appState = currentState();
+
   if (!appState.currentConnectionConfiguration)
     throw new Error('No connection configuration');
+
   const configsService = useService(() => listConnectionConfigurations(), []);
+
   const [state, setState] = useState<null | number>(null);
+
   const config =
     state === -1
       ? null
       : state !== null
         ? configsService.lastValidData![state]
         : appState.currentConnectionConfiguration;
+
   const configs = configsService.lastValidData
     ? configsService.lastValidData
     : [appState.currentConnectionConfiguration];
+
   const configValue = configs.findIndex(
     (c) =>
       config &&
@@ -244,6 +253,48 @@ export function useQuerySelector(
 
   const [limit, setLimit] = useState(80);
 
+  const [deleteQuery, setDelete] = useState<{
+    id: number;
+    sql: string;
+    title: string;
+    created_at: number;
+    editor_content: string;
+    editor_cursor_start_line: number;
+    editor_cursor_end_line: number;
+    editor_cursor_start_char: number;
+    editor_cursor_end_char: number;
+  } | null>(null);
+
+  const [editQuery, setEdit] = useState<{
+    id: number;
+    sql: string;
+    title: string;
+    created_at: number;
+    editor_content: string;
+    editor_cursor_start_line: number;
+    editor_cursor_end_line: number;
+    editor_cursor_start_char: number;
+    editor_cursor_end_char: number;
+  } | null>(null);
+
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    query: {
+      id: number;
+      sql: string;
+      title: string;
+      created_at: number;
+      editor_content: string;
+      editor_cursor_start_line: number;
+      editor_cursor_end_line: number;
+      editor_cursor_start_char: number;
+      editor_cursor_end_char: number;
+    };
+  } | null>(null);
+
   const service = useService(
     () =>
       Promise.all([lastQueries(config, limit), favorites(config)]).then(
@@ -252,6 +303,7 @@ export function useQuerySelector(
       ),
     [config, limit],
   );
+
   useEffect(() => {
     if (service.error) {
       showError(service.error);
@@ -261,6 +313,7 @@ export function useQuerySelector(
   const queries = service.lastValidData?.queries;
 
   const onScroll = useEvent((e: React.UIEvent<HTMLDivElement>) => {
+    if (contextMenu) setContextMenu(null);
     if (!queries?.length) return;
     if (e.target instanceof HTMLElement) {
       const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -270,8 +323,6 @@ export function useQuerySelector(
     }
   });
 
-  const [selected, setSelected] = useState<string | null>(null);
-
   const onGroupSelect = (s: {
     content: string;
     cursorStart: { line: number; ch: number };
@@ -280,7 +331,35 @@ export function useQuerySelector(
     page: number;
   }) => {
     onSelect(s);
+    if (contextMenu !== null) setContextMenu(null);
     setSelected(`group${s.queryGroup.id}`);
+  };
+
+  const onFavoriteMouseDown = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    q: {
+      id: number;
+      sql: string;
+      title: string;
+      created_at: number;
+      editor_content: string;
+      editor_cursor_start_line: number;
+      editor_cursor_end_line: number;
+      editor_cursor_start_char: number;
+      editor_cursor_end_char: number;
+    },
+  ) => {
+    if (event.button !== 2) {
+      if (contextMenu !== null) setContextMenu(null);
+      return;
+    }
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      query: q,
+    });
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const onFavoriteClick = (q: {
@@ -294,6 +373,7 @@ export function useQuerySelector(
     editor_cursor_start_char: number;
     editor_cursor_end_char: number;
   }) => {
+    if (contextMenu !== null) setContextMenu(null);
     setSelected(`favorite${q.id}`);
     onSelect({
       content: q.editor_content,
@@ -308,6 +388,43 @@ export function useQuerySelector(
     });
   };
 
+  const onDeleteClick = useEvent(() => {
+    if (contextMenu?.query) setDelete(contextMenu.query);
+    setContextMenu(null);
+  });
+
+  const onEditClick = useEvent(() => {
+    if (contextMenu?.query) setEdit(contextMenu.query);
+    setContextMenu(null);
+  });
+
+  const onBlurDialog = useEvent(() => {
+    setDelete(null);
+    setEdit(null);
+  });
+
+  const onBlurContextMenu = useEvent(() => {
+    setContextMenu(null);
+  });
+
+  const onRename = useEvent(async (title: string) => {
+    if (editQuery) {
+      if (title) {
+        await updateFavoriteQueryTitle(editQuery.id, title);
+        setEdit(null);
+        service.reload();
+      }
+    }
+  });
+
+  const onDelete = useEvent(async () => {
+    if (deleteQuery) {
+      await deleteFavoriteQuery(deleteQuery.id);
+      setDelete(null);
+      service.reload();
+    }
+  });
+
   return {
     queries,
     onScroll,
@@ -318,5 +435,15 @@ export function useQuerySelector(
     onGroupSelect,
     selected,
     onFavoriteClick,
+    onFavoriteMouseDown,
+    contextMenu,
+    onEditClick,
+    onDeleteClick,
+    editQuery,
+    deleteQuery,
+    onBlurDialog,
+    onBlurContextMenu,
+    onRename,
+    onDelete,
   };
 }
