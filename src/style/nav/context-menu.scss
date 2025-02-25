@@ -4,8 +4,9 @@
   width: 170px;
   z-index: 100;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
-  padding: 5px 0;
-  font-size: 14px;
+  padding: 7px 0;
+  border-radius: 7px;
+  font-size: 13px;
   text-shadow: none;
   font-style: normal;
   font-weight: normal;
@@ -21,6 +22,10 @@
     align-items: center;
     padding: 4px 10px;
     cursor: pointer;
+    border-bottom: 1px solid #eee;
+    &:last-child {
+      border-bottom: none;
+    }
     &:hover,
     &.selected {
       background: #f4f4f4;

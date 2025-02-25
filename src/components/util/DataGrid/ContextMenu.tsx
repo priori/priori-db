@@ -32,32 +32,39 @@ export type ContextMenuEvent =
 const optionHeight = 30;
 const extraHeight = 10;
 const contextMenuWidth = 230;
+const readOnlyInfoHeight = 45;
 
 export function ContextMenu({
-  x,
-  y,
   onSelectOption,
-  rowIndex,
-  colIndex,
   update,
   selection,
   rowsLength,
+  readOnly,
+  rowIndex,
+  colIndex,
+  hintOnly,
+  x,
+  y,
+  x2,
+  y2,
 }: {
-  x: number;
-  y: number;
   onSelectOption: (e: ContextMenuEvent) => void;
-  selection:
-    | {
-        rowIndex: [number, number];
-        colIndex: [number, number];
-      }
-    | undefined;
+  selection: {
+    rowIndex: [number, number];
+    colIndex: [number, number];
+  };
   rowIndex: number;
   colIndex: number;
   rowsLength: number;
+  readOnly: boolean;
   update: {
     [rowIndex: string]: { [colIndex: string]: string | null } | 'REMOVE';
   };
+  hintOnly?: boolean;
+  x: number;
+  y: number;
+  y2?: number;
+  x2?: number;
 }) {
   const hoverElRef = useRef<HTMLElement | undefined | null>(null);
   const rowsSelectionElRef = useRef<HTMLElement | undefined | null>(null);
@@ -80,111 +87,112 @@ export function ContextMenu({
       }
     },
   };
-  const isInSelection =
-    !!selection &&
-    selection.rowIndex[0] <= rowIndex &&
-    rowIndex <= selection?.rowIndex[1] &&
-    selection.colIndex[0] <= colIndex &&
-    colIndex <= selection?.colIndex[1];
-  let updateCount = 0;
-  let deleteCount = 0;
-  if (selection?.rowIndex)
-    for (const [updateIndex0, updateRow] of Object.entries(update)) {
-      const updateIndex = parseInt(updateIndex0, 10);
-      if (
-        updateIndex >= selection.rowIndex[0] &&
-        updateIndex <= Math.max(selection.rowIndex[1], rowsLength - 1)
-      ) {
-        if (updateRow !== 'REMOVE') {
-          for (const [updateColIndex0, updateCol] of Object.entries(
-            updateRow,
-          )) {
-            const updateColIndex = parseInt(updateColIndex0, 10);
-            if (
-              updateCol &&
-              updateColIndex >= selection.colIndex[0] &&
-              updateColIndex <= selection.colIndex[1]
-            ) {
-              updateCount += 1;
-            }
-          }
-        } else if (updateRow === 'REMOVE') {
-          deleteCount += 1;
-        }
-      }
-    }
-  const currentCellUpdate =
-    update?.[rowIndex] &&
-    update[rowIndex] !== 'REMOVE' &&
-    colIndex in update[rowIndex];
-  const currentRowDelete = update?.[rowIndex] === 'REMOVE';
-  const updates = isInSelection ? updateCount : currentCellUpdate ? 1 : 0;
-  const deletes = isInSelection ? deleteCount : currentRowDelete ? 1 : 0;
   const options: {
     title: string;
     icon: string;
-    action: () => void;
+    action?: () => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
   }[] = [];
-  const selectionRowsSize = selection?.rowIndex
-    ? Math.min(selection.rowIndex[1], rowsLength - 1) -
-      selection.rowIndex[0] +
-      1
-    : 0;
-  if (updates === 1 && currentCellUpdate) {
-    options.push({
-      title: `Undo value update `,
-      icon: 'undo',
-      action: () => {
-        onSelectOption({
-          type: 'undo update',
-          rowIndex: [rowIndex, rowIndex],
-          colIndex: [colIndex, colIndex],
-        });
-      },
-    });
-  } else if (deletes === 1 && currentRowDelete) {
-    options.push({
-      title: `Unmark row for removal `,
-      icon: 'undo',
-      action: () => {
-        onSelectOption({
-          type: 'undo delete',
-          rowIndex: [rowIndex, rowIndex],
-        });
-      },
-    });
-  }
-  if (
-    (isInSelection && selectionRowsSize === 1) ||
-    (!isInSelection && rowIndex < rowsLength)
-  ) {
-    options.push({
-      title: `Mark row for removal `,
-      icon: 'close',
-      action: () => {
-        onSelectOption({
-          type: 'delete',
-          rowIndex: [rowIndex, rowIndex],
-        });
-      },
-    });
-  }
-  if (isInSelection) {
-    if (updates > 0 && !(updates === 1 && currentCellUpdate)) {
+  if (!hintOnly) {
+    let updateCount = 0;
+    let deleteCount = 0;
+    if (selection?.rowIndex)
+      for (const [updateIndex0, updateRow] of Object.entries(update)) {
+        const updateIndex = parseInt(updateIndex0, 10);
+        if (
+          updateIndex >= selection.rowIndex[0] &&
+          updateIndex <= selection.rowIndex[1]
+        ) {
+          if (updateRow !== 'REMOVE') {
+            for (const [updateColIndex0, updateCol] of Object.entries(
+              updateRow,
+            )) {
+              const updateColIndex = parseInt(updateColIndex0, 10);
+              if (
+                updateCol &&
+                updateColIndex >= selection.colIndex[0] &&
+                updateColIndex <= selection.colIndex[1]
+              ) {
+                updateCount += 1;
+              }
+            }
+          } else if (updateRow === 'REMOVE') {
+            deleteCount += 1;
+          }
+        }
+      }
+    const updates = updateCount;
+    const deletes = deleteCount;
+    const rowsAvailableForRemoval = selection?.rowIndex
+      ? Math.min(selection.rowIndex[1], rowsLength - 1) -
+        selection.rowIndex[0] +
+        1
+      : 0;
+    const hasInserts = selection.rowIndex[1] >= rowsLength;
+    if (updates === 1) {
       options.push({
-        title: `Undo ${updates} value update${updates > 1 ? 's' : ''} `,
+        title: `Undo value update `,
+        icon: 'undo',
+        action:
+          readOnly && !hasInserts
+            ? undefined
+            : () => {
+                onSelectOption({
+                  type: 'undo update',
+                  rowIndex: selection.rowIndex,
+                  colIndex: selection.colIndex,
+                });
+              },
+      });
+    } else if (deletes === 1) {
+      options.push({
+        title: `Unmark row for removal `,
         icon: 'undo',
         action: () => {
           onSelectOption({
-            type: 'undo update',
-            ...selection,
+            type: 'undo delete',
+            rowIndex: selection.rowIndex,
           });
         },
       });
     }
-    if (deletes > 0 && !(deletes === 1 && currentRowDelete)) {
+    if (
+      rowsAvailableForRemoval === 1 &&
+      update[selection.rowIndex[1]] !== 'REMOVE'
+    ) {
+      options.push({
+        title: `Mark row for removal `,
+        icon: 'close',
+        action: readOnly
+          ? undefined
+          : () => {
+              onSelectOption({
+                type: 'delete',
+                rowIndex: [
+                  selection.rowIndex[0],
+                  Math.min(selection.rowIndex[1], rowsLength - 1),
+                ],
+              });
+            },
+      });
+    }
+    if (updates > 1) {
+      options.push({
+        title: `Undo ${updates} value update${updates > 1 ? 's' : ''} `,
+        icon: 'undo',
+        action:
+          readOnly && !hasInserts
+            ? undefined
+            : () => {
+                onSelectOption({
+                  type: 'undo update',
+                  ...selection,
+                });
+              },
+      });
+    }
+    if (deletes > 1) {
       options.push({
         title: `Unmark ${deletes} row${deletes > 1 ? 's' : ''} for removal `,
         icon: 'undo',
@@ -200,82 +208,85 @@ export function ContextMenu({
         },
       });
     }
-    if (deletes < selectionRowsSize && selectionRowsSize > 1) {
+    if (deletes < rowsAvailableForRemoval && rowsAvailableForRemoval > 1) {
       options.push({
         ...rowsListeners,
-        title: `Mark ${selectionRowsSize} row${selectionRowsSize > 1 ? 's' : ''}  for removal `,
+        title: `Mark ${rowsAvailableForRemoval} row${rowsAvailableForRemoval > 1 ? 's' : ''}  for removal `,
         icon: 'close',
-        action: () => {
-          onSelectOption({
-            type: 'delete',
-            rowIndex: [
-              selection.rowIndex[0],
-              Math.min(selection.rowIndex[1], rowsLength - 1),
-            ],
+        action:
+          readOnly && !hasInserts
+            ? undefined
+            : () => {
+                onSelectOption({
+                  type: 'delete',
+                  rowIndex: [
+                    selection.rowIndex[0],
+                    Math.min(selection.rowIndex[1], rowsLength - 1),
+                  ],
+                });
+              },
+      });
+    }
+    if (updates && deletes && deletes + updates > 1) {
+      options.push({
+        title: `Undo all ${deletes + updates} changes in selection`,
+        icon: 'undo',
+        action:
+          readOnly && !hasInserts
+            ? undefined
+            : () => {
+                onSelectOption({
+                  type: 'undo all',
+                  ...selection,
+                });
+              },
+      });
+    }
+    if (update[rowsLength]) {
+      if (selection.rowIndex[1] >= rowsLength) {
+        const quantity =
+          selection.rowIndex[1] -
+          Math.max(selection.rowIndex[0], rowsLength) +
+          (update?.[selection.rowIndex[1]] ? 1 : 0);
+        if (quantity > 0)
+          options.push({
+            title: `Undo ${quantity === 1 ? '' : `${quantity} `}row insert${quantity > 1 ? 's' : ''} `,
+            icon: 'undo',
+            ...rowsListeners,
+            action: () => {
+              onSelectOption({
+                type: 'undo inserts',
+                rowIndex: [
+                  Math.max(selection.rowIndex[0], rowsLength),
+                  selection.rowIndex[1] -
+                    (update?.[selection.rowIndex[1]] ? 0 : 1),
+                ],
+              });
+            },
           });
-        },
+      }
+    }
+    if (update[rowIndex] !== 'REMOVE') {
+      options.push({
+        title: 'Update value ',
+        icon: 'pencil',
+        action:
+          readOnly && rowIndex < rowsLength
+            ? undefined
+            : () => {
+                onSelectOption({
+                  type: 'update',
+                  rowIndex,
+                  colIndex,
+                });
+              },
       });
     }
   }
-  if (!currentCellUpdate && !currentRowDelete) {
-    options.push({
-      title: 'Update value ',
-      icon: 'pencil',
-      action: () => {
-        onSelectOption({
-          type: 'update',
-          rowIndex,
-          colIndex,
-        });
-      },
-    });
-  }
-  if (isInSelection && updates && deletes && deletes + updates > 1) {
-    options.push({
-      title: `Undo all ${deletes + updates} changes in selection`,
-      icon: 'undo',
-      action: () => {
-        onSelectOption({
-          type: 'undo all',
-          ...selection,
-        });
-      },
-    });
-  }
-  if (update[rowsLength]) {
-    if (isInSelection && selection.rowIndex[1] >= rowsLength) {
-      const quantity =
-        selection.rowIndex[1] -
-        Math.max(selection.rowIndex[0], rowsLength) +
-        (update?.[selection.rowIndex[1]] ? 1 : 0);
-      options.push({
-        title: `Undo ${quantity} row insert${quantity > 1 ? 's' : ''} `,
-        icon: 'undo',
-        ...rowsListeners,
-        action: () => {
-          onSelectOption({
-            type: 'undo inserts',
-            rowIndex: [
-              Math.max(selection.rowIndex[0], rowsLength),
-              selection.rowIndex[1] - (update?.[selection.rowIndex[1]] ? 0 : 1),
-            ],
-          });
-        },
-      });
-    } else if (rowIndex >= rowsLength) {
-      options.push({
-        ...rowsListeners,
-        title: `Undo row insert `,
-        icon: 'undo',
-        action: () => {
-          onSelectOption({
-            type: 'undo inserts',
-            rowIndex: [rowIndex, rowIndex],
-          });
-        },
-      });
-    }
-  }
+  const showReadOnlyInfo =
+    hintOnly ||
+    (readOnly && (!options.length || options.some((o) => !o.action)));
+
   useEffect(() => {
     if (hoverElRef.current) {
       hoverElRef.current.classList.remove('hover');
@@ -291,12 +302,16 @@ export function ContextMenu({
     <div
       className="context-menu"
       style={{
-        ...(y + options.length * optionHeight + extraHeight < window.innerHeight
+        ...(y +
+          options.length * optionHeight +
+          extraHeight +
+          (showReadOnlyInfo ? readOnlyInfoHeight : 0) <
+        window.innerHeight
           ? { top: y }
-          : { bottom: window.innerHeight - y }),
+          : { bottom: window.innerHeight - (y2 ?? y) }),
         ...(x + contextMenuWidth < window.innerWidth
           ? { left: x }
-          : { right: window.innerWidth - x }),
+          : { right: window.innerWidth - (x2 ?? x) }),
       }}
       ref={(el) => {
         if (el) {
@@ -324,12 +339,42 @@ export function ContextMenu({
         if (selectionElRef.current) selectionElRef.current.style.display = '';
       }}
     >
+      {showReadOnlyInfo && (
+        <div
+          style={{
+            textAlign: 'right',
+            pointerEvents: 'none',
+            height: readOnlyInfoHeight,
+          }}
+        >
+          <span
+            style={{
+              display: 'block',
+              position: 'absolute',
+              borderLeft: '3px solid',
+              height: 26,
+              transform: 'rotate(-45deg)',
+              marginLeft: 8,
+              marginTop: -1,
+              boxShadow: '1px 0 0 white, -1px 0 0 white',
+            }}
+          />
+          <i
+            className="fa fa-pencil"
+            style={{ width: 18, float: 'left', fontSize: 24 }}
+          />{' '}
+          Read-only data <i className="fa fa-lock" />
+          <br />
+          <strong>No primary key configured!</strong>
+        </div>
+      )}
       {options.map((option, index) => (
         <div
           key={index}
           onClick={option.action}
           onMouseEnter={option.onMouseEnter}
           onMouseLeave={option.onMouseLeave}
+          className={option.action ? undefined : 'disabled'}
         >
           <i className={`fa fa-${option.icon}`} style={{ width: 14 }} />{' '}
           {option.title}

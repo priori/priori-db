@@ -50,8 +50,12 @@ export interface DataGridState {
   contextMenu?: {
     rowIndex: number;
     colIndex: number;
-    mouseX: number;
-    mouseY: number;
+    x: number;
+    y: number;
+    readOnly: boolean;
+    hintOnly?: boolean;
+    y2?: number;
+    x2?: number;
   };
   openSortDialog: boolean;
   openFilterDialog: boolean;
@@ -348,13 +352,34 @@ export function DataGridCore(props: DataGridCoreProps) {
       {state.contextMenu ? (
         <ContextMenu
           onSelectOption={onContextMenuSelectOption}
-          x={state.contextMenu.mouseX}
-          y={state.contextMenu.mouseY}
+          x={state.contextMenu.x}
+          y={state.contextMenu.y}
+          y2={state.contextMenu.y2}
+          x2={state.contextMenu.x2}
+          update={state.update}
+          hintOnly={state.contextMenu.hintOnly}
+          selection={
+            state.selection &&
+            state.selection.colIndex[0] <= state.contextMenu.colIndex &&
+            state.selection.colIndex[1] >= state.contextMenu.colIndex &&
+            state.selection.rowIndex[0] <= state.contextMenu.rowIndex &&
+            state.selection.rowIndex[1] >= state.contextMenu.rowIndex
+              ? state.selection
+              : {
+                  colIndex: [
+                    state.contextMenu.colIndex,
+                    state.contextMenu.colIndex,
+                  ],
+                  rowIndex: [
+                    state.contextMenu.rowIndex,
+                    state.contextMenu.rowIndex,
+                  ],
+                }
+          }
           rowIndex={state.contextMenu.rowIndex}
           colIndex={state.contextMenu.colIndex}
-          update={state.update}
-          selection={state.selection}
           rowsLength={props.result.rows.length}
+          readOnly={state.contextMenu.readOnly}
         />
       ) : null}
     </div>
