@@ -562,9 +562,11 @@ tr.remove .cell {
 .content-table td .context-menu,
 .context-menu {
   line-height: normal;
+  outline: none;
   text-align: left;
   position: fixed !important;
   background: white;
+  color: #000;
   font-family: ui-sans-serif, sans-serif;
   padding: 5px 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);

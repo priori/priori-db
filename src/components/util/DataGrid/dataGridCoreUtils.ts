@@ -94,6 +94,24 @@ function fixSelection(
     : selection;
 }
 
+function fixActive(
+  active: { rowIndex: number; colIndex: number } | undefined,
+  fixedCount: number,
+  rowIndex: [number, number],
+) {
+  return fixedCount &&
+    active &&
+    active.rowIndex >= rowIndex[0] &&
+    active.rowIndex <= rowIndex[1]
+    ? undefined
+    : fixedCount && active && active.rowIndex > rowIndex[0]
+      ? {
+          rowIndex: active.rowIndex - fixedCount,
+          colIndex: active.colIndex,
+        }
+      : active;
+}
+
 export function useDataGridCore(props: DataGridCoreProps) {
   const [state0, setState] = useState<DataGridState>({
     slice: [0, rowsByRender],
@@ -965,6 +983,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         contextMenu: undefined,
         update: update2,
         selection: fixSelection(s.selection, fixedCount),
+        active: fixActive(s.active, fixedCount, e.rowIndex),
       }));
     } else if (e.type === 'undo all') {
       const update2 = { ...state.update };
@@ -990,6 +1009,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         contextMenu: undefined,
         update: update2,
         selection: fixSelection(s.selection, fixedCount),
+        active: fixActive(s.active, fixedCount, e.rowIndex),
       }));
     } else if (e.type === 'update') {
       setState((s) => ({
@@ -1029,6 +1049,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         contextMenu: undefined,
         update: update2,
         selection,
+        active: fixActive(s.active, removes, e.rowIndex),
       }));
     }
   });

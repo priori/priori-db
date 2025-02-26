@@ -124,11 +124,11 @@ export function ContextMenu({
       }
     const updates = updateCount;
     const deletes = deleteCount;
-    const rowsAvailableForRemoval = selection?.rowIndex
-      ? Math.min(selection.rowIndex[1], rowsLength - 1) -
+    const rowsAvailableForRemoval = readOnly
+      ? 0
+      : Math.min(selection.rowIndex[1], rowsLength - 1) -
         selection.rowIndex[0] +
-        1
-      : 0;
+        1;
     const hasInserts = selection.rowIndex[1] >= rowsLength;
     if (updates === 1) {
       options.push({
@@ -280,6 +280,13 @@ export function ContextMenu({
                   colIndex,
                 });
               },
+      });
+    }
+    if (readOnly && selection.rowIndex[0] < rowsLength) {
+      options.push({
+        title: `Mark row for removal `,
+        icon: 'close',
+        action: undefined,
       });
     }
   }
