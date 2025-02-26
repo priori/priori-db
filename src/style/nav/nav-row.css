@@ -72,7 +72,7 @@
 .nav-row__icon--mview,
 .nav-row__icon--view,
 .nav-row__icon--table {
-  margin-top: 2px;
+  margin-top: 0;
   position: relative;
   top: 1px;
   font-size: 14px;
@@ -251,9 +251,9 @@
 }
 .nav-row.active .nav-row__title,
 .nav-row.active .fa,
-.nav-row.active .fa.fa-table.nav-row__icon--table,
-.nav-row.active .fa.fa-table.nav-row__icon--view,
-.nav-row.active .fa.fa-table.nav-row__icon--mview {
+.nav-row.active .nav-row__icon--table,
+.nav-row.active .nav-row__icon--view,
+.nav-row.active .nav-row__icon--mview {
   color: inherit;
 }
 .nav-row.active:hover {
@@ -279,4 +279,38 @@
 }
 .nav-row.active .adjustment-icon--small:hover {
   color: white;
+}
+.nav-row__icon--table.nav-row__icon {
+  width: 13px;
+  display: inline-block;
+  margin-right: 5px;
+}
+.nav-row--search-result .nav-row__icon--table {
+  margin-top: 1px;
+}
+.table-icon {
+  width: 13px;
+  height: 12px;
+  border: 1px solid;
+  border-top-width: 3px;
+  border-radius: 2px;
+  position: relative;
+  display: inline-block;
+}
+.table-icon > div:first-of-type {
+  height: 4px;
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+  position: absolute;
+  inset: 0;
+  top: 2px;
+}
+.table-icon > div:last-of-type {
+  width: 5px;
+  border-left: 1px solid;
+  border-right: 1px solid;
+  position: absolute;
+  left: 3px;
+  top: 0;
+  bottom: 0;
 }

@@ -24,14 +24,20 @@ function grantScrollVisibility(el: HTMLDivElement | null) {
 }
 
 export const icons = {
-  table: <i className="fa fa-table nav-row__icon--table nav-row__icon" />,
+  table: (
+    <span className="nav-row__icon--table nav-row__icon">
+      <div className="table-icon">
+        <div />
+        <div />
+      </div>
+    </span>
+  ),
   function: (
     <span className="nav-row__icon--function nav-row__icon">
       <span>F</span>
       <span>()</span>
     </span>
   ),
-  // procedure: <i className="fa fa-cogs nav-row__icon--procedure nav-row__icon" />,
   procedure: (
     <span className="nav-row__icon--procedure nav-row__icon">
       <span>#</span>
@@ -40,8 +46,22 @@ export const icons = {
   ),
   role: <i className="fa fa-users nav-row__icon--role nav-row__icon" />,
   user: <i className="fa fa-user nav-row__icon--user nav-row__icon" />,
-  mview: <i className="fa fa-table nav-row__icon--mview nav-row__icon" />,
-  view: <i className="fa fa-table nav-row__icon--view nav-row__icon" />,
+  mview: (
+    <span className="nav-row__icon--mview nav-row__icon">
+      <div className="table-icon">
+        <div />
+        <div />
+      </div>
+    </span>
+  ),
+  view: (
+    <span className="nav-row__icon--view nav-row__icon">
+      <div className="table-icon">
+        <div />
+        <div />
+      </div>
+    </span>
+  ),
   domain: <i className="fa fa-list-ul nav-row__icon--domain nav-row__icon" />,
   sequence: (
     <i className="fa fa-list-ol nav-row__icon--sequence nav-row__icon" />
@@ -306,9 +326,6 @@ function NavTreeSingleItem0({
       : undefined;
   return (
     <div
-      onDoubleClick={localOnDblClick}
-      onClick={localOnClick}
-      onMouseDown={localOnMouseDown}
       className={`nav-row${
         item.children ? ' nav-row--folder' : ' nav-row--leaf'
       }${item.internal ? ' nav-row--internal' : ''}${
@@ -320,6 +337,9 @@ function NavTreeSingleItem0({
         paddingLeft: (depth ?? 0) * 10 + 10,
       }}
       ref={item.hasFocus ? grantScrollVisibility : undefined}
+      onDoubleClick={localOnDblClick}
+      onClick={localOnClick}
+      onMouseDown={localOnMouseDown}
       onMouseLeave={localOnMouseLeave}
     >
       <div

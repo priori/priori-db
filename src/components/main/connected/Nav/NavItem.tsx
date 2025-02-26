@@ -111,12 +111,12 @@ export function NavItem({
     <div
       className={`nav-row nav-row--leaf nav-row--search-result${isActive ? ' active' : ''}${
         isOpen ? ' open' : ''
-      }${entity.type === 'VIEW' ? ' view' : ''}${focus ? ' focused' : ''}`}
+      }${focus ? ' focused' : ''}`}
+      style={{ paddingLeft: 20 }}
+      ref={focus ? grantScrollVisibility : undefined}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onMouseDown={onDivMouseDown}
-      ref={focus ? grantScrollVisibility : undefined}
-      style={{ paddingLeft: 20 }}
     >
       <div className="nav-row__main-mouse-area">
         {entity.type && iconsMap[entity.type] ? iconsMap[entity.type] : null}
