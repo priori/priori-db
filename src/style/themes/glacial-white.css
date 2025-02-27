@@ -58,7 +58,6 @@ body.glacial-white-theme .header .nav:before {
 body.glacial-white-theme .nav-button .nav::after {
   border-bottom-color: #fafafa;
 }
-
 /* tabs */
 body.glacial-white-theme .tabs-header {
   background: #eee;
@@ -140,6 +139,12 @@ body.glacial-white-theme select,
 body.glacial-white-theme input {
   border-color: #f0f0f0;
 }
+body.glacial-white-theme .grid-content--table-wrapper-outer select {
+  border-color: #ddd;
+}
+body.glacial-white-theme .query-selector__select {
+  border-color: transparent;
+}
 body.glacial-white-theme .nav-search__field input:focus,
 body.glacial-white-theme .grid .dialog input:focus,
 body.glacial-white-theme .grid .dialog textarea:focus,
@@ -164,7 +169,6 @@ body.glacial-white-theme select:focus {
     inset #1976d2 -1px 1px,
     inset #1976d2 1px -1px;
 }
-
 /* frames */
 body.glacial-white-theme .definition {
   background: #f8f8f8;
@@ -206,6 +210,10 @@ body.glacial-white-theme .nav-row.active .adjustment-icon--small {
 }
 body.glacial-white-theme .nav-row.active .adjustment-icon--small:hover {
   color: white;
+}
+body.glacial-white-theme .nav-search__result .nav-row.active:hover {
+  background: #15d;
+  --bg: #15d;
 }
 
 /* table */

@@ -376,8 +376,7 @@ button.query-tab--stdout {
   animation: show 0.3s forwards;
   &:hover {
     background: white !important;
-    width: 40px;
-    border-left: 0;
+    width: 41px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.33);
     color: black;
     z-index: 9;
@@ -535,8 +534,6 @@ div.CodeMirror-gutters {
 }
 .query-frame__up-down-button--closed {
   z-index: 8;
-  border-left: 1px solid rgb(238, 238, 238);
-  border-top: 1px solid rgb(238, 238, 238);
 }
 .query-frame__up-down-button--open {
   z-index: 11;

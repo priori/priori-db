@@ -105,8 +105,10 @@
   display: flex;
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 3;
   height: 28px;
+  background: white;
+  border-bottom: 1px solid #ddd;
   input {
     flex: 1;
     padding: 6px;
@@ -187,6 +189,7 @@
   margin-bottom: -1px;
   padding: 5px;
   background: #fcfcfc;
+  z-index: 2;
   .query-selector--pagination {
     background: #fcfcfc;
     bottom: 1px;

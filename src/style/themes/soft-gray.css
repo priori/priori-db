@@ -131,6 +131,10 @@ body.soft-gray-theme .nav-row.active .adjustment-icon--small {
 body.soft-gray-theme .nav-row.active .adjustment-icon--small:hover {
   color: white;
 }
+body.soft-gray-theme .nav-search__result .nav-row.active:hover {
+  background: #15d;
+  --bg: #15d;
+}
 
 /* table */
 body.soft-gray-theme .grid--selection {

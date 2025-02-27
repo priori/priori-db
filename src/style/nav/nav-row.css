@@ -280,6 +280,9 @@
 .nav-row.active .adjustment-icon--small:hover {
   color: white;
 }
+dialog.launcher .nav-row--search-result.focused.active:before {
+  border-left-color: white;
+}
 .nav-row__icon--table.nav-row__icon {
   width: 13px;
   display: inline-block;
