@@ -1141,7 +1141,26 @@ export function useDataGridCore(props: DataGridCoreProps) {
       }));
       return;
     }
-    // if shift is pressed, select a range
+    if (e.shiftKey && state.active) {
+      setState((state2) => ({
+        ...state2,
+        selection: state2.active
+          ? {
+              rowIndex: [
+                Math.min(state2.active.rowIndex, rowIndex),
+                Math.max(state2.active.rowIndex, rowIndex),
+              ],
+              colIndex: [
+                Math.min(state2.active.colIndex, colIndex),
+                Math.max(state2.active.colIndex, colIndex),
+              ],
+            }
+          : undefined,
+        active: { rowIndex, colIndex },
+        contextMenu: undefined,
+      }));
+      return;
+    }
     setState((state2) => ({
       ...state2,
       mouseDown: { rowIndex, colIndex },
