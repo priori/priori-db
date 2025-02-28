@@ -1056,6 +1056,15 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
   const onMouseDown = useEvent((e: React.MouseEvent<HTMLElement>) => {
     if (
+      document.activeElement instanceof HTMLElement &&
+      document.activeElement.matches('textarea')
+    ) {
+      if (document.activeElement === e.target) {
+        return;
+      }
+      document.activeElement.blur();
+    }
+    if (
       e.button === 1 ||
       (e.target instanceof HTMLElement &&
         (e.target.matches('input, textarea, select, button') ||
