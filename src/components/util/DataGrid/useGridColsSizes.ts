@@ -240,6 +240,11 @@ export function useGridColsSizes({
       );
       ths1[index - 1].style.width = `${newWidths[index - 1]}px`;
       ths2[index - 1].style.width = `${newWidths[index - 1]}px`;
+      if (selectionEl && selection) {
+        const style = buildStyle({ selection, colsWidths: newWidths });
+        selectionEl.style.left = `${style.left}px`;
+        selectionEl.style.width = `${style.width}px`;
+      }
       const fieldName = result.fields[index - 1].name;
       setState({
         touched: state
@@ -255,6 +260,11 @@ export function useGridColsSizes({
         colsWidths.reduce((a: number, b: number) => a + b, 0) + 1;
       table1.style.width = `${gridContentTableWidth}px`;
       table2.style.width = `${gridContentTableWidth}px`;
+      if (selectionEl && selection) {
+        const style = buildStyle({ selection, colsWidths });
+        selectionEl.style.left = `${style.left}px`;
+        selectionEl.style.width = `${style.width}px`;
+      }
       if (ths1[index - 1])
         ths1[index - 1].style.width = `${colsWidths[index - 1]}px`;
       if (ths2[index - 1])
