@@ -289,45 +289,26 @@ export function DataGridCore(props: DataGridCoreProps) {
       )}
 
       {props.onChangeSort ? (
-        pendingRowsUpdate > 0 ? (
+        pendingInserts || pendingRowsRemoval || pendingRowsUpdate ? (
           <i className="fa fa-sort disabled" onMouseDown={nop} />
         ) : (
           <i className="fa fa-sort" onMouseDown={onSortClick} />
         )
       ) : null}
 
-      {pendingRowsUpdate > 0 ? (
-        <>
-          {props.onChangeFilter ? (
-            <i className="fa fa-filter disabled" onMouseDown={nop} />
-          ) : null}
-          {props.onUpdate ? (
-            <i className="fa fa-plus disabled" onMouseDown={nop} />
-          ) : null}
-        </>
-      ) : (
-        <>
-          {props.onChangeFilter ? (
-            <i className="fa fa-filter" onMouseDown={onFilterClick} />
-          ) : null}
-          {props.onUpdate ? (
-            props.fetchMoreRows ? (
-              <i
-                className="fa fa-plus disabled"
-                style={{
-                  cursor: 'default',
-                  color: 'gray',
-                  background: '#f7f7f7',
-                  opacity: 0.7,
-                }}
-                onMouseDown={nop}
-              />
-            ) : (
-              <i className="fa fa-plus" onMouseDown={onPlusClick} />
-            )
-          ) : null}
-        </>
-      )}
+      {props.onChangeFilter ? (
+        pendingInserts || pendingRowsRemoval || pendingRowsUpdate ? (
+          <i className="fa fa-filter disabled" onMouseDown={nop} />
+        ) : (
+          <i className="fa fa-filter" onMouseDown={onFilterClick} />
+        )
+      ) : null}
+
+      {props.onUpdate && props.fetchMoreRows ? (
+        <i className="fa fa-plus disabled" onMouseDown={nop} />
+      ) : props.onUpdate ? (
+        <i className="fa fa-plus" onMouseDown={onPlusClick} />
+      ) : null}
 
       {props.result.rows.length === 0 && props.emptyTable ? (
         <div className="empty-table">
@@ -358,24 +339,7 @@ export function DataGridCore(props: DataGridCoreProps) {
           x2={state.contextMenu.x2}
           update={state.update}
           hintOnly={state.contextMenu.hintOnly}
-          selection={
-            state.selection &&
-            state.selection.colIndex[0] <= state.contextMenu.colIndex &&
-            state.selection.colIndex[1] >= state.contextMenu.colIndex &&
-            state.selection.rowIndex[0] <= state.contextMenu.rowIndex &&
-            state.selection.rowIndex[1] >= state.contextMenu.rowIndex
-              ? state.selection
-              : {
-                  colIndex: [
-                    state.contextMenu.colIndex,
-                    state.contextMenu.colIndex,
-                  ],
-                  rowIndex: [
-                    state.contextMenu.rowIndex,
-                    state.contextMenu.rowIndex,
-                  ],
-                }
-          }
+          selection={state.selection}
           rowIndex={state.contextMenu.rowIndex}
           colIndex={state.contextMenu.colIndex}
           rowsLength={props.result.rows.length}

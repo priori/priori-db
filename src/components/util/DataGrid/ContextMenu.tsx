@@ -37,7 +37,7 @@ const readOnlyInfoHeight = 45;
 export function ContextMenu({
   onSelectOption,
   update,
-  selection,
+  selection: selection0,
   rowsLength,
   readOnly,
   rowIndex,
@@ -49,7 +49,7 @@ export function ContextMenu({
   y2,
 }: {
   onSelectOption: (e: ContextMenuEvent) => void;
-  selection: {
+  selection?: {
     rowIndex: [number, number];
     colIndex: [number, number];
   };
@@ -66,6 +66,17 @@ export function ContextMenu({
   y2?: number;
   x2?: number;
 }) {
+  const selection =
+    selection0 &&
+    selection0.colIndex[0] <= colIndex &&
+    selection0.colIndex[1] >= colIndex &&
+    selection0.rowIndex[0] <= rowIndex &&
+    selection0.rowIndex[1] >= rowIndex
+      ? selection0
+      : {
+          colIndex: [colIndex, colIndex] as [number, number],
+          rowIndex: [rowIndex, rowIndex] as [number, number],
+        };
   const hoverElRef = useRef<HTMLElement | undefined | null>(null);
   const rowsSelectionElRef = useRef<HTMLElement | undefined | null>(null);
   const selectionElRef = useRef<HTMLElement | undefined | null>(null);

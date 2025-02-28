@@ -393,6 +393,12 @@ th.desc.sortable:hover::before {
   z-index: 3;
   cursor: pointer;
 }
+.grid .fa-sort.disabled,
+.grid .fa-filter.disabled,
+.grid > div > .fa-plus.disabled {
+  cursor: default;
+  opacity: 0.5;
+}
 .grid .fa-sort:not(.disabled),
 .grid > div > .fa-plus:not(.disabled),
 .grid .fa-filter:not(.disabled) {
