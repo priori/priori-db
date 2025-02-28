@@ -137,8 +137,8 @@ body.soft-gray-theme .nav-search__result .nav-row.active:hover {
 }
 
 /* table */
-body.soft-gray-theme .grid--selection {
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  background: rgba(0, 0, 0, 0.15);
-  backdrop-filter: contrast(1.05);
+body.soft-gray-theme .grid__selection {
+  border-color: rgba(0, 0, 0, 0.14);
+  background: rgba(0, 0, 0, 0.09);
+  backdrop-filter: contrast(1.03);
 }

@@ -58,7 +58,7 @@ export function cellClassName(hasChange: boolean): string | undefined {
   return undefined;
 }
 
-export function activePos(
+export function activeCellPos(
   widths: number[],
   colIndex: number,
   rowIndex: number,

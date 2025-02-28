@@ -9,7 +9,7 @@ const dontDragSelector =
 const noOverlaySelector = '.tabs-header, .frame, .app-content, .nav-button';
 
 const dragExceptionSelector =
-  '.grid > div, .grid-content--table-wrapper-outer, .empty-table, .empty-table *, .grid-content, .nav-tree--wrapper, .grid-content--footer';
+  '.grid > div, .grid__content, .empty-table, .empty-table *, .nav-tree--wrapper, .grid__limit-control';
 
 let extraTop: number | undefined;
 if (window.navigator.userAgent.indexOf('Linux') !== -1) {

@@ -1,8 +1,8 @@
-.dialog .form-row .data-grid-filter-dialog--input-wrapper textarea {
+.dialog .form-row .grid__filter-dialog__input-wrapper textarea {
   margin: 0;
 }
 
-.app-content button.data-grid-filter-dialog--or {
+.app-content button.grid__filter-dialog__or {
   box-shadow: 0 0;
   border: 1px solid #eee;
   background: transparent;
@@ -14,12 +14,12 @@
   }
 }
 
-.data-grid-filter-dialog--big-form.dialog,
-.data-grid-filter-dialog--small-form.dialog {
+.grid__filter-dialog__big-form.dialog,
+.grid__filter-dialog__small-form.dialog {
   line-height: 1.1em;
   font-family: sans-serif;
 }
-.data-grid-filter-dialog--big-form.dialog {
+.grid__filter-dialog__big-form.dialog {
   select,
   input,
   textarea {
@@ -30,7 +30,7 @@
     margin-top: 2px;
     margin-bottom: 2px;
   }
-  .data-grid-filter-dialog--input-wrapper {
+  .grid__filter-dialog__input-wrapper {
     margin-top: 2px;
     margin-bottom: 0;
   }
@@ -38,31 +38,31 @@
     margin-top: 6px;
   }
 }
-.data-grid-filter-dialog--small-form.dialog .form-row strong {
+.grid__filter-dialog__small-form.dialog .form-row strong {
   margin-top: 19px;
 }
-.data-grid-filter-dialog--input-wrapper textarea {
+.grid__filter-dialog__input-wrapper textarea {
   width: 150px;
 }
 
-.data-grid-filter-dialog--and-group {
+.grid__filter-dialog__and-group {
   padding: 0 11px;
 }
-.data-grid-filter-dialog--big-form.dialog .data-grid-filter-dialog--and-group {
+.grid__filter-dialog__big-form.dialog .grid__filter-dialog__and-group {
   border: solid 1px #eee;
   padding: 5px;
   border-radius: 5px;
 }
 
-.form-row .data-grid-filter-dialog--small-ops {
+.form-row .grid__filter-dialog__small-ops {
   display: none;
 }
 
-.data-grid-filter-dialog--input-focus .data-grid-filter-dialog--small-ops {
+.grid__filter-dialog__input-focus .grid__filter-dialog__small-ops {
   display: block;
 }
 
-.data-grid-filter-dialog--small-ops {
+.grid__filter-dialog__small-ops {
   position: absolute;
   right: 0px;
   top: -16px;
@@ -88,13 +88,13 @@
   }
 }
 
-.data-grid-filter-dialog--value-type {
+.grid__filter-dialog__value-type {
   position: relative;
   select {
     width: 22px;
   }
 }
-.data-grid-filter-dialog--value-type:after {
+.grid__filter-dialog__value-type:after {
   content: '';
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
@@ -107,18 +107,18 @@
   pointer-events: none;
 }
 
-.data-grid-filter-dialog--value-type:hover:after {
+.grid__filter-dialog__value-type:hover:after {
   border-top-color: #000;
 }
 
-.data-grid-filter-dialog--input-wrapper.data-grid-filter-dialog--sql {
+.grid__filter-dialog__input-wrapper.grid__filter-dialog__sql {
   textarea {
     border-color: #1976d2;
     color: #1976d2;
     padding-right: 28px;
   }
 }
-.data-grid-filter-dialog--sql-tip {
+.grid__filter-dialog__sql-tip {
   background: #1976d2;
   color: white;
   position: absolute;
@@ -131,32 +131,29 @@
   padding: 0 3px;
   border-radius: 3px;
 }
-.data-grid-filter-dialog--input-focus .data-grid-filter-dialog--sql-tip {
+.grid__filter-dialog__input-focus .grid__filter-dialog__sql-tip {
   display: none;
 }
-.data-grid-filter-dialog--input-focus textarea {
+.grid__filter-dialog__input-focus textarea {
   padding-right: 2px;
 }
-.data-grid-filter-dialog--small-form
-  .data-grid-filter-dialog--value-type:after {
+.grid__filter-dialog__small-form .grid__filter-dialog__value-type:after {
   margin-top: 6px;
 }
-.data-grid-filter-dialog--input-wrapper {
+.grid__filter-dialog__input-wrapper {
   margin-top: 7px;
   margin-bottom: 7px;
   line-height: 1em;
 }
-.data-grid-filter-dialog--input-wrapper textarea {
+.grid__filter-dialog__input-wrapper textarea {
   resize: vertical;
   min-height: 37px;
 }
-.data-grid-filter-dialog--big-form
-  .data-grid-filter-dialog--input-wrapper
-  textarea {
+.grid__filter-dialog__big-form .grid__filter-dialog__input-wrapper textarea {
   min-height: 22px;
 }
 
-.app-content button.data-grid-filter-dialog--where-sql {
+.app-content button.grid__filter-dialog__where-sql {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -176,7 +173,7 @@
   }
 }
 
-.data-grid-filter-dialog--sql-where {
+.grid__filter-dialog__sql-where {
   min-height: 273px;
   white-space: pre-line;
   word-break: break-word;
@@ -195,7 +192,7 @@
   resize: vertical;
   margin-bottom: 0;
 }
-textarea.data-grid-filter-dialog--sql-where {
+textarea.grid__filter-dialog__sql-where {
   font-weight: normal;
   padding: 15px 19px !important;
   background: #fafafa;
@@ -205,13 +202,13 @@ textarea.data-grid-filter-dialog--sql-where {
     border: 2px solid #1976d2 !important;
     padding: 14px 18px !important;
   }
-  .data-grid-filter-dialog--sql-invalid &:focus,
-  .data-grid-filter-dialog--sql-invalid &:active {
+  .grid__filter-dialog__sql-invalid &:focus,
+  .grid__filter-dialog__sql-invalid &:active {
     border: 2px solid #d22 !important;
   }
 }
 
-.app-content button.data-grid-filter-dialog--edit-button {
+.app-content button.grid__filter-dialog__edit-button {
   position: absolute;
   margin: 0;
   right: 0;
@@ -237,7 +234,7 @@ textarea.data-grid-filter-dialog--sql-where {
   margin: 5px;
 }
 
-.data-grid-filter-dialog--sql-invalid {
+.grid__filter-dialog__sql-invalid {
   textarea {
     border-color: #d22 !important;
     color: #d22 !important;
@@ -251,7 +248,7 @@ textarea.data-grid-filter-dialog--sql-where {
     }
   }
   .selected,
-  .data-grid-filter-dialog--sql-tip {
+  .grid__filter-dialog__sql-tip {
     background: #d22 !important;
   }
 }

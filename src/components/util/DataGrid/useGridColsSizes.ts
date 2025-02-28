@@ -174,26 +174,28 @@ export function useGridColsSizes({
   );
 
   const onStartResize = useEvent(async (index: number, e: React.MouseEvent) => {
-    const d = elRef.current as HTMLElement | null;
-    assert(d, `elRef.current is null`);
-    const t = d.querySelector('.grid-content table') as HTMLTableElement | null;
-    const table1 = d.querySelector('table.grid-header') as HTMLElement | null;
-    const table2 = d.querySelector('.grid-content table') as HTMLElement | null;
-    const outer = d.querySelector(
-      '.grid-content--table-wrapper-outer',
+    const rootEl = elRef.current as HTMLElement | null;
+    assert(rootEl, `elRef.current is null`);
+    const headerTableEl = rootEl.querySelector(
+      'table.grid__header',
     ) as HTMLElement | null;
-    const selectionEl = d.querySelector(
-      '.grid-content .grid--selection',
+    const contentTableEl = rootEl.querySelector(
+      '.grid__content table',
     ) as HTMLElement | null;
-    assert(t, `.grid-content table is null`);
-    assert(table1, `table.grid-header is null`);
-    assert(table2, `.grid-content table is null`);
-    assert(outer, `.grid-content--table-wrapper-outer is null`);
+    const tableWrapperEl = rootEl.querySelector(
+      '.grid__table-wrapper',
+    ) as HTMLElement | null;
+    const selectionEl = rootEl.querySelector(
+      '.grid__content .grid__selection',
+    ) as HTMLElement | null;
+    assert(headerTableEl, `table.grid__header is null`);
+    assert(contentTableEl, `.grid__content table is null`);
+    assert(tableWrapperEl, `.grid__content is null`);
     const ths1 = Array.from(
-      d.querySelectorAll('.grid-header th'),
+      rootEl.querySelectorAll('.grid__header th'),
     ) as HTMLElement[];
     const ths2 = Array.from(
-      t.querySelectorAll('.grid-content table thead th'),
+      rootEl.querySelectorAll('.grid__content table thead th'),
     ) as HTMLElement[];
     assert(ths1.length === ths2.length, `ths1.length !== ths2.length`);
     assert(ths2.length === colsWidths.length, `ths.length !== widths.length`);
@@ -207,8 +209,9 @@ export function useGridColsSizes({
         if (colWidth < 18) return false;
         const widthSum =
           colsWidths.reduce((a: number, b: number) => a + b, 0) + inc2 + 1;
-        table1.style.width = `${widthSum}px`;
-        table2.style.width = `${widthSum}px`;
+        headerTableEl.style.width = `${widthSum}px`;
+        contentTableEl.style.width = `${widthSum}px`;
+        tableWrapperEl.style.width = `${widthSum}px`;
         ths1[index - 1].style.width = `${colWidth}px`;
         ths2[index - 1].style.width = `${colWidth}px`;
         const newColsWidths = colsWidths.map((w, i) =>
@@ -222,8 +225,9 @@ export function useGridColsSizes({
         }
         return true;
       },
-      t,
+      tableWrapperEl,
       initialPos,
+      rootEl,
     );
     if (inc !== undefined) {
       const areaWidth = width - (hasRightScrollbar ? scrollWidth : 0) - 1;
@@ -231,8 +235,9 @@ export function useGridColsSizes({
         colsWidths.reduce((a: number, b: number) => a + b, 1) + inc;
       const finalWidth = Math.max(areaWidth, withSum);
       const widthToDistribute = Math.max(areaWidth - withSum, 0);
-      table1.style.width = `${finalWidth}px`;
-      table2.style.width = `${finalWidth}px`;
+      headerTableEl.style.width = `${finalWidth}px`;
+      contentTableEl.style.width = `${finalWidth}px`;
+      tableWrapperEl.style.width = ``;
       const newWidths = colsWidths.map(
         (w, i) =>
           (i === index - 1 ? w + inc : w) +
@@ -258,8 +263,9 @@ export function useGridColsSizes({
     } else {
       const gridContentTableWidth =
         colsWidths.reduce((a: number, b: number) => a + b, 0) + 1;
-      table1.style.width = `${gridContentTableWidth}px`;
-      table2.style.width = `${gridContentTableWidth}px`;
+      headerTableEl.style.width = `${gridContentTableWidth}px`;
+      contentTableEl.style.width = `${gridContentTableWidth}px`;
+      tableWrapperEl.style.width = ``;
       if (selectionEl && selection) {
         const style = buildStyle({ selection, colsWidths });
         selectionEl.style.left = `${style.left}px`;

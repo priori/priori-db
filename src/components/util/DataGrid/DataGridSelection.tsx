@@ -31,10 +31,10 @@ export const DataGridSelection = React.memo(
       colIndex: [number, number];
     };
     colsWidths: number[];
-    className?: 'grid--selection--rows';
+    className?: 'grid__selection--rows';
   }) => (
     <div
-      className={`grid--selection${className ? ` ${className}` : ''}`}
+      className={`grid__selection${className ? ` ${className}` : ''}`}
       style={{
         top: headerHeight + selection.rowIndex[0] * rowHeight,
         height:

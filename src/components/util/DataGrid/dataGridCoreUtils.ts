@@ -95,21 +95,21 @@ function fixSelection(
 }
 
 function fixActive(
-  active: { rowIndex: number; colIndex: number } | undefined,
+  activeCell: { rowIndex: number; colIndex: number } | undefined,
   fixedCount: number,
   rowIndex: [number, number],
 ) {
   return fixedCount &&
-    active &&
-    active.rowIndex >= rowIndex[0] &&
-    active.rowIndex <= rowIndex[1]
+    activeCell &&
+    activeCell.rowIndex >= rowIndex[0] &&
+    activeCell.rowIndex <= rowIndex[1]
     ? undefined
-    : fixedCount && active && active.rowIndex > rowIndex[0]
+    : fixedCount && activeCell && activeCell.rowIndex > rowIndex[0]
       ? {
-          rowIndex: active.rowIndex - fixedCount,
-          colIndex: active.colIndex,
+          rowIndex: activeCell.rowIndex - fixedCount,
+          colIndex: activeCell.colIndex,
         }
-      : active;
+      : activeCell;
 }
 
 export function useDataGridCore(props: DataGridCoreProps) {
@@ -157,7 +157,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         openFilterDialog: false,
         editing: false,
         update: {},
-        active: undefined,
+        activeCell: undefined,
         contextMenu: undefined,
         selection: undefined,
         touched: state.touched,
@@ -186,7 +186,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
   const elRef = useRef(null as HTMLDivElement | null);
 
-  const activeElRef = useRef(null as HTMLDivElement | null);
+  const activeCellElRef = useRef(null as HTMLDivElement | null);
 
   const lastScrollTimeRef = useRef(null as Date | null);
 
@@ -198,7 +198,8 @@ export function useDataGridCore(props: DataGridCoreProps) {
     if (!props.onUpdate) return;
     if (
       props.pks?.length ||
-      (state.active && state.active.rowIndex >= props.result.rows.length)
+      (state.activeCell &&
+        state.activeCell.rowIndex >= props.result.rows.length)
     ) {
       setState((s) => ({
         ...s,
@@ -207,13 +208,13 @@ export function useDataGridCore(props: DataGridCoreProps) {
       }));
     } else if (!state.contextMenu?.hintOnly) {
       const { top, left, width } = elRef
-        .current!.querySelector('.active')!
+        .current!.querySelector('.grid__active-cell-wrapper')!
         .getClientRects()[0];
       setState((s) => ({
         ...s,
         contextMenu: {
-          rowIndex: s.active!.rowIndex,
-          colIndex: s.active!.colIndex,
+          rowIndex: s.activeCell!.rowIndex,
+          colIndex: s.activeCell!.colIndex,
           x: left,
           y: top + rowHeight + 3,
           y2: top,
@@ -260,17 +261,17 @@ export function useDataGridCore(props: DataGridCoreProps) {
     .filter((k) => state.update[k] !== 'REMOVE')
     .reduce((a, b) => a + Object.keys(state.update[b]).length, 0);
 
-  const gridActiveCellUpdate = useEvent(
+  const activeCellUpdate2 = useEvent(
     (
       widths: number[],
       hasBottomScrollbar: boolean,
       hasRightScrollbar: boolean,
     ) => {
-      if (activeElRef.current && state.active)
+      if (activeCellElRef.current && state.activeCell)
         activeCellUpdate({
-          activeEl: activeElRef.current,
+          activeCellEl: activeCellElRef.current,
           finalWidths: widths,
-          active: state.active,
+          activeCell: state.activeCell,
           scrollTop: scrollRef.current.top,
           scrollLeft: scrollRef.current.left,
           containerHeight: props.height,
@@ -294,24 +295,24 @@ export function useDataGridCore(props: DataGridCoreProps) {
     extraRows,
     extraBottomSpace,
     elRef,
-    activeCellUpdate: gridActiveCellUpdate,
+    activeCellUpdate: activeCellUpdate2,
     selection: state.selection,
   });
 
   useEffect(() => {
-    if (state.active) {
+    if (state.activeCell) {
       const el = gridContentRef.current;
       assert(el);
       scrollTo(
         el,
         colsWidths,
-        state.active.colIndex,
-        state.active.rowIndex,
+        state.activeCell.colIndex,
+        state.activeCell.rowIndex,
         hasRightScrollbar,
         hasBottomScrollbar,
       );
     }
-  }, [colsWidths, state.active, hasRightScrollbar, hasBottomScrollbar]);
+  }, [colsWidths, state.activeCell, hasRightScrollbar, hasBottomScrollbar]);
 
   useEffect(() => {
     if (state.selection && state.mouseDown) {
@@ -380,11 +381,11 @@ export function useDataGridCore(props: DataGridCoreProps) {
   }
 
   useEffect(() => {
-    if (state.active && activeElRef.current)
+    if (state.activeCell && activeCellElRef.current)
       activeCellUpdate({
-        activeEl: activeElRef.current,
+        activeCellEl: activeCellElRef.current,
         finalWidths: colsWidths,
-        active: state.active,
+        activeCell: state.activeCell,
         scrollTop: scrollRef.current.top,
         scrollLeft: scrollRef.current.left,
         containerHeight: props.height,
@@ -393,7 +394,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         hasRightScrollbar,
       });
   }, [
-    state.active,
+    state.activeCell,
     colsWidths,
     props.height,
     props.width,
@@ -444,7 +445,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }
     setState((state2) => ({
       ...state2,
-      active: { rowIndex, colIndex },
+      activeCell: { rowIndex, colIndex },
       selection,
       mouseDown: undefined,
       contextMenu: undefined,
@@ -481,25 +482,25 @@ export function useDataGridCore(props: DataGridCoreProps) {
     setState((state2) => ({
       ...state2,
       selection,
-      active: { rowIndex, colIndex },
+      activeCell: { rowIndex, colIndex },
       contextMenu: undefined,
     }));
   });
 
   function tabMove(e: React.KeyboardEvent, direction = 1) {
-    if (!state.active) return;
+    if (!state.activeCell) return;
     const colIndex =
-      state.active.colIndex + direction === props.result.fields.length
+      state.activeCell.colIndex + direction === props.result.fields.length
         ? 0
-        : state.active.colIndex + direction === -1
+        : state.activeCell.colIndex + direction === -1
           ? props.result.fields.length - 1
-          : state.active.colIndex + direction;
+          : state.activeCell.colIndex + direction;
     const rowIndex =
-      state.active.colIndex + direction === props.result.fields.length
-        ? state.active.rowIndex + 1
-        : state.active.colIndex + direction === -1
-          ? state.active.rowIndex - 1
-          : state.active.rowIndex;
+      state.activeCell.colIndex + direction === props.result.fields.length
+        ? state.activeCell.rowIndex + 1
+        : state.activeCell.colIndex + direction === -1
+          ? state.activeCell.rowIndex - 1
+          : state.activeCell.rowIndex;
     if (rowIndex >= 0 && rowIndex < props.result.rows.length + extraRows) {
       setState((s) => {
         const newEditing =
@@ -518,7 +519,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
           },
           contextMenu: undefined,
           editing: newEditing,
-          active: { rowIndex, colIndex },
+          activeCell: { rowIndex, colIndex },
         };
       });
       e.preventDefault();
@@ -531,29 +532,29 @@ export function useDataGridCore(props: DataGridCoreProps) {
     selection: boolean,
     editing?: 1 | 2 | boolean,
   ) {
-    if (!state.active) return;
+    if (!state.activeCell) return;
     let x = x0;
     let y = y0;
-    if (state.active.colIndex + x < 0) {
-      x = -state.active.colIndex;
-    } else if (state.active.colIndex + x >= props.result.fields.length) {
-      x = props.result.fields.length - state.active.colIndex - 1;
+    if (state.activeCell.colIndex + x < 0) {
+      x = -state.activeCell.colIndex;
+    } else if (state.activeCell.colIndex + x >= props.result.fields.length) {
+      x = props.result.fields.length - state.activeCell.colIndex - 1;
     }
-    if (state.active.rowIndex + y < 0) {
-      y = -state.active.rowIndex;
+    if (state.activeCell.rowIndex + y < 0) {
+      y = -state.activeCell.rowIndex;
     } else if (
-      state.active.rowIndex + y >=
+      state.activeCell.rowIndex + y >=
       props.result.rows.length + extraRows
     ) {
-      y = props.result.rows.length - state.active.rowIndex - 1 + extraRows;
+      y = props.result.rows.length - state.activeCell.rowIndex - 1 + extraRows;
     }
     if (x === 0 && y === 0) return;
     setState((s) => {
-      if (!s.active) return s;
+      if (!s.activeCell) return s;
       const newEditing =
         (s.editing || editing) &&
         (!props.pks || !props.pks.length) &&
-        s.active.rowIndex + y < props.result.rows.length
+        s.activeCell.rowIndex + y < props.result.rows.length
           ? false
           : editing === undefined
             ? s.editing
@@ -570,47 +571,47 @@ export function useDataGridCore(props: DataGridCoreProps) {
           : !state.selection
             ? {
                 colIndex: [
-                  Math.min(s.active.colIndex + x, s.active.colIndex),
-                  Math.max(s.active.colIndex + x, s.active.colIndex),
+                  Math.min(s.activeCell.colIndex + x, s.activeCell.colIndex),
+                  Math.max(s.activeCell.colIndex + x, s.activeCell.colIndex),
                 ],
                 rowIndex: [
-                  Math.min(s.active.rowIndex + y, s.active.rowIndex),
-                  Math.max(s.active.rowIndex + y, s.active.rowIndex),
+                  Math.min(s.activeCell.rowIndex + y, s.activeCell.rowIndex),
+                  Math.max(s.activeCell.rowIndex + y, s.activeCell.rowIndex),
                 ],
               }
             : {
                 colIndex: [
                   Math.min(
-                    s.active.colIndex + x,
-                    state.selection.colIndex[0] === s.active.colIndex
+                    s.activeCell.colIndex + x,
+                    state.selection.colIndex[0] === s.activeCell.colIndex
                       ? state.selection.colIndex[1]
                       : state.selection.colIndex[0],
                   ),
                   Math.max(
-                    s.active.colIndex + x,
-                    state.selection.colIndex[0] === s.active.colIndex
+                    s.activeCell.colIndex + x,
+                    state.selection.colIndex[0] === s.activeCell.colIndex
                       ? state.selection.colIndex[1]
                       : state.selection.colIndex[0],
                   ),
                 ],
                 rowIndex: [
                   Math.min(
-                    s.active.rowIndex + y,
-                    state.selection.rowIndex[0] === s.active.rowIndex
+                    s.activeCell.rowIndex + y,
+                    state.selection.rowIndex[0] === s.activeCell.rowIndex
                       ? state.selection.rowIndex[1]
                       : state.selection.rowIndex[0],
                   ),
                   Math.max(
-                    s.active.rowIndex + y,
-                    state.selection.rowIndex[0] === s.active.rowIndex
+                    s.activeCell.rowIndex + y,
+                    state.selection.rowIndex[0] === s.activeCell.rowIndex
                       ? state.selection.rowIndex[1]
                       : state.selection.rowIndex[0],
                   ),
                 ],
               },
-        active: {
-          colIndex: s.active.colIndex + x,
-          rowIndex: s.active.rowIndex + y,
+        activeCell: {
+          colIndex: s.activeCell.colIndex + x,
+          rowIndex: s.activeCell.rowIndex + y,
         },
       };
     });
@@ -648,10 +649,10 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const fetchMoreRows = props.fetchMoreRows ? fetchMoreRows0 : undefined;
 
   useEffect(() => {
-    if (state.active?.rowIndex === props.result.rows.length - 1) {
+    if (state.activeCell?.rowIndex === props.result.rows.length - 1) {
       fetchMoreRows0();
     }
-  }, [state.active?.rowIndex, props.result.rows.length, fetchMoreRows0]);
+  }, [state.activeCell?.rowIndex, props.result.rows.length, fetchMoreRows0]);
 
   const onScroll = useEvent((e: React.UIEvent<HTMLElement>) => {
     if (props.onScroll) props.onScroll();
@@ -670,11 +671,11 @@ export function useDataGridCore(props: DataGridCoreProps) {
       const headerEl = headerElRef.current;
       headerEl.style.marginLeft = `-${container.scrollLeft}px`;
     }
-    if (state.active && activeElRef.current)
+    if (state.activeCell && activeCellElRef.current)
       activeCellUpdate({
-        activeEl: activeElRef.current,
+        activeCellEl: activeCellElRef.current,
         finalWidths: colsWidths,
-        active: state.active,
+        activeCell: state.activeCell,
         scrollTop: container.scrollTop,
         scrollLeft: container.scrollLeft,
         containerHeight: props.height,
@@ -754,7 +755,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     setState((s) => ({
       ...s,
       editing: true,
-      active: { colIndex: 0, rowIndex: i },
+      activeCell: { colIndex: 0, rowIndex: i },
       contextMenu: undefined,
       selection: {
         colIndex: [0, 0],
@@ -766,9 +767,9 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const onDiscardClick = useEvent(() => {
     setState((s) => ({
       ...s,
-      active:
-        s.active && s.active.rowIndex < props.result.rows.length + 1
-          ? s.active
+      activeCell:
+        s.activeCell && s.activeCell.rowIndex < props.result.rows.length + 1
+          ? s.activeCell
           : undefined,
       contextMenu: undefined,
       selection: s.selection
@@ -789,7 +790,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     if (e.target !== elRef.current) {
       if (
         e.target instanceof HTMLTextAreaElement &&
-        e.target.classList.contains('active-cell')
+        e.target.classList.contains('grid__active-cell')
       ) {
         const el = e.target;
         const cursorOnEnd =
@@ -811,7 +812,8 @@ export function useDataGridCore(props: DataGridCoreProps) {
     if (
       props.onUpdate &&
       (e.key === 'F2' || e.key === 'Enter') &&
-      (!state.active || state.update?.[state.active.rowIndex] !== 'REMOVE')
+      (!state.activeCell ||
+        state.update?.[state.activeCell.rowIndex] !== 'REMOVE')
     ) {
       edit();
       e.preventDefault();
@@ -826,7 +828,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         },
       }));
     } else if (e.key === 'PageUp') {
-      if (e.shiftKey || state.active) {
+      if (e.shiftKey || state.activeCell) {
         const pageRows = Math.round((props.height - headerHeight) / rowHeight);
         moveBy(0, -pageRows, e.shiftKey);
         return;
@@ -842,7 +844,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         behavior: 'smooth',
       });
     } else if (e.key === 'PageDown') {
-      if (e.shiftKey || state.active) {
+      if (e.shiftKey || state.activeCell) {
         const pageRows = Math.round((props.height - headerHeight) / rowHeight);
         moveBy(0, pageRows, e.shiftKey);
         return;
@@ -856,7 +858,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         behavior: 'smooth',
       });
     } else if (e.key === 'Home') {
-      if (e.shiftKey || state.active) {
+      if (e.shiftKey || state.activeCell) {
         moveBy(0, -Infinity, e.shiftKey);
         return;
       }
@@ -867,7 +869,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         behavior: 'smooth',
       });
     } else if (e.key === 'End') {
-      if (e.shiftKey || state.active) {
+      if (e.shiftKey || state.activeCell) {
         moveBy(0, Infinity, e.shiftKey);
         return;
       }
@@ -880,7 +882,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
           scrollWidth,
         behavior: 'smooth',
       });
-    } else if (state.active) {
+    } else if (state.activeCell) {
       if (e.key === 'Escape') {
         if (elRef.current) elRef.current.blur();
       } else if (e.key === 'ArrowDown') {
@@ -900,14 +902,16 @@ export function useDataGridCore(props: DataGridCoreProps) {
         !e.ctrlKey &&
         !e.altKey &&
         !e.metaKey &&
-        (!state.active || state.update?.[state.active.rowIndex] !== 'REMOVE')
+        (!state.activeCell ||
+          state.update?.[state.activeCell.rowIndex] !== 'REMOVE')
       ) {
         e.preventDefault();
         e.stopPropagation();
         if (
           !(
             props.pks?.length ||
-            (state.active && state.active.rowIndex >= props.result.rows.length)
+            (state.activeCell &&
+              state.activeCell.rowIndex >= props.result.rows.length)
           )
         ) {
           edit();
@@ -921,17 +925,17 @@ export function useDataGridCore(props: DataGridCoreProps) {
           touched: true,
           editing: 2,
           contextMenu: undefined,
-          update: s.active
+          update: s.activeCell
             ? {
                 ...s.update,
-                [s.active.rowIndex]:
-                  s.update?.[s.active.rowIndex] === 'REMOVE'
+                [s.activeCell.rowIndex]:
+                  s.update?.[s.activeCell.rowIndex] === 'REMOVE'
                     ? 'REMOVE'
                     : {
-                        ...(s.update?.[s.active.rowIndex] as {
+                        ...(s.update?.[s.activeCell.rowIndex] as {
                           [colIndex: string]: string | null;
                         }),
-                        [s.active.colIndex]: e.key,
+                        [s.activeCell.colIndex]: e.key,
                       },
               }
             : s.update,
@@ -983,7 +987,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         contextMenu: undefined,
         update: update2,
         selection: fixSelection(s.selection, fixedCount),
-        active: fixActive(s.active, fixedCount, e.rowIndex),
+        activeCell: fixActive(s.activeCell, fixedCount, e.rowIndex),
       }));
     } else if (e.type === 'undo all') {
       const update2 = { ...state.update };
@@ -1009,14 +1013,14 @@ export function useDataGridCore(props: DataGridCoreProps) {
         contextMenu: undefined,
         update: update2,
         selection: fixSelection(s.selection, fixedCount),
-        active: fixActive(s.active, fixedCount, e.rowIndex),
+        activeCell: fixActive(s.activeCell, fixedCount, e.rowIndex),
       }));
     } else if (e.type === 'update') {
       setState((s) => ({
         ...s,
         contextMenu: undefined,
         editing: true,
-        active: { rowIndex: e.rowIndex, colIndex: e.colIndex },
+        activeCell: { rowIndex: e.rowIndex, colIndex: e.colIndex },
       }));
     } else if (e.type === 'undo inserts') {
       const update2 = { ...state.update };
@@ -1049,7 +1053,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
         contextMenu: undefined,
         update: update2,
         selection,
-        active: fixActive(s.active, removes, e.rowIndex),
+        activeCell: fixActive(s.activeCell, removes, e.rowIndex),
       }));
     }
   });
@@ -1141,22 +1145,22 @@ export function useDataGridCore(props: DataGridCoreProps) {
       }));
       return;
     }
-    if (e.shiftKey && state.active) {
+    if (e.shiftKey && state.activeCell) {
       setState((state2) => ({
         ...state2,
-        selection: state2.active
+        selection: state2.activeCell
           ? {
               rowIndex: [
-                Math.min(state2.active.rowIndex, rowIndex),
-                Math.max(state2.active.rowIndex, rowIndex),
+                Math.min(state2.activeCell.rowIndex, rowIndex),
+                Math.max(state2.activeCell.rowIndex, rowIndex),
               ],
               colIndex: [
-                Math.min(state2.active.colIndex, colIndex),
-                Math.max(state2.active.colIndex, colIndex),
+                Math.min(state2.activeCell.colIndex, colIndex),
+                Math.max(state2.activeCell.colIndex, colIndex),
               ],
             }
           : undefined,
-        active: { rowIndex, colIndex },
+        activeCell: { rowIndex, colIndex },
         contextMenu: undefined,
       }));
       return;
@@ -1164,7 +1168,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
     setState((state2) => ({
       ...state2,
       mouseDown: { rowIndex, colIndex },
-      active: { rowIndex, colIndex },
+      activeCell: { rowIndex, colIndex },
       selection: undefined,
       contextMenu: undefined,
     }));
@@ -1193,9 +1197,10 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }
     const colIndex = getColIndex(x);
     if (
-      colIndex === state.active?.colIndex &&
-      rowIndex === state.active?.rowIndex &&
-      (!state.active || state.update?.[state.active.rowIndex] !== 'REMOVE')
+      colIndex === state.activeCell?.colIndex &&
+      rowIndex === state.activeCell?.rowIndex &&
+      (!state.activeCell ||
+        state.update?.[state.activeCell.rowIndex] !== 'REMOVE')
     ) {
       edit();
     }
@@ -1226,32 +1231,32 @@ export function useDataGridCore(props: DataGridCoreProps) {
   });
 
   const onChange = useEvent((value: string | null) => {
-    if (!state.active) return;
+    if (!state.activeCell) return;
     if (
-      state.update?.[state.active.rowIndex] === 'REMOVE' ||
+      state.update?.[state.activeCell.rowIndex] === 'REMOVE' ||
       (
-        state.update?.[state.active.rowIndex] as
+        state.update?.[state.activeCell.rowIndex] as
           | {
               [colIndex: string]: string | null;
             }
           | undefined
-      )?.[state.active.colIndex] === value
+      )?.[state.activeCell.colIndex] === value
     )
       return;
     setState((s) => ({
       ...s,
       contextMenu: undefined,
-      update: s.active
+      update: s.activeCell
         ? {
             ...s.update,
-            [s.active.rowIndex]:
-              state.update?.[s.active.rowIndex] === 'REMOVE'
+            [s.activeCell.rowIndex]:
+              state.update?.[s.activeCell.rowIndex] === 'REMOVE'
                 ? 'REMOVE'
                 : {
-                    ...(s.update?.[s.active.rowIndex] as {
+                    ...(s.update?.[s.activeCell.rowIndex] as {
                       [colIndex: string]: string | null;
                     }),
-                    [s.active.colIndex]: value,
+                    [s.activeCell.colIndex]: value,
                   },
           }
         : s.update,
@@ -1379,30 +1384,32 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const fetchingNewRows = useMoreTime(!!state.fetchingNewRows, 200);
 
   const activeCellChanged =
-    state.active?.rowIndex !== undefined &&
-    state.update?.[state.active.rowIndex] !== 'REMOVE' &&
+    state.activeCell?.rowIndex !== undefined &&
+    state.update?.[state.activeCell.rowIndex] !== 'REMOVE' &&
     typeof (
-      state.update?.[state.active.rowIndex] as {
+      state.update?.[state.activeCell.rowIndex] as {
         [colIndex: string]: string | null;
       }
-    )?.[state.active.colIndex] !== 'undefined';
+    )?.[state.activeCell.colIndex] !== 'undefined';
 
   const activeCellValue =
-    state.active?.rowIndex !== undefined &&
-    state.update?.[state.active.rowIndex] !== 'REMOVE' &&
-    typeof state.update[state.active.rowIndex] !== 'undefined' &&
+    state.activeCell?.rowIndex !== undefined &&
+    state.update?.[state.activeCell.rowIndex] !== 'REMOVE' &&
+    typeof state.update[state.activeCell.rowIndex] !== 'undefined' &&
     typeof (
-      state.update?.[state.active.rowIndex] as {
+      state.update?.[state.activeCell.rowIndex] as {
         [colIndex: string]: string | null;
       }
-    )?.[state.active.colIndex] !== 'undefined'
+    )?.[state.activeCell.colIndex] !== 'undefined'
       ? (
-          state.update?.[state.active.rowIndex] as {
+          state.update?.[state.activeCell.rowIndex] as {
             [colIndex: string]: string | null;
           }
-        )?.[state.active.colIndex]
-      : state.active
-        ? props.result.rows[state.active.rowIndex]?.[state.active.colIndex]
+        )?.[state.activeCell.colIndex]
+      : state.activeCell
+        ? props.result.rows[state.activeCell.rowIndex]?.[
+            state.activeCell.colIndex
+          ]
         : undefined;
 
   const onChangeLimit0 = useEvent((e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -1420,7 +1427,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
   return {
     activeCellChanged,
     activeCellValue,
-    activeElRef,
+    activeCellElRef,
     applyClick,
     applyingUpdate: state.updateRunning,
     colsWidths,

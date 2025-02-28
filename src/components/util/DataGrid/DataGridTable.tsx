@@ -7,7 +7,6 @@ interface DataGridTableProps {
   visibleStartingInEven: boolean;
   visibleRows: (string | null | number)[][];
   slice: [number, number];
-  gridContentTableTop: string;
   gridContentTableWidth: number | undefined;
   fields: QueryResultDataField[];
   finalWidths: number[];
@@ -20,7 +19,6 @@ export const DataGridTable = React.memo(
     visibleStartingInEven,
     visibleRows,
     slice,
-    gridContentTableTop,
     gridContentTableWidth,
     fields,
     finalWidths,
@@ -29,11 +27,9 @@ export const DataGridTable = React.memo(
   }: DataGridTableProps) => {
     return (
       <table
-        className="content-table"
+        className="grid__table"
         style={{
           width: gridContentTableWidth,
-          position: 'relative',
-          top: gridContentTableTop,
         }}
       >
         <thead style={{ visibility: 'hidden' }}>
@@ -97,7 +93,6 @@ export const DataGridTable = React.memo(
       prev.visibleRows === next.visibleRows &&
       prev.slice[0] === next.slice[0] &&
       prev.slice[1] === next.slice[1] &&
-      prev.gridContentTableTop === next.gridContentTableTop &&
       prev.gridContentTableWidth === next.gridContentTableWidth &&
       prev.fields === next.fields &&
       prev.finalWidths === next.finalWidths &&

@@ -336,10 +336,10 @@ export function ContextMenu({
           hoverElRef.current = el.closest('.grid')?.querySelector('tr.hover');
           rowsSelectionElRef.current = el
             .closest('.grid')
-            ?.querySelector('.grid--selection--rows');
+            ?.querySelector('.grid__selection--rows');
           selectionElRef.current = el
             .closest('.grid')
-            ?.querySelector('.grid--selection:not(.grid--selection--rows)');
+            ?.querySelector('.grid__selection:not(.grid__selection--rows)');
           if (rowsSelectionElRef.current) {
             rowsSelectionElRef.current.style.display = 'none';
           }

@@ -192,13 +192,13 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
       }}
       className={`form ${
         !('type' in filter) && isBigForm
-          ? 'data-grid-filter-dialog--big-form'
-          : 'data-grid-filter-dialog--small-form'
+          ? 'grid__filter-dialog__big-form'
+          : 'grid__filter-dialog__small-form'
       }`}
     >
       <h1 style={{ margin: 0, marginBottom: 20, lineHeight: '1em' }}>Filter</h1>
       <button
-        className={`data-grid-filter-dialog--where-sql${
+        className={`grid__filter-dialog__where-sql${
           sqlVisible ? ' active' : ''
         }`}
         onClick={showSql}
@@ -224,12 +224,12 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                   (filter.where as string)) ||
                   editQuery,
               )
-                ? 'data-grid-filter-dialog--sql-invalid'
+                ? 'grid__filter-dialog__sql-invalid'
                 : undefined
             }
           >
             <textarea
-              className="data-grid-filter-dialog--sql-where"
+              className="grid__filter-dialog__sql-where"
               value={
                 ('type' in filter &&
                   filter.type === 'query' &&
@@ -241,7 +241,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
               }}
             />
             <button
-              className="data-grid-filter-dialog--edit-button"
+              className="grid__filter-dialog__edit-button"
               style={updatedSqlQuery ? { opacity: 0.1 } : undefined}
               onClick={() => {
                 if (updatedSqlQuery) return;
@@ -254,12 +254,12 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
         ) : (
           <div style={{ position: 'relative', marginBottom: 15 }}>
             <textarea
-              className="data-grid-filter-dialog--sql-where"
+              className="grid__filter-dialog__sql-where"
               value={db().buildFilterWhere(filter)}
               readOnly
             />
             <button
-              className="data-grid-filter-dialog--edit-button"
+              className="grid__filter-dialog__edit-button"
               style={
                 !('type' in filter) &&
                 filter.length === 1 &&
@@ -280,7 +280,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
         <div>
           {filter.map((group, gIndex) => (
             <React.Fragment key={gIndex}>
-              <div className="data-grid-filter-dialog--and-group">
+              <div className="grid__filter-dialog__and-group">
                 {[...group, null].map((formField, i) => (
                   <div
                     style={{
@@ -495,7 +495,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                           focus?.[0] === gIndex &&
                           focus?.[1] === i &&
                           focus?.[2] === 0
-                            ? 'data-grid-filter-dialog--input-focus'
+                            ? 'grid__filter-dialog__input-focus'
                             : undefined
                         }
                       >
@@ -504,7 +504,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                           formField?.operator === 'nin') ? (
                           <span
                             style={{ position: 'relative' }}
-                            className="data-grid-filter-dialog--input-wrapper"
+                            className="grid__filter-dialog__input-wrapper"
                           >
                             <ValueListInput
                               values={
@@ -531,20 +531,18 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                         ) : (
                           <span
                             style={{ position: 'relative' }}
-                            className={`data-grid-filter-dialog--input-wrapper${
-                              formField?.sql
-                                ? ' data-grid-filter-dialog--sql'
-                                : ''
+                            className={`grid__filter-dialog__input-wrapper${
+                              formField?.sql ? ' grid__filter-dialog__sql' : ''
                             }${
                               formField?.sql &&
                               !validSql(formField?.value ?? '')
-                                ? ' data-grid-filter-dialog--sql-invalid'
+                                ? ' grid__filter-dialog__sql-invalid'
                                 : ''
                             }`}
                           >
                             {formField?.sql ? (
                               <div
-                                className="data-grid-filter-dialog--small-ops"
+                                className="grid__filter-dialog__small-ops"
                                 onMouseDown={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
@@ -649,14 +647,14 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                               }}
                             />
                             {formField?.sql ? (
-                              <span className="data-grid-filter-dialog--sql-tip">
+                              <span className="grid__filter-dialog__sql-tip">
                                 SQL
                               </span>
                             ) : null}
                           </span>
                         )}
                         <span
-                          className="data-grid-filter-dialog--value-type"
+                          className="grid__filter-dialog__value-type"
                           style={
                             formField?.operator === 'notnull' ||
                             formField?.operator === 'null'
@@ -764,7 +762,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                             focus?.[0] === gIndex &&
                             focus?.[1] === i &&
                             focus?.[2] === 1
-                              ? 'data-grid-filter-dialog--input-focus'
+                              ? 'grid__filter-dialog__input-focus'
                               : undefined
                           }
                         >
@@ -780,20 +778,18 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                           </div>
                           <span
                             style={{ position: 'relative' }}
-                            className={`data-grid-filter-dialog--input-wrapper${
-                              formField?.sql2
-                                ? ' data-grid-filter-dialog--sql'
-                                : ''
+                            className={`grid__filter-dialog__input-wrapper${
+                              formField?.sql2 ? ' grid__filter-dialog__sql' : ''
                             }${
                               formField?.sql2 &&
                               !validSql(formField?.value2 ?? '')
-                                ? ' data-grid-filter-dialog--sql-invalid'
+                                ? ' grid__filter-dialog__sql-invalid'
                                 : ''
                             }`}
                           >
                             {formField?.sql2 ? (
                               <div
-                                className="data-grid-filter-dialog--small-ops"
+                                className="grid__filter-dialog__small-ops"
                                 onMouseDown={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
@@ -866,12 +862,12 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                               }}
                             />
                             {formField?.sql2 ? (
-                              <span className="data-grid-filter-dialog--sql-tip">
+                              <span className="grid__filter-dialog__sql-tip">
                                 SQL
                               </span>
                             ) : null}
                           </span>
-                          <span className="data-grid-filter-dialog--value-type">
+                          <span className="grid__filter-dialog__value-type">
                             <select
                               value={
                                 formField?.sql2
@@ -981,7 +977,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                   }}
                 >
                   <button
-                    className="data-grid-filter-dialog--or"
+                    className="grid__filter-dialog__or"
                     onClick={() => {
                       setFilter([...filter, []]);
                       fit();

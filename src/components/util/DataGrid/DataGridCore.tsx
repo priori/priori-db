@@ -44,7 +44,7 @@ export interface DataGridCoreProps {
 
 export interface DataGridState {
   slice: [number, number];
-  active?: { rowIndex: number; colIndex: number };
+  activeCell?: { rowIndex: number; colIndex: number };
   selection?: { rowIndex: [number, number]; colIndex: [number, number] };
   mouseDown?: { rowIndex: number; colIndex: number };
   contextMenu?: {
@@ -73,7 +73,7 @@ export function DataGridCore(props: DataGridCoreProps) {
   const {
     activeCellChanged,
     activeCellValue,
-    activeElRef,
+    activeCellElRef,
     applyClick,
     applyingUpdate,
     colsWidths,
@@ -127,9 +127,9 @@ export function DataGridCore(props: DataGridCoreProps) {
       onDoubleClick={onDoubleClick}
       ref={elRef}
     >
-      <div className="grid-header-wrapper">
+      <div className="grid__header-wrapper">
         <table
-          className="grid-header"
+          className="grid__header"
           style={{
             width: gridContentTableWidth,
             zIndex: 3,
@@ -153,15 +153,15 @@ export function DataGridCore(props: DataGridCoreProps) {
         </table>
       </div>
 
-      {state.active ? (
+      {state.activeCell ? (
         <DataGridActiveCell
-          field={props.result.fields[state.active.colIndex].type}
+          field={props.result.fields[state.activeCell.colIndex].type}
           scrollLeft={scrollRef.current.top}
           scrollTop={scrollRef.current.left}
           containerHeight={props.height}
           containerWidth={props.width}
           colsWidths={colsWidths}
-          active={state.active}
+          activeCell={state.activeCell}
           hasBottomScrollbar={hasBottomScrollbar}
           hasRightScrollbar={hasRightScrollbar}
           onChange={onChange}
@@ -169,13 +169,15 @@ export function DataGridCore(props: DataGridCoreProps) {
           onBlur={onEditBlur}
           editing={state.editing}
           value={activeCellValue}
-          markedForRemoval={state.update[state.active.rowIndex] === 'REMOVE'}
-          elRef={activeElRef}
+          markedForRemoval={
+            state.update[state.activeCell.rowIndex] === 'REMOVE'
+          }
+          elRef={activeCellElRef}
         />
       ) : null}
 
       <div
-        className="grid-content"
+        className="grid__scroll"
         onScroll={onScroll}
         ref={gridContentRef}
         style={{
@@ -185,87 +187,79 @@ export function DataGridCore(props: DataGridCoreProps) {
       >
         <div
           style={{
-            height: gridContentHeight + extraBottomSpace + gridContentMarginTop,
+            width: gridContentTableWidth,
+            paddingBottom:
+              extraBottomSpace - (onChangeLimit && props.limit ? 83 : 0) < 0
+                ? undefined
+                : extraBottomSpace - (onChangeLimit && props.limit ? 83 : 0),
           }}
+          className="grid__content"
         >
           <div
             style={{
-              width: gridContentTableWidth,
-              height: gridContentHeight + extraBottomSpace,
+              marginTop: gridContentMarginTop,
+              paddingTop: gridContentTableTop,
+              height: gridContentHeight,
             }}
-            className="grid-content--table-wrapper-outer"
+            className="grid__table-wrapper"
           >
-            <div
-              style={{
-                marginTop: gridContentMarginTop,
-                height: gridContentHeight,
-              }}
-              className="grid-content--table-wrapper"
-            >
-              <DataGridTable
-                visibleStartingInEven={visibleStartingInEven}
-                visibleRows={visibleRows}
-                slice={state.slice}
-                gridContentTableTop={gridContentTableTop}
-                gridContentTableWidth={gridContentTableWidth}
-                fields={props.result.fields}
-                finalWidths={colsWidths}
-                update={state.update}
-                hoverRowIndex={state.contextMenu?.rowIndex}
-              />
-              {state.selection ? (
-                <DataGridSelection
-                  colsWidths={colsWidths}
-                  selection={state.selection}
-                />
-              ) : undefined}
-              {state.selection &&
-              state.contextMenu &&
-              state.contextMenu.rowIndex >= state.selection.rowIndex[0] &&
-              state.contextMenu.rowIndex <= state.selection.rowIndex[1] &&
-              state.contextMenu.colIndex >= state.selection.colIndex[0] &&
-              state.contextMenu.colIndex <= state.selection.colIndex[1] ? (
-                <DataGridSelection
-                  className="grid--selection--rows"
-                  colsWidths={colsWidths}
-                  selection={{
-                    colIndex: [0, props.result.fields.length - 1],
-                    rowIndex: state.selection.rowIndex,
-                  }}
-                />
-              ) : null}
-            </div>
-            {onChangeLimit && props.limit ? (
-              <div
-                style={{
-                  top: gridContentHeight + gridContentMarginTop,
-                }}
-                className="grid-content--footer"
-              >
-                <select
-                  value={props.limit}
-                  disabled={
-                    props.result.rows.length < 1000 ||
-                    pendingRowsUpdate > 0 ||
-                    pendingInserts > 0 ||
-                    pendingRowsRemoval > 0
-                  }
-                  onChange={onChangeLimit}
-                >
-                  <option value="1000">LIMIT 1000</option>
-                  <option value="10000">LIMIT 10000</option>
-                  <option value="unlimited">
-                    UNLIMITED (incremental fetching)
-                  </option>
-                </select>
-              </div>
-            ) : null}
+            <DataGridTable
+              visibleStartingInEven={visibleStartingInEven}
+              visibleRows={visibleRows}
+              slice={state.slice}
+              gridContentTableWidth={gridContentTableWidth}
+              fields={props.result.fields}
+              finalWidths={colsWidths}
+              update={state.update}
+              hoverRowIndex={state.contextMenu?.rowIndex}
+            />
           </div>
+          {state.selection ? (
+            <DataGridSelection
+              colsWidths={colsWidths}
+              selection={state.selection}
+            />
+          ) : undefined}
+          {state.selection &&
+          state.contextMenu &&
+          state.contextMenu.rowIndex >= state.selection.rowIndex[0] &&
+          state.contextMenu.rowIndex <= state.selection.rowIndex[1] &&
+          state.contextMenu.colIndex >= state.selection.colIndex[0] &&
+          state.contextMenu.colIndex <= state.selection.colIndex[1] ? (
+            <DataGridSelection
+              className="grid__selection--rows"
+              colsWidths={colsWidths}
+              selection={{
+                colIndex: [0, props.result.fields.length - 1],
+                rowIndex: state.selection.rowIndex,
+              }}
+            />
+          ) : null}
+          {onChangeLimit && props.limit ? (
+            <div className="grid__limit-control">
+              <select
+                value={props.limit}
+                disabled={
+                  props.result.rows.length < 1000 ||
+                  pendingRowsUpdate > 0 ||
+                  pendingInserts > 0 ||
+                  pendingRowsRemoval > 0
+                }
+                onChange={onChangeLimit}
+              >
+                <option value="1000">LIMIT 1000</option>
+                <option value="10000">LIMIT 10000</option>
+                <option value="unlimited">
+                  UNLIMITED (incremental fetching)
+                </option>
+              </select>
+            </div>
+          ) : null}
         </div>
       </div>
 
       {fetchingNewRows ? (
-        <div className="grid-content--fetch-more-rows">
+        <div className="grid__fetching">
           <i className="fa fa-circle-o-notch fa-spin fa-3x fa-fw" />
         </div>
       ) : null}

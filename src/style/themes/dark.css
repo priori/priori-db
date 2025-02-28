@@ -294,7 +294,7 @@ body.dark {
   }
   .dialog,
   .new-schema-form > div,
-  .change-dialog,
+  .grid__update-dialog,
   .favorite-dialog,
   .dialog--close-window {
     background: rgba(0, 0, 0, 0.85);
@@ -304,7 +304,7 @@ body.dark {
     background: #111;
     color: white;
   }
-  .change-dialog .data-grid-update-info--buttons {
+  .grid__update-dialog .grid__update-dialog__buttons {
     border-top-color: #333;
   }
   div.frame.table-info div.dialog-form div[tabindex]:focus,
@@ -355,7 +355,7 @@ body.dark {
         -1px 0 #fe0 !important;
     }
   }
-  .grid-content--table-wrapper-outer select:disabled {
+  .grid__limit-control select:disabled {
     color: #555;
     opacity: 0.3;
   }
@@ -366,9 +366,9 @@ body.dark {
   .grid table {
     box-shadow: none;
   }
-  .app-content button.data-grid-filter-dialog--where-sql,
-  .app-content button.data-grid-filter-dialog--or,
-  .app-content .data-grid-filter-dialog--edit-button {
+  .app-content button.grid__filter-dialog__where-sql,
+  .app-content button.grid__filter-dialog__or,
+  .app-content .grid__filter-dialog__edit-button {
     color: #ddd;
     cursor: pointer;
     border-color: #666;
@@ -378,23 +378,23 @@ body.dark {
       background: transparent;
     }
   }
-  .app-content button.data-grid-filter-dialog--where-sql:hover,
-  .app-content button.data-grid-filter-dialog--or:hover,
-  .app-content .data-grid-filter-dialog--edit-button:hover {
+  .app-content button.grid__filter-dialog__where-sql:hover,
+  .app-content button.grid__filter-dialog__or:hover,
+  .app-content .grid__filter-dialog__edit-button:hover {
     background: #333 !important;
     color: white;
     border-color: #777;
   }
-  .app-content button.data-grid-filter-dialog--where-sql.active {
+  .app-content button.grid__filter-dialog__where-sql.active {
     background: #1976d2 !important;
   }
 
   /* data grid */
-  .grid-content--table-wrapper,
-  .active-cell-wrapper2:not(:has(textarea)) {
+  .grid__table-wrapper,
+  .grid__active-cell-wrapper > div > div:not(:has(textarea)) {
     filter: contrast(0.8) invert(1) brightness(0.9);
   }
-  .active-cell-wrapper2 textarea {
+  .grid__active-cell-wrapper textarea {
     color: white;
     background: #000;
   }
@@ -409,8 +409,7 @@ body.dark {
   .grid .fa-plus:hover {
     color: #fe0;
   }
-  .data-grid-filter-dialog--big-form.dialog
-    .data-grid-filter-dialog--and-group {
+  .grid__filter-dialog__big-form.dialog .grid__filter-dialog__and-group {
     border-color: #222;
   }
 

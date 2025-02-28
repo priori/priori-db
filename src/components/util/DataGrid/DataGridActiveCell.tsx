@@ -2,7 +2,7 @@ import React from 'react';
 import { equals } from 'util/equals';
 import { useEvent } from 'util/useEvent';
 import {
-  activePos,
+  activeCellPos,
   getType,
   getValString,
   rowHeight,
@@ -10,9 +10,9 @@ import {
 } from './util';
 
 interface UpdateActivePos {
-  activeEl: HTMLDivElement;
+  activeCellEl: HTMLDivElement;
   finalWidths: number[];
-  active: { colIndex: number; rowIndex: number };
+  activeCell: { colIndex: number; rowIndex: number };
   scrollTop: number;
   scrollLeft: number;
   containerHeight: number;
@@ -21,9 +21,9 @@ interface UpdateActivePos {
   hasRightScrollbar: boolean;
 }
 export function activeCellUpdate({
-  activeEl,
+  activeCellEl,
   finalWidths,
-  active,
+  activeCell,
   scrollTop,
   scrollLeft,
   containerHeight,
@@ -32,10 +32,10 @@ export function activeCellUpdate({
   hasRightScrollbar,
 }: UpdateActivePos) {
   const { top, left, leftCrop, topCrop, wrapperWidth, wrapperHeight } =
-    activePos(
+    activeCellPos(
       finalWidths,
-      active.colIndex,
-      active.rowIndex,
+      activeCell.colIndex,
+      activeCell.rowIndex,
       scrollTop,
       scrollLeft,
       containerWidth,
@@ -43,16 +43,16 @@ export function activeCellUpdate({
       hasBottomScrollbar,
       hasRightScrollbar,
     );
-  activeEl.style.top = `${top}px`;
-  activeEl.style.left = `${left}px`;
-  const wrapper2El = activeEl.querySelector(
-    '.active-cell-wrapper2',
+  activeCellEl.style.top = `${top}px`;
+  activeCellEl.style.left = `${left}px`;
+  const wrapper2El = activeCellEl.querySelector(
+    '.grid__active-cell-wrapper>div>div',
   ) as HTMLDivElement;
-  const strokeEl = activeEl.querySelector(
-    '.active__stroke',
+  const strokeEl = activeCellEl.querySelector(
+    '.grid__active-cell__stroke',
   ) as HTMLDivElement | null;
   wrapper2El.style.marginLeft = `-${leftCrop}px`;
-  activeEl.style.width = `${wrapperWidth + 4}px`;
+  activeCellEl.style.width = `${wrapperWidth + 4}px`;
   if (topCrop) {
     wrapper2El.style.marginTop = `-${topCrop}px`;
     if (strokeEl) {
@@ -68,11 +68,11 @@ export function activeCellUpdate({
     }
   }
   if (wrapperHeight) {
-    activeEl.style.height = `${wrapperHeight}px`;
-  } else if (activeEl.style.height) {
-    activeEl.style.height = '';
+    activeCellEl.style.height = `${wrapperHeight}px`;
+  } else if (activeCellEl.style.height) {
+    activeCellEl.style.height = '';
   }
-  activeEl.style.display =
+  activeCellEl.style.display =
     wrapperHeight === 0 ||
     top < 0 ||
     wrapperWidth < 0 ||
@@ -82,7 +82,7 @@ export function activeCellUpdate({
 }
 
 interface DataGridActiveCellProps {
-  active: {
+  activeCell: {
     colIndex: number;
     rowIndex: number;
   };
@@ -104,7 +104,7 @@ interface DataGridActiveCellProps {
 }
 export const DataGridActiveCell = React.memo(
   ({
-    active,
+    activeCell,
     elRef,
     value,
     scrollLeft,
@@ -124,10 +124,10 @@ export const DataGridActiveCell = React.memo(
     const val = value;
     const type = getType(val, field);
     const valString = getValString(val);
-    const { top, left, leftCrop, wrapperWidth } = activePos(
+    const { top, left, leftCrop, wrapperWidth } = activeCellPos(
       colsWidths,
-      active.colIndex,
-      active.rowIndex,
+      activeCell.colIndex,
+      activeCell.rowIndex,
       scrollLeft,
       scrollTop,
       containerWidth,
@@ -135,8 +135,8 @@ export const DataGridActiveCell = React.memo(
       hasBottomScrollbar,
       hasRightScrollbar,
     );
-    const key = `${active.rowIndex}/${active.colIndex}`;
-    const even = active.rowIndex % 2;
+    const key = `${activeCell.rowIndex}/${activeCell.colIndex}`;
+    const even = activeCell.rowIndex % 2;
     const textareaRef = useEvent((el: HTMLTextAreaElement | null) => {
       if (el) {
         el.focus();
@@ -188,8 +188,8 @@ export const DataGridActiveCell = React.memo(
         }}
         key={key}
         ref={elRef}
-        className={`active active-cell-wrapper ${even ? ' even' : ' odd'}${
-          markedForRemoval ? ' active-cell--marked-for-removal' : ''
+        className={`grid__active-cell-wrapper ${even ? ' even' : ' odd'}${
+          markedForRemoval ? ' grid__active-cell--marked-for-removal' : ''
         }`}
       >
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
@@ -198,7 +198,7 @@ export const DataGridActiveCell = React.memo(
               marginLeft: `${-leftCrop}px`,
               height: `${rowHeight - 1}px`,
             }}
-            className={`active-cell-wrapper2 ${type}`}
+            className={type}
           >
             {editing ? (
               <textarea
@@ -208,11 +208,11 @@ export const DataGridActiveCell = React.memo(
                 readOnly={!!markedForRemoval}
                 ref={textareaRef}
                 placeholder={val === null ? 'null' : undefined}
-                className="active-cell"
+                className="grid__active-cell"
                 defaultValue={val === null ? '' : valString}
               />
             ) : (
-              <div className={`active-cell${changed ? ' changed' : ''}`}>
+              <div className={`grid__active-cell${changed ? ' changed' : ''}`}>
                 {valString && valString.length > 200
                   ? `${valString.substring(0, 200)}...`
                   : valString}
@@ -220,7 +220,9 @@ export const DataGridActiveCell = React.memo(
             )}
           </div>
         </div>
-        {markedForRemoval ? <div className="active__stroke" /> : null}
+        {markedForRemoval ? (
+          <div className="grid__active-cell__stroke" />
+        ) : null}
       </div>
     );
   },

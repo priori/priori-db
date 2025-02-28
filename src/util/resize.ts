@@ -2,8 +2,9 @@ function resize(
   e: React.MouseEvent,
   fn: (v: { x: number; y: number }) => boolean | { x: number; y: number },
   type: 'horizontal' | 'vertical',
-  el: HTMLElement,
+  baseEl: HTMLElement,
   pos: number,
+  rootEl?: HTMLElement | undefined,
 ) {
   const x0 = e.clientX;
   const y0 = e.clientY;
@@ -21,13 +22,14 @@ function resize(
   const indicator = document.createElement('div');
   indicator.className = `resize--indicator resize--indicator--${type}`;
   lock.append(indicator);
-  const rect = el.getClientRects()[0];
+  const rect = baseEl.getClientRects()[0];
+  const rect0 = rootEl?.getClientRects()[0] ?? rect;
   if (type === 'horizontal') {
-    indicator.style.top = `${rect.top}px`;
-    indicator.style.height = `${rect.height}px`;
+    indicator.style.top = `${rect0.top}px`;
+    indicator.style.height = `${rect0.height}px`;
   } else {
-    indicator.style.left = `${rect.left}px`;
-    indicator.style.width = `${rect.width}px`;
+    indicator.style.left = `${rect0.left}px`;
+    indicator.style.width = `${rect0.width}px`;
   }
   indicator.style[type === 'horizontal' ? 'left' : 'top'] = `${
     pos + (type === 'horizontal' ? rect.left : rect.top)
@@ -106,8 +108,9 @@ function resize(
 export function horizontalResize(
   e: React.MouseEvent,
   fn: (inc: number) => boolean | number,
-  el: HTMLElement,
+  baseEl: HTMLElement,
   pos: number,
+  rootEl?: HTMLElement,
 ) {
   return resize(
     e,
@@ -117,15 +120,17 @@ export function horizontalResize(
       return ret;
     },
     'horizontal',
-    el,
+    baseEl,
     pos,
+    rootEl,
   ).then((v) => v?.x);
 }
 export function verticalResize(
   e: React.MouseEvent,
   fn: (inc: number) => boolean | number,
-  el: HTMLElement,
+  baseEl: HTMLElement,
   pos: number,
+  rootEl?: HTMLElement,
 ) {
   return resize(
     e,
@@ -135,7 +140,8 @@ export function verticalResize(
       return ret;
     },
     'vertical',
-    el,
+    baseEl,
     pos,
+    rootEl,
   ).then((v) => v?.y);
 }

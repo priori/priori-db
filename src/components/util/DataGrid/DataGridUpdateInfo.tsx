@@ -27,12 +27,12 @@ export function DataGridUpdateInfoDialog({
   });
   return (
     <div
-      className="change-dialog"
+      className="grid__update-dialog"
       onMouseDown={onChangeDialogMouseDown}
       tabIndex={0}
     >
       {applyingUpdate ? (
-        <div className="data-grid-update-info--updating">
+        <div className="grid__update-dialog__updating">
           <i className="fa fa-circle-o-notch fa-spin" />
         </div>
       ) : null}
@@ -87,13 +87,13 @@ export function DataGridUpdateInfoDialog({
           </>
         ) : null}
         {fail ? (
-          <div className="data-grid-update-info--error">
+          <div className="grid__update-dialog__error">
             <i className="fa fa-exclamation-triangle" /> {fail.message}
             <i className="fa fa-times" onClick={onDiscardFailClick} />
           </div>
         ) : null}
       </div>
-      <div className="data-grid-update-info--buttons">
+      <div className="grid__update-dialog__buttons">
         <button
           className="pill-button"
           onClick={onDiscardClick}

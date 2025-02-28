@@ -139,7 +139,7 @@ body.glacial-white-theme select,
 body.glacial-white-theme input {
   border-color: #f0f0f0;
 }
-body.glacial-white-theme .grid-content--table-wrapper-outer select {
+body.glacial-white-theme .grid__limit-control select {
   border-color: #ddd;
 }
 body.glacial-white-theme .query-selector__select {
@@ -217,10 +217,11 @@ body.glacial-white-theme .nav-search__result .nav-row.active:hover {
 }
 
 /* table */
-body.glacial-white-theme .grid-content--table-wrapper {
+body.glacial-white-theme .grid__table-wrapper {
   filter: brightness(1.04);
 }
-body.glacial-white-theme .grid--selection {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(0, 0, 0, 0.09);
+body.glacial-white-theme .grid__selection {
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  background: rgba(0, 0, 0, 0.03);
+  backdrop-filter: brightness(0.95) contrast(1.02);
 }
