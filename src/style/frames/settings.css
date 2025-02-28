@@ -3,6 +3,7 @@
 }
 [data-hint]::after {
   content: attr(data-hint);
+  display: none;
   position: absolute;
   line-height: 1.2;
   background: rgba(0, 0, 0, 0.8);
@@ -26,6 +27,7 @@
 
 [data-hint]:hover::after {
   opacity: 1;
+  display: block;
 }
 .params--search {
   padding: 3px;
