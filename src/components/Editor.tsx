@@ -37,14 +37,12 @@ export interface EditorHandle {
   getQuery(): string;
   getEditorState(): EditorState;
   setQueryValue(query: string): void;
-  editor: any;
+  blur(): void;
 }
 
 export const Editor = forwardRef<EditorHandle, EditorProps>(
   (props: EditorProps, ref) => {
     const editorRef = React.useRef<any>(null);
-
-    // focus = false;
 
     const elRef = React.useRef<HTMLElement | null>(null);
 
@@ -75,12 +73,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
       historyPolicity: 'clear' | 'replace' | 'push',
     ) {
       if (historyPolicity === 'replace') {
-        // editor.current.setHistory(this.lastHistory);
         editorRef.current.undo();
       }
-      // if (historyPolicity === 'push') {
-      //   this.lastHistory = editor.current.getHistory();
-      // }
       editorRef.current.setValue(content);
       editorRef.current.setSelection(cursorStart, cursorEnd);
       if (historyPolicity === 'clear') editorRef.current.clearHistory();
@@ -123,35 +117,19 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         prev = v;
         if (props.onChange) props.onChange(contentChanged);
       });
-      // var charWidth = editor.defaultCharWidth(), basePadding = 4;
-      // editor.on("renderLine", function(cm:any, line:any, elt:any) {
-      //     console.log(cm,line,elt);
-      //     var off = (window as any).CodeMirror.countColumn(line.text, null, cm.getOption("tabSize")) * charWidth;
-      //     elt.style.textIndent = "-" + off + "px";
-      //     elt.style.paddingLeft = (basePadding + off) + "px";
-      // });
       editorRef.current.refresh();
       editorRef.current.getInputField().focus();
     }
-
-    // hide() {
-    //   this.focus = editor.current.hasFocus();
-    //   editor.current.getInputField().blur();
-    // }
-
-    // show() {
-    //   setTimeout(() => {
-    //     editor.current.getInputField().focus();
-    //     editor.current.refresh();
-    //   }, 1);
-    // }
+    function blur() {
+      if (elRef.current) editorRef.current.getInputField().blur();
+    }
 
     useImperativeHandle(ref, () => ({
       getEditorState,
-      editor: editorRef.current,
       setQueryValue,
       getQuery,
       setEditorState,
+      blur,
     }));
 
     const { height } = props;

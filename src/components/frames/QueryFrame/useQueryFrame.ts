@@ -311,15 +311,9 @@ export function useQueryFrame({ uid }: { uid: number }) {
       const el = document.activeElement;
       el.blur();
     }
-    if (
-      editorRef.current &&
-      editorRef.current.editor &&
-      editorRef.current.editor.getInputField()
-    ) {
-      editorRef.current.editor.getInputField().blur();
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    editorRef.current?.blur();
+    e.preventDefault();
+    e.stopPropagation();
     const el = e.target.closest('.frame.query-tab');
     assert(el instanceof HTMLElement);
     const maxHeight = el.offsetHeight - 60;
