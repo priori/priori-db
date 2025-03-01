@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { assert } from 'util/assert';
 import { useEvent } from 'util/useEvent';
 import { closeTabNow, showError, updateTab } from 'state/actions';
@@ -17,7 +17,7 @@ import { verticalResize } from 'util/resize';
 import { useEventListener } from 'util/useEventListener';
 import { QueryGroupEntryIDB } from 'util/browserDb/entities';
 import { useTab } from '../../main/connected/ConnectedApp';
-import { Editor } from '../../Editor';
+import { EditorHandle } from '../../Editor';
 import {
   QueryExecutorNoticeMessage,
   useQueryExecutor,
@@ -54,7 +54,7 @@ export function useQueryFrame({ uid }: { uid: number }) {
     queryGroup: QueryGroupEntryIDB;
     page: number;
   } | null>(null);
-  const editorRef: MutableRefObject<Editor | null> = useRef(null);
+  const editorRef = useRef<EditorHandle | null>(null);
   const isMounted = useIsMounted();
   const [stdInFile, setStdInFile] = useState<string | null>(null);
   const [stdOutFile, setStdOutFile] = useState<string | null>(null);
