@@ -112,13 +112,14 @@
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.8",
     "electron-updater": "^6.1.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.16.0",
+    "monaco-editor": "^0.52.2",
     "mysql2": "^3.10.0",
     "pg": "^8.7.3",
     "pg-copy-streams": "^6.0.6",
-    "pg-cursor": "^2.10.3"
+    "pg-cursor": "^2.10.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.16.0"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.0",
@@ -129,6 +130,9 @@
     "@testing-library/react": "^14.0.0",
     "@types/jest": "^29.5.5",
     "@types/node": "20.6.2",
+    "@types/pg": "^8.6.5",
+    "@types/pg-copy-streams": "^1.2.4",
+    "@types/pg-cursor": "^2.7.2",
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
     "@types/react-test-renderer": "^18.0.1",
@@ -183,10 +187,7 @@
     "webpack-bundle-analyzer": "^4.9.1",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1",
-    "webpack-merge": "^5.9.0",
-    "@types/pg": "^8.6.5",
-    "@types/pg-copy-streams": "^1.2.4",
-    "@types/pg-cursor": "^2.7.2"
+    "webpack-merge": "^5.9.0"
   },
   "build": {
     "productName": "Priori DB",

@@ -67,7 +67,7 @@
   position: absolute;
   right: 60px;
   margin-top: -54px;
-  z-index: 2;
+  z-index: 4;
   cursor: pointer;
 }
 .query-frame__execute-button {
@@ -97,7 +97,7 @@ button.query-tab--stdout {
   position: absolute;
   right: 20px;
   margin-top: -54px;
-  z-index: 2;
+  z-index: 4;
   cursor: pointer;
   padding: 5px !important;
   font-size: 14px;
@@ -109,7 +109,7 @@ button.query-tab--stdout {
   font-weight: bold;
   font-size: 13px;
   background: white;
-  z-index: 2;
+  z-index: 4;
   padding: 5px;
 }
 .query-tab .client-error {
@@ -120,7 +120,7 @@ button.query-tab--stdout {
   font-weight: bold;
   font-size: 13px;
   background: white;
-  z-index: 2;
+  z-index: 4;
   padding: 5px;
 }
 .running span {
@@ -182,7 +182,7 @@ button.query-tab--stdout {
   border-radius: 4px;
   font-weight: bold;
   cursor: default;
-  z-index: 2;
+  z-index: 4;
   opacity: 0;
   animation: opacity 0.3s;
   animation-delay: 0.3s;
@@ -207,7 +207,7 @@ button.query-tab--stdout {
   right: 8px;
   top: 0;
   width: 180px;
-  z-index: 2;
+  z-index: 4;
   i.fa.fa-circle-o-notch.fa-spin {
     position: absolute;
     right: 0;
@@ -231,7 +231,7 @@ button.query-tab--stdout {
 }
 .favorite {
   position: absolute;
-  z-index: 4;
+  z-index: 5;
   top: 31px;
   right: 15px;
   transition: 0.3s top;
@@ -331,7 +331,7 @@ button.query-tab--stdout {
   font-size: 20px;
   color: #ccc;
   &:hover {
-    z-index: 9;
+    z-index: 11;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
     background: white !important;
     color: #000;
@@ -490,7 +490,7 @@ div.CodeMirror-gutters {
   right: 55px;
   top: 8px;
   width: 160px;
-  z-index: 3;
+  z-index: 5;
   cursor: default;
   h1 {
     font-size: 19px;

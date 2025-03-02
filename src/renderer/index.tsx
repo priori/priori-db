@@ -3,10 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ipcRenderer } from 'electron';
 import { forceClose } from 'util/useWindowCloseConfirm';
 import '../style/style.scss';
-import '../vendor/codemirror/codemirror.css';
 import '../vendor/font-awesome-4.6.3/css/font-awesome.min.css';
-import '../vendor/codemirror/codemirror';
-import '../vendor/codemirror/sql';
 import { App } from '../components/main/App';
 
 const container = document.getElementById('root');
