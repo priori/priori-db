@@ -159,7 +159,11 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
           alwaysConsumeMouseWheel: false,
         },
         overviewRulerBorder: false,
+        contextmenu: false,
+        multiCursorModifier: undefined,
       });
+      editorRef.current.addCommand(monaco.KeyCode.F1, () => {});
+      editorRef.current.addCommand(monaco.KeyCode.F2, () => {});
 
       let prev = getEditorState();
       editorRef.current.onDidChangeModelContent(() => {
