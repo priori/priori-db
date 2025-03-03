@@ -323,17 +323,35 @@ export const mysqlDb: DBInterface = {
     table: string,
     update: { comment?: string | null; name?: string; schema?: string },
   ): Promise<void> {
+    if (
+      update.comment &&
+      update.name === undefined &&
+      update.schema === undefined
+    ) {
+      await execute(
+        `ALTER TABLE ${label(schema)}.${label(table)} COMMENT = ?`,
+        [update.comment],
+      );
+      return;
+    }
+    if (update.comment === undefined) {
+      await execute(
+        `RENAME TABLE ${label(schema)}.${label(table)}
+        TO ${update.schema ? `${label(update.schema)}.` : ''}${label(update.name || table)}`,
+      );
+      return;
+    }
     const con = await openConnection();
     await con.query('START TRANSACTION;');
     try {
       if (update.name || update.schema) {
-        await execute(
+        await con.execute(
           `RENAME TABLE ${label(schema)}.${label(table)}
           TO ${update.schema ? `${label(update.schema)}.` : ''}${label(update.name || table)}`,
         );
       }
       if (update.comment) {
-        await execute(
+        await con.execute(
           `ALTER TABLE ${label(schema)}.${label(table)} COMMENT = ?`,
           [update.comment],
         );
