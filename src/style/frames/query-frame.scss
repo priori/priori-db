@@ -540,3 +540,105 @@ div.CodeMirror-gutters {
   // color: 'black',
   box-shadow: none;
 }
+/* monaco editor */
+.monaco-editor {
+  --monaco-fix--border-color: #e1e1e1;
+  --monaco-fix--focus-color: #1976d2;
+}
+.monaco-editor .find-widget > .find-part .monaco-inputbox,
+.monaco-editor .find-widget > .replace-part .monaco-inputbox,
+.monaco-editor .find-widget > .find-part .monaco-inputbox[style],
+.monaco-editor .find-widget > .replace-part .monaco-inputbox[style] {
+  min-height: 27px;
+  border: 1px solid var(--vscode-editorWidget-background) !important;
+  border-radius: 6px !important;
+}
+.monaco-editor .find-widget > .find-part {
+  margin: 2px 25px 0 17px !important;
+}
+.monaco-editor .find-widget > .replace-part {
+  margin: 1px 25px 0 17px !important;
+}
+.monaco-editor .find-widget .button.toggle {
+  width: 16px !important;
+}
+.monaco-editor .find-widget .monaco-findInput .monaco-scrollable-element,
+.monaco-editor .find-widget .monaco-replaceInput .monaco-scrollable-element {
+  border-radius: 7px;
+}
+.monaco-editor .find-widget > .find-part .monaco-inputbox > .ibwrapper > .input,
+.monaco-editor
+  .find-widget
+  > .find-part
+  .monaco-inputbox
+  > .ibwrapper
+  > .input[style],
+.monaco-editor
+  .find-widget
+  > .replace-part
+  .monaco-inputbox
+  > .ibwrapper
+  > .input,
+.monaco-editor
+  .find-widget
+  > .replace-part
+  .monaco-inputbox
+  > .ibwrapper
+  > .input[style] {
+  height: 24px !important;
+}
+.monaco-findInput > .controls,
+.monaco-editor .find-widget > .replace-part > .monaco-findInput > .controls {
+  top: 4px !important;
+  right: 4px !important;
+}
+.monaco-editor .find-widget > .find-part .monaco-inputbox > .ibwrapper,
+.monaco-editor .find-widget > .replace-part .monaco-inputbox > .ibwrapper {
+  border: 1px solid var(--monaco-fix--border-color);
+  border-radius: 5px !important;
+}
+.monaco-editor .find-widget .monaco-inputbox.synthetic-focus {
+  outline: none !important;
+}
+.monaco-editor .find-widget > .find-part .monaco-inputbox.synthetic-focus,
+.monaco-editor .find-widget > .replace-part .monaco-inputbox.synthetic-focus,
+.monaco-editor
+  .find-widget
+  > .find-part
+  .monaco-inputbox.synthetic-focus[style],
+.monaco-editor
+  .find-widget
+  > .replace-part
+  .monaco-inputbox.synthetic-focus[style] {
+  border-color: var(--monaco-fix--focus-color) !important;
+  box-shadow:
+    1px 1px var(--monaco-fix--focus-color),
+    1px -1px var(--monaco-fix--focus-color),
+    -1px 1px var(--monaco-fix--focus-color),
+    -1px -1px var(--monaco-fix--focus-color),
+    inset 1px 1px var(--monaco-fix--focus-color),
+    inset 1px -1px var(--monaco-fix--focus-color),
+    inset -1px 1px var(--monaco-fix--focus-color),
+    inset -1px -1px var(--monaco-fix--focus-color);
+}
+.monaco-editor
+  .find-widget
+  > .find-part
+  .monaco-inputbox.synthetic-focus
+  > .ibwrapper,
+.monaco-editor
+  .find-widget
+  > .replace-part
+  .monaco-inputbox.synthetic-focus
+  > .ibwrapper {
+  border-color: var(--monaco-fix--focus-color) !important;
+  box-shadow:
+    1px 1px var(--monaco-fix--focus-color),
+    1px -1px var(--monaco-fix--focus-color),
+    -1px 1px var(--monaco-fix--focus-color),
+    -1px -1px var(--monaco-fix--focus-color),
+    inset 1px 1px var(--monaco-fix--focus-color),
+    inset 1px -1px var(--monaco-fix--focus-color),
+    inset -1px 1px var(--monaco-fix--focus-color),
+    inset -1px -1px var(--monaco-fix--focus-color);
+}

@@ -1,5 +1,6 @@
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 import * as monaco from 'monaco-editor';
+import { useEvent } from 'util/useEvent';
 
 type EditorState = {
   content: string;
@@ -46,6 +47,31 @@ export interface EditorHandle {
   blur(): void;
 }
 
+monaco.editor.defineTheme('dark', {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [],
+  colors: {
+    'editor.background': '#262626',
+  },
+});
+
+function isDark() {
+  const theme = localStorage.getItem('theme') || 'soft-gray-theme';
+  return theme === 'dark';
+}
+
+function useThemeChange(listener0: () => void) {
+  const listener = useEvent(listener0);
+  useEffect(() => {
+    const observer = new MutationObserver(listener);
+    observer.observe(document.body, { attributeFilter: ['class'] });
+    return () => {
+      observer.disconnect();
+    };
+  }, [listener]);
+}
+
 export const Editor = forwardRef<EditorHandle, EditorProps>(
   (props: EditorProps, ref) => {
     const editorRef = React.useRef<monaco.editor.IStandaloneCodeEditor | null>(
@@ -56,7 +82,15 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
 
     const timeout = React.useRef<ReturnType<typeof setTimeout>>();
 
-    function getQuery() {
+    useThemeChange(() => {
+      if (isDark()) {
+        editorRef.current?.updateOptions({ theme: 'dark' });
+      } else {
+        editorRef.current?.updateOptions({ theme: 'vs-white' });
+      }
+    });
+
+    const getQuery = useEvent(() => {
       const editor = editorRef.current!;
       const sel = editor.getSelection();
       if (sel) {
@@ -64,9 +98,9 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         if (q) return q;
       }
       return editor.getValue();
-    }
+    });
 
-    function getEditorState() {
+    const getEditorState = useEvent(() => {
       const content = editorRef.current!.getValue();
       const selection = editorRef.current!.getSelection()!;
       return {
@@ -80,49 +114,51 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
           ch: selection?.endColumn,
         },
       };
-    }
+    });
 
-    function setQueryValue(query: string) {
+    const setQueryValue = useEvent((query: string) => {
       editorRef.current?.setValue(query);
-    }
+    });
 
-    function setEditorState(
-      { content, cursorStart, cursorEnd }: EditorState,
-      historyPolicity: 'clear' | 'replace' | 'push',
-    ) {
-      if (historyPolicity === 'clear') {
-        editorRef.current?.setValue(content);
-        const sel = new monaco.Selection(
-          cursorStart.line,
-          cursorStart.ch,
-          cursorEnd.line,
-          cursorEnd.ch,
-        );
-        editorRef.current?.setSelection(sel);
-        return;
-      }
-      if (historyPolicity === 'replace') {
-        editorRef.current?.trigger('source', 'undo', null);
-      }
-      editorRef.current?.executeEdits('source', [
-        {
-          range: editorRef.current!.getModel()!.getFullModelRange(),
-          text: content,
-        },
-      ]);
-      if (cursorStart && cursorEnd) {
-        const sel = new monaco.Selection(
-          cursorStart.line,
-          cursorStart.ch,
-          cursorEnd.line,
-          cursorEnd.ch,
-        );
-        editorRef.current?.setSelection(sel);
-      }
-      editorRef.current?.focus();
-    }
+    const setEditorState = useEvent(
+      (
+        { content, cursorStart, cursorEnd }: EditorState,
+        historyPolicity: 'clear' | 'replace' | 'push',
+      ) => {
+        if (historyPolicity === 'clear') {
+          editorRef.current?.setValue(content);
+          const sel = new monaco.Selection(
+            cursorStart.line,
+            cursorStart.ch,
+            cursorEnd.line,
+            cursorEnd.ch,
+          );
+          editorRef.current?.setSelection(sel);
+          return;
+        }
+        if (historyPolicity === 'replace') {
+          editorRef.current?.trigger('source', 'undo', null);
+        }
+        editorRef.current?.executeEdits('source', [
+          {
+            range: editorRef.current!.getModel()!.getFullModelRange(),
+            text: content,
+          },
+        ]);
+        if (cursorStart && cursorEnd) {
+          const sel = new monaco.Selection(
+            cursorStart.line,
+            cursorStart.ch,
+            cursorEnd.line,
+            cursorEnd.ch,
+          );
+          editorRef.current?.setSelection(sel);
+        }
+        editorRef.current?.focus();
+      },
+    );
 
-    function setEditor(el: HTMLDivElement | null) {
+    const setEditor = useEvent((el: HTMLDivElement | null) => {
       if (!el) {
         timeout.current = setTimeout(() => {
           editorRef.current?.dispose();
@@ -140,7 +176,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
       editorRef.current = monaco.editor.create(el, {
         value: '',
         language: 'sql',
-        theme: 'vs-white',
+        theme: isDark() ? 'dark' : 'vs-white',
         automaticLayout: true,
         minimap: {
           enabled: false,
@@ -180,17 +216,17 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         prev = v;
         if (props.onChange) props.onChange(contentChanged);
       });
-      // editorRef.current.refresh();
       editorRef.current.focus();
-    }
-    function blur() {
+    });
+
+    const blur = useEvent(() => {
       if (
         elRef.current &&
         document.activeElement &&
         document.activeElement.contains(elRef.current)
       )
         (document.activeElement as HTMLElement).blur();
-    }
+    });
 
     useImperativeHandle(ref, () => ({
       getEditorState,
@@ -201,15 +237,12 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
     }));
 
     const { height } = props;
-    // if (editorRef.current && editorRef.current.refresh) {
-    //   editorRef.current.refresh();
-    //   setTimeout(() => editorRef.current.refresh(), 1);
-    // }
     if (editorRef.current && height <= 40) {
       editorRef.current?.updateOptions({ readOnly: true, domReadOnly: true });
     } else if (editorRef.current && height > 40) {
       editorRef.current?.updateOptions({ readOnly: false, domReadOnly: false });
     }
+
     return (
       <div
         className="editor"
@@ -217,10 +250,10 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
           {
             height,
             '--editor-height': `${height}px`,
-            ...(height <= 40 ? { overflow: 'hidden' } : {}),
+            ...(height <= 40 ? { overflow: 'hidden', opacity: 0 } : {}),
           } as React.CSSProperties
         }
-        ref={(el) => setEditor(el)}
+        ref={setEditor}
       />
     );
   },

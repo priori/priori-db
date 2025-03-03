@@ -336,7 +336,7 @@ body.dark {
     background: #2d2d2d;
   }
   textarea:focus {
-    border: 1px solid transparent;
+    border-color: transparent;
   }
   input,
   select,
@@ -354,6 +354,9 @@ body.dark {
         1px 0 #fe0,
         -1px 0 #fe0 !important;
     }
+  }
+  .monaco-editor .find-widget textarea:focus {
+    box-shadow: none !important;
   }
   .grid__limit-control select:disabled {
     color: #555;
@@ -391,7 +394,8 @@ body.dark {
 
   /* data grid */
   .grid__table-wrapper,
-  .grid__active-cell-wrapper > div > div:not(:has(textarea)) {
+  .grid__active-cell-wrapper > div > div:not(:has(textarea)),
+  .grid__active-cell__stroke {
     filter: contrast(0.8) invert(1) brightness(0.9);
   }
   .grid__active-cell-wrapper textarea {
@@ -412,13 +416,14 @@ body.dark {
   .grid__filter-dialog__big-form.dialog .grid__filter-dialog__and-group {
     border-color: #222;
   }
+  .grid__selection {
+    border: 1px solid rgba(256, 256, 256, 0.11);
+    background: rgba(256, 256, 256, 0.09);
+  }
 
   /* query editor */
   .app-content > .frame.query-tab {
     background: #2a2a2a;
-  }
-  .editor {
-    filter: brightness(0.87) invert(1);
   }
   .grid div .active {
     border-color: #eee;
@@ -683,6 +688,10 @@ body.dark {
   }
   .connection--editing {
     color: #1a4;
+  }
+  .monaco-editor {
+    --monaco-fix--border-color: #383838;
+    --monaco-fix--focus-color: #fe0;
   }
 }
 body.dark:has(.connections) {
