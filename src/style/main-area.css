@@ -12,7 +12,6 @@ table.table > * > th {
   font-size: 12px;
   table-layout: auto;
 }
-
 .new-schema-form input {
   padding: 8px;
   width: 150px;
@@ -42,7 +41,6 @@ table.table > * > th {
   top: 475px;
   left: 20px;
 }
-
 .list-input > .list-input-item {
   transition: top 0.5s;
 }

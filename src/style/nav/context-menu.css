@@ -1,0 +1,63 @@
+.nav-context-menu {
+  position: absolute;
+  background: white;
+  width: 170px;
+  z-index: 100;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+  padding: 7px 0;
+  border-radius: 7px;
+  font-size: 13px;
+  text-shadow: none;
+  font-style: normal;
+  font-weight: normal;
+  color: #000;
+}
+.nav-context-menu .adjustment-icon--small {
+  display: block !important;
+  opacity: 1 !important;
+  --bg: white;
+  color: black !important;
+}
+.nav-context-menu > div {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+.nav-context-menu > div:last-child {
+  border-bottom: none;
+}
+.nav-context-menu > div:hover,
+.nav-context-menu > div.selected {
+  background: #f4f4f4;
+}
+.nav-context-menu > div:hover .ajustment-icon,
+.nav-context-menu > div.selected .ajustment-icon {
+  --bg: #f4f4f4;
+}
+.nav-context-menu > div .fa {
+  font-size: 14px;
+  text-align: center;
+}
+.nav-context-menu > div .adjustment-icon--small {
+  margin-top: -1px;
+}
+.nav-context-menu > div .fa,
+.nav-context-menu > div .adjustment-icon--small {
+  width: 16px;
+  margin-right: 7px;
+}
+.nav-context-menu > div i.fa.fa-plus {
+  display: block;
+  color: black;
+  margin-top: -1px;
+  text-align: left;
+  padding-left: 2px;
+}
+.nav-context-menu > div.selected {
+  color: #007;
+}
+.nav-context-menu > div.selected .adjustment-icon--small {
+  color: #007 !important;
+}

@@ -79,7 +79,6 @@ body {
 .pill .fa-close:hover {
   opacity: 1;
 }
-
 input {
   border: solid 1px #e1e1e1;
   outline: none;
@@ -94,7 +93,6 @@ input:focus {
     1px 0 #1976d2,
     -1px 0 #1976d2;
 }
-
 @keyframes scale-up-center {
   0% {
     transform: scale(0.75);
@@ -137,21 +135,20 @@ input:focus {
   line-height: 1.2em;
   margin-top: -100px;
   width: 400px;
-  outline: none;
-  div {
-    padding-bottom: 20px;
-    padding-top: 10px;
-  }
-  button {
-    margin: 5px;
-    width: 60px;
-  }
   animation: scale-up-center 0.2s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+  outline: none;
+}
+.dialog--close-window div {
+  padding-bottom: 20px;
+  padding-top: 10px;
+}
+.dialog--close-window button {
+  margin: 5px;
+  width: 60px;
 }
 .dialog {
   animation: scale-up-center 0.2s cubic-bezier(0.39, 0.575, 0.565, 1) both;
 }
-
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -168,7 +165,6 @@ input:focus {
 button {
   white-space: nowrap;
 }
-
 .dialog {
   outline: none;
   background: white;
@@ -180,11 +176,10 @@ button {
   overflow: auto;
   transition: top 0.3s;
   z-index: 1112;
-  button {
-    margin: 5px;
-  }
 }
-
+.dialog button {
+  margin: 5px;
+}
 .error-message {
   padding: 20px;
   text-align: center;
@@ -192,12 +187,12 @@ button {
   margin: 10px 0;
   color: #e11;
   font-weight: bold;
-  .fa-exclamation-triangle {
-    margin-bottom: 10px;
-    display: block;
-    font-size: 30px;
-    text-align: center;
-  }
+}
+.error-message .fa-exclamation-triangle {
+  margin-bottom: 10px;
+  display: block;
+  font-size: 30px;
+  text-align: center;
 }
 select {
   border: 1px solid #e1e1e1;

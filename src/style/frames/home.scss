@@ -292,8 +292,8 @@
   left: 67px;
   padding: 4px;
   height: 36px;
-
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -301,6 +301,7 @@
 
   &:hover {
     -webkit-line-clamp: unset;
+    line-clamp: unset;
     height: auto;
     background: white;
     box-shadow: 0 1px 10px rgba(0, 0, 0, 0.12);

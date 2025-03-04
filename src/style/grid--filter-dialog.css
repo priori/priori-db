@@ -1,7 +1,6 @@
 .dialog .form-row .grid__filter-dialog__input-wrapper textarea {
   margin: 0;
 }
-
 .app-content button.grid__filter-dialog__or {
   box-shadow: 0 0;
   border: 1px solid #eee;
@@ -9,34 +8,31 @@
   padding: 3px 6px !important;
   font-weight: normal;
   font-size: 13px;
-  &:hover {
-    background: #eee !important;
-  }
 }
-
+.app-content button.grid__filter-dialog__or:hover {
+  background: #eee !important;
+}
 .grid__filter-dialog__big-form.dialog,
 .grid__filter-dialog__small-form.dialog {
   line-height: 1.1em;
   font-family: sans-serif;
 }
-.grid__filter-dialog__big-form.dialog {
-  select,
-  input,
-  textarea {
-    font-family: 'Inconsolata';
-    padding: 2px;
-    line-height: 16px;
-    height: 26px;
-    margin-top: 2px;
-    margin-bottom: 2px;
-  }
-  .grid__filter-dialog__input-wrapper {
-    margin-top: 2px;
-    margin-bottom: 0;
-  }
-  .form-row strong {
-    margin-top: 6px;
-  }
+.grid__filter-dialog__big-form.dialog select,
+.grid__filter-dialog__big-form.dialog input,
+.grid__filter-dialog__big-form.dialog textarea {
+  font-family: 'Inconsolata';
+  padding: 2px;
+  line-height: 16px;
+  height: 26px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+.grid__filter-dialog__big-form.dialog .grid__filter-dialog__input-wrapper {
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+.grid__filter-dialog__big-form.dialog .form-row strong {
+  margin-top: 6px;
 }
 .grid__filter-dialog__small-form.dialog .form-row strong {
   margin-top: 19px;
@@ -44,7 +40,6 @@
 .grid__filter-dialog__input-wrapper textarea {
   width: 150px;
 }
-
 .grid__filter-dialog__and-group {
   padding: 0 11px;
 }
@@ -53,15 +48,12 @@
   padding: 5px;
   border-radius: 5px;
 }
-
 .form-row .grid__filter-dialog__small-ops {
   display: none;
 }
-
 .grid__filter-dialog__input-focus .grid__filter-dialog__small-ops {
   display: block;
 }
-
 .grid__filter-dialog__small-ops {
   position: absolute;
   right: 0px;
@@ -73,26 +65,25 @@
   box-shadow: 0 0 9px rgba(0, 0, 0, 0.2);
   border-radius: 10px 10px 0 0;
   overflow: hidden;
-  & > span {
-    padding: 2px 6px;
-    font-weight: bold;
-    letter-spacing: -0.5px;
-    border-right: 1px solid #eee;
-    &:last-child {
-      border-right: 0;
-    }
-  }
-  .selected {
-    background: #1976d2;
-    color: white;
-  }
 }
-
+.grid__filter-dialog__small-ops > span {
+  padding: 2px 6px;
+  font-weight: bold;
+  letter-spacing: -0.5px;
+  border-right: 1px solid #eee;
+}
+.grid__filter-dialog__small-ops > span:last-child {
+  border-right: 0;
+}
+.grid__filter-dialog__small-ops .selected {
+  background: #1976d2;
+  color: white;
+}
 .grid__filter-dialog__value-type {
   position: relative;
-  select {
-    width: 22px;
-  }
+}
+.grid__filter-dialog__value-type select {
+  width: 22px;
 }
 .grid__filter-dialog__value-type:after {
   content: '';
@@ -106,17 +97,13 @@
   left: 0;
   pointer-events: none;
 }
-
 .grid__filter-dialog__value-type:hover:after {
   border-top-color: #000;
 }
-
-.grid__filter-dialog__input-wrapper.grid__filter-dialog__sql {
-  textarea {
-    border-color: #1976d2;
-    color: #1976d2;
-    padding-right: 28px;
-  }
+.grid__filter-dialog__input-wrapper.grid__filter-dialog__sql textarea {
+  border-color: #1976d2;
+  color: #1976d2;
+  padding-right: 28px;
 }
 .grid__filter-dialog__sql-tip {
   background: #1976d2;
@@ -152,7 +139,6 @@
 .grid__filter-dialog__big-form .grid__filter-dialog__input-wrapper textarea {
   min-height: 22px;
 }
-
 .app-content button.grid__filter-dialog__where-sql {
   position: absolute;
   top: 10px;
@@ -163,16 +149,15 @@
   font-weight: normal;
   padding: 3px 6px !important;
   font-size: 13px;
-  &:hover {
-    background: #eee !important;
-  }
-  &.active {
-    background: #1976d2 !important;
-    color: white !important;
-    border: 1px solid #1976d2 !important;
-  }
 }
-
+.app-content button.grid__filter-dialog__where-sql:hover {
+  background: #eee !important;
+}
+.app-content button.grid__filter-dialog__where-sql.active {
+  background: #1976d2 !important;
+  color: white !important;
+  border: 1px solid #1976d2 !important;
+}
 .grid__filter-dialog__sql-where {
   min-height: 273px;
   white-space: pre-line;
@@ -197,62 +182,57 @@ textarea.grid__filter-dialog__sql-where {
   padding: 15px 19px !important;
   background: #fafafa;
   font-size: 14px !important;
-  &:focus,
-  &:active {
-    border: 2px solid #1976d2 !important;
-    padding: 14px 18px !important;
-  }
-  .grid__filter-dialog__sql-invalid &:focus,
-  .grid__filter-dialog__sql-invalid &:active {
-    border: 2px solid #d22 !important;
-  }
 }
-
+textarea.grid__filter-dialog__sql-where:focus,
+textarea.grid__filter-dialog__sql-where:active {
+  border: 2px solid #1976d2 !important;
+  padding: 14px 18px !important;
+}
+textarea.grid__filter-dialog__sql-where .grid__filter-dialog__sql-invalid:focus,
+textarea.grid__filter-dialog__sql-where
+  .grid__filter-dialog__sql-invalid:active {
+  border: 2px solid #d22 !important;
+}
 .app-content button.grid__filter-dialog__edit-button {
   position: absolute;
   margin: 0;
   right: 0;
   bottom: -25px;
-
   box-shadow: 0 0;
   border: 1px solid #ddd;
   background: transparent;
   font-weight: normal;
   padding: 3px 6px !important;
   font-size: 13px;
-  &:hover {
-    background: #eee !important;
-  }
-  &.active {
-    background: #1976d2 !important;
-    color: white !important;
-    border: 1px solid #1976d2 !important;
-  }
+}
+.app-content button.grid__filter-dialog__edit-button:hover {
+  background: #eee !important;
+}
+.app-content button.grid__filter-dialog__edit-button.active {
+  background: #1976d2 !important;
+  color: white !important;
+  border: 1px solid #1976d2 !important;
 }
 .dialog button,
 .dialog button.active {
   margin: 5px;
 }
-
-.grid__filter-dialog__sql-invalid {
-  textarea {
-    border-color: #d22 !important;
-    color: #d22 !important;
-    &:focus {
-      border: 2px solid #d22 !important;
-      box-shadow:
-        inset 1px 1px 0 0 #d22,
-        inset -1px 1px 0 0 #d22,
-        inset 1px -1px 0 0 #d22,
-        inset -1px -1px 0 0 #d22 !important;
-    }
-  }
-  .selected,
-  .grid__filter-dialog__sql-tip {
-    background: #d22 !important;
-  }
+.grid__filter-dialog__sql-invalid textarea {
+  border-color: #d22 !important;
+  color: #d22 !important;
 }
-
+.grid__filter-dialog__sql-invalid textarea:focus {
+  border: 2px solid #d22 !important;
+  box-shadow:
+    inset 1px 1px 0 0 #d22,
+    inset -1px 1px 0 0 #d22,
+    inset 1px -1px 0 0 #d22,
+    inset -1px -1px 0 0 #d22 !important;
+}
+.grid__filter-dialog__sql-invalid .selected,
+.grid__filter-dialog__sql-invalid .grid__filter-dialog__sql-tip {
+  background: #d22 !important;
+}
 /* .frame.table-tab.active:after {
     content: '';
     position: absolute;

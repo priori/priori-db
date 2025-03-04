@@ -4,18 +4,18 @@
   src: url('./Inconsolata-Regular.ttf');
 }
 @import './adjustment-icons.css';
-@include meta.load-css('basic-style.scss');
-@include meta.load-css('grid.scss');
+@import './basic-style.css';
+@import './grid.css';
+@import './grid--filter-dialog.css';
 @import './nav/left-nav.css';
 @import './nav/nav-row.css';
 @import './nav/new-schema.css';
 @import './nav/new-role.css';
-@include meta.load-css('./nav/context-menu.scss');
+@import './nav/context-menu.css';
 @import './nav/hint.css';
-@include meta.load-css('main-area.scss');
-@include meta.load-css('main-components.scss');
+@import './main-area.css';
+@import './main-components.css';
 @import './tabs-header.css';
-
 @include meta.load-css('frames/home.scss');
 @include meta.load-css('frames/table-data.scss');
 @include meta.load-css('frames/new-table-frame.scss');
