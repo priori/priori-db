@@ -178,6 +178,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         language: 'sql',
         theme: isDark() ? 'dark' : 'vs-white',
         automaticLayout: true,
+        renderLineHighlight: 'none',
         minimap: {
           enabled: false,
         },
