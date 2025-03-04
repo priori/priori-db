@@ -46,8 +46,6 @@ npm install
 npm start
 ```
 
-### Development Setup
-
 ## Support
 For support, please open an issue in the GitHub repository.
 
