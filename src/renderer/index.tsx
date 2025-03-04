@@ -11,9 +11,10 @@ assert(container !== null);
 createRoot(container).render(<App />);
 
 window.onstorage = () => {
-  document.body.className = localStorage.getItem('theme') || 'soft-gray-theme';
+  document.body.className =
+    localStorage.getItem('theme') || 'modern-light-theme';
 };
-document.body.className = localStorage.getItem('theme') || 'soft-gray-theme';
+document.body.className = localStorage.getItem('theme') || 'modern-light-theme';
 
 ipcRenderer.on('close', () => {
   window.close();

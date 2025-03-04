@@ -38,7 +38,7 @@ export function SettingsFrame() {
   });
   const reloading = useMoreTime(service.status === 'reloading', 100);
   const [theme, setTheme] = React.useState(
-    localStorage.getItem('theme') || 'soft-gray-theme',
+    localStorage.getItem('theme') || 'modern-light-theme',
   );
   useEffect(() => {
     document.body.className = theme;
@@ -46,7 +46,7 @@ export function SettingsFrame() {
   }, [theme]);
 
   useEventListener(window, 'storage', () => {
-    setTheme(localStorage.getItem('theme') || 'soft-gray-theme');
+    setTheme(localStorage.getItem('theme') || 'modern-light-theme');
   });
   if (service.status === 'starting') {
     return (
@@ -270,9 +270,9 @@ export function SettingsFrame() {
           fontSize: 14,
         }}
       >
-        <option value="soft-gray-theme">Soft Gray (Default)</option>
-        <option value="glacial-white-theme">Glacial White</option>
-        <option value="dark">Dark</option>
+        <option value="modern-light-theme">Modern Light</option>
+        <option value="artless-gray-theme">Artless Gray</option>
+        <option value="dark-theme">Dark</option>
       </select>
     </div>
   );

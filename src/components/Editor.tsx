@@ -57,7 +57,7 @@ monaco.editor.defineTheme('dark', {
 });
 
 function isDark() {
-  const theme = localStorage.getItem('theme') || 'soft-gray-theme';
+  const theme = localStorage.getItem('theme') || 'modern-light-theme';
   return theme === 'dark';
 }
 
