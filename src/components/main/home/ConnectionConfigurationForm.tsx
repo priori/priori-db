@@ -122,10 +122,12 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
     assert(port);
     setTestResult('pending');
     listDatabases({
-      database: database || 'postgres',
+      database: database || (type === 'postgres' ? 'postgres' : ''),
       host: host || 'localhost',
       port,
-      user: user || 'postgres',
+      user:
+        user ||
+        (type === 'postgres' ? 'postgres' : type === 'mysql' ? 'root' : ''),
       password: password || '',
       requireSsl: !!requireSsl || undefined,
       type,
@@ -222,9 +224,9 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
             Port: <br />
             <input
               placeholder={
-                connection?.type === 'postgres'
+                state?.type === 'postgres'
                   ? '5432'
-                  : connection?.type === 'mysql'
+                  : state?.type === 'mysql'
                     ? '3306'
                     : ''
               }
@@ -242,7 +244,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
         <div className="new-connection__field">
           Database:{' '}
           <input
-            placeholder="postgres"
+            placeholder={state?.type === 'postgres' ? 'postgres' : ''}
             defaultValue={connection ? connection.database : ''}
             onChange={(e) =>
               setState((state2) => ({
@@ -255,7 +257,13 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
         <div className="new-connection__field">
           User:{' '}
           <input
-            placeholder="postgres"
+            placeholder={
+              state?.type === 'postgres'
+                ? 'postgres'
+                : state?.type === 'mysql'
+                  ? 'root'
+                  : ''
+            }
             defaultValue={connection ? connection.user : ''}
             onChange={(e) =>
               setState((state2) => ({
