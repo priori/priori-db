@@ -642,3 +642,10 @@ div.CodeMirror-gutters {
     inset -1px 1px var(--monaco-fix--focus-color),
     inset -1px -1px var(--monaco-fix--focus-color);
 }
+.editor--hidden {
+  overflow: hidden;
+  pointer-events: none;
+}
+.editor--hidden .scrollbar {
+  opacity: 0 !important;
+}

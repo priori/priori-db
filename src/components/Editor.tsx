@@ -246,14 +246,10 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
 
     return (
       <div
-        className="editor"
-        style={
-          {
-            height,
-            '--editor-height': `${height}px`,
-            ...(height <= 40 ? { overflow: 'hidden', opacity: 0 } : {}),
-          } as React.CSSProperties
-        }
+        className={`editor ${height <= 40 ? 'editor--hidden' : ''}`}
+        style={{
+          height,
+        }}
         ref={setEditor}
       />
     );
