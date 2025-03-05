@@ -1,4 +1,3 @@
-@use 'sass:meta';
 @font-face {
   font-family: 'Inconsolata';
   src: url('./Inconsolata-Regular.ttf');
@@ -16,12 +15,12 @@
 @import './main-area.css';
 @import './main-components.css';
 @import './tabs-header.css';
-@include meta.load-css('frames/home.scss');
-@include meta.load-css('frames/table-data.scss');
-@include meta.load-css('frames/new-table-frame.scss');
-@include meta.load-css('frames/query-frame.scss');
-@include meta.load-css('frames/query-selector.scss');
-@include meta.load-css('frames/table-info.scss');
+@import './frames/home.css';
+@import './frames/table-data.css';
+@import './frames/new-table-frame.css';
+@import './frames/query-frame.css';
+@import './frames/query-selector.css';
+@import './frames/table-info.css';
 @import './frames/settings.css';
 @import './launcher.css';
 @import './settings-button.css';

@@ -212,66 +212,24 @@ body.dark-theme {
   }
 
   /* frames */
-  .frame.table-info,
-  .frame.schema-info,
-  .frame.new-table,
-  .frame.function,
-  .frame.domain,
-  .frame.sequence,
-  .frame.role,
-  .frame.settings,
+  .frame.settings-frame,
   .frame {
     background: #262626;
     --bg: #262626;
     color: white;
     -webkit-font-smoothing: antialiased;
   }
-  .frame.table-info td,
-  .frame.table-info th,
-  .frame.schema-info td,
-  .frame.schema-info th,
-  .frame.new-table td,
-  .frame.new-table th,
-  .frame.function td,
-  .frame.function th,
-  .frame.domain td,
-  .frame.domain th,
-  .frame.sequence td,
-  .frame.sequence th,
-  .frame.role td,
-  .frame.role th,
-  .frame.settings td,
-  .frame.settings th {
+  .frame.settings-frame td,
+  .frame.settings-frame th {
     border-bottom-color: #333;
   }
-  .frame.table-info .fields .field,
-  .frame.schema-info .fields .field,
-  .frame.new-table .fields .field,
-  .frame.function .fields .field,
-  .frame.domain .fields .field,
-  .frame.sequence .fields .field,
-  .frame.role .fields .field,
-  .frame.settings .fields .field {
+  .frame.settings-frame .fields .field {
     border-left-color: #333;
   }
-  .frame.table-info .empty,
-  .frame.schema-info .empty,
-  .frame.new-table .empty,
-  .frame.function .empty,
-  .frame.domain .empty,
-  .frame.sequence .empty,
-  .frame.role .empty,
-  .frame.settings .empty {
+  .frame.settings-frame .empty {
     background: #202020;
   }
-  .frame.table-info h2,
-  .frame.schema-info h2,
-  .frame.new-table h2,
-  .frame.function h2,
-  .frame.domain h2,
-  .frame.sequence h2,
-  .frame.role h2,
-  .frame.settings h2 {
+  .frame.settings-frame h2 {
     color: #3997f4;
     text-shadow: 0 1px 2px black;
   }
@@ -524,13 +482,7 @@ body.dark-theme {
   .pill-button:active:not([disabled]) {
     background: #2d2d2d;
   }
-  div.frame.table-info h1,
-  div.frame.schema-info h1,
-  div.frame.sequence h1,
-  div.frame.domain h1,
-  div.frame.function h1,
-  div.frame.role h1,
-  div.frame.settings h1 {
+  div.frame.settings-frame h1 {
     text-shadow:
       0 1px 3px black,
       0 1px 4px black;

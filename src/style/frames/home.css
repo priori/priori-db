@@ -5,15 +5,15 @@
   width: 100%;
   margin-left: -1px;
   overflow: visible;
-  & > * > tr > td,
-  & > * > tr > th {
-    border: solid 1px #bbb;
-    padding: 10px;
-    border-right: 0;
-  }
-  tbody > tr:hover td {
-    background: #ddd;
-  }
+}
+.connections > * > tr > td,
+.connections > * > tr > th {
+  border: solid 1px #bbb;
+  padding: 10px;
+  border-right: 0;
+}
+.connections tbody > tr:hover td {
+  background: #ddd;
 }
 .connections--edit-button,
 .connections--add-button {
@@ -33,7 +33,6 @@
   position: absolute;
   bottom: 7px;
 }
-
 .connections--add-button {
   right: 10px;
 }
@@ -128,7 +127,6 @@
 .connections--edit-button2:hover {
   color: black;
 }
-
 .bases-wrapper {
   position: absolute;
   inset: 0;
@@ -162,15 +160,15 @@
 .base.base--default {
   color: #000;
   font-weight: bold;
-  &::after {
-    content: '\f00c';
-    font-family: 'FontAwesome';
-    float: right;
-    color: #159;
-    font-size: 25px;
-    margin-top: -3px;
-    margin-right: -5px;
-  }
+}
+.base.base--default::after {
+  content: '\f00c';
+  font-family: 'FontAwesome';
+  float: right;
+  color: #159;
+  font-size: 25px;
+  margin-top: -3px;
+  margin-right: -5px;
 }
 .base.base--default.selected {
   background: white;
@@ -182,7 +180,6 @@
   background: #f8f8f8;
   color: black;
 }
-
 .new-connection {
   font-size: 15px;
   line-height: 15px;
@@ -192,24 +189,24 @@
   align-items: center;
   width: 505px;
   gap: 20px;
-  & > div {
-    flex: 1;
-  }
+}
+.new-connection > div {
+  flex: 1;
 }
 .new-connection__field {
   margin-bottom: 12px;
-  &:last-of-type {
-    margin-bottom: 0;
-  }
+}
+.new-connection__field:last-of-type {
+  margin-bottom: 0;
 }
 .new-connection input {
   padding: 6px;
   font-size: 16px;
   width: 100%;
   margin-top: 3px;
-  &:focus {
-    padding: 5px;
-  }
+}
+.new-connection input:focus {
+  padding: 5px;
 }
 .new-connection button {
   padding: 11px;
@@ -217,21 +214,20 @@
   font-size: 14px;
   background: #eee;
   border-radius: 6px;
-  &:active {
-    background: #ddd;
-  }
-  &:focus {
-    color: #018;
-    background: rgba(0, 0, 0, 0.15);
-  }
-  &[disabled],
-  &[disabled]:active,
-  &[disabled]:focus {
-    background: #eee;
-    color: #000;
-  }
 }
-
+.new-connection button:active {
+  background: #ddd;
+}
+.new-connection button:focus {
+  color: #018;
+  background: rgba(0, 0, 0, 0.15);
+}
+.new-connection button[disabled],
+.new-connection button[disabled]:active,
+.new-connection button[disabled]:focus {
+  background: #eee;
+  color: #000;
+}
 .new-connection__require-ssl {
   flex: 1 1 0%;
   padding-top: 8px;
@@ -240,12 +236,11 @@
   margin-right: 66px;
   border-radius: 8px;
   outline: none;
-  &:focus-visible {
-    color: #018;
-    background: #eee;
-  }
 }
-
+.new-connection__require-ssl:focus-visible {
+  color: #018;
+  background: #eee;
+}
 .connection-error {
   position: absolute;
   right: 25px;
@@ -255,14 +250,12 @@
   max-width: 193px;
   text-align: right;
 }
-
 .new-connection .error {
   color: #e00;
 }
 .new-connection .error input {
   border-color: #e00;
 }
-
 .new-connection .dialog {
   position: absolute;
   font-size: 13px;
@@ -274,14 +267,14 @@
   padding: 15px 10px;
   width: 250px;
   text-align: center;
-  button {
-    margin: 5px;
-    margin-top: 10px;
-    font-size: 14px;
-    padding: 6px 0;
-    width: 50px;
-    text-align: center;
-  }
+}
+.new-connection .dialog button {
+  margin: 5px;
+  margin-top: 10px;
+  font-size: 14px;
+  padding: 6px 0;
+  width: 50px;
+  text-align: center;
 }
 .connection-test-error {
   color: #d32;
@@ -298,14 +291,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-
-  &:hover {
-    -webkit-line-clamp: unset;
-    line-clamp: unset;
-    height: auto;
-    background: white;
-    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.12);
-  }
+}
+.connection-test-error:hover {
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  height: auto;
+  background: white;
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.12);
 }
 .connection-test-success {
   color: #071;
@@ -318,7 +310,6 @@
   padding-top: 9px;
   color: #444;
 }
-
 body:has(.connections) {
   background: #ddd;
 }
@@ -328,15 +319,14 @@ body:has(.connections) {
   margin: 0 auto;
   background: white;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-  & > div {
-    height: 100vh;
-    overflow: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: safe center;
-  }
 }
-
+#root:has(.connections) > div {
+  height: 100vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+}
 .new-connection__field-select {
   display: flex;
   overflow: hidden;
@@ -346,7 +336,6 @@ body:has(.connections) {
   cursor: pointer;
   margin-bottom: 18px;
 }
-
 .new-connection__field-option {
   background: #eee;
   flex: 1;
@@ -354,41 +343,39 @@ body:has(.connections) {
   text-align: center;
   color: #555;
   outline: none;
-  &:hover {
-    background: #f0f0f0;
-    color: #000;
-  }
-  &:active {
-    background: #ddd;
-  }
-  &:focus-visible {
-    background: #ddd;
-    color: #018;
-  }
 }
-
+.new-connection__field-option:hover {
+  background: #f0f0f0;
+  color: #000;
+}
+.new-connection__field-option:active {
+  background: #ddd;
+}
+.new-connection__field-option:focus-visible {
+  background: #ddd;
+  color: #018;
+}
 .new-connection__field-option--selected {
-  // background: #777;
+  /* background: #777; */
   background: #25b;
   color: white;
-  &:hover,
-  &:active,
-  &:focus {
-    background: #25b;
-    color: white;
-  }
-  &:focus-visible {
-    color: #fe0;
-  }
-  &:after {
-    font-family: 'FontAwesome';
-    content: '\f00c';
-    display: inline-block;
-    position: absolute;
-    margin-left: 5px;
-  }
 }
-
+.new-connection__field-option--selected:hover,
+.new-connection__field-option--selected:active,
+.new-connection__field-option--selected:focus {
+  background: #25b;
+  color: white;
+}
+.new-connection__field-option--selected:focus-visible {
+  color: #fe0;
+}
+.new-connection__field-option--selected:after {
+  font-family: 'FontAwesome';
+  content: '\f00c';
+  display: inline-block;
+  position: absolute;
+  margin-left: 5px;
+}
 span.connection--user:before {
   display: inline-block;
   font-weight: bold;
@@ -408,14 +395,13 @@ span.connection--user:before {
   margin-bottom: -6px;
   border: solid 2px orange;
   background: transparent;
-  // box-shadow: -2px 2px orange;
+  /* box-shadow: -2px 2px orange; */
 }
 .mysql span.connection--user:before {
   content: 'my';
   border-color: orange;
   color: #46b;
 }
-
 .pg span.connection--user:before {
   content: 'pg';
   border-color: #46b;

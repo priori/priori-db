@@ -5,7 +5,6 @@
     "react",
     "typescript",
     "ts",
-    "sass",
     "webpack",
     "postgresql",
     "postgres",
@@ -41,7 +40,7 @@
     "start:preload": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.preload.dev.ts",
     "start:renderer": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./.erb/configs/webpack.config.renderer.dev.ts",
     "test": "jest",
-    "prettier": "./node_modules/.bin/prettier -w './src/**/*.{ts,tsx,scss}'",
+    "prettier": "./node_modules/.bin/prettier -w './src/**/*.{ts,tsx}'",
     "ts:check": "tsc --noEmit -p ./tsconfig.json"
   },
   "lint-staged": {
@@ -51,7 +50,7 @@
     "*.json,.{eslintrc,prettierrc}": [
       "prettier --ignore-path .eslintignore --parser json --write"
     ],
-    "*.{css,scss}": [
+    "*.{css}": [
       "prettier --ignore-path .eslintignore --single-quote --write"
     ],
     "*.{html,md,yml}": [
@@ -90,7 +89,7 @@
     ],
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/.erb/mocks/fileMock.js",
-      "\\.(css|less|sass|scss)$": "identity-obj-proxy"
+      "\\.(css)$": "identity-obj-proxy"
     },
     "setupFiles": [
       "./.erb/scripts/check-build-exists.ts"
@@ -173,8 +172,6 @@
     "react-refresh": "^0.14.0",
     "react-test-renderer": "^18.2.0",
     "rimraf": "^5.0.1",
-    "sass": "^1.67.0",
-    "sass-loader": "^13.3.2",
     "style-loader": "^3.3.3",
     "terser-webpack-plugin": "^5.3.9",
     "ts-jest": "^29.1.1",

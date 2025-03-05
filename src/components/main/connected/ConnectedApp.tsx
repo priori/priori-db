@@ -29,14 +29,14 @@ import { SettingsButton } from './SettingsButton';
 const classNames: Record<FrameType, string> = {
   query: 'query-tab',
   table: 'table-tab',
-  newtable: 'new-table',
-  schemainfo: 'schema-info',
-  tableinfo: 'table-info',
-  function: 'function',
-  domain: 'domain',
-  sequence: 'sequence',
-  role: 'role',
-  settings: 'settings',
+  newtable: 'new-table settings-frame',
+  schemainfo: 'schema-info settings-frame',
+  tableinfo: 'table-info settings-frame',
+  function: 'function settings-frame',
+  domain: 'domain settings-frame',
+  sequence: 'sequence settings-frame',
+  role: 'role settings-frame',
+  settings: 'settings settings-frame',
 };
 
 interface UseTabConfiguration {

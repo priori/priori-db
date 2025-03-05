@@ -1,7 +1,6 @@
 .frame.active.new-table {
   overflow: auto;
 }
-
 .columns-form-column {
   text-align: center;
   padding: 2px;
@@ -50,9 +49,9 @@
   padding: 5px;
   display: block;
   width: 100%;
-  &:focus {
-    padding: 4px;
-  }
+}
+.columns-form-column input:focus {
+  padding: 4px;
 }
 .columns-form-column select {
   padding: 4px;
@@ -62,9 +61,9 @@
 .columns-form-column-drop .fa-close {
   cursor: pointer;
   opacity: 0.5;
-  &:hover {
-    opacity: 1;
-  }
+}
+.columns-form-column-drop .fa-close:hover {
+  opacity: 1;
 }
 .list-input-item .fa-square-o,
 .list-input-item .fa-check-square-o {
@@ -76,25 +75,22 @@
   top: 2px;
   color: #444;
 }
-
 .columns-form-column-notnull,
 .columns-form-column-pk,
 .columns-form-column-drop {
   line-height: 28px;
 }
-
 .new-table .table i.fa {
   font-size: 18px;
   width: 15px;
   display: inline-block;
   text-align: left;
 }
-
 .input-form-field input {
   padding: 5px;
-  &:focus {
-    padding: 4px;
-  }
+}
+.input-form-field input:focus {
+  padding: 4px;
 }
 body > .list-input-item {
   background: white;
@@ -103,11 +99,11 @@ body > .list-input-item {
 .new-table--name {
   font-weight: bold;
   font-size: 15px;
-  input {
-    padding: 5px;
-    display: block;
-    font-size: 17px;
-    width: 270px;
-    margin-top: 3px;
-  }
+}
+.new-table--name input {
+  padding: 5px;
+  display: block;
+  font-size: 17px;
+  width: 270px;
+  margin-top: 3px;
 }
