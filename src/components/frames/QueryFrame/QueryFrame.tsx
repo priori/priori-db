@@ -229,7 +229,13 @@ export function QueryFrame({ uid }: { uid: number }) {
           onMouseLeave={popup ? onPopupMouseLeave : undefined}
           className={
             popup
-              ? 'query-frame__code-editor--popup'
+              ? `query-frame__code-editor--popup ${
+                  popup.right === 0
+                    ? 'query-frame__code-editor--popup--down-button'
+                    : popup.right === 80
+                      ? 'query-frame__code-editor--popup--code-button'
+                      : ''
+                }`
               : 'query-frame__code-editor--no-popup'
           }
           style={

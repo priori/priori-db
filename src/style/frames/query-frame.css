@@ -314,7 +314,7 @@ button.query-tab--stdout {
   right: 0;
   position: absolute;
   bottom: 0;
-  height: 41px;
+  height: 40px;
   width: 40px;
   z-index: 5;
   cursor: pointer;
@@ -332,10 +332,13 @@ button.query-tab--stdout {
   color: #ccc;
 }
 .query-frame__up-down-button:hover {
-  z-index: 11;
+  z-index: 11111;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
   background: white !important;
   color: #000;
+}
+.query-frame__up-down-button--closed:hover {
+  box-shadow: none !important;
 }
 .query-frame--open .query-frame__up-down-button .fa.fa-chevron-down {
   display: none;
@@ -362,7 +365,7 @@ button.query-tab--stdout {
   height: 40px;
   width: 41px;
   border-left: 1px solid #eee;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #fff;
   text-align: center;
   font-size: 21px;
   letter-spacing: 1px;
@@ -370,21 +373,6 @@ button.query-tab--stdout {
   z-index: 7;
   opacity: 0;
   animation: show 0.3s forwards;
-}
-.query-frame__code-button:hover {
-  background: white !important;
-  width: 41px;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.33);
-  color: black;
-  z-index: 9;
-}
-.query-frame__code-button--open {
-  z-index: 11;
-  color: black;
-  box-shadow: none;
-  background: white !important;
-  border-left: 1px solid #eee;
-  width: 41;
 }
 .query-frame__play-button {
   padding: 0 !important;
@@ -656,4 +644,50 @@ div.CodeMirror-gutters {
 }
 .editor--hidden .scrollbar {
   opacity: 0 !important;
+}
+
+.query-frame__code-editor--popup--down-button::after {
+  content: '\f078';
+  font-family: 'FontAwesome';
+  cursor: pointer;
+  font-size: 20px;
+  position: fixed;
+  z-index: -1;
+  right: 0;
+  top: 40px;
+  width: 40px;
+  background: white;
+  display: block;
+  height: 31px;
+  padding-top: 10px;
+  text-align: center;
+  box-shadow: 0 3px 16px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+.query-frame__code-button--open {
+  z-index: 111111;
+  border-left-color: white;
+  border-right-color: white;
+  background: white;
+  color: black;
+}
+.query-frame__code-editor--popup--code-button::after {
+  content: '';
+  pointer-events: none;
+  cursor: pointer;
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-size: 21px;
+  position: fixed;
+  text-align: center;
+  z-index: -1;
+  right: 80px;
+  top: 40px;
+  width: 41px;
+  background: white;
+  display: block;
+  height: 40px;
+  box-sizing: border-box;
+  padding-top: 9px;
+  box-shadow: 0 3px 16px rgba(0, 0, 0, 0.3);
 }
