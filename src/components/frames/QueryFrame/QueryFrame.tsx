@@ -419,6 +419,7 @@ export function QueryFrame({ uid }: { uid: number }) {
             className={`query-frame__code-button${popup && popup.right === 80 ? ` query-frame__code-button--open` : ''}`}
             onMouseEnter={onCodeMouseEnter}
             onMouseLeave={onPopupMouseLeave}
+            onClick={upButtonClick}
           >
             &lt;/&gt;
           </button>
