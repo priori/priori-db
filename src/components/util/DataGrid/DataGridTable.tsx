@@ -43,28 +43,26 @@ export const DataGridTable = React.memo(
         </thead>
         <tbody>
           {visibleStartingInEven ? <tr style={{ display: 'none' }} /> : null}
-          {visibleRows.map((row, rowIndex) => {
+          {visibleRows.map((row, i) => {
+            const rowIndex = i + slice[0];
             const trClassName =
-              update?.[rowIndex + slice[0]] === 'REMOVE'
+              update?.[rowIndex] === 'REMOVE'
                 ? `remove${hoverRowIndex === rowIndex ? ' hover' : ''}`
-                : rowIndex === visibleRows.length - 1 &&
+                : i === visibleRows.length - 1 &&
                     row.length === 0 &&
-                    (!update?.[slice[0] + rowIndex] ||
-                      Object.values(update?.[slice[0] + rowIndex]).length === 0)
+                    (!update?.[rowIndex] ||
+                      Object.values(update?.[rowIndex]).length === 0)
                   ? `spare${hoverRowIndex === rowIndex ? ' hover' : ''}`
                   : hoverRowIndex === rowIndex
                     ? 'hover'
                     : undefined;
             return (
-              <tr key={rowIndex} className={trClassName}>
+              <tr key={i} className={trClassName}>
                 {fields.map((field, index) => {
                   const hasChange =
-                    update?.[rowIndex + slice[0]] !== 'REMOVE' &&
-                    typeof update?.[slice[0] + rowIndex]?.[index] !==
-                      'undefined';
-                  const val = hasChange
-                    ? update[slice[0] + rowIndex][index]
-                    : row[index];
+                    update?.[rowIndex] !== 'REMOVE' &&
+                    typeof update?.[rowIndex]?.[index] !== 'undefined';
+                  const val = hasChange ? update[rowIndex][index] : row[index];
                   const type = getType(val, field.type);
                   const valString = getValString(val);
                   const className = cellClassName(hasChange);
