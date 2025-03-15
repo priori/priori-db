@@ -299,10 +299,8 @@ export function useQueryFrame({ uid }: { uid: number }) {
         setOpenDialogOpen(false);
       });
   });
-
   const running = useDelayTrue(queryExecutor.running, 200);
   const hasPid = useDelayTrue(!!queryExecutor.pid, 200);
-
   const [topHeightState, setTopHeightState] = useState(300);
   const topHeight = topHeightState;
   const onResizeHelperMouseDown = useEvent(async (e: React.MouseEvent) => {
@@ -342,7 +340,7 @@ export function useQueryFrame({ uid }: { uid: number }) {
         return true;
       },
       el,
-      topHeight,
+      topHeight + 1,
     );
     resizeIndicatorEl = null;
 
@@ -376,12 +374,18 @@ export function useQueryFrame({ uid }: { uid: number }) {
   }>(null);
   const popup = topHeight === 40 && !animating ? popupState : false;
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
   const upMouseEnter = useEvent(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (animating) return;
+    const tabsHeaderEl = document.querySelector('.tabs-header');
+    if (tabsHeaderEl instanceof HTMLElement) tabsHeaderEl.style.zIndex = '-1';
     setPopup({ right: 0, height: document.documentElement.offsetHeight - 120 });
   });
+
   const onCodeMouseEnter = useEvent(() => {
+    const tabsHeaderEl = document.querySelector('.tabs-header');
+    if (tabsHeaderEl instanceof HTMLElement) tabsHeaderEl.style.zIndex = '-1';
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (animating) return;
     setPopup({
@@ -396,11 +400,15 @@ export function useQueryFrame({ uid }: { uid: number }) {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (animating) return;
     timeoutRef.current = setTimeout(() => {
+      const tabsHeaderEl = document.querySelector('.tabs-header');
+      if (tabsHeaderEl instanceof HTMLElement) tabsHeaderEl.style.zIndex = '';
       setPopup(null);
     }, 10);
   });
 
   useEventListener(window, 'resize', () => {
+    const tabsHeaderEl = document.querySelector('.tabs-header');
+    if (tabsHeaderEl instanceof HTMLElement) tabsHeaderEl.style.zIndex = '';
     setPopup(null);
   });
 
