@@ -1,12 +1,14 @@
 import { assert } from 'util/assert';
 import { Dialog } from 'components/util/Dialog/Dialog';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { grantError } from 'util/errors';
 import { useEvent } from 'util/useEvent';
 import { ConnectionConfiguration, ConnectionType } from 'types';
 import { listDatabases } from 'db/db';
+import { equals } from 'util/equals';
 
 export interface NewConectionState {
+  dbSelectionMode: 'always' | 'options';
   port?: string;
   database?: string;
   user?: string;
@@ -33,8 +35,11 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
     database: connection ? connection.database : '',
     user: connection ? connection.user : '',
     password: connection ? connection.password : '',
-    requireSsl: connection ? connection.requireSsl : false,
+    requireSsl: connection ? !!connection.requireSsl : false,
     type: connection ? connection.type : null,
+    dbSelectionMode: connection
+      ? (connection.dbSelectionMode ?? 'options')
+      : 'aways',
   } as NewConectionState);
   const [removeConfirmation, setRemoveConfirmation] = useState(false);
   const [testResult, setTestResult] = useState(
@@ -76,6 +81,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
       password: password || '',
       type,
       requireSsl: !!state.requireSsl || undefined,
+      dbSelectionMode: state.dbSelectionMode,
     } as ConnectionConfiguration);
   }
 
@@ -99,6 +105,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
       password: password || '',
       type,
       requireSsl: !!requireSsl || undefined,
+      dbSelectionMode: state.dbSelectionMode,
     } as ConnectionConfiguration);
   }
 
@@ -137,6 +144,22 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
       })
       .catch((e) => setTestResult(grantError(e)));
   }
+
+  const hasChanges = React.useMemo(() => {
+    const initial = {
+      port: connection ? `${connection.port}` : '',
+      host: connection ? connection.host : '',
+      database: connection ? connection.database : '',
+      user: connection ? connection.user : '',
+      password: connection ? connection.password : '',
+      requireSsl: connection ? !!connection.requireSsl : false,
+      type: connection ? connection.type : null,
+      dbSelectionMode: connection
+        ? (connection.dbSelectionMode ?? 'options')
+        : 'aways',
+    };
+    return !equals(initial, state);
+  }, [connection, state]);
 
   return (
     <div className="new-connection">
@@ -242,6 +265,83 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
           </div>
         </div>
         <div className="new-connection__field">
+          <span
+            style={{
+              float: 'right',
+              fontSize: 13,
+              WebkitFontSmoothing: 'antialiased',
+              position: 'relative',
+            }}
+            key={state.dbSelectionMode}
+          >
+            <i
+              className="fa fa-check-square-o"
+              style={{
+                width: 13,
+              }}
+            />
+            {state.dbSelectionMode === 'always' ? 'Always' : 'Show options'}
+            <i className="fa fa-caret-down" style={{ marginLeft: 5 }} />
+            <div
+              className="context-menu"
+              tabIndex={0}
+              style={{
+                top: state.dbSelectionMode === 'always' ? -12 : -42,
+                left: -10,
+              }}
+            >
+              <div
+                style={
+                  state.dbSelectionMode === 'always'
+                    ? { pointerEvents: 'none' }
+                    : undefined
+                }
+                onClick={(e) => {
+                  if (e.target instanceof HTMLElement) {
+                    const dialogEl = e.target.parentElement?.closest('.dialog');
+                    if (dialogEl instanceof HTMLElement) {
+                      dialogEl.focus();
+                    }
+                  }
+                  setState((state2) => ({
+                    ...state2,
+                    dbSelectionMode: 'always',
+                  }));
+                }}
+              >
+                <i
+                  className={`fa fa${state.dbSelectionMode === 'always' ? '-check' : ''}-square-o`}
+                  style={{ width: 13 }}
+                />
+                Always auto choose this database
+              </div>
+              <div
+                style={
+                  state.dbSelectionMode === 'options'
+                    ? { pointerEvents: 'none' }
+                    : undefined
+                }
+                onClick={(e) => {
+                  if (e.target instanceof HTMLElement) {
+                    const dialogEl = e.target.parentElement?.closest('.dialog');
+                    if (dialogEl instanceof HTMLElement) {
+                      dialogEl.focus();
+                    }
+                  }
+                  setState((state2) => ({
+                    ...state2,
+                    dbSelectionMode: 'options',
+                  }));
+                }}
+              >
+                <i
+                  className={`fa fa${state.dbSelectionMode === 'options' ? '-check' : ''}-square-o`}
+                  style={{ width: 13 }}
+                />
+                Show options during connection
+              </div>
+            </div>
+          </span>
           Database:{' '}
           <input
             placeholder={state?.type === 'postgres' ? 'postgres' : ''}
@@ -330,8 +430,31 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
             </button>
           )}{' '}
           {props.onCancel ? (
-            <button className="button" onClick={() => cancel()}>
+            <button
+              className="button"
+              style={{
+                width: 95,
+                textAlign: 'left',
+              }}
+              onClick={() => cancel()}
+              data-hint={
+                hasChanges && connection ? 'Discard changes' : undefined
+              }
+            >
               <i className="fa fa-rotate-left" /> Cancel
+              {hasChanges && connection ? (
+                <strong
+                  style={{
+                    fontSize: 21,
+                    lineHeight: 0.1,
+                    position: 'relative',
+                    top: 3,
+                    marginLeft: 2,
+                  }}
+                >
+                  *
+                </strong>
+              ) : null}
             </button>
           ) : null}
         </div>
@@ -367,7 +490,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
           >
             <i className="fa fa-remove" /> Remove
           </button>
-        ) : null}{' '}
+        ) : null}
       </div>
     </div>
   );

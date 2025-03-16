@@ -3,7 +3,9 @@ import { ConnectionConfiguration } from 'types';
 import hotLoadSafe from 'util/hotLoadSafe';
 
 export async function mysqlListDatabases(
-  c: Omit<ConnectionConfiguration, 'id'>,
+  c:
+    | Omit<ConnectionConfiguration, 'id' | 'dbSelectionMode'>
+    | Omit<ConnectionConfiguration, 'id'>,
 ) {
   const connection = await mysql.createConnection({
     host: c.host,

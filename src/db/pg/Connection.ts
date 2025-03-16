@@ -66,7 +66,10 @@ export function openConnection() {
 }
 
 export async function listFromConfiguration(
-  c: Omit<ConnectionConfiguration, 'id'> | ConnectionConfiguration,
+  c:
+    | Omit<ConnectionConfiguration, 'id' | 'dbSelectionMode'>
+    | Omit<ConnectionConfiguration, 'id'>
+    | ConnectionConfiguration,
   query: string,
   args?: (number | string | boolean | null)[] | undefined,
 ) {
@@ -170,7 +173,10 @@ export async function closeAll() {
 }
 
 export async function listDatabases(
-  c: Omit<ConnectionConfiguration, 'id'> | ConnectionConfiguration,
+  c:
+    | Omit<ConnectionConfiguration, 'id' | 'dbSelectionMode'>
+    | Omit<ConnectionConfiguration, 'id'>
+    | ConnectionConfiguration,
 ) {
   const res = await listFromConfiguration(
     c,

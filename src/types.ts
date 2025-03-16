@@ -132,6 +132,7 @@ export interface ConnectionConfiguration {
   password: string;
   type: ConnectionType;
   requireSsl?: boolean;
+  dbSelectionMode: 'always' | 'options';
 }
 
 export interface AppState {

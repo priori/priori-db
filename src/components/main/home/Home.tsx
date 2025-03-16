@@ -35,7 +35,7 @@ export function Home(props: AppState) {
 
   const basesService = useService<string[] | null>(
     () =>
-      state.openConnection
+      state.openConnection && state.openConnection.dbSelectionMode !== 'always'
         ? listDatabases(state.openConnection)
         : Promise.resolve(null),
     [state.openConnection],
@@ -127,14 +127,23 @@ export function Home(props: AppState) {
           }}
           onSaveAndConnect={async (e: ConnectionConfiguration) => {
             await updateConnectionConfiguration(e);
-            await service.reload();
-            setState((s) => ({
-              ...s,
-              editConnection: null,
-              newConnection: false,
-              openConnection: e,
-              editConnections: false,
-            }));
+            if (e.dbSelectionMode === 'always') {
+              setState((s) => ({
+                ...s,
+                connecting: true,
+                openConnection: e,
+              }));
+              await connect(e, e.database);
+            } else {
+              await service.reload();
+              setState((s) => ({
+                ...s,
+                editConnection: null,
+                newConnection: false,
+                openConnection: e,
+                editConnections: false,
+              }));
+            }
           }}
           onRemove={async () => {
             await deleteConnectionConfiguration(state.editConnection!.id!);
@@ -202,10 +211,27 @@ export function Home(props: AppState) {
               onClick={
                 listingBases
                   ? undefined
-                  : () => {
+                  : async (e) => {
                       if (state.editConnections)
                         setState((s) => ({ ...s, editConnection: p }));
-                      else {
+                      else if (p.dbSelectionMode === 'always') {
+                        e.stopPropagation();
+                        try {
+                          setState((s) => ({
+                            ...s,
+                            connecting: true,
+                            openConnection: p,
+                          }));
+                          await connect(p, p.database);
+                        } catch (err) {
+                          setState((s) => ({
+                            ...s,
+                            connecting: false,
+                            openConnection: null,
+                            error: grantError(err),
+                          }));
+                        }
+                      } else {
                         setState((s) => ({ ...s, openConnection: p }));
                       }
                       if (document.activeElement instanceof HTMLElement)
@@ -215,7 +241,7 @@ export function Home(props: AppState) {
               onKeyDown={
                 listingBases
                   ? undefined
-                  : (e) => {
+                  : async (e) => {
                       if (
                         e.key === ' ' ||
                         e.key === 'Enter' ||
@@ -223,7 +249,24 @@ export function Home(props: AppState) {
                       ) {
                         if (state.editConnections)
                           setState((s) => ({ ...s, editConnection: p }));
-                        else {
+                        else if (p.dbSelectionMode === 'always') {
+                          e.stopPropagation();
+                          try {
+                            setState((s) => ({
+                              ...s,
+                              connecting: true,
+                              openConnection: p,
+                            }));
+                            await connect(p, p.database);
+                          } catch (err) {
+                            setState((s) => ({
+                              ...s,
+                              connecting: false,
+                              openConnection: null,
+                              error: grantError(err),
+                            }));
+                          }
+                        } else {
                           setState((s) => ({ ...s, openConnection: p }));
                         }
                         if (document.activeElement instanceof HTMLElement)
@@ -371,6 +414,17 @@ export function Home(props: AppState) {
             />
           </div>
         </div>
+      ) : state.openConnection?.dbSelectionMode === 'always' ? (
+        <div
+          className="bases-wrapper"
+          style={
+            state.connecting
+              ? {
+                  filter: 'blur(0.5px) brightness(99%) grayscale(0.5)',
+                }
+              : undefined
+          }
+        />
       ) : undefined}
       <button
         onClick={

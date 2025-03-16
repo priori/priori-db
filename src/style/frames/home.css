@@ -187,7 +187,7 @@
   margin: 0 auto;
   height: 100vh;
   align-items: center;
-  width: 505px;
+  width: 530px;
   gap: 20px;
 }
 .new-connection > div {
@@ -236,9 +236,19 @@
   margin-right: 66px;
   border-radius: 8px;
   outline: none;
+  cursor: pointer;
+  color: #444;
 }
 .new-connection__require-ssl:focus-visible {
   color: #018;
+  background: #eee;
+}
+.new-connection__require-ssl:hover {
+  background: #f8f8f8;
+  color: #000;
+  transition: background 0.2s;
+}
+.new-connection__require-ssl:hover:active {
   background: #eee;
 }
 .connection-error {
@@ -375,6 +385,19 @@ body:has(.connections) {
   display: inline-block;
   position: absolute;
   margin-left: 5px;
+}
+.new-connection__field .context-menu {
+  position: absolute !important;
+  display: none;
+}
+.new-connection__field > span:hover .context-menu {
+  display: block;
+}
+.new-connection [data-hint]:hover::after {
+  margin-top: -61px;
+  margin-left: -36px;
+  font-size: 14px;
+  padding: 6px 10px;
 }
 span.connection--user:before {
   display: inline-block;

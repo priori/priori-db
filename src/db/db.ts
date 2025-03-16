@@ -206,7 +206,10 @@ export async function connect(c: ConnectionConfiguration, name: string) {
 export type Filter = ImportedFilter;
 
 export async function listDatabases(
-  c: Omit<ConnectionConfiguration, 'id'> | ConnectionConfiguration,
+  c:
+    | Omit<ConnectionConfiguration, 'id' | 'dbSelectionMode'>
+    | Omit<ConnectionConfiguration, 'id'>
+    | ConnectionConfiguration,
 ) {
   if (c.type === 'postgres') return pgListDabases(c);
   if (c.type === 'mysql') return mysqlListDatabases(c);
