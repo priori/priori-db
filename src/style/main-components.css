@@ -197,3 +197,16 @@
 .left-nav-resizing .settings-button {
   transition: none !important;
 }
+@keyframes draggable-glow {
+  0% {
+    background: transparent;
+  }
+  100% {
+    background: #1976d2;
+  }
+}
+.resize-helper:hover,
+.query-frame--resize-helper:hover {
+  animation: draggable-glow 0.3s 0.7s forwards;
+  z-index: 1112;
+}
