@@ -196,6 +196,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
           alwaysConsumeMouseWheel: false,
         },
         overviewRulerBorder: false,
+        overviewRulerLanes: 0,
+        renderWhitespace: 'none',
         contextmenu: false,
         multiCursorModifier: undefined,
       });
