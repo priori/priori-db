@@ -691,3 +691,6 @@ div.CodeMirror-gutters {
   padding-top: 9px;
   box-shadow: 0 3px 16px rgba(0, 0, 0, 0.3);
 }
+body .monaco-editor .sticky-widget {
+  box-shadow: -10px 0 10px rgba(0, 0, 0, 0.2);
+}
