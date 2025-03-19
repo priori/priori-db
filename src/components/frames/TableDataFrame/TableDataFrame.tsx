@@ -1,3 +1,4 @@
+import { JSX } from 'react';
 import { DataGrid } from '../../util/DataGrid/DataGrid';
 import { TableFrameProps } from '../../../types';
 import { useTableDataFrame } from './tableDataFrameUtils';

@@ -133,7 +133,7 @@ const createWindow = async () => {
 };
 
 if (isDebug) {
-  require('electron-debug')();
+  require('electron-debug').default();
 }
 const localShortcut = require('electron-localshortcut');
 

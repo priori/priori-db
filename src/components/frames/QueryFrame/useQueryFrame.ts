@@ -373,7 +373,9 @@ export function useQueryFrame({ uid }: { uid: number }) {
     height: number;
   }>(null);
   const popup = topHeight === 40 && !animating ? popupState : false;
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   const upMouseEnter = useEvent(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);

@@ -38,7 +38,6 @@ module.exports = {
     ],
     'react/jsx-filename-extension': [1, { extensions: ['.jsx', '.tsx'] }],
     'no-unused-vars': 'off',
-    '@typescript-eslint/no-unused-vars': ['error'],
   },
   parserOptions: {
     ecmaVersion: 2022,

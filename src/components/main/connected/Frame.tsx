@@ -1,6 +1,6 @@
 import { AbstractTabProps, FrameProps0, FrameType } from 'types';
 import { equals } from 'util/equals';
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, JSX } from 'react';
 import { assert } from 'util/assert';
 import { SequenceFrame } from 'components/frames/SequenceFrame';
 import { DomainFrame } from 'components/frames/DomainFrame';

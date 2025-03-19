@@ -15,7 +15,7 @@ import {
 } from 'state/actions';
 import { equals } from 'util/equals';
 import { useEventListener } from 'util/useEventListener';
-import { Entity, useDeferredValueFix } from './Nav';
+import { Entity } from './Nav';
 import { NavSearchCore } from './NavSearchCore';
 import { Tabs } from './navUtils';
 
@@ -37,9 +37,7 @@ export function NavSearch({
   const [len, setLen] = useState(0);
   const [searchText, setSearchText] = useState('');
   const [focus, setFocus] = useState(false);
-  const search = (useDeferredValue as useDeferredValueFix<string>)(searchText, {
-    timeoutMs: 300,
-  });
+  const search = useDeferredValue(searchText);
   const onSearchFocusChange = useEvent((s: Entity | null) => {
     if (disabled) return;
     setFocusedEntity(s);

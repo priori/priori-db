@@ -80,7 +80,9 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
 
     const elRef = React.useRef<HTMLElement | null>(null);
 
-    const timeout = React.useRef<ReturnType<typeof setTimeout>>();
+    const timeout = React.useRef<ReturnType<typeof setTimeout> | undefined>(
+      undefined,
+    );
 
     useThemeChange(() => {
       if (isDark()) {

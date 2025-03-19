@@ -27,9 +27,6 @@ export type Entity = {
   schema?: string;
 } & ({ schema: string } | { type: 'SCHEMA' });
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export type useDeferredValueFix<T> = (s: T, config: { timeoutMs: number }) => T;
-
 const isIOS = process?.platform === 'darwin';
 
 function NavNewSchema({ disabled }: { disabled?: boolean }) {
@@ -90,9 +87,7 @@ export function Nav(props: {
   title?: string;
   rolesOpen: boolean;
 }) {
-  const tabs = (useDeferredValue as useDeferredValueFix<Tab[]>)(props.tabs, {
-    timeoutMs: 150,
-  });
+  const tabs = useDeferredValue(props.tabs);
 
   const [refreshing0, setRefreshing] = useState(false);
 
