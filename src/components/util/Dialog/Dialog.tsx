@@ -8,7 +8,31 @@ const safeMargin = 15;
 function relativeEl(
   el: HTMLElement,
   to: 'nextSibling' | 'previousSibling' | 'parentNode',
+  relativeToSelector?: string,
 ) {
+  if (relativeToSelector) {
+    if (to === 'parentNode') {
+      const el2 = el.closest(relativeToSelector);
+      assert(el2 instanceof HTMLElement);
+      return el2;
+    }
+    if (to === 'nextSibling') {
+      let el2 = el.nextElementSibling;
+      while (el2 && !el2.matches(relativeToSelector)) {
+        el2 = el2.nextElementSibling;
+      }
+      assert(el2 instanceof HTMLElement);
+      return el2;
+    }
+    if (to === 'previousSibling') {
+      let el2 = el.previousElementSibling;
+      while (el2 && !el2.matches(relativeToSelector)) {
+        el2 = el2.previousElementSibling;
+      }
+      assert(el2 instanceof HTMLElement);
+      return el2;
+    }
+  }
   if (to === 'nextSibling') {
     assert(
       el.nextElementSibling && el.nextElementSibling instanceof HTMLElement,
@@ -74,6 +98,7 @@ export function Dialog({
   onBlur,
   children,
   relativeTo,
+  relativeToSelector,
   className,
   onMouseDown,
   onKeyDown: onKeyDownProp,
@@ -81,6 +106,7 @@ export function Dialog({
   onBlur: () => void;
   children: React.ReactNode;
   relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
+  relativeToSelector?: string;
   className?: string;
   onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
@@ -88,7 +114,7 @@ export function Dialog({
   const elRef = React.useRef<HTMLElement | null>(null);
   const fit = useEvent(() => {
     if (elRef.current) {
-      const to = relativeEl(elRef.current, relativeTo);
+      const to = relativeEl(elRef.current, relativeTo, relativeToSelector);
       if (to) {
         elRef.current.style.top = '-10000px';
         elRef.current.style.left = '-10000px';
@@ -106,7 +132,7 @@ export function Dialog({
       el.style.top = '-10000px';
       el.style.left = '-10000px';
       el.style.position = 'fixed';
-      const to = relativeEl(el, relativeTo) as HTMLElement;
+      const to = relativeEl(el, relativeTo, relativeToSelector) as HTMLElement;
       const p = el.parentNode;
       assert(p);
       const h = el.offsetHeight;

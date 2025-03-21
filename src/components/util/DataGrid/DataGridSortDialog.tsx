@@ -36,6 +36,7 @@ export function DataGridSortDialog(props: DataGridSortDialogProps) {
       onMouseDown={(e) => {
         e.stopPropagation();
       }}
+      relativeToSelector=".grid__scroll"
       className="form"
     >
       <h1

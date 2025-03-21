@@ -190,6 +190,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
       onMouseDown={(e) => {
         e.stopPropagation();
       }}
+      relativeToSelector=".grid__scroll"
       className={`form ${
         !('type' in filter) && isBigForm
           ? 'grid__filter-dialog__big-form'
