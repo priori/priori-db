@@ -21,14 +21,16 @@ type ResizeState = {
 
 function buildFinalWidths(
   initialColsWidths: number[],
-  areaWidth: number, // available width subtracting scrollbars
+  availableWidthSubtractingScrollbars: number,
   state?: ResizeState,
 ) {
   if (state) {
     const withSum = state.widths.reduce((a: number, b: number) => a + b, 0) + 1;
-    if (withSum < areaWidth) {
+    if (withSum < availableWidthSubtractingScrollbars) {
       return state.widths.map((w, i) =>
-        i === state.widths.length - 1 ? w + areaWidth - withSum : w,
+        i === state.widths.length - 1
+          ? w + availableWidthSubtractingScrollbars - withSum
+          : w,
       );
     }
     return state.widths;
@@ -37,7 +39,10 @@ function buildFinalWidths(
     return [];
   }
   const minWidth = initialColsWidths.reduce((a: number, b: number) => a + b, 1);
-  const finalWidth = areaWidth > minWidth ? areaWidth : minWidth;
+  const finalWidth =
+    availableWidthSubtractingScrollbars > minWidth
+      ? availableWidthSubtractingScrollbars
+      : minWidth;
   const ratio = finalWidth / minWidth;
   const floatSizes = initialColsWidths.map((w: number) => w * ratio);
   const roundedSizes = floatSizes.map((w) => Math.round(w));
