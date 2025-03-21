@@ -56,7 +56,7 @@ export function SettingsFrame() {
           opacity: 0.5,
         }}
       >
-        <h1>
+        <h1 style={{ userSelect: 'none' }}>
           <span className="adjustment-icon--big">
             <div />
           </span>
@@ -73,7 +73,7 @@ export function SettingsFrame() {
         opacity: reloading ? 0.6 : 1,
       }}
     >
-      <h1>
+      <h1 style={{ userSelect: 'none' }}>
         <span className="adjustment-icon--big">
           <div />
         </span>
