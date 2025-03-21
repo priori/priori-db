@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { JSX, useEffect, useRef } from 'react';
 
 export type ContextMenuEvent =
   | {
@@ -27,6 +27,11 @@ export type ContextMenuEvent =
   | {
       type: 'undo inserts';
       rowIndex: [number, number];
+    }
+  | {
+      type: 'copy';
+      rowIndex: [number, number];
+      colIndex: [number, number];
     };
 
 const optionHeight = 30;
@@ -39,7 +44,7 @@ export function ContextMenu({
   update,
   selection: selection0,
   rowsLength,
-  readOnly,
+  noPk: readOnly,
   rowIndex,
   colIndex,
   hintOnly,
@@ -47,6 +52,7 @@ export function ContextMenu({
   y,
   x2,
   y2,
+  codeResult,
 }: {
   onSelectOption: (e: ContextMenuEvent) => void;
   selection?: {
@@ -56,7 +62,8 @@ export function ContextMenu({
   rowIndex: number;
   colIndex: number;
   rowsLength: number;
-  readOnly: boolean;
+  noPk: boolean;
+  codeResult: boolean;
   update: {
     [rowIndex: string]: { [colIndex: string]: string | null } | 'REMOVE';
   };
@@ -101,6 +108,7 @@ export function ContextMenu({
   const options: {
     title: string;
     icon: string;
+    right?: string | JSX.Element;
     action?: () => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
@@ -156,7 +164,7 @@ export function ContextMenu({
                 });
               },
       });
-    } else if (deletes === 1) {
+    } else if (deletes === 1 && !codeResult) {
       options.push({
         title: `Unmark row for removal `,
         icon: 'undo',
@@ -170,7 +178,8 @@ export function ContextMenu({
     }
     if (
       rowsAvailableForRemoval === 1 &&
-      update[selection.rowIndex[1]] !== 'REMOVE'
+      update[selection.rowIndex[1]] !== 'REMOVE' &&
+      !codeResult
     ) {
       options.push({
         title: `Mark row for removal `,
@@ -278,22 +287,35 @@ export function ContextMenu({
       }
     }
     if (update[rowIndex] !== 'REMOVE') {
-      options.push({
-        title: 'Update value ',
-        icon: 'pencil',
-        action:
-          readOnly && rowIndex < rowsLength
-            ? undefined
-            : () => {
-                onSelectOption({
-                  type: 'update',
-                  rowIndex,
-                  colIndex,
-                });
-              },
-      });
+      if (codeResult) {
+        options.push({
+          title: 'Update',
+          icon: 'pencil',
+          right: (
+            <span style={{ color: '#000' }}>
+              <span style={{ fontSize: 11 }}>Read-Only (Code Result)</span>{' '}
+              <i className="fa fa-lock" />
+            </span>
+          ),
+        });
+      } else
+        options.push({
+          title: 'Update value ',
+          icon: 'pencil',
+          right: 'Enter',
+          action:
+            readOnly && rowIndex < rowsLength
+              ? undefined
+              : () => {
+                  onSelectOption({
+                    type: 'update',
+                    rowIndex,
+                    colIndex,
+                  });
+                },
+        });
     }
-    if (readOnly && selection.rowIndex[0] < rowsLength) {
+    if (readOnly && selection.rowIndex[0] < rowsLength && !codeResult) {
       options.push({
         title: `Mark row for removal `,
         icon: 'close',
@@ -301,9 +323,59 @@ export function ContextMenu({
       });
     }
   }
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  if (
+    !hintOnly &&
+    (selection.rowIndex[0] !== selection.rowIndex[1] ||
+      selection.colIndex[0] !== selection.colIndex[1])
+  ) {
+    options.push({
+      title: 'Copy',
+      right: isMac ? 'Cmd+C' : 'Ctrl+C',
+      icon: 'copy',
+      action: () => {
+        onSelectOption({
+          type: 'copy',
+          rowIndex: selection.rowIndex,
+          colIndex: selection.colIndex,
+        });
+      },
+    });
+  } else if (
+    !hintOnly &&
+    selection.rowIndex[0] >= rowsLength &&
+    (update[selection.rowIndex[0]] === 'REMOVE' ||
+      typeof update[selection.rowIndex[0]] !== 'object' ||
+      (typeof update[selection.rowIndex[0]] === 'object' &&
+        (update[selection.rowIndex[0]] as Record<number, unknown>)[
+          selection.colIndex[0]
+        ] === undefined))
+  ) {
+    options.push({
+      title: 'Copy',
+      right: isMac ? 'Cmd+C' : 'Ctrl+C',
+      icon: 'copy',
+    });
+  } else if (!hintOnly) {
+    options.push({
+      title: 'Copy Value',
+      right: isMac ? 'Cmd+C' : 'Ctrl+C',
+      icon: 'copy',
+      action: () => {
+        onSelectOption({
+          type: 'copy',
+          rowIndex: selection.rowIndex,
+          colIndex: selection.colIndex,
+        });
+      },
+    });
+  }
+
   const showReadOnlyInfo =
     hintOnly ||
-    (readOnly && (!options.length || options.some((o) => !o.action)));
+    (readOnly &&
+      (!options.length || options.some((o) => !o.action)) &&
+      !codeResult);
 
   useEffect(() => {
     if (hoverElRef.current) {
@@ -383,7 +455,11 @@ export function ContextMenu({
           />{' '}
           Read-only data <i className="fa fa-lock" />
           <br />
-          <strong>No primary key configured!</strong>
+          <strong>
+            {codeResult
+              ? 'Result from SQL code editor!'
+              : 'No primary key configured!'}
+          </strong>
         </div>
       )}
       {options.map((option, index) => (
@@ -396,6 +472,37 @@ export function ContextMenu({
         >
           <i className={`fa fa-${option.icon}`} style={{ width: 14 }} />{' '}
           {option.title}
+          {option.right && (
+            <span
+              style={{
+                float: 'right',
+                opacity: option.action ? 0.3 : undefined,
+              }}
+            >
+              {typeof option.right === 'string' &&
+              option.right.startsWith('Cmd+') ? (
+                <>
+                  <svg
+                    style={{
+                      width: 15,
+                      position: 'absolute',
+                      height: 15,
+                      marginLeft: -16,
+                      opacity: !option.action ? 0.3 : undefined,
+                    }}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 32 32"
+                  >
+                    <path d="m24 13a4 4 0 0 0 4-4v-1a4 4 0 0 0 -4-4h-1a4 4 0 0 0 -4 4v3h-6v-3a4 4 0 0 0 -4-4h-1a4 4 0 0 0 -4 4v1a4 4 0 0 0 4 4h3v6h-3a4 4 0 0 0 -4 4v1a4 4 0 0 0 4 4h1a4 4 0 0 0 4-4v-3h6v3a4 4 0 0 0 4 4h1a4 4 0 0 0 4-4v-1a4 4 0 0 0 -4-4h-3v-6zm-3-5a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1 -2 2h-3zm-13 3a2 2 0 0 1 -2-2v-1a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v3zm3 13a2 2 0 0 1 -2 2h-1a2 2 0 0 1 -2-2v-1a2 2 0 0 1 2-2h3zm8-5h-6v-6h6zm2 2h3a2 2 0 0 1 2 2v1a2 2 0 0 1 -2 2h-1a2 2 0 0 1 -2-2z" />
+                    <path d="m0 0h32v32h-32z" fill="none" />
+                  </svg>{' '}
+                  {option.right.replace(/^Cmd\+/, '')}
+                </>
+              ) : (
+                option.right
+              )}
+            </span>
+          )}
         </div>
       ))}
     </div>

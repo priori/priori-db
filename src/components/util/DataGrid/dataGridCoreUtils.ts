@@ -190,28 +190,28 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
   const lastScrollTimeRef = useRef(null as Date | null);
 
-  const hintCloseTimeoutRef = useRef(
-    null as ReturnType<typeof setTimeout> | null,
-  );
-
   function edit() {
-    if (!props.onUpdate) return;
-    if (
-      props.pks?.length ||
-      (state.activeCell &&
-        state.activeCell.rowIndex >= props.result.rows.length)
-    ) {
-      setState((s) => ({
-        ...s,
-        contextMenu: undefined,
-        editing: true,
-      }));
-    } else if (!state.contextMenu?.hintOnly) {
+    if (!state.contextMenu?.hintOnly) {
       const { top, left, width } = elRef
         .current!.querySelector('.grid__active-cell-wrapper')!
         .getClientRects()[0];
       setState((s) => ({
         ...s,
+        selection:
+          s.selection &&
+          s.activeCell!.rowIndex >= s.selection.rowIndex[0] &&
+          s.activeCell!.rowIndex <= s.selection.rowIndex[1] &&
+          s.activeCell!.colIndex >= s.selection.colIndex[0] &&
+          s.activeCell!.colIndex <= s.selection.colIndex[1]
+            ? s.selection
+            : {
+                colIndex: [s.activeCell!.colIndex, s.activeCell!.colIndex],
+                rowIndex: [s.activeCell!.rowIndex, s.activeCell!.rowIndex],
+              },
+        activeCell: {
+          rowIndex: s.activeCell!.rowIndex,
+          colIndex: s.activeCell!.colIndex,
+        },
         contextMenu: {
           rowIndex: s.activeCell!.rowIndex,
           colIndex: s.activeCell!.colIndex,
@@ -219,24 +219,44 @@ export function useDataGridCore(props: DataGridCoreProps) {
           y: top + rowHeight + 3,
           y2: top,
           x2: left + width - 1,
-          readOnly: true,
+          noPk: !!props.pks?.length,
+          codeResult: !props.onUpdate,
           hintOnly: true,
         },
       }));
-      if (hintCloseTimeoutRef.current)
-        clearTimeout(hintCloseTimeoutRef.current);
-      hintCloseTimeoutRef.current = setTimeout(() => {
+    }
+  }
+
+  useEffect(() => {
+    if (!state.notice && !state.contextMenu?.hintOnly) return () => {};
+    const timeout = setTimeout(
+      () => {
         setState((s) =>
-          s.contextMenu?.hintOnly
+          s.notice && state.contextMenu?.hintOnly
             ? {
                 ...s,
                 contextMenu: undefined,
+                notice: undefined,
               }
-            : s,
+            : s.notice
+              ? {
+                  ...s,
+                  notice: undefined,
+                }
+              : state.contextMenu?.hintOnly
+                ? {
+                    ...s,
+                    contextMenu: undefined,
+                  }
+                : s,
         );
-      }, 4000);
-    }
-  }
+      },
+      state.notice ? 2500 : 4000,
+    );
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [state.notice, state.contextMenu]);
 
   const pendingInserts = Object.keys(state.update).filter(
     (i) => parseInt(i, 10) >= props.result.rows.length,
@@ -526,6 +546,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       e.stopPropagation();
     }
   }
+
   function moveBy(
     x0: number,
     y0: number,
@@ -632,6 +653,15 @@ export function useDataGridCore(props: DataGridCoreProps) {
       d.setData('text/tab-separated-values', toTsv(sels).join(''));
       d.setData('text/html', toHtml(sels));
       d.setData('application/json', JSON.stringify(sels));
+      setState((s) => ({
+        ...s,
+        contextMenu: undefined,
+        notice: {
+          key: (s.notice?.key ?? 0) + 1,
+          rows: s.selection!.rowIndex[1] - s.selection!.rowIndex[0] + 1,
+          cols: s.selection!.colIndex[1] - s.selection!.colIndex[0] + 1,
+        },
+      }));
     }
   });
 
@@ -646,6 +676,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
       props.fetchMoreRows?.();
     }, 1);
   });
+
   const fetchMoreRows = props.fetchMoreRows ? fetchMoreRows0 : undefined;
 
   useEffect(() => {
@@ -810,7 +841,6 @@ export function useDataGridCore(props: DataGridCoreProps) {
       return;
     }
     if (
-      props.onUpdate &&
       (e.key === 'F2' || e.key === 'Enter') &&
       (!state.activeCell ||
         state.update?.[state.activeCell.rowIndex] !== 'REMOVE')
@@ -884,7 +914,13 @@ export function useDataGridCore(props: DataGridCoreProps) {
       });
     } else if (state.activeCell) {
       if (e.key === 'Escape') {
-        if (elRef.current) elRef.current.blur();
+        if (state.contextMenu || state.notice) {
+          setState((s) => ({
+            ...s,
+            contextMenu: undefined,
+            notice: undefined,
+          }));
+        } else if (elRef.current) elRef.current.blur();
       } else if (e.key === 'ArrowDown') {
         moveBy(0, 1, e.shiftKey);
       } else if (e.key === 'ArrowUp') {
@@ -896,7 +932,6 @@ export function useDataGridCore(props: DataGridCoreProps) {
       } else if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey) {
         tabMove(e, e.shiftKey ? -1 : 1);
       } else if (
-        props.onUpdate &&
         e.key &&
         e.key.length === 1 &&
         !e.ctrlKey &&
@@ -1055,6 +1090,12 @@ export function useDataGridCore(props: DataGridCoreProps) {
         selection,
         activeCell: fixActive(s.activeCell, removes, e.rowIndex),
       }));
+    } else if (e.type === 'copy') {
+      setState((s) => ({
+        ...s,
+        contextMenu: undefined,
+      }));
+      document.execCommand('copy');
     }
   });
 
@@ -1118,28 +1159,37 @@ export function useDataGridCore(props: DataGridCoreProps) {
     }
     const colIndex = getColIndex(x);
     if (e.button === 2) {
-      if (!props.onUpdate || rowIndex >= props.result.rows.length + extraRows) {
-        if (state.contextMenu) {
-          setState((s) => ({
-            ...s,
-            contextMenu: undefined,
-          }));
-        }
-        return;
-      }
-      const readOnly =
+      const codeResult =
+        !props.onUpdate || rowIndex >= props.result.rows.length + extraRows;
+      const noPk =
         !props.onUpdate ||
         !props.pks ||
         !props.pks.length ||
         rowIndex >= props.result.rows.length + extraRows;
       setState((s) => ({
         ...s,
+        selection:
+          s.selection &&
+          rowIndex >= s.selection.rowIndex[0] &&
+          rowIndex <= s.selection.rowIndex[1] &&
+          colIndex >= s.selection.colIndex[0] &&
+          colIndex <= s.selection.colIndex[1]
+            ? s.selection
+            : {
+                colIndex: [colIndex, colIndex],
+                rowIndex: [rowIndex, rowIndex],
+              },
+        activeCell: {
+          rowIndex,
+          colIndex,
+        },
         contextMenu: {
           rowIndex,
           colIndex,
           x: e.clientX,
           y: e.clientY,
-          readOnly,
+          noPk,
+          codeResult,
         },
         mouseDown: undefined,
       }));

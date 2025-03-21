@@ -649,3 +649,33 @@ tr.remove .cell {
   padding-top: 30px;
   padding-bottom: 30px;
 }
+
+@keyframes show {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.grid__notice {
+  width: 217px;
+  margin-top: 32px;
+  background: rgba(0, 0, 0, 0.777);
+  font-family: sans-serif;
+  border-radius: 10px;
+  overflow: hidden;
+  user-select: none;
+  pointer-events: none;
+  color: #fff;
+  font-size: 23px;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 1px;
+  position: absolute;
+  right: 20px;
+  padding: 6px 8px;
+  z-index: 3;
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  animation: show 1.5s forwards;
+}

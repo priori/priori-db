@@ -8,6 +8,7 @@ import { useDataGridCore } from './dataGridCoreUtils';
 import { DataGridUpdateInfoDialog } from './DataGridUpdateInfo';
 import { DataGridSelection } from './DataGridSelection';
 import { ContextMenu } from './ContextMenu';
+import { DataGridNotice } from './DataGridNotice';
 
 export interface DataGridCoreProps {
   result: {
@@ -46,13 +47,19 @@ export interface DataGridState {
   slice: [number, number];
   activeCell?: { rowIndex: number; colIndex: number };
   selection?: { rowIndex: [number, number]; colIndex: [number, number] };
+  notice?: {
+    cols: number;
+    rows: number;
+    key: number;
+  };
   mouseDown?: { rowIndex: number; colIndex: number };
   contextMenu?: {
     rowIndex: number;
     colIndex: number;
     x: number;
     y: number;
-    readOnly: boolean;
+    noPk: boolean;
+    codeResult?: boolean;
     hintOnly?: boolean;
     y2?: number;
     x2?: number;
@@ -258,6 +265,14 @@ export function DataGridCore(props: DataGridCoreProps) {
         </div>
       </div>
 
+      {state.notice ? (
+        <DataGridNotice
+          key={state.notice.key}
+          rows={state.notice.rows}
+          cols={state.notice.cols}
+        />
+      ) : null}
+
       {fetchingNewRows ? (
         <div className="grid__fetching">
           <i className="fa fa-circle-o-notch fa-spin fa-3x fa-fw" />
@@ -337,7 +352,8 @@ export function DataGridCore(props: DataGridCoreProps) {
           rowIndex={state.contextMenu.rowIndex}
           colIndex={state.contextMenu.colIndex}
           rowsLength={props.result.rows.length}
-          readOnly={state.contextMenu.readOnly}
+          noPk={state.contextMenu.noPk}
+          codeResult={!!state.contextMenu.codeResult}
         />
       ) : null}
     </div>
