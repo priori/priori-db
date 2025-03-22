@@ -175,7 +175,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
       }
       if (el === elRef.current) return;
       elRef.current = el;
-      editorRef.current = monaco.editor.create(el, {
+      const editor = monaco.editor.create(el, {
         value: '',
         language: 'sql',
         theme: isDark() ? 'dark' : 'vs-white',
@@ -203,25 +203,34 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         contextmenu: false,
         multiCursorModifier: undefined,
       });
-      editorRef.current.addCommand(monaco.KeyCode.F1, () => {});
-      editorRef.current.addCommand(monaco.KeyCode.F2, () => {});
-
+      editorRef.current = editor;
+      editor.addCommand(monaco.KeyCode.F1, () => {});
+      editor.addCommand(monaco.KeyCode.F2, () => {});
+      editor.addCommand(
+        // eslint-disable-next-line no-bitwise
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV,
+        () => {
+          navigator.clipboard.readText().then((text) => {
+            editor.trigger('keyboard', 'paste', { text });
+          });
+        },
+      );
       let prev = getEditorState();
-      editorRef.current.onDidChangeModelContent(() => {
+      editor.onDidChangeModelContent(() => {
         const v = getEditorState();
         if (isSameEditorState(v, prev)) return;
         const contentChanged = v.content !== prev.content;
         prev = v;
         if (props.onChange) props.onChange(contentChanged);
       });
-      editorRef.current.onDidChangeCursorSelection(() => {
+      editor.onDidChangeCursorSelection(() => {
         const v = getEditorState();
         if (isSameEditorState(v, prev)) return;
         const contentChanged = v.content !== prev.content;
         prev = v;
         if (props.onChange) props.onChange(contentChanged);
       });
-      editorRef.current.focus();
+      editor.focus();
     });
 
     const blur = useEvent(() => {
