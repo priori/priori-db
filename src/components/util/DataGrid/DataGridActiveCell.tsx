@@ -72,13 +72,12 @@ export function activeCellUpdate({
   } else if (activeCellEl.style.height) {
     activeCellEl.style.height = '';
   }
-  activeCellEl.style.display =
+  const hiddenActiveCell =
     wrapperHeight === 0 ||
     top < 0 ||
     wrapperWidth < 0 ||
-    top > containerHeight - (hasBottomScrollbar ? scrollWidth : 0)
-      ? 'none'
-      : '';
+    top > containerHeight - (hasBottomScrollbar ? scrollWidth : 0);
+  activeCellEl.style.opacity = hiddenActiveCell ? '0' : '';
 }
 
 interface DataGridActiveCellProps {

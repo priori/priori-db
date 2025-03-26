@@ -192,38 +192,49 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
   function edit() {
     if (!state.contextMenu?.hintOnly) {
-      const { top, left, width } = elRef
-        .current!.querySelector('.grid__active-cell-wrapper')!
-        .getClientRects()[0];
-      setState((s) => ({
-        ...s,
-        selection:
-          s.selection &&
-          s.activeCell!.rowIndex >= s.selection.rowIndex[0] &&
-          s.activeCell!.rowIndex <= s.selection.rowIndex[1] &&
-          s.activeCell!.colIndex >= s.selection.colIndex[0] &&
-          s.activeCell!.colIndex <= s.selection.colIndex[1]
-            ? s.selection
-            : {
-                colIndex: [s.activeCell!.colIndex, s.activeCell!.colIndex],
-                rowIndex: [s.activeCell!.rowIndex, s.activeCell!.rowIndex],
-              },
-        activeCell: {
-          rowIndex: s.activeCell!.rowIndex,
-          colIndex: s.activeCell!.colIndex,
-        },
-        contextMenu: {
-          rowIndex: s.activeCell!.rowIndex,
-          colIndex: s.activeCell!.colIndex,
-          x: left,
-          y: top + rowHeight + 3,
-          y2: top,
-          x2: left + width - 1,
-          noPk: !!props.pks?.length,
-          codeResult: !props.onUpdate,
-          hintOnly: true,
-        },
-      }));
+      if (props.onUpdate && props.pks?.length) {
+        if (!state.touched && props.onTouch) {
+          props.onTouch();
+        }
+        setState((s) => ({
+          ...s,
+          touched: true,
+          editing: true,
+        }));
+      } else {
+        const { top, left, width } = elRef
+          .current!.querySelector('.grid__active-cell-wrapper')!
+          .getClientRects()[0];
+        setState((s) => ({
+          ...s,
+          selection:
+            s.selection &&
+            s.activeCell!.rowIndex >= s.selection.rowIndex[0] &&
+            s.activeCell!.rowIndex <= s.selection.rowIndex[1] &&
+            s.activeCell!.colIndex >= s.selection.colIndex[0] &&
+            s.activeCell!.colIndex <= s.selection.colIndex[1]
+              ? s.selection
+              : {
+                  colIndex: [s.activeCell!.colIndex, s.activeCell!.colIndex],
+                  rowIndex: [s.activeCell!.rowIndex, s.activeCell!.rowIndex],
+                },
+          activeCell: {
+            rowIndex: s.activeCell!.rowIndex,
+            colIndex: s.activeCell!.colIndex,
+          },
+          contextMenu: {
+            rowIndex: s.activeCell!.rowIndex,
+            colIndex: s.activeCell!.colIndex,
+            x: left,
+            y: top + rowHeight + 3,
+            y2: top,
+            x2: left + width - 1,
+            noPk: !!props.pks?.length,
+            codeResult: !props.onUpdate,
+            hintOnly: true,
+          },
+        }));
+      }
     }
   }
 
@@ -1293,6 +1304,23 @@ export function useDataGridCore(props: DataGridCoreProps) {
       )?.[state.activeCell.colIndex] === value
     )
       return;
+
+    if (
+      gridContentRef.current &&
+      activeCellElRef.current?.style.opacity === '0'
+    ) {
+      const el = gridContentRef.current;
+      assert(el);
+      scrollTo(
+        el,
+        colsWidths,
+        state.activeCell.colIndex,
+        state.activeCell.rowIndex,
+        hasRightScrollbar,
+        hasBottomScrollbar,
+      );
+    }
+
     setState((s) => ({
       ...s,
       contextMenu: undefined,
