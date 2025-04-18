@@ -152,10 +152,14 @@ body.modern-light-theme select:focus,
 body.modern-light-theme input:focus {
   border-color: #1976d2;
   box-shadow:
-    0 1px #1976d2,
-    0 -1px #1976d2,
-    1px 0 #1976d2,
-    -1px 0 #1976d2;
+    1px 1px #1976d2,
+    1px -1px #1976d2,
+    -1px -1px #1976d2,
+    -1px 1px #1976d2,
+    inset #1976d2 1px 1px,
+    inset #1976d2 -1px -1px,
+    inset #1976d2 -1px 1px,
+    inset #1976d2 1px -1px;
 }
 body.modern-light-theme select:active,
 body.modern-light-theme select:focus {

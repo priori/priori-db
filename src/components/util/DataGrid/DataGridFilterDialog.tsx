@@ -979,6 +979,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
                 >
                   <button
                     className="grid__filter-dialog__or"
+                    style={{ marginRight: 0 }}
                     onClick={() => {
                       setFilter([...filter, []]);
                       fit();

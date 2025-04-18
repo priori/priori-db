@@ -176,6 +176,7 @@ button {
   overflow: auto;
   transition: top 0.3s;
   z-index: 1112;
+  border-radius: 7px;
 }
 .dialog button {
   margin: 5px;

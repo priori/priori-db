@@ -1,16 +1,45 @@
+.grid .dialog h1,
+.grid .dialog h1[style] {
+  font-size: 16px;
+  margin: 0;
+  margin-bottom: 7px !important;
+  margin-top: 7px !important;
+}
+.grid .dialog {
+  padding: 7px;
+  border-radius: 7px;
+}
+.grid__filter-dialog__value-type select {
+  cursor: pointer;
+}
 .dialog .form-row .grid__filter-dialog__input-wrapper textarea {
   margin: 0;
 }
-.app-content button.grid__filter-dialog__or {
-  box-shadow: 0 0;
-  border: 1px solid #eee;
-  background: transparent;
+.app-content button.grid__filter-dialog__where-sql,
+.app-content button.grid__filter-dialog__or,
+.app-content button.grid__filter-dialog__edit-button {
+  border: 0;
+  background: #fff;
   padding: 3px 6px !important;
-  font-weight: normal;
   font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #555;
+  box-shadow:
+    1px 1px #f4f4f4,
+    -1px 1px #f4f4f4,
+    1px -1px #f4f4f4,
+    -1px -1px #f4f4f4;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
 }
-.app-content button.grid__filter-dialog__or:hover {
-  background: #eee !important;
+.app-content button.grid__filter-dialog__where-sql:hover,
+.app-content button.grid__filter-dialog__or:hover,
+.app-content button.grid__filter-dialog__edit-button:hover {
+  color: #000;
+  border-color: white !important;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.17);
 }
 .grid__filter-dialog__big-form.dialog,
 .grid__filter-dialog__small-form.dialog {
@@ -44,7 +73,7 @@
   padding: 0 11px;
 }
 .grid__filter-dialog__big-form.dialog .grid__filter-dialog__and-group {
-  border: solid 1px #eee;
+  border: solid 1px #f8f8f8;
   padding: 5px;
   border-radius: 5px;
 }
@@ -53,6 +82,9 @@
 }
 .grid__filter-dialog__input-focus .grid__filter-dialog__small-ops {
   display: block;
+}
+.grid .dialog.form .form-row .fa-close {
+  cursor: pointer;
 }
 .grid__filter-dialog__small-ops {
   position: absolute;
@@ -70,7 +102,7 @@
   padding: 2px 6px;
   font-weight: bold;
   letter-spacing: -0.5px;
-  border-right: 1px solid #eee;
+  border-right: 1px solid #f8f8f8;
 }
 .grid__filter-dialog__small-ops > span:last-child {
   border-right: 0;
@@ -141,17 +173,9 @@
 }
 .app-content button.grid__filter-dialog__where-sql {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  box-shadow: 0 0;
-  border: 1px solid #eee;
-  background: transparent;
+  top: 0;
+  right: 0;
   font-weight: normal;
-  padding: 3px 6px !important;
-  font-size: 13px;
-}
-.app-content button.grid__filter-dialog__where-sql:hover {
-  background: #eee !important;
 }
 .app-content button.grid__filter-dialog__where-sql.active {
   background: #1976d2 !important;
@@ -166,7 +190,6 @@
   text-align: left;
   user-select: text;
   padding: 23px 30px;
-  background: #eee;
   font-size: 15px;
   border-radius: 14px;
   margin-bottom: 20px;
@@ -198,15 +221,14 @@ textarea.grid__filter-dialog__sql-where
   margin: 0;
   right: 0;
   bottom: -25px;
-  box-shadow: 0 0;
-  border: 1px solid #ddd;
+  border: 0;
   background: transparent;
   font-weight: normal;
-  padding: 3px 6px !important;
-  font-size: 13px;
 }
 .app-content button.grid__filter-dialog__edit-button:hover {
-  background: #eee !important;
+  color: #000;
+  border-color: white !important;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.17);
 }
 .app-content button.grid__filter-dialog__edit-button.active {
   background: #1976d2 !important;
