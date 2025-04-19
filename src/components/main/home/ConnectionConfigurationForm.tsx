@@ -37,9 +37,11 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
     password: connection ? connection.password : '',
     requireSsl: connection ? !!connection.requireSsl : false,
     type: connection ? connection.type : null,
-    dbSelectionMode: connection
-      ? (connection.dbSelectionMode ?? 'options')
-      : 'aways',
+    dbSelectionMode: !connection
+      ? 'always'
+      : connection
+        ? (connection.dbSelectionMode ?? 'options')
+        : 'always',
   } as NewConectionState);
   const [removeConfirmation, setRemoveConfirmation] = useState(false);
   const [testResult, setTestResult] = useState(
@@ -156,7 +158,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
       type: connection ? connection.type : null,
       dbSelectionMode: connection
         ? (connection.dbSelectionMode ?? 'options')
-        : 'aways',
+        : 'always',
     };
     return !equals(initial, state);
   }, [connection, state]);

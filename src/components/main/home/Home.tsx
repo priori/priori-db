@@ -87,14 +87,26 @@ export function Home(props: AppState) {
             service.reload();
           }}
           onSaveAndConnect={async (c) => {
-            service.reload();
             await insertConnectionConfiguration(c);
-            setState((s) => ({
-              ...s,
-              openConnection: c,
-              newConnection: false,
-              editConnections: false,
-            }));
+            if (c.dbSelectionMode === 'always') {
+              setState((s) => ({
+                ...s,
+                newConnection: false,
+                editConnections: false,
+                connecting: true,
+                openConnection: c,
+              }));
+              await connect(c, c.database);
+            } else {
+              await service.reload();
+              setState((s) => ({
+                ...s,
+                editConnection: null,
+                newConnection: false,
+                openConnection: c,
+                editConnections: false,
+              }));
+            }
           }}
         />
       </div>
