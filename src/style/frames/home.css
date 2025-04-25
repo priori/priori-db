@@ -436,6 +436,8 @@ span.connection--user:before {
   background: rgba(235, 235, 235, 0.65);
   backdrop-filter: blur(0.75px);
   z-index: 1;
+  display: flex;
+  align-items: center;
 }
 .home-connection-error-dialog {
   padding: 30px 20px;
@@ -445,4 +447,5 @@ span.connection--user:before {
   color: rgb(221, 51, 51);
   margin: 20px auto;
   text-align: center;
+  width: 100%;
 }

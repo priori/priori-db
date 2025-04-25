@@ -413,7 +413,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
                 className="fa fa-exclamation-triangle"
                 style={{ marginRight: 5 }}
               />
-              {testResult.message}
+              {testResult.message || 'Connection failed'}
             </span>
           ) : testResult ? (
             <span className="connection-test-pending">

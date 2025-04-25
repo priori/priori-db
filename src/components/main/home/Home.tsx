@@ -11,9 +11,11 @@ import { grantError } from 'util/errors';
 import { useShortcuts } from 'util/shortcuts';
 import { useEventListener } from 'util/useEventListener';
 import { useService } from 'util/useService';
+import { useEvent } from 'util/useEvent';
 import { AppState, ConnectionConfiguration } from '../../../types';
 import { Errors } from '../Errors';
 import { ConnectionConfigurationForm } from './ConnectionConfigurationForm';
+import { HomeConnectionErrorDialog } from './HomeConnectionErrorDialog';
 
 export function Home(props: AppState) {
   const service = useService(() => listConnectionConfigurations(), []);
@@ -23,6 +25,7 @@ export function Home(props: AppState) {
     newConnection: false,
     editConnection: null as null | ConnectionConfiguration,
     openConnection: null as null | ConnectionConfiguration,
+    selectedConnection: null as null | ConnectionConfiguration,
     editConnections: false,
     error: null as null | Error,
   });
@@ -42,9 +45,10 @@ export function Home(props: AppState) {
   );
 
   useEffect(() => {
-    if (basesService?.error)
+    if (basesService?.error) {
       setState((s) => ({ ...s, error: basesService.error }));
-  }, [basesService?.error]);
+    }
+  }, [setState, state, basesService?.error]);
 
   const error = state?.error;
 
@@ -59,10 +63,33 @@ export function Home(props: AppState) {
     }
   });
 
-  if (state.newConnection || connectionConfigurations?.length === 0) {
+  const onErrorClose = useEvent(() => {
+    setState((s) => ({ ...s, error: null, openConnection: null }));
+  });
+
+  const onErrorEdit = useEvent(() => {
+    setState((s) => ({
+      ...s,
+      error: null,
+      openConnection: null,
+      editConnection: s.openConnection ?? s.selectedConnection,
+    }));
+  });
+
+  if (
+    !state.editConnection &&
+    (state.newConnection || connectionConfigurations?.length === 0)
+  ) {
     return (
       <div>
         <Errors errors={props.errors} />
+        {error ? (
+          <HomeConnectionErrorDialog
+            error={error}
+            onClose={onErrorClose}
+            onEdit={onErrorEdit}
+          />
+        ) : null}
         <ConnectionConfigurationForm
           connection={undefined}
           onRemove={undefined}
@@ -87,16 +114,29 @@ export function Home(props: AppState) {
             service.reload();
           }}
           onSaveAndConnect={async (c) => {
-            await insertConnectionConfiguration(c);
+            const id = await insertConnectionConfiguration(c);
             if (c.dbSelectionMode === 'always') {
               setState((s) => ({
                 ...s,
                 newConnection: false,
+                editConnection: {
+                  ...c,
+                  id,
+                },
                 editConnections: false,
                 connecting: true,
-                openConnection: c,
               }));
-              await connect(c, c.database);
+              try {
+                await connect(c, c.database);
+              } catch (err) {
+                setState((s) => ({
+                  ...s,
+                  connecting: false,
+                  openConnection: null,
+                  selectedConnection: c,
+                  error: grantError(err),
+                }));
+              }
             } else {
               await service.reload();
               setState((s) => ({
@@ -116,6 +156,13 @@ export function Home(props: AppState) {
     return (
       <div style={{ animation: 'show 1s' }}>
         <Errors errors={props.errors} />
+        {error ? (
+          <HomeConnectionErrorDialog
+            error={error}
+            onClose={onErrorClose}
+            onEdit={onErrorEdit}
+          />
+        ) : null}
         <ConnectionConfigurationForm
           key={state.editConnection.id}
           connection={state.editConnection}
@@ -142,10 +189,21 @@ export function Home(props: AppState) {
             if (e.dbSelectionMode === 'always') {
               setState((s) => ({
                 ...s,
+                editConnections: false,
+                editConnection: null,
                 connecting: true,
-                openConnection: e,
               }));
-              await connect(e, e.database);
+              try {
+                await connect(e, e.database);
+              } catch (err) {
+                setState((s) => ({
+                  ...s,
+                  connecting: false,
+                  openConnection: null,
+                  selectedConnection: e,
+                  error: grantError(err),
+                }));
+              }
             } else {
               await service.reload();
               setState((s) => ({
@@ -175,43 +233,11 @@ export function Home(props: AppState) {
     <div style={{ animation: 'show 1s' }}>
       <Errors errors={props.errors} />
       {error ? (
-        <div
-          className="home-connection-error-dialog__wrapper"
-          onClick={() =>
-            setState((s) => ({ ...s, error: null, openConnection: null }))
-          }
-        >
-          <div className="home-connection-error-dialog">
-            <div
-              style={{ userSelect: 'text', marginBottom: 18, marginTop: 13 }}
-            >
-              {error.message}
-            </div>{' '}
-            <button
-              className="button"
-              style={{ marginTop: '5px', marginRight: 10 }}
-              onClick={() => {
-                setState((s) => ({ ...s, error: null, openConnection: null }));
-              }}
-            >
-              Close <i className="fa fa-undo" />
-            </button>{' '}
-            <button
-              className="button"
-              style={{ marginTop: '5px' }}
-              onClick={() => {
-                setState((s) => ({
-                  ...s,
-                  error: null,
-                  openConnection: null,
-                  editConnection: s.openConnection,
-                }));
-              }}
-            >
-              Edit <i className="fa fa-pencil" />
-            </button>
-          </div>
-        </div>
+        <HomeConnectionErrorDialog
+          error={error}
+          onClose={onErrorClose}
+          onEdit={onErrorEdit}
+        />
       ) : null}
       {connectionConfigurations?.length ? (
         <div className="connections">
@@ -240,6 +266,7 @@ export function Home(props: AppState) {
                             ...s,
                             connecting: false,
                             openConnection: null,
+                            selectedConnection: p,
                             error: grantError(err),
                           }));
                         }
@@ -275,6 +302,7 @@ export function Home(props: AppState) {
                               ...s,
                               connecting: false,
                               openConnection: null,
+                              selectedConnection: p,
                               error: grantError(err),
                             }));
                           }
@@ -376,6 +404,7 @@ export function Home(props: AppState) {
                                 ...s,
                                 connecting: false,
                                 openConnection: null,
+                                selectedConnection: s.openConnection,
                                 error: grantError(err),
                               }));
                             }
@@ -395,6 +424,7 @@ export function Home(props: AppState) {
                               ...s,
                               connecting: false,
                               openConnection: null,
+                              selectedConnection: s.openConnection,
                               error: grantError(err),
                             }));
                           }

@@ -212,7 +212,7 @@ export async function insertConnectionConfiguration(
   c: ConnectionConfiguration,
 ) {
   if (c.id) throw new Error('id should not be set');
-  await transaction(({ connectionConfiguration }) =>
+  return transaction(({ connectionConfiguration }) =>
     connectionConfiguration.add(c),
   );
 }
