@@ -48,8 +48,13 @@ export const {
 
 export async function reloadNav() {
   const newSchemas = await db().listAll();
-  const roles = await db().privileges?.listRoles();
-  state.updateSchemasAndRoles(newSchemas, roles);
+  try {
+    const roles = await db().privileges?.listRoles();
+    state.updateSchemasAndRoles(newSchemas, roles);
+  } catch (err) {
+    state.updateSchemasAndRoles(newSchemas, []);
+    state.showError(grantError(err));
+  }
 }
 
 export function createSchema(name: string) {
@@ -102,7 +107,16 @@ export async function connect(conf: ConnectionConfiguration, database: string) {
     );
     try {
       const schemas = await db().listAll();
-      const roles = await db().privileges?.listRoles();
+      let roles: {
+        name: string;
+        isUser: boolean;
+        host?: string;
+      }[] = [];
+      try {
+        roles = (await db().privileges?.listRoles()) ?? [];
+      } catch (err) {
+        console.error('Error listing roles:', err);
+      }
       state.connected(conf, database, schemas, roles);
     } catch (err) {
       throw grantError(err);

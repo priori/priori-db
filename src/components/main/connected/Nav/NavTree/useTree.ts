@@ -197,17 +197,19 @@ function buildTree(
       };
       children.push(role);
     }
-    const rootRoles: NavTreeItem = {
-      title: 'Users & Roles',
-      children,
-      includeActions: db().privileges?.createRole ? true : undefined,
-      internal: true,
-      key: 'roles',
-      type: 'roles-folder',
-      isOpen: rolesOpen,
-      rowsOpen: rolesOpen ? children.length + 1 : 1,
-    };
-    root.push(rootRoles);
+    if (children.length) {
+      const rootRoles: NavTreeItem = {
+        title: 'Users & Roles',
+        children,
+        includeActions: db().privileges?.createRole ? true : undefined,
+        internal: true,
+        key: 'roles',
+        type: 'roles-folder',
+        isOpen: rolesOpen,
+        rowsOpen: rolesOpen ? children.length + 1 : 1,
+      };
+      root.push(rootRoles);
+    }
   }
   return root;
 }

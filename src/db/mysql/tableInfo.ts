@@ -70,7 +70,10 @@ export async function tableInfo(
     `SELECT * FROM mysql.tables_priv
     WHERE Db = ? AND Table_name = ?`,
     [schema, table],
-  );
+  ).catch((e) => {
+    if (e?.code === 'ER_TABLEACCESS_DENIED_ERROR') return undefined;
+    throw e;
+  });
   const inforSchemaTableP = first(
     `SELECT *
     FROM information_schema.TABLES
@@ -87,7 +90,11 @@ export async function tableInfo(
     FROM mysql.innodb_table_stats
     WHERE database_name = ? AND table_name = ?`,
     [schema, table],
-  );
+  ).catch((e) => {
+    if (e?.code === 'ER_TABLEACCESS_DENIED_ERROR') return undefined;
+    throw e;
+  });
+
   const [
     cols,
     table0,
@@ -118,7 +125,7 @@ export async function tableInfo(
     }
   }
 
-  const privileges = priviliges0.map((p) => {
+  const privileges = priviliges0?.map((p) => {
     const ps = {
       update: undefined,
       insert: undefined,
@@ -175,7 +182,7 @@ export async function tableInfo(
     info: {
       ...(view ? { 'information_schema.VIEWS': view } : undefined),
       'information_schema.TABLES': inforSchemaTable,
-      'mysql.innodb_table_stats': innodbStats,
+      ...(innodbStats ? { 'mysql.innodb_table_stats': innodbStats } : {}),
     },
     subType:
       table0.TABLE_TYPE === 'SYSTEM VIEW' || table0.TABLE_TYPE === 'VIEW'

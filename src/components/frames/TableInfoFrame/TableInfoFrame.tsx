@@ -354,7 +354,25 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
 
   const reloading = useMoreTime(service.status === 'reloading', 100);
 
-  if (!service.lastValidData)
+  if (!service.lastValidData) {
+    if (service.error) {
+      return (
+        <>
+          <h1>
+            <span className="adjustment-icon--big">
+              <div />
+            </span>
+            {props.schema}.{props.table}
+          </h1>
+          {service?.error?.message && (
+            <div className="error-message">
+              <i className="fa fa-exclamation-triangle" />
+              {service.error.message}
+            </div>
+          )}
+        </>
+      );
+    }
     return (
       <h1 style={{ opacity: 0.5 }}>
         <span className="adjustment-icon--big">
@@ -363,6 +381,7 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
         {props.schema}.{props.table}
       </h1>
     );
+  }
 
   return (
     <div
