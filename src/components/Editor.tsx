@@ -102,6 +102,11 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
       return editor.getValue();
     });
 
+    let prev: EditorState = {
+      content: '',
+      cursorStart: { line: 0, ch: 0 },
+      cursorEnd: { line: 0, ch: 0 },
+    };
     const getEditorState = useEvent(() => {
       const content = editorRef.current!.getValue();
       const selection = editorRef.current!.getSelection()!;
@@ -160,6 +165,28 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
       },
     );
 
+    const onEditorCtrlV = useEvent(() => {
+      navigator.clipboard.readText().then((text) => {
+        editorRef.current?.trigger('keyboard', 'paste', { text });
+      });
+    });
+
+    const onDidChangeModelContent = useEvent(() => {
+      const v = getEditorState();
+      if (isSameEditorState(v, prev)) return;
+      const contentChanged = v.content !== prev.content;
+      prev = v;
+      if (props.onChange) props.onChange(contentChanged);
+    });
+
+    const onDidChangeCursorSelection = useEvent(() => {
+      const v = getEditorState();
+      if (isSameEditorState(v, prev)) return;
+      const contentChanged = v.content !== prev.content;
+      prev = v;
+      if (props.onChange) props.onChange(contentChanged);
+    });
+
     const setEditor = useEvent((el: HTMLDivElement | null) => {
       if (!el) {
         timeout.current = setTimeout(() => {
@@ -209,27 +236,11 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
       editor.addCommand(
         // eslint-disable-next-line no-bitwise
         monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV,
-        () => {
-          navigator.clipboard.readText().then((text) => {
-            editor.trigger('keyboard', 'paste', { text });
-          });
-        },
+        onEditorCtrlV,
       );
-      let prev = getEditorState();
-      editor.onDidChangeModelContent(() => {
-        const v = getEditorState();
-        if (isSameEditorState(v, prev)) return;
-        const contentChanged = v.content !== prev.content;
-        prev = v;
-        if (props.onChange) props.onChange(contentChanged);
-      });
-      editor.onDidChangeCursorSelection(() => {
-        const v = getEditorState();
-        if (isSameEditorState(v, prev)) return;
-        const contentChanged = v.content !== prev.content;
-        prev = v;
-        if (props.onChange) props.onChange(contentChanged);
-      });
+      prev = getEditorState();
+      editor.onDidChangeModelContent(onDidChangeModelContent);
+      editor.onDidChangeCursorSelection(onDidChangeCursorSelection);
       editor.focus();
     });
 
