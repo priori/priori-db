@@ -183,7 +183,7 @@ app
   .then(() => {
     createWindow();
     if (process.platform === 'darwin') {
-      app.dock.setMenu(dockMenu);
+      app.dock?.setMenu(dockMenu);
     }
     app.on('activate', () => {
       if (windowsCount === 0) createWindow();

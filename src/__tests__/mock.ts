@@ -7,4 +7,5 @@ import { TextEncoder } from 'util';
   };
 });
 
-global.TextEncoder = TextEncoder;
+// Cast needed because Node's util.TextEncoder uses ArrayBufferLike while DOM expects ArrayBuffer
+global.TextEncoder = TextEncoder as unknown as typeof globalThis.TextEncoder;
