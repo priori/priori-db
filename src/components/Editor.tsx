@@ -8,6 +8,11 @@ type EditorState = {
   cursorEnd: { line: number; ch: number };
 };
 
+// Fix for paste not working
+// Monaco mismanages focus between editors / textareas
+// active editor paste handler
+let pasteFix: null | (() => void) = null;
+
 monaco.languages.getLanguages().forEach((lang) => {
   if (lang.id === 'sql') {
     monaco.languages.register({ id: 'sql' });
@@ -231,12 +236,21 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         multiCursorModifier: undefined,
       });
       editorRef.current = editor;
+      editor.onDidFocusEditorText(() => {
+        pasteFix = onEditorCtrlV;
+      });
+      editor.onDidBlurEditorText(() => {
+        pasteFix = null;
+      });
       editor.addCommand(monaco.KeyCode.F1, () => {});
       editor.addCommand(monaco.KeyCode.F2, () => {});
       editor.addCommand(
         // eslint-disable-next-line no-bitwise
         monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV,
-        onEditorCtrlV,
+        () => {
+          const handler = pasteFix ?? onEditorCtrlV;
+          handler();
+        },
       );
       prev = getEditorState();
       editor.onDidChangeModelContent(onDidChangeModelContent);
