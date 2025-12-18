@@ -39,7 +39,6 @@ export async function connect(c: ConnectionConfiguration, db?: string) {
           allowExitOnIdle: false,
         },
   );
-  hls.pool = p;
   try {
     const client = await p.connect();
     try {
@@ -49,12 +48,14 @@ export async function connect(c: ConnectionConfiguration, db?: string) {
       }/${database}`;
       document.head.appendChild(title);
       client.release(true);
-      assert(p);
+      hls.pool = p;
     } catch (err2) {
       client.release(true);
+      await p.end().catch(() => {});
       throw grantError(err2);
     }
   } catch (err) {
+    await p.end().catch(() => {});
     throw grantError(err);
   }
 }
@@ -159,17 +160,20 @@ export async function hasOpenConnection() {
 }
 
 export async function closeAll() {
+  let error: unknown;
   try {
     await PgQueryExecutor.destroyAll();
-    await hls.pool?.end();
   } catch (err) {
-    try {
-      if (hls.pool?.end) await hls.pool?.end();
-    } catch (err2) {
-      throw grantError(err2);
-    }
-    throw grantError(err);
+    error = err;
   }
+  try {
+    if (hls.pool) await hls.pool.end();
+  } catch (err) {
+    if (!error) error = err;
+  } finally {
+    hls.pool = null;
+  }
+  if (error) throw grantError(error);
 }
 
 export async function listDatabases(
