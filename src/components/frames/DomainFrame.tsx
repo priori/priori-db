@@ -312,7 +312,9 @@ export function DomainFrame(props: DomainFrameProps) {
                         : owner
                     }
                   >
-                    {roles?.map((r) => <option key={r.name}>{r.name}</option>)}
+                    {roles?.map((r) => (
+                      <option key={r.name}>{r.name}</option>
+                    ))}
                   </select>
                   <div>
                     <button

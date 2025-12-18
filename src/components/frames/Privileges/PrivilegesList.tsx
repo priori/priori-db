@@ -260,7 +260,9 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
                           : entityType === 'sequence'
                             ? 'sequences'
                             : 'tables'
-                    ]?.map((t) => <option key={t.name}>{t.name}</option>)}
+                    ]?.map((t) => (
+                      <option key={t.name}>{t.name}</option>
+                    ))}
                 </select>
               </>
             ) : (

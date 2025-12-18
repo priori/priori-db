@@ -558,7 +558,9 @@ export function TableInfoFrame(props: TableInfoFrameProps) {
                         : owner
                     }
                   >
-                    {roles?.map((r) => <option key={r.name}>{r.name}</option>)}
+                    {roles?.map((r) => (
+                      <option key={r.name}>{r.name}</option>
+                    ))}
                   </select>
                   <div>
                     <button
