@@ -24,7 +24,7 @@ export class SizeControlledArea extends Component<
     window.addEventListener('resize', this.resizeListener);
   }
 
-  componentWillUnmount() {
+  override componentWillUnmount() {
     window.removeEventListener('resize', this.resizeListener);
   }
 
@@ -48,7 +48,7 @@ export class SizeControlledArea extends Component<
     });
   }
 
-  render() {
+  override render() {
     return (
       <div
         style={this.props.style}

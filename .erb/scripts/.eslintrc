@@ -1,8 +1,8 @@
 {
   "rules": {
-    "no-console": "off",
-    "global-require": "off",
-    "import/no-dynamic-require": "off",
-    "import/no-extraneous-dependencies": "off"
+    "no-console": "error",
+    "global-require": "error",
+    "import/no-dynamic-require": "error",
+    "import/no-extraneous-dependencies": "error"
   }
 }

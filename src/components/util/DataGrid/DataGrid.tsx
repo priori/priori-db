@@ -3,10 +3,11 @@ import { equals } from 'util/equals';
 import { Filter, Sort, QueryResultDataField } from 'db/db';
 import { SizeControlledArea } from '../SizeControlledArea';
 import { DataGridCore } from './DataGridCore';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 export interface GridProps {
   style: CSSProperties;
-  fetchMoreRows?: () => void;
+  fetchMoreRows?: undefined | (() => void);
   result:
     | {
         rows: any[];
@@ -23,11 +24,11 @@ export interface GridProps {
     inserts: { [fieldName: string]: string | null }[];
     removals: { [fieldName: string]: string | number | null }[];
   }) => Promise<boolean>;
-  pks?: string[];
-  currentSort?: Sort;
+  pks?: undefined | string[];
+  currentSort?: undefined | Sort;
   // eslint-disable-next-line react/no-unused-prop-types
-  defaultSort?: Sort;
-  currentFilter?: Filter;
+  defaultSort?: undefined | Sort;
+  currentFilter?: undefined | Filter;
   onChangeSort?: (sort: Sort) => void;
   className?: string;
   onChangeFilter?: (filter: Filter) => void;
@@ -41,29 +42,31 @@ export const DataGrid = memo(
     const res = props.result;
     if (res) {
       return (
-        <SizeControlledArea
-          style={props.style}
-          className={`grid${props.className ? ` ${props.className}` : ''}`}
-          render={(width: number, height: number) => (
-            <DataGridCore
-              result={res}
-              currentFilter={props.currentFilter}
-              width={width}
-              onScroll={props.onScroll}
-              height={height}
-              pks={props.pks}
-              emptyTable={props.emptyTable}
-              onUpdate={props.onUpdate}
-              currentSort={props.currentSort}
-              onChangeSort={props.onChangeSort}
-              onChangeFilter={props.onChangeFilter}
-              fetchMoreRows={props.fetchMoreRows}
-              onTouch={props.onTouch}
-              limit={props.limit}
-              onChangeLimit={props.onChangeLimit}
-            />
-          )}
-        />
+        <ErrorBoundary>
+          <SizeControlledArea
+            style={props.style}
+            className={`grid${props.className ? ` ${props.className}` : ''}`}
+            render={(width: number, height: number) => (
+              <DataGridCore
+                result={res}
+                currentFilter={props.currentFilter}
+                width={width}
+                onScroll={props.onScroll}
+                height={height}
+                pks={props.pks}
+                emptyTable={props.emptyTable}
+                onUpdate={props.onUpdate}
+                currentSort={props.currentSort}
+                onChangeSort={props.onChangeSort}
+                onChangeFilter={props.onChangeFilter}
+                fetchMoreRows={props.fetchMoreRows}
+                onTouch={props.onTouch}
+                limit={props.limit}
+                onChangeLimit={props.onChangeLimit}
+              />
+            )}
+          />
+        </ErrorBoundary>
       );
     }
     return <div className="grid" />;

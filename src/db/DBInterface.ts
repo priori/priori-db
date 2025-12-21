@@ -40,11 +40,13 @@ export interface DBInterface {
     }[];
     owner?: string;
     comment: string;
-    info?: {
-      [title: string]: {
-        [key: string]: SimpleValue;
-      };
-    };
+    info?:
+      | undefined
+      | {
+          [title: string]: {
+            [key: string]: SimpleValue;
+          };
+        };
   }>;
   updateSchemaComment:
     | null
@@ -78,6 +80,7 @@ export interface DBInterface {
       precision: string;
       notNull: boolean;
       primaryKey: boolean;
+      autoIncrement?: boolean | undefined;
       enum?: string[];
     }[];
   }): Promise<void>;
@@ -98,14 +101,14 @@ export interface DBInterface {
     table: string,
     column: string,
     update: {
-      name?: string;
-      comment?: string | null;
-      type?: string;
-      length?: number;
-      scale?: number;
-      notNull?: boolean;
-      default?: string | null;
-      enum?: string[];
+      name?: undefined | string;
+      comment?: undefined | string | null;
+      type?: undefined | string;
+      length?: undefined | number;
+      scale?: undefined | number;
+      notNull?: undefined | boolean;
+      default?: undefined | string | null;
+      enum?: undefined | string[];
     },
   ): Promise<void>;
   updateTable(
@@ -201,11 +204,11 @@ export interface DBInterface {
     col: {
       name: string;
       type: string;
-      length?: number;
-      scale?: number;
+      length?: undefined | number;
+      scale?: undefined | number;
       comment: string | null;
-      notNull?: boolean;
-      default?: string;
+      notNull?: undefined | boolean;
+      default?: undefined | string | null;
     },
   ): Promise<void>;
   update(

@@ -203,7 +203,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
     window.addEventListener('blur', this.windowBlur);
   }
 
-  UNSAFE_componentWillReceiveProps(next: TabsHeaderProps) {
+  override UNSAFE_componentWillReceiveProps(next: TabsHeaderProps) {
     if ((this.props, equals(next, this.props))) return;
     if (
       this.state.sorting &&
@@ -248,7 +248,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
     }, 1);
   }
 
-  componentWillUnmount() {
+  override componentWillUnmount() {
     window.removeEventListener('resize', this.fit);
     window.removeEventListener('mousemove', this.windowMouseMove);
     window.removeEventListener('mouseup', this.windowMouseUp);
@@ -402,7 +402,7 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
     return { tabs, width: styleWidth };
   }
 
-  render() {
+  override render() {
     if (!this.state.sorting) {
       return (
         <div className="tabs-header" style={{ left: this.props.left }}>
@@ -413,7 +413,9 @@ export class TabsHeader extends Component<TabsHeaderProps, TabsHeaderState> {
             }}
           >
             {this.props.tabs.map((t, index) => {
-              const { width } = this.state.tabs[index];
+              const tab = this.state.tabs[index];
+              assert(tab);
+              const { width } = tab;
               return (
                 <span
                   className={`tabs-header__tab${

@@ -233,7 +233,6 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         overviewRulerLanes: 0,
         renderWhitespace: 'none',
         contextmenu: false,
-        multiCursorModifier: undefined,
       });
       editorRef.current = editor;
       editor.onDidFocusEditorText(() => {

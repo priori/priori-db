@@ -21,8 +21,8 @@ export function NavContextMenu({
 }: {
   item: NavTreeItem;
   onClose: () => void;
-  onNewRoleClick?: () => void;
-  position?: { x: number; y: number };
+  onNewRoleClick?: undefined | (() => void);
+  position?: undefined | { x: number; y: number };
   animate: boolean;
 }) {
   const onTableDataViewClick = useEvent(() => {

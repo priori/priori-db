@@ -67,7 +67,7 @@ async function version() {
   if (cachedV === undefined) {
     const r = await first('SELECT version() "version"');
     if (r && r.version && typeof r.version === 'string') {
-      cachedV = parseInt(r.version.split(' ')[1].split('.')[0], 10);
+      cachedV = parseInt(r.version.split(' ')[1]?.split('.')[0] ?? '', 10);
     }
   }
   return cachedV;
@@ -267,6 +267,7 @@ export const DB: DBInterface = {
     const versionAndSize = await first(
       'SELECT version(),pg_size_pretty(pg_database_size(current_database())) AS database_size;',
     );
+    assert(versionAndSize);
     const size = versionAndSize.database_size as string;
     return { size, version: versionAndSize.version as string };
   },
@@ -274,6 +275,7 @@ export const DB: DBInterface = {
     const info = await first(
       'SELECT * FROM pg_catalog.pg_database WHERE datname = current_database()',
     );
+    assert(info);
     return {
       'pg_catelog.pg_database': info,
     };
@@ -354,9 +356,11 @@ export const DB: DBInterface = {
     ]);
     return {
       ...owner,
-      info: {
-        'pg_catalog.pg_namespace': pgNamesspace,
-      },
+      info: pgNamesspace
+        ? {
+            'pg_catalog.pg_namespace': pgNamesspace,
+          }
+        : undefined,
       privileges,
     };
   },
@@ -426,12 +430,14 @@ export const DB: DBInterface = {
                     return new Promise<{
                       rows: SimpleValue[][];
                       fields: QueryResultDataField[];
-                      release?: () => void;
-                      fetchMoreRows?: () => Promise<{
-                        rows: SimpleValue[][];
-                        fields: QueryResultDataField[];
-                        release?: () => void;
-                      }>;
+                      release?: undefined | (() => void);
+                      fetchMoreRows?:
+                        | undefined
+                        | (() => Promise<{
+                            rows: SimpleValue[][];
+                            fields: QueryResultDataField[];
+                            release?: undefined | (() => void);
+                          }>);
                     }>((_resolve, _reject) => {
                       c.read(500, (err2: unknown, newRows: SimpleValue[][]) => {
                         if (err2) {
@@ -975,11 +981,9 @@ export const DB: DBInterface = {
       constraints,
       privileges,
     ] = await Promise.all([
-      (
-        await first(`
+      first(`
         SELECT obj_description('${label(schema)}.${label(name)}'::regclass) "comment"
-        `)
-      ).comment as string | null,
+      `).then((r) => (r as { comment: string | null }).comment),
       listCols(schema, name),
       listIndexes(schema, name),
       pgTable(schema, name),
@@ -1975,6 +1979,7 @@ export const DB: DBInterface = {
         ),
         functionsPrivileges(schema, name),
       ]);
+      assert(info);
       const comment = info.comment as string;
       const definition = info.definition as string;
       const owner = info.owner as string;
@@ -2024,7 +2029,8 @@ export const DB: DBInterface = {
         `,
           [schema, name],
         )
-      ).is_procedure;
+      )?.is_procedure;
+      assert(isProcedure !== undefined);
       await query(
         `DROP ${isProcedure ? 'PROCEDURE' : 'FUNCTION'} ${label(schema)}.${name} ${cascade ? 'CASCADE' : ''}`,
       );
@@ -2062,7 +2068,8 @@ export const DB: DBInterface = {
           pg_catalog.has_function_privilege((0)::oid, '${label(
             schema,
           )}.${name}', 'EXECUTE') has`)
-      ).has;
+      )?.has;
+      assert(hasPublicPrivilege !== undefined);
       const entityName = isProcedure ? 'PROCEDURE' : 'FUNCTION';
       if (privileges.execute === false) {
         if (hasPublicPrivilege) {
@@ -2116,6 +2123,7 @@ export const DB: DBInterface = {
       }
       async function sequenceLastValue(s: string, n: string) {
         const r = await first(`SELECT last_value FROM ${label(s)}.${label(n)}`);
+        assert(r);
         return r.last_value;
       }
       async function sequencePrivileges(s: string, n: string) {
@@ -2368,7 +2376,7 @@ export const DB: DBInterface = {
         pg_catalog.has_type_privilege((0)::oid, '${label(
           schema,
         )}.${name}', 'USAGE') has`)
-      ).has;
+      )?.has;
       if (hasPublicPrivilege) {
         const roles = (await list(
           `

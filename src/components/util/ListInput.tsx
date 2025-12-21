@@ -109,7 +109,7 @@ export class ListInput<Entry extends object> extends Component<
       }
       const entries = [...this.props.entries];
       const entry = entries.splice(index, 1)[0];
-      entries.splice(dropPos, 0, entry);
+      if (entry) entries.splice(dropPos, 0, entry);
       this.setNewState(entries);
     }
     if (this.clone) {
@@ -201,6 +201,7 @@ export class ListInput<Entry extends object> extends Component<
     this.rowEl = rowEl;
     this.firstScroll = document.documentElement.scrollTop;
     this.firstMousePos = { y: e.pageY, x: e.pageX };
+    assert(rect);
     this.firstPos = { y: rect.top, x: rect.left };
     // e.preventDefault()
     // e.stopPropagation()
@@ -238,11 +239,15 @@ export class ListInput<Entry extends object> extends Component<
     // els.splice(els.length-1,1)
     const currentDisplay = this.rowEl.style.display;
     this.rowEl.style.display = 'none';
-    const lastTop = els[els.length - 1].getClientRects()[0].top;
+    const rect3 = els[els.length - 1]?.getClientRects()[0];
+    assert(rect3);
+    const lastTop = rect3.top;
     const positions = els
       .filter((el) => el !== this.rowEl)
       .map((el) => {
-        const { left, top, right, bottom } = el.getClientRects()[0];
+        const rect4 = el.getClientRects()[0];
+        assert(rect4);
+        const { left, top, right, bottom } = rect4;
         const y = (top + bottom) / 2;
         return { el, left, top, right, bottom, center: y };
       });
@@ -250,22 +255,26 @@ export class ListInput<Entry extends object> extends Component<
     const pos2 = els
       .filter((el) => el !== this.rowEl)
       .map((el) => {
-        const { left, top, right, bottom } = el.getClientRects()[0];
+        const rect = el.getClientRects()[0];
+        assert(rect);
+        const { left, top, right, bottom } = rect;
         const y = (top + bottom) / 2;
         return { el, left, top, right, bottom, center: y };
       });
-    const lastTop2 = els[els.length - 1].getClientRects()[0].top;
+    const rectLast = els[els.length - 1]?.getClientRects()[0];
+    assert(rectLast);
+    const lastTop2 = rectLast.top;
     this.gap = lastTop2 - lastTop;
     const rect = this.el.getClientRects()[0];
     pos2.forEach((pos) => {
       pos.el.style.position = 'absolute';
-      pos.el.style.top = `${pos.top - rect.top}px`;
+      pos.el.style.top = `${pos.top - (rect?.top ?? 0)}px`;
       pos.el.style.width = `${pos.right - pos.left}px`;
       pos.el.style.marginTop = '0';
     });
     const rect2 = this.el.getClientRects()[0];
     this.positions = positions.map((pos) => {
-      return { ...pos, top: pos.top - rect2.top };
+      return { ...pos, top: pos.top - (rect2?.top ?? 0) };
     });
     const clone = this.rowEl.cloneNode(true) as HTMLElement;
     clone.style.width = `${this.rowEl.offsetWidth}px`;
@@ -286,8 +295,15 @@ export class ListInput<Entry extends object> extends Component<
     const selects2 = clone.querySelectorAll('select');
     const selects = this.rowEl.querySelectorAll('select');
     for (let i = 0; i < selects.length; i += 1) {
-      selects2[i].selectedIndex = selects[i].selectedIndex;
-      selects2[i].value = selects[i].value;
+      const sel2 = selects2[i];
+      const sel = selects[i];
+      if (
+        sel instanceof HTMLSelectElement &&
+        sel2 instanceof HTMLSelectElement
+      ) {
+        sel2.selectedIndex = sel.selectedIndex;
+        sel2.value = sel.value;
+      }
     }
     this.lock = lock;
     this.clone = clone;
@@ -338,7 +354,7 @@ export class ListInput<Entry extends object> extends Component<
     return el;
   }
 
-  render() {
+  override render() {
     const { props } = this;
     if (!(props.entries instanceof Array))
       throw new Error('Entries deve ser um Array.');

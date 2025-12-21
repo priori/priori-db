@@ -53,7 +53,7 @@ function buildFinalWidths(
     const roundedA = roundedSizes[aIndex];
     const floatB = floatSizes[bIndex];
     const roundedB = roundedSizes[bIndex];
-    return floatB - roundedB - (floatA - roundedA);
+    return (floatB ?? 0) - (roundedB ?? 0) - ((floatA ?? 0) - (roundedA ?? 0));
   });
   const totalRounded = roundedSizes.reduce((a, b) => a + b);
   const finalWidths = [...roundedSizes];
@@ -61,7 +61,12 @@ function buildFinalWidths(
     let temQueSomar = finalWidth - totalRounded;
     while (temQueSomar > 0) {
       for (const index of sortedByDiff) {
-        finalWidths[index] += 1;
+        if (
+          finalWidths &&
+          index in finalWidths &&
+          typeof finalWidths[index] === 'number'
+        )
+          finalWidths[index] += 1;
         temQueSomar -= 1;
         if (temQueSomar === 0) break;
       }
@@ -71,6 +76,11 @@ function buildFinalWidths(
     while (temQueSub > 0) {
       for (let c = sortedByDiff.length - 1; c >= 0; c -= 1) {
         const index = sortedByDiff[c];
+        assert(
+          index !== undefined &&
+            finalWidths !== undefined &&
+            finalWidths[index] !== undefined,
+        );
         finalWidths[index] -= 1;
         temQueSub -= 1;
         if (temQueSub === 0) break;
@@ -99,10 +109,12 @@ export function useGridColsSizes({
   height: number;
   extraBottomSpace: number;
   elRef: React.MutableRefObject<HTMLDivElement | null>;
-  selection?: {
-    rowIndex: [number, number];
-    colIndex: [number, number];
-  };
+  selection?:
+    | undefined
+    | {
+        rowIndex: [number, number];
+        colIndex: [number, number];
+      };
   activeCellUpdate: (
     widths: number[],
     hasBottomScrollbar: boolean,
@@ -210,15 +222,18 @@ export function useGridColsSizes({
     const inc = await horizontalResize(
       e,
       (inc2) => {
-        const colWidth = colsWidths[index - 1] + inc2;
+        const colWidth = (colsWidths?.[index - 1] ?? 0) + inc2;
         if (colWidth < 18) return false;
         const widthSum =
           colsWidths.reduce((a: number, b: number) => a + b, 0) + inc2 + 1;
         headerTableEl.style.width = `${widthSum}px`;
         contentTableEl.style.width = `${widthSum}px`;
         tableWrapperEl.style.width = `${widthSum}px`;
-        ths1[index - 1].style.width = `${colWidth}px`;
-        ths2[index - 1].style.width = `${colWidth}px`;
+        const th1 = ths1[index - 1];
+        const th2 = ths2[index - 1];
+        assert(th1 && th2);
+        th1.style.width = `${colWidth}px`;
+        th2.style.width = `${colWidth}px`;
         const newColsWidths = colsWidths.map((w, i) =>
           i === index - 1 ? colWidth : w,
         );
@@ -248,14 +263,20 @@ export function useGridColsSizes({
           (i === index - 1 ? w + inc : w) +
           (i === colsWidths.length - 1 ? widthToDistribute : 0),
       );
-      ths1[index - 1].style.width = `${newWidths[index - 1]}px`;
-      ths2[index - 1].style.width = `${newWidths[index - 1]}px`;
+      const th1 = ths1[index - 1];
+      const th2 = ths2[index - 1];
+      assert(th1 && th2);
+      th1.style.width = `${newWidths[index - 1]}px`;
+      th2.style.width = `${newWidths[index - 1]}px`;
       if (selectionEl && selection) {
         const style = buildStyle({ selection, colsWidths: newWidths });
         selectionEl.style.left = `${style.left}px`;
         selectionEl.style.width = `${style.width}px`;
       }
-      const fieldName = result.fields[index - 1].name;
+      const lastField = result.fields[index - 1];
+      assert(lastField, 'lastField is undefined');
+      const fieldName = lastField.name;
+      assert(fieldName !== undefined, 'fieldName is undefined');
       setState({
         touched: state
           ? [...state.touched, fieldName].filter(
@@ -276,10 +297,11 @@ export function useGridColsSizes({
         selectionEl.style.left = `${style.left}px`;
         selectionEl.style.width = `${style.width}px`;
       }
-      if (ths1[index - 1])
-        ths1[index - 1].style.width = `${colsWidths[index - 1]}px`;
-      if (ths2[index - 1])
-        ths2[index - 1].style.width = `${colsWidths[index - 1]}px`;
+      const th1 = ths1[index - 1];
+      const th2 = ths2[index - 1];
+      assert(th1 && th2);
+      th1.style.width = `${colsWidths[index - 1]}px`;
+      th2.style.width = `${colsWidths[index - 1]}px`;
       activeCellUpdate(colsWidths, hasBottomScrollbar, hasRightScrollbar);
     }
   });

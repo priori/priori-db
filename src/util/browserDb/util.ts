@@ -190,7 +190,7 @@ export function openIndexedDb(
             if (i instanceof Array) {
               const indexName = i
                 .map((part, j) =>
-                  j ? part[0].toUpperCase() + part.substring(1) : part,
+                  j ? (part[0]?.toUpperCase() ?? '') + part.substring(1) : part,
                 )
                 .join('');
               s.createIndex(indexName, i);

@@ -54,7 +54,7 @@ export function buildFinalQueryWhere(
     where:
       'type' in filter2
         ? (filter2.where as string)
-        : filter2.length === 1 && filter2[0].length === 0
+        : filter2.length === 1 && filter2[0]!.length === 0
           ? ''
           : filter2
               .map((ands) =>
@@ -150,7 +150,7 @@ export function buildFilterWhere(
   filter: Filter,
 ): string {
   if ('type' in filter) return filter.where;
-  if (filter.length === 1 && filter[0].length === 0) return '';
+  if (filter.length === 1 && filter[0]!.length === 0) return '';
   const parts = filter.map((ands) =>
     ands
       .map((f) =>

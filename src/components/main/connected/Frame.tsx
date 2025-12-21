@@ -7,6 +7,7 @@ import { DomainFrame } from 'components/frames/DomainFrame';
 import { FunctionFrame } from 'components/frames/FunctionFrame';
 import { RoleFrame } from 'components/frames/RoleFrame';
 import { SettingsFrame } from 'components/frames/SettingsFrame/SettingsFrame';
+import { ErrorBoundary } from 'components/util/ErrorBoundary';
 import { QueryFrame } from '../../frames/QueryFrame/QueryFrame';
 import { TableDataFrame } from '../../frames/TableDataFrame/TableDataFrame';
 import { NewTableFrame } from '../../frames/NewTableFrame';
@@ -35,9 +36,13 @@ export const Frame = React.memo(
     const sType = props.type;
     const type = framesTypes[sType];
     assert(type);
-    return React.createElement(
-      type as FunctionComponent<AbstractTabProps<FrameType>>,
-      props,
+    return (
+      <ErrorBoundary>
+        {React.createElement(
+          type as FunctionComponent<AbstractTabProps<FrameType>>,
+          props,
+        )}
+      </ErrorBoundary>
     );
   },
   (a, b) => equals(a, b),

@@ -5,7 +5,7 @@ import { cellClassName, getType, getValString } from './util';
 
 interface DataGridTableProps {
   visibleStartingInEven: boolean;
-  visibleRows: (string | null | number)[][];
+  visibleRows: (string | null | number | undefined)[][];
   slice: [number, number];
   gridContentTableWidth: number | undefined;
   fields: QueryResultDataField[];
@@ -62,7 +62,8 @@ export const DataGridTable = React.memo(
                   const hasChange =
                     update?.[rowIndex] !== 'REMOVE' &&
                     typeof update?.[rowIndex]?.[index] !== 'undefined';
-                  const val = hasChange ? update[rowIndex][index] : row[index];
+                  const updateI = update[rowIndex];
+                  const val = hasChange ? updateI![index] : row[index];
                   const type = getType(val, field.type);
                   const valString = getValString(val);
                   const className = cellClassName(hasChange);

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { NavSchema } from 'types';
 import { useEvent } from 'util/useEvent';
+import { assert } from 'util/assert';
 import { Entity } from './Nav';
 
 function buildEntitites(schemas: NavSchema[]) {
@@ -149,6 +150,7 @@ function buildMatches(
     let c = 0;
     while (c < es.length) {
       const e = es[c];
+      assert(e);
       if (
         (!set.has(e) &&
           m.type === 'fulltext' &&
@@ -237,7 +239,7 @@ export function useNavSearch(
   }, [len, onLengthChange]);
   const f = matches && index !== undefined ? matches[index]?.entity : null;
   useEffect(() => {
-    onFocusChange(f);
+    onFocusChange(f ?? null);
   }, [f, onFocusChange]);
 
   return {

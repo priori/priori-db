@@ -115,6 +115,7 @@ export async function connect(conf: ConnectionConfiguration, database: string) {
       try {
         roles = (await db().privileges?.listRoles()) ?? [];
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Error listing roles:', err);
       }
       state.connected(conf, database, schemas, roles);

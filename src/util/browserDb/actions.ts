@@ -1,5 +1,5 @@
 import { ConnectionConfiguration, ConnectionType } from 'types';
-import { assert } from '../assert';
+import { assert } from 'util/assert';
 import { ConnectionGroupEntryIDB, transaction } from './entities';
 
 const executionP = transaction(async ({ appExecution }) =>

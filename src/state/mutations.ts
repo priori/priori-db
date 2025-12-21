@@ -179,9 +179,10 @@ export function keepSchemaInfo(current: AppState, name: string) {
   }));
 }
 
-function findLast<T>(a: T[], f: (i: T) => boolean) {
+function findLast<T>(a: Exclude<T, undefined>[], f: (i: T) => boolean) {
   for (let i = a.length - 1; i >= 0; i -= 1) {
-    if (f(a[i])) return a[i];
+    const item = a[i];
+    if (item !== undefined && f(item)) return a[i];
   }
   return null;
 }
@@ -492,7 +493,7 @@ export function updateTab(
   current: AppState,
   uid: number,
   status: 'running' | 'error' | 'success',
-  title2?: string,
+  title2?: string | undefined,
 ) {
   return {
     ...current,
@@ -633,16 +634,27 @@ export function nextTab(current: AppState) {
   const s = current;
   if (s.tabs.length === 0) return s;
   const activeIndex = s.tabs.findIndex((c) => c.active);
-  if (activeIndex === s.tabs.length - 1) return activateTab(s, s.tabs[0]);
-  return activateTab(s, s.tabs[activeIndex + 1]);
+  if (activeIndex === s.tabs.length - 1) {
+    if (s.tabs[0]) return activateTab(s, s.tabs[0]);
+    return s;
+  }
+  const next = s.tabs[activeIndex + 1];
+  if (next) return activateTab(s, next);
+  return s;
 }
 
 export function prevTab(current: AppState) {
   const s = current;
   if (s.tabs.length === 0) return s;
   const activeIndex = s.tabs.findIndex((c) => c.active);
-  if (activeIndex === 0) return activateTab(s, s.tabs[s.tabs.length - 1]);
-  return activateTab(s, s.tabs[activeIndex - 1]);
+  if (activeIndex === 0) {
+    const lastTab = s.tabs[s.tabs.length - 1];
+    if (lastTab) return activateTab(s, lastTab);
+    return s;
+  }
+  const next = s.tabs[activeIndex - 1];
+  if (next) return activateTab(s, next);
+  return s;
 }
 
 export function changeSchema(current: AppState, uid: number, schema: string) {
@@ -680,10 +692,10 @@ export function renameSchema(current: AppState, uid: number, name: string) {
   const tab = current.tabs.find(
     (t) => t.props.uid === uid,
   ) as Tab0<'schemainfo'> | null;
-  if (!tab) return current;
+  if (!tab || !current.schemas) return current;
   const newState = {
     ...current,
-    schemas: current.schemas?.map((s) =>
+    schemas: current.schemas.map((s) =>
       s.name === tab.props.schema
         ? {
             ...s,

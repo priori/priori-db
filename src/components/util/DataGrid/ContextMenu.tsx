@@ -55,10 +55,12 @@ export function ContextMenu({
   codeResult,
 }: {
   onSelectOption: (e: ContextMenuEvent) => void;
-  selection?: {
-    rowIndex: [number, number];
-    colIndex: [number, number];
-  };
+  selection?:
+    | undefined
+    | {
+        rowIndex: [number, number];
+        colIndex: [number, number];
+      };
   rowIndex: number;
   colIndex: number;
   rowsLength: number;
@@ -67,11 +69,11 @@ export function ContextMenu({
   update: {
     [rowIndex: string]: { [colIndex: string]: string | null } | 'REMOVE';
   };
-  hintOnly?: boolean;
+  hintOnly?: undefined | boolean;
   x: number;
   y: number;
-  y2?: number;
-  x2?: number;
+  y2?: undefined | number;
+  x2?: undefined | number;
 }) {
   const selection =
     selection0 &&
@@ -109,7 +111,7 @@ export function ContextMenu({
     title: string;
     icon: string;
     right?: string | JSX.Element;
-    action?: () => void;
+    action?: undefined | (() => void);
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
   }[] = [];

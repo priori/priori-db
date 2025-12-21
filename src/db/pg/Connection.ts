@@ -128,12 +128,13 @@ export async function query(
 ): Promise<{ rows: { [key: string]: SimpleValue }[] } | QueryResultData> {
   const p = hls.pool;
   assert(p);
-  if (arrayRowMode)
+  if (arrayRowMode) {
     return p.query({
       text: q,
       rowMode: 'array',
-      values: args,
+      values: args ?? [],
     });
+  }
   return p.query<{ [key: string]: SimpleValue }>(q, args);
 }
 

@@ -36,8 +36,10 @@ function mutationsToActions<MC extends MutationsConfig>(
   for (const k in conf) {
     // eslint-disable-next-line no-loop-func
     ms[k] = (...ev) => {
-      current = conf[k](current, ...ev);
-      hls.current = current;
+      if (conf[k]) {
+        current = conf[k](current, ...ev);
+        hls.current = current;
+      }
       assert(hls.listener);
       hls.listener(current);
     };

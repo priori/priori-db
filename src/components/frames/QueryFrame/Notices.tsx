@@ -3,7 +3,7 @@ import { QueryExecutorNoticeMessage } from './useQueryExecutor';
 
 function label(k: string) {
   return (
-    k[0].toUpperCase() +
+    (k[0]?.toUpperCase() ?? '') +
     k.substring(1).replace(/[A-Z]/g, (v) => ` ${v.toUpperCase()}`)
   );
 }

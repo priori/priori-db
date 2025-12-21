@@ -98,7 +98,7 @@ interface DataGridActiveCellProps {
   editing: boolean | 1 | 2;
   changed: boolean;
   onBlur: () => void;
-  field?: string;
+  field: undefined | string;
   markedForRemoval?: boolean;
 }
 export const DataGridActiveCell = React.memo(

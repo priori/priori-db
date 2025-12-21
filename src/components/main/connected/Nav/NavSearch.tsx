@@ -29,7 +29,7 @@ export function NavSearch({
   schemas: NavSchema[];
   tabs: Tabs;
   onBlur: (e: 'next' | 'prev' | 'up' | 'down') => void;
-  disabled?: boolean;
+  disabled?: undefined | boolean;
   onDone?: () => void;
 }) {
   const [focusedEntity, setFocusedEntity] = useState<Entity | null>(null);

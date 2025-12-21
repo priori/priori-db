@@ -12,14 +12,14 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
   const rolePriviliges = 'entitiesType' in props;
   const entitiesName =
     'entitiesType' in props
-      ? `${props.entitiesType[0].toUpperCase()}${props.entitiesType.substring(1)}`
+      ? `${props.entitiesType[0]?.toUpperCase() ?? ''}${props.entitiesType.substring(1)}`
       : null;
 
   const onUpdate =
     'entityType' in props
       ? (props.onUpdate as (update: {
           role: string;
-          host?: string;
+          host?: undefined | string;
           newPrivilege: boolean;
           privileges: { [k: string]: boolean | undefined };
         }) => Promise<void>)
@@ -51,7 +51,7 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
           privileges: {
             [k: string]: boolean | undefined;
           };
-          host?: string;
+          host?: undefined | string;
         }
       | {
           entityName: string;
@@ -68,7 +68,7 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
           privileges: {
             [k: string]: boolean | undefined;
           };
-          host?: string;
+          host?: undefined | string;
         }),
         newPrivilege: false,
       });
@@ -102,7 +102,7 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
             privileges: {
               [k: string]: boolean | undefined;
             };
-            host?: string;
+            host?: undefined | string;
           }
         | {
             entityName: string;
@@ -142,33 +142,47 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
           Grant new privilege <i className="fa fa-plus" />
         </button>
         {edit.newPrivilege ? (
-          <PrivilegesDialog
-            entityType={entityType}
-            privilegesTypes={privilegesTypes}
-            relativeTo="previousSibling"
-            onCancel={() => set({ ...edit, newPrivilege: false })}
-            onUpdate={(
-              form:
-                | {
-                    role: string;
-                    privileges: {
-                      [k: string]: boolean | undefined;
-                    };
-                    host?: string;
-                  }
-                | {
-                    entityName: string;
-                    schema?: string;
-                    privileges: {
-                      [k: string]: boolean | undefined;
-                    };
-                  },
-            ) => onNewPrivilege(form)}
-            entity={
-              'entitiesType' in props ? props.entitiesType : props.entityType
-            }
-            type={'entitiesType' in props ? 'by_entity' : 'by_role'}
-          />
+          'entitiesType' in props ? (
+            <PrivilegesDialog
+              entityType={entityType}
+              privilegesTypes={privilegesTypes}
+              relativeTo="previousSibling"
+              onCancel={() => set({ ...edit, newPrivilege: false })}
+              onUpdate={(
+                form:
+                  | {
+                      role: string;
+                      privileges: {
+                        [k: string]: boolean | undefined;
+                      };
+                      host?: string;
+                    }
+                  | {
+                      entityName: string;
+                      schema?: string;
+                      privileges: {
+                        [k: string]: boolean | undefined;
+                      };
+                    },
+              ) => onNewPrivilege(form)}
+              entity={props.entitiesType}
+              type="by_entity"
+            />
+          ) : (
+            <PrivilegesDialog
+              privilegesTypes={privilegesTypes}
+              relativeTo="previousSibling"
+              onCancel={() => set({ ...edit, newPrivilege: false })}
+              onUpdate={(form: {
+                role: string;
+                privileges: {
+                  [k: string]: boolean | undefined;
+                };
+                host?: undefined | string;
+              }) => onNewPrivilege(form)}
+              type="by_role"
+            />
+          )
         ) : null}
         {internals.map((internal) => (
           <React.Fragment key={internal.name}>
@@ -196,7 +210,7 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
             <th>{'entitiesType' in props ? entitiesName : 'Role'}</th>
             {privilegesTypes.map((p) => (
               <th style={{ width: 75 }} key={p}>
-                {p[0].toUpperCase()}
+                {p[0]?.toUpperCase() ?? ''}
                 {p.substring(1).replace(/[A-Z]/g, ' $&')}
               </th>
             ))}
@@ -330,30 +344,36 @@ export function PrivilegesTable(props: PrivilegesProps | RolePrivilegesProps) {
           New <i className="fa fa-plus" />
         </button>
         {edit.newPrivilege ? (
-          <PrivilegesDialog
-            entityType={entityType}
-            privilegesTypes={privilegesTypes}
-            relativeTo="previousSibling"
-            onCancel={() => set({ ...edit, newPrivilege: false })}
-            onUpdate={(
-              form:
-                | {
-                    role: string;
-                    privileges: {
-                      [k: string]: boolean | undefined;
-                    };
-                    host?: string;
-                  }
-                | {
-                    entityName: string;
-                    schema?: string;
-                    privileges: {
-                      [k: string]: boolean | undefined;
-                    };
-                  },
-            ) => onNewPrivilege(form)}
-            type={'entitiesType' in props ? 'by_entity' : 'by_role'}
-          />
+          'entitiesType' in props ? (
+            <PrivilegesDialog
+              entityType={entityType}
+              privilegesTypes={privilegesTypes}
+              relativeTo="previousSibling"
+              onCancel={() => set({ ...edit, newPrivilege: false })}
+              onUpdate={(form: {
+                entityName: string;
+                schema?: string;
+                privileges: {
+                  [k: string]: boolean | undefined;
+                };
+              }) => onNewPrivilege(form)}
+              type="by_entity"
+            />
+          ) : (
+            <PrivilegesDialog
+              privilegesTypes={privilegesTypes}
+              relativeTo="previousSibling"
+              onCancel={() => set({ ...edit, newPrivilege: false })}
+              onUpdate={(form: {
+                role: string;
+                privileges: {
+                  [k: string]: boolean | undefined;
+                };
+                host?: undefined | string;
+              }) => onNewPrivilege(form)}
+              type="by_role"
+            />
+          )
         ) : null}
       </div>
     </>

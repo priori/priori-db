@@ -11,14 +11,14 @@ type PrivilegesDialogProps =
   | {
       relativeTo: 'nextSibling' | 'previousSibling' | 'parentNode';
       type: 'by_role';
-      host?: string;
+      host?: undefined | string;
       onCancel: () => void;
       onUpdate: (f: {
         role: string;
         privileges: {
           [k: string]: boolean | undefined;
         };
-        host?: string;
+        host?: undefined | string;
       }) => Promise<void>;
       roleName?: string;
       privileges?: {
@@ -38,7 +38,7 @@ type PrivilegesDialogProps =
           [k: string]: boolean | undefined;
         };
       }) => Promise<void>;
-      schema?: string;
+      schema?: undefined | string;
       entity?: string;
       privileges?: {
         [k: string]: boolean | undefined;
@@ -65,9 +65,9 @@ export function PrivilegesDialog(props: PrivilegesDialogProps) {
   const [form, setForm] = useState<Record<string, boolean | undefined>>({
     ...privileges,
   });
-  const [role, setRole] = useState<{ name: string; host?: string } | undefined>(
-    undefined,
-  );
+  const [role, setRole] = useState<
+    { name: string; host?: undefined | string } | undefined
+  >(undefined);
 
   const updateDisabled =
     !!error ||

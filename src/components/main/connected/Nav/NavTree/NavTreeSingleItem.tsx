@@ -203,7 +203,7 @@ function NavTreeSingleItem0({
   onDblClick: (i: NavTreeNode) => void;
   onClick: (i: NavTreeNode) => void;
   onMouseDown: (i: NavTreeNode, e: React.MouseEvent) => void;
-  depth?: number;
+  depth?: undefined | number;
   onLongMouseOver: () => void;
   longMouseOver: boolean;
   onNavContextMenuClose: () => void;

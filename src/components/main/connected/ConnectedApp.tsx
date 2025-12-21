@@ -241,7 +241,9 @@ export function ConnectedApp({ state }: { state: AppState }) {
 
   const onActiveTabMouseDown = useEvent(() => {
     assert(active);
-    const el = activeElements.get(framesEls[active]);
+    const el = framesEls[active]
+      ? activeElements.get(framesEls[active])
+      : undefined;
     if (el) el.focus();
   });
 

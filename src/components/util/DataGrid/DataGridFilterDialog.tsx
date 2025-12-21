@@ -1,6 +1,7 @@
 import { Filter, db, operatorsLabels } from 'db/db';
 import React, { useState } from 'react';
 import { useService } from 'util/useService';
+import { assert } from 'util/assert';
 import { Dialog } from '../Dialog/Dialog';
 
 function ValueListInput({
@@ -93,11 +94,13 @@ function validSqlCalc(s: string) {
       if (ch === inString) inString = false;
     } else if (ch === "'" || ch === '"') {
       inString = ch;
-    } else if (ch in scopesMap) {
+    } else if (ch && ch in scopesMap) {
       scopes.push(ch as '(' | '[' | '{');
     } else if (ch === ')' || ch === ']' || ch === '}') {
       if (scopes.length === 0) return false;
-      if (ch !== scopesMap[scopes[scopes.length - 1]]) return false;
+      const last = scopes[scopes.length - 1];
+      assert(last);
+      if (ch !== scopesMap[last]) return false;
       scopes.pop();
     } else if (ch === '-' && s[i - 1] === '-') {
       inSingleLineComment = true;
@@ -178,7 +181,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
 
   const isBigForm =
     !('type' in filter) &&
-    (filter.length > 1 || (filter.length === 1 && filter[0].length > 3));
+    (filter.length > 1 || (filter.length === 1 && filter[0]!.length > 3));
 
   const updatedSqlQuery =
     editQuery && 'type' in filter && filter.type === 'query';
@@ -264,7 +267,7 @@ export function DataGridFilterDialog(props: DataGridFilterDialogProps) {
               style={
                 !('type' in filter) &&
                 filter.length === 1 &&
-                filter[0].length === 0 &&
+                filter[0]!.length === 0 &&
                 db().buildFilterWhere(filter)
                   ? { opacity: 0.14 }
                   : undefined

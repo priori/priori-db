@@ -47,7 +47,7 @@ function privsToPrivileges(
       [k: string]: boolean;
     } = {};
     for (const part of parts) {
-      const type = `${part[0].toLowerCase()}${part.substring(1).replace(/ \w/g, (m) => m[1].toUpperCase())}`;
+      const type = `${part[0]?.toLowerCase() ?? ''}${part.substring(1).replace(/ \w/g, (m) => m[1]?.toUpperCase() ?? '')}`;
       if (type !== undefined && allowed.includes(type))
         privileges2[type] = true;
     }
@@ -56,7 +56,7 @@ function privsToPrivileges(
   const privileges: Record<string, boolean> = {};
   for (const k in p) {
     if (k.endsWith('_priv') && (p[k] === 'Y' || p[k] === 'N')) {
-      const pName = `${k[0].toLowerCase()}${k
+      const pName = `${k[0]?.toLowerCase() ?? ''}${k
         .substring(1)
         .replace('_priv', '')
         .replace(/_(\w)/g, (_, v) => v.toUpperCase())}`;
@@ -71,6 +71,11 @@ export const openIds = new Set<number>();
 export const mysqlDb: DBInterface = {
   async basicInfo() {
     const versionAndSize = await first('SELECT version() version');
+    assert(
+      versionAndSize &&
+        'version' in versionAndSize &&
+        typeof versionAndSize.version === 'string',
+    );
     return { version: `MySQL Version: ${versionAndSize.version}` };
   },
   async extraInfo() {
@@ -448,6 +453,7 @@ export const mysqlDb: DBInterface = {
       WHERE table_schema = ? AND table_name = ?`,
       [schema, table],
     );
+    assert(size && 'DATA_LENGTH' in size && 'INDEX_LENGTH' in size);
     return {
       size: size.DATA_LENGTH + size.INDEX_LENGTH,
       pretty: prettyBytes(size.DATA_LENGTH + size.INDEX_LENGTH),
@@ -603,7 +609,7 @@ export const mysqlDb: DBInterface = {
         const rolePrivileges: Record<string, boolean> = {};
         for (const k in p) {
           if (k.endsWith('_priv') && (p[k] === 'Y' || p[k] === 'N')) {
-            const pName = `${k[0].toLowerCase()}${k
+            const pName = `${k[0]?.toLowerCase() ?? ''}${k
               .substring(1)
               .replace('_priv', '')
               .replace(/_(\w)/g, (_, v) => v.toUpperCase())}`;
@@ -644,7 +650,7 @@ export const mysqlDb: DBInterface = {
       precision: string;
       notNull: boolean;
       primaryKey: boolean;
-      autoIncrement: boolean;
+      autoIncrement?: boolean | undefined;
       enum?: string[];
     }[];
   }): Promise<void> {
@@ -781,6 +787,7 @@ export const mysqlDb: DBInterface = {
         WHERE routine_schema = ? AND routine_name = ?`,
         [schema, name],
       );
+      assert(routine0, 'Routine not found');
       const isProc = routine0.ROUTINE_TYPE === 'PROCEDURE';
       delete routine0.ROUTINE_DEFINITION;
       const comment = routine0.ROUTINE_COMMENT;
@@ -1028,7 +1035,7 @@ export const mysqlDb: DBInterface = {
           mysqlDb.functions!.privilegesTypes!(),
           tablesP,
           mysqlDb.privileges!.tablePrivilegesTypes!(),
-          first('SELECT DATABASE() "db"', []),
+          first('SELECT DATABASE() "db"', []) as Promise<{ db: string }>,
           first(
             `SELECT
               *,
@@ -1038,6 +1045,7 @@ export const mysqlDb: DBInterface = {
             [name, host],
           ),
         ]);
+      assert(user);
       dbs0.sort((a, b) => {
         if (a.Db === db) return -1;
         if (b.Db === db) return 1;

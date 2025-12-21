@@ -4,7 +4,7 @@ type Entry = (
   | { entityName: string; schema?: string }
   | { roleName: string }
 ) & {
-  internal?: boolean;
+  internal?: undefined | boolean;
 };
 export function useInternals<T extends Entry[]>(
   list: T,
@@ -33,9 +33,10 @@ export function useInternals<T extends Entry[]>(
     if (internalItens.length === 0) {
       return internals0;
     }
-    if ('roleName' in internalItens[0]) {
+    if (internalItens[0] && 'roleName' in internalItens[0]) {
       const prefix = internalItens[0].roleName.split('_')[0];
       if (
+        prefix &&
         internalItens.every((r) =>
           (r as { roleName: string }).roleName.startsWith(prefix),
         )
@@ -54,7 +55,7 @@ export function useInternals<T extends Entry[]>(
         });
       }
     } else {
-      if ('schema' in internalItens[0]) {
+      if (internalItens[0] && 'schema' in internalItens[0]) {
         const schemas = new Set(
           internalItens.map((r) => (r as { schema: string }).schema),
         );

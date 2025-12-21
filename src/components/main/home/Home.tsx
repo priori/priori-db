@@ -92,7 +92,6 @@ export function Home(props: AppState) {
         ) : null}
         <ConnectionConfigurationForm
           connection={undefined}
-          onRemove={undefined}
           onCancel={
             state.newConnection
               ? () => {

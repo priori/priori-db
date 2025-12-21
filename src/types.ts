@@ -17,7 +17,7 @@ export interface AbstractTabProps<T extends FrameType> {
 
 export interface RoleFrameProps extends AbstractTabProps<'role'> {
   readonly name: string;
-  readonly host?: string;
+  readonly host?: string | undefined;
 }
 
 export interface QueryFrameProps extends AbstractTabProps<'query'> {
@@ -116,7 +116,7 @@ export interface Tab0<T extends FrameType> {
   readonly active: boolean;
   readonly keep: boolean;
   readonly props: FrameProps0<T>;
-  readonly title2?: string;
+  readonly title2?: string | undefined;
   readonly status?: 'running' | 'error' | 'success';
 }
 export type Tab = Tab0<FrameType>;
@@ -131,7 +131,7 @@ export interface ConnectionConfiguration {
   user: string;
   password: string;
   type: ConnectionType;
-  requireSsl?: boolean;
+  requireSsl?: undefined | boolean;
   dbSelectionMode: 'always' | 'options';
 }
 
@@ -202,7 +202,7 @@ export type SimpleValue =
 
 export interface QueryResultDataField {
   name: string;
-  type?: string;
+  type?: string | undefined;
 }
 
 export interface QueryResult {
@@ -212,11 +212,13 @@ export interface QueryResult {
   stdOutResult?: string;
   stdOutMode?: boolean;
   stdInMode?: boolean;
-  fetchMoreRows?: () => Promise<{
-    rows: SimpleValue[][];
-    fields: QueryResultDataField[];
-    rowCount: number;
-  }>;
+  fetchMoreRows?:
+    | undefined
+    | (() => Promise<{
+        rows: SimpleValue[][];
+        fields: QueryResultDataField[];
+        rowCount: number;
+      }>);
 }
 
 export interface Notice {
@@ -228,10 +230,12 @@ export interface Notice {
 export interface QueryResultData {
   rows: SimpleValue[][];
   fields: QueryResultDataField[];
-  fetchMoreRows?: () => Promise<{
-    rows: SimpleValue[][];
-    fields: QueryResultDataField[];
-  }>;
+  fetchMoreRows?:
+    | undefined
+    | (() => Promise<{
+        rows: SimpleValue[][];
+        fields: QueryResultDataField[];
+      }>);
   release?: () => void;
 }
 

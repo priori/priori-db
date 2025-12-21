@@ -1,5 +1,6 @@
 import { SimpleValue } from 'db/db';
 import { renderToString } from 'react-dom/server';
+import { assert } from 'util/assert';
 
 export const letterSize = 6;
 function prettyBytes(bytes: number) {
@@ -72,6 +73,7 @@ export function activeCellPos(
   let fieldLeft = 0;
   for (const c in widths) {
     const w = widths[c];
+    assert(w !== undefined, 'width is undefined');
     if (`${colIndex}` === c) break;
     fieldLeft += w;
   }
@@ -80,7 +82,7 @@ export function activeCellPos(
   const activeCellLeft = fieldLeft - (scrollLeft < 0 ? 0 : scrollLeft);
   const left = activeCellLeft < 0 ? 0 : activeCellLeft;
   const leftCrop = fieldLeft - scrollLeft < 0 ? -(fieldLeft - scrollLeft) : 0;
-  const originalWidth = widths[colIndex] - 1 - leftCrop;
+  const originalWidth = (widths[colIndex] ?? 0) - 1 - leftCrop;
   const containerAvailableWidth =
     containerWidth - (hasRightScrollbar ? scrollWidth : 0);
   const needToCropRight = originalWidth + left > containerAvailableWidth;
@@ -112,11 +114,12 @@ export function scrollTo(
   let fieldLeft = 0;
   for (const c in widths) {
     const w = widths[c];
+    assert(w !== undefined, 'width is undefined');
     if (`${colIndex}` === c) break;
     fieldLeft += w;
   }
   const x = fieldLeft;
-  const x2 = x + widths[colIndex] + 1;
+  const x2 = x + (widths[colIndex] ?? 0) + 1;
   let { scrollTop } = el;
   let { scrollLeft } = el;
   if (scrollTop < y2 - el.offsetHeight + (hasBottomScrollbar ? scrollWidth : 0))

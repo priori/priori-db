@@ -38,6 +38,9 @@ module.exports = {
     ],
     'react/jsx-filename-extension': [1, { extensions: ['.jsx', '.tsx'] }],
     'no-unused-vars': 'off',
+    "no-restricted-imports": ["error", {
+      "paths": ["assert", "console"]
+    }]
   },
   parserOptions: {
     ecmaVersion: 2022,

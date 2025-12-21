@@ -5,9 +5,9 @@ import { equals } from 'util/equals';
 interface DataGridTheadProps {
   fields: QueryResultDataField[];
   colsWidths: number[];
-  pks?: string[];
-  onChangeSort?: (sort: Sort) => void;
-  currentSort?: Sort;
+  pks?: undefined | string[];
+  onChangeSort?: undefined | ((sort: Sort) => void);
+  currentSort?: undefined | Sort;
   onStartResize: (index: number, e: React.MouseEvent) => void;
 }
 

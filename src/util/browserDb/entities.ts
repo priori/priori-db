@@ -10,13 +10,13 @@ export interface QueryEntryIDB {
   version: number;
   success?: boolean;
   executionTime?: number;
-  resultLength?: number;
+  resultLength?: number | undefined;
   editorState: {
     content: string;
     cursorStart: { line: number; ch: number };
     cursorEnd: { line: number; ch: number };
   };
-  tabTitle?: string;
+  tabTitle?: string | undefined;
 }
 
 export interface QueryGroupEntryIDB {
@@ -31,13 +31,13 @@ export interface QueryGroupEntryIDB {
   sql: string;
   success?: boolean;
   executionTime?: number;
-  resultLength?: number;
+  resultLength?: number | undefined;
   editorState: {
     content: string;
     cursorStart: { line: number; ch: number };
     cursorEnd: { line: number; ch: number };
   };
-  tabTitle?: string;
+  tabTitle?: string | undefined;
 }
 
 export interface FavoriteQueryEntryIDB {
@@ -58,7 +58,7 @@ export interface AppExecutionEntryIDB {
   id: number;
   createdAt: number;
   database?: string;
-  port?: number;
+  port?: number | undefined;
   host?: string;
   user?: string;
   type?: ConnectionType;

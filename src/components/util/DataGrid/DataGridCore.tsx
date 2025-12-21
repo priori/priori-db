@@ -16,61 +16,69 @@ export interface DataGridCoreProps {
     fields: QueryResultDataField[];
   };
   // eslint-disable-next-line react/no-unused-prop-types
-  fetchMoreRows?: () => void;
+  fetchMoreRows?: undefined | (() => void);
   width: number;
   // eslint-disable-next-line react/no-unused-prop-types
   onScroll?: (() => void) | undefined;
   height: number;
   emptyTable?: string | undefined;
   // eslint-disable-next-line react/no-unused-prop-types
-  onUpdate?: (u: {
-    updates: {
-      where: { [fieldName: string]: string | number | null };
-      values: { [fieldName: string]: string | null };
-    }[];
-    inserts: { [fieldName: string]: string | null }[];
-    removals: { [fieldName: string]: string | number | null }[];
-  }) => Promise<boolean>;
-  pks?: string[];
-  currentFilter?: Filter;
-  currentSort?: Sort;
-  onChangeSort?: (sort: Sort) => void;
-  onChangeFilter?: (filter: Filter) => void;
+  onUpdate?:
+    | undefined
+    | ((u: {
+        updates: {
+          where: { [fieldName: string]: string | number | null };
+          values: { [fieldName: string]: string | null };
+        }[];
+        inserts: { [fieldName: string]: string | null }[];
+        removals: { [fieldName: string]: string | number | null }[];
+      }) => Promise<boolean>);
+  pks?: undefined | string[];
+  currentFilter?: undefined | Filter;
+  currentSort?: undefined | Sort;
+  onChangeSort?: undefined | ((sort: Sort) => void);
+  onChangeFilter?: undefined | ((filter: Filter) => void);
   // eslint-disable-next-line react/no-unused-prop-types
-  onTouch?: () => void;
-  limit?: 1000 | 10000 | 'unlimited';
+  onTouch?: undefined | (() => void);
+  limit?: undefined | 1000 | 10000 | 'unlimited';
   // eslint-disable-next-line react/no-unused-prop-types
-  onChangeLimit?: (limit: 1000 | 10000 | 'unlimited') => void;
+  onChangeLimit?: undefined | ((limit: 1000 | 10000 | 'unlimited') => void);
 }
 
 export interface DataGridState {
   slice: [number, number];
-  activeCell?: { rowIndex: number; colIndex: number };
-  selection?: { rowIndex: [number, number]; colIndex: [number, number] };
-  notice?: {
-    cols: number;
-    rows: number;
-    key: number;
-  };
-  mouseDown?: { rowIndex: number; colIndex: number };
-  contextMenu?: {
-    rowIndex: number;
-    colIndex: number;
-    x: number;
-    y: number;
-    noPk: boolean;
-    codeResult?: boolean;
-    hintOnly?: boolean;
-    y2?: number;
-    x2?: number;
-  };
+  activeCell?: undefined | { rowIndex: number; colIndex: number };
+  selection?:
+    | undefined
+    | { rowIndex: [number, number]; colIndex: [number, number] };
+  notice?:
+    | undefined
+    | {
+        cols: number;
+        rows: number;
+        key: number;
+      };
+  mouseDown?: undefined | { rowIndex: number; colIndex: number };
+  contextMenu?:
+    | undefined
+    | {
+        rowIndex: number;
+        colIndex: number;
+        x: number;
+        y: number;
+        noPk: boolean;
+        codeResult?: boolean;
+        hintOnly?: boolean;
+        y2?: number;
+        x2?: number;
+      };
   openSortDialog: boolean;
   openFilterDialog: boolean;
   editing: boolean | 2 | 1;
   update: {
     [rowIndex: string]: { [colIndex: string]: string | null } | 'REMOVE';
   };
-  updateFail?: Error;
+  updateFail?: undefined | Error;
   updateRunning?: boolean;
   fetchingNewRows?: boolean;
   touched: boolean;
@@ -162,7 +170,7 @@ export function DataGridCore(props: DataGridCoreProps) {
 
       {state.activeCell ? (
         <DataGridActiveCell
-          field={props.result.fields[state.activeCell.colIndex].type}
+          field={props.result.fields[state.activeCell.colIndex]!.type}
           scrollLeft={scrollRef.current.top}
           scrollTop={scrollRef.current.left}
           containerHeight={props.height}

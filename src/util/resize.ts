@@ -1,3 +1,5 @@
+import { assert } from 'util/assert';
+
 function resize(
   e: React.MouseEvent,
   fn: (v: { x: number; y: number }) => boolean | { x: number; y: number },
@@ -22,17 +24,20 @@ function resize(
   const indicator = document.createElement('div');
   indicator.className = `resize--indicator resize--indicator--${type}`;
   lock.append(indicator);
-  const rect = baseEl.getClientRects()[0];
-  const rect0 = rootEl?.getClientRects()[0] ?? rect;
+  const baseElRect0 = baseEl.getClientRects()[0];
+  assert(baseElRect0 !== undefined);
+  const baseElRect = baseElRect0;
+  const rootElRect = rootEl?.getClientRects()[0] ?? baseElRect;
+  assert(rootElRect !== undefined);
   if (type === 'horizontal') {
-    indicator.style.top = `${rect0.top}px`;
-    indicator.style.height = `${rect0.height}px`;
+    indicator.style.top = `${rootElRect.top}px`;
+    indicator.style.height = `${rootElRect.height}px`;
   } else {
-    indicator.style.left = `${rect0.left}px`;
-    indicator.style.width = `${rect0.width}px`;
+    indicator.style.left = `${rootElRect.left}px`;
+    indicator.style.width = `${rootElRect.width}px`;
   }
   indicator.style[type === 'horizontal' ? 'left' : 'top'] = `${
-    pos + (type === 'horizontal' ? rect.left : rect.top)
+    pos + (type === 'horizontal' ? baseElRect.left : baseElRect.top)
   }px`;
 
   function stop(increment?: { x: number; y: number }) {
@@ -61,7 +66,7 @@ function resize(
     indicator.style[type === 'horizontal' ? 'left' : 'top'] = `${
       pos +
       (type === 'horizontal' ? lastValid.x : lastValid.y) +
-      (type === 'horizontal' ? rect.left : rect.top)
+      (type === 'horizontal' ? baseElRect.left : baseElRect.top)
     }px`;
   }
 
@@ -86,7 +91,7 @@ function resize(
     indicator.style[type === 'horizontal' ? 'left' : 'top'] = `${
       pos +
       (type === 'horizontal' ? e2.pageX - x0 : e2.clientY - y0) +
-      (type === 'horizontal' ? rect.left : rect.top)
+      (type === 'horizontal' ? baseElRect.left : baseElRect.top)
     }px`;
     stop({ x: e2.pageX - x0, y: e2.clientY - y0 });
   }

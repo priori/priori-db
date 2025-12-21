@@ -153,6 +153,7 @@ export function useKeyboardInterations(
       return;
       // open or close folders
     }
+    assert(item);
     if (enter && (focused.contextMenu === 1 || focused.contextMenu === 2)) {
       if (focused.type === 'schema-folder' && focused.contextMenu === 1) {
         newTable(focused.name);
@@ -245,16 +246,19 @@ export function useKeyboardInterations(
       } else {
         const goToSchemaFolder = !!(item.children && item.schema);
         for (let i = index - 1; i >= 0; i -= 1) {
+          const row = rows[i];
+          assert(row);
           if (
-            (rows[i].children && !goToSchemaFolder) ||
-            rows[i].type === 'schema-folder'
+            (row.children && !goToSchemaFolder) ||
+            row.type === 'schema-folder'
           ) {
-            setFocused({
-              type: rows[i].type,
-              key: rows[i].key,
-              schema: rows[i].schema,
-              name: rows[i].title,
-            } as Focus);
+            const fucused: Focus = {
+              type: row.type,
+              key: row.key,
+              schema: row.schema,
+              name: row.title,
+            };
+            setFocused(fucused);
             return;
           }
         }

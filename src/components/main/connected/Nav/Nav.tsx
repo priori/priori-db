@@ -81,7 +81,7 @@ declare module 'react' {
 export function Nav(props: {
   schemas: NavSchema[];
   tabs: Tab[];
-  roles?: { name: string; isUser: boolean }[];
+  roles?: undefined | { name: string; isUser: boolean }[];
   style?: React.CSSProperties;
   disabled?: boolean;
   title?: string;

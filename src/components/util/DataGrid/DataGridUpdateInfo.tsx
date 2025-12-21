@@ -11,8 +11,8 @@ export function DataGridUpdateInfoDialog({
   pendingRowsUpdate,
   totalChanges,
 }: {
-  applyingUpdate?: boolean;
-  fail?: Error;
+  applyingUpdate?: undefined | boolean;
+  fail?: undefined | Error;
   onApplyClick: () => void;
   onDiscardClick: () => void;
   onDiscardFailClick: () => void;

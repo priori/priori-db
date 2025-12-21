@@ -12,7 +12,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
     'entityType' in props
       ? (props.onUpdate as (update: {
           role: string;
-          host?: string;
+          host?: undefined | string;
           newPrivilege: boolean;
           privileges: { [k: string]: boolean | undefined };
         }) => Promise<void>)
@@ -21,14 +21,17 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
     'entitiesType' in props
       ? (props.onUpdate as (update: {
           entityName: string;
-          schema?: string;
+          schema?: undefined | string;
           newPrivilege: boolean;
           privileges: { [k: string]: boolean | undefined };
         }) => Promise<void>)
       : undefined;
   const [state, set] = useState({
-    grant: false as false | true | { roleName: string; host?: string },
-    revoke: false as false | { roleName: string; host?: string },
+    grant: false as
+      | false
+      | true
+      | { roleName: string; host?: undefined | string },
+    revoke: false as false | { roleName: string; host?: undefined | string },
     schema: '',
     entityName: '',
   });
@@ -41,7 +44,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
         host: state.revoke.host,
         newPrivilege: false,
         privileges: {
-          [props.privilegesTypes[0]]: false,
+          [props.privilegesTypes[0]!]: false,
         },
       });
     else if (onUpdate2) {
@@ -50,7 +53,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
         schema: state.revoke.host,
         newPrivilege: false,
         privileges: {
-          [props.privilegesTypes[0]]: false,
+          [props.privilegesTypes[0]!]: false,
         },
       });
     }
@@ -68,7 +71,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
           host: state.grant.host,
           newPrivilege: true,
           privileges: {
-            [props.privilegesTypes[0]]: true,
+            [props.privilegesTypes[0]!]: true,
           },
         });
       } else if (onUpdate2 && state.entityName) {
@@ -77,7 +80,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
           schema: state.schema,
           newPrivilege: true,
           privileges: {
-            [props.privilegesTypes[0]]: true,
+            [props.privilegesTypes[0]!]: true,
           },
         });
       }
@@ -95,7 +98,7 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
   const { roles } = currentState();
   const entitiesName =
     'entitiesType' in props
-      ? `${props.entitiesType[0].toUpperCase()}${props.entitiesType.substring(1)}`
+      ? `${props.entitiesType[0]?.toUpperCase() ?? ''}${props.entitiesType.substring(1)}`
       : null;
 
   return (
@@ -105,7 +108,8 @@ export function PrivilegesList(props: PrivilegesProps | RolePrivilegesProps) {
         <span style={{ fontWeight: 'normal' }}>
           {' '}
           {'entitiesType' in props ? '' : 'Roles & Users with'}{' '}
-          {props.privilegesTypes[0].replace(/[A-Z]/g, ' $&').toUpperCase()}{' '}
+          {props.privilegesTypes[0]?.replace(/[A-Z]/g, ' $&').toUpperCase() ??
+            ''}{' '}
           GRANTs
         </span>
       </h2>

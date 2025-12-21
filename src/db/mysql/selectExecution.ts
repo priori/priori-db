@@ -42,7 +42,7 @@ export async function selectExecution(
       )._fields;
       if (dataFields && dataFields.length) {
         currentFields =
-          dataFields[dataFields.length - 1].map((f) => ({
+          dataFields[dataFields.length - 1]?.map((f) => ({
             name: f.name,
             type:
               f.type === 7 || (f.type && f.type >= 10 && f.type < 14)

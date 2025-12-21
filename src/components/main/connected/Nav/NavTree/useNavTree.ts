@@ -20,7 +20,7 @@ export type Focus =
       key: string;
       schema: string;
       name: string;
-      contextMenu?: { x: number; y: number } | true | 1 | 2;
+      contextMenu?: undefined | { x: number; y: number } | true | 1 | 2;
     }
   | {
       type:
@@ -31,9 +31,9 @@ export type Focus =
         | 'domains-folder'
         | 'sequences-folder';
       key: string;
-      schema?: string;
+      schema?: undefined | string;
       name: string;
-      contextMenu?: { x: number; y: number } | true | 1 | 2;
+      contextMenu?: undefined | { x: number; y: number } | true | 1 | 2;
       newRole?: boolean;
     };
 

@@ -5,7 +5,7 @@ import { Dialog } from '../Dialog/Dialog';
 
 interface DataGridSortDialogProps {
   fields: { name: string }[];
-  currentSort?: Sort;
+  currentSort?: Sort | undefined;
   onChangeSort: (sort: Sort) => void;
   onClose: () => void;
 }

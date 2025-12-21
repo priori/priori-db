@@ -12,8 +12,8 @@ import { validSql } from 'components/util/DataGrid/DataGridFilterDialog';
 export interface ColumnForm {
   name: string;
   type: string;
-  length?: number;
-  scale?: number;
+  length?: undefined | number;
+  scale?: undefined | number;
   comment: string | null;
   notNull: boolean;
   default?: string;

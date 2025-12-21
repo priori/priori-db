@@ -200,12 +200,9 @@ export function useQueryExecutor({
       time: null,
     }));
   });
-  const fetchMoreRows =
-    state.result &&
-    'fetchMoreRows' in state.result &&
-    state.result.fetchMoreRows
-      ? fetchMoreRows0
-      : undefined;
+  const fetchMoreRows = state.result?.fetchMoreRows
+    ? fetchMoreRows0
+    : undefined;
 
   const openNotice = useEvent((n: QueryExecutorNoticeMessage) => {
     setState((state2) => ({

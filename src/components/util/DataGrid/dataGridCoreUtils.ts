@@ -63,7 +63,12 @@ function fixInsertRows(
       if (!update[i]) {
         removedCount += 1;
       } else if (removedCount) {
-        update[i - removedCount] = update[i];
+        const index = i - removedCount;
+        const updateVal = update[i];
+        if (update[index]) {
+          if (updateVal !== undefined) update[index] = updateVal;
+          else delete update[index];
+        }
         delete update[i];
       }
     }
@@ -175,7 +180,10 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const extraRows = useMemo(() => {
     if (!props.onUpdate) return 0;
     let i = 0;
-    while (state.update[i + len] && Object.values(state.update[i + len]).length)
+    while (
+      state.update[i + len] &&
+      Object.values(state.update[i + len]!).length
+    )
       i += 1;
     return i + 1;
   }, [props.onUpdate, state.update, len]);
@@ -202,9 +210,11 @@ export function useDataGridCore(props: DataGridCoreProps) {
           editing: true,
         }));
       } else {
-        const { top, left, width } = elRef
+        const rect = elRef
           .current!.querySelector('.grid__active-cell-wrapper')!
           .getClientRects()[0];
+        assert(rect);
+        const { top, left, width } = rect;
         setState((s) => ({
           ...s,
           selection:
@@ -290,7 +300,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
 
   const totalChanges = Object.keys(state.update)
     .filter((k) => state.update[k] !== 'REMOVE')
-    .reduce((a, b) => a + Object.keys(state.update[b]).length, 0);
+    .reduce((a, b) => a + Object.keys(state.update[b]!).length, 0);
 
   const activeCellUpdate2 = useEvent(
     (
@@ -380,9 +390,9 @@ export function useDataGridCore(props: DataGridCoreProps) {
   const gridContentTableTop = `${state.slice[0] * rowHeight}px`;
 
   const visibleRows = useMemo(() => {
-    const r = (props.result.rows as (string | number | null)[][]).filter(
-      (_, i) => state.slice[0] <= i && i <= state.slice[1],
-    );
+    const r = (
+      props.result.rows as (string | number | null | undefined)[][]
+    ).filter((_, i) => state.slice[0] <= i && i <= state.slice[1]);
     let i = extraRows;
     while (i) {
       i -= 1;
@@ -391,7 +401,10 @@ export function useDataGridCore(props: DataGridCoreProps) {
         u === 'REMOVE'
           ? []
           : u && Object.values(u).length
-            ? props.result.rows.map((_, j) => u?.[j])
+            ? props.result.rows.map((_, j) => {
+                const v = u?.[j];
+                return v;
+              })
             : [],
       );
     }
@@ -1019,7 +1032,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
           for (let i2 = e.colIndex[0]; i2 <= e.colIndex[1]; i2 += 1) {
             if (u[i2]) delete u[i2];
           }
-          if (!Object.keys(update2[i]).length) delete update2[i];
+          if (!Object.keys(update2[i]!).length) delete update2[i];
         }
       }
       const fixedCount = fixInsertRows(
@@ -1045,7 +1058,7 @@ export function useDataGridCore(props: DataGridCoreProps) {
           for (let i2 = e.colIndex[0]; i2 <= e.colIndex[1]; i2 += 1) {
             delete u[i2];
           }
-          if (!Object.keys(update2[i]).length) delete update2[i];
+          if (!Object.keys(update2[i]!).length) delete update2[i];
         }
       }
       const fixedCount = fixInsertRows(
@@ -1076,7 +1089,9 @@ export function useDataGridCore(props: DataGridCoreProps) {
       const removes = e.rowIndex[1] - e.rowIndex[0] + 1;
       let i = e.rowIndex[1] + 1;
       while (update2[i]) {
-        update2[i - removes] = update2[i];
+        const updateI = update2[i];
+        if (updateI) update2[i - removes] = updateI;
+        else delete update2[i - removes];
         delete update2[i];
         i += 1;
       }
@@ -1371,8 +1386,9 @@ export function useDataGridCore(props: DataGridCoreProps) {
           for (const colIndex in state.update[rowIndex] as {
             [k: string]: string | null;
           }) {
-            const fieldName =
-              props.result.fields[colIndex as unknown as number].name;
+            const { fields: fields2 } = props.result;
+            assert(fields2);
+            const fieldName = fields2[colIndex as unknown as number]?.name;
             const val = (
               state.update[rowIndex] as { [k: string]: string | null }
             )[colIndex];
@@ -1427,8 +1443,9 @@ export function useDataGridCore(props: DataGridCoreProps) {
           for (const colIndex in state.update[rowIndex] as {
             [k: string]: string | null;
           }) {
-            const fieldName =
-              props.result.fields[colIndex as unknown as number].name;
+            const field = props.result.fields[colIndex as unknown as number];
+            assert(field);
+            const fieldName = field.name;
             const val = (
               state.update[rowIndex] as {
                 [k: string]: string | null;

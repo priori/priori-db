@@ -71,15 +71,17 @@ export interface TableInfo {
   subType: 'table' | 'view' | 'mview';
   cols?: ColTableInfo[];
   owner?: string;
-  definition?: string;
-  privileges?: {
-    roleName: string;
-    host?: string;
-    internal?: boolean;
-    privileges: {
-      [key: string]: boolean | undefined;
-    };
-  }[];
+  definition?: undefined | string;
+  privileges?:
+    | undefined
+    | {
+        roleName: string;
+        host?: string;
+        internal?: boolean;
+        privileges: {
+          [key: string]: boolean | undefined;
+        };
+      }[];
   indexes?: {
     name: string;
     definition: string;
@@ -105,7 +107,7 @@ export interface TableInfo {
 
 export interface QueryResultDataField {
   name: string;
-  type?: string;
+  type?: undefined | string;
 }
 
 export interface QueryResult {
@@ -115,11 +117,13 @@ export interface QueryResult {
   stdOutResult?: string;
   stdOutMode?: boolean;
   stdInMode?: boolean;
-  fetchMoreRows?: () => Promise<{
-    rows: SimpleValue[][];
-    fields: QueryResultDataField[];
-    rowCount: number;
-  }>;
+  fetchMoreRows?:
+    | undefined
+    | (() => Promise<{
+        rows: SimpleValue[][];
+        fields: QueryResultDataField[];
+        rowCount: number;
+      }>);
 }
 
 export interface Notice {

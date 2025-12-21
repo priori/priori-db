@@ -26,7 +26,7 @@ export type RolePrivilegesProps = {
   privileges: {
     schema?: string;
     entityName: string;
-    internal?: boolean;
+    internal?: undefined | boolean;
     privileges: { [k: string]: boolean | undefined };
     highlight?: boolean;
   }[];

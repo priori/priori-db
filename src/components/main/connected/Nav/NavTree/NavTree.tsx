@@ -15,7 +15,7 @@ export function NavTree({
   schemas: NavSchema[];
   roles: { name: string; isUser: boolean }[] | undefined;
   onBlur: (e: 'next' | 'prev' | 'up' | 'down') => void;
-  disabled?: boolean;
+  disabled?: undefined | boolean;
   rolesOpen: boolean;
 }) {
   const {

@@ -57,7 +57,7 @@ export type NavTreeItem =
       isOpen?: boolean;
       schema?: string;
       rowsOpen: number;
-      host?: string;
+      host?: undefined | string;
       contextMenu?: { x: number; y: number } | true;
     }
   | {
@@ -65,7 +65,7 @@ export type NavTreeItem =
       children: NavTreeItem[];
       internal?: boolean;
       infoAction?: boolean;
-      includeActions?: boolean;
+      includeActions?: undefined | boolean;
       key: string;
       important?: boolean;
       hasFocus?: boolean;
