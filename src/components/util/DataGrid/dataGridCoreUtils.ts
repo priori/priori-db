@@ -393,23 +393,25 @@ export function useDataGridCore(props: DataGridCoreProps) {
     const r = (
       props.result.rows as (string | number | null | undefined)[][]
     ).filter((_, i) => state.slice[0] <= i && i <= state.slice[1]);
-    let i = extraRows;
-    while (i) {
-      i -= 1;
-      const u = state.update[i];
+    for (let i = 0; i < extraRows; i += 1) {
+      const rowIndex = props.result.rows.length + i;
+      const u = state.update[rowIndex];
       r.push(
         u === 'REMOVE'
           ? []
           : u && Object.values(u).length
-            ? props.result.rows.map((_, j) => {
-                const v = u?.[j];
-                return v;
-              })
+            ? props.result.fields.map((_, j) => u?.[j])
             : [],
       );
     }
     return r;
-  }, [props.result.rows, state.slice, extraRows, state.update]);
+  }, [
+    props.result.rows,
+    props.result.fields,
+    state.slice,
+    extraRows,
+    state.update,
+  ]);
 
   const visibleStartingInEven = !!(state.slice[0] % 2);
 
