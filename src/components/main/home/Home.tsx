@@ -318,7 +318,8 @@ export function Home(props: AppState) {
               key={i}
             >
               {state.editConnections ? <i className="fa fa-pencil" /> : null}
-              <span className="connection--user">{p.user}</span>@
+              <span className="connection--user">{p.user}</span>
+              <span className="connection--at">@</span>
               <span className="connection--host">{p.host}</span>
               <span
                 className={`connection--port${

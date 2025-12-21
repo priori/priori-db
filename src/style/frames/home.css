@@ -50,9 +50,24 @@
   word-break: break-all;
   height: 38px;
   cursor: pointer;
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  outline: 0;
+  position: relative;
+}
+.connection:active:after,
+.connection:focus:after,
+.connection.selected:after {
+  content: '';
+  left: 5px;
+  right: 3px;
+  border: 3px solid #1976d2;
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  border-radius: 7px;
 }
 .connection:last-of-type {
   margin-bottom: 80px;
@@ -65,6 +80,7 @@
 }
 .connection i.fa.fa-pencil {
   left: 7px;
+
   position: absolute;
   color: #092;
 }
@@ -84,6 +100,8 @@
 }
 .connection--host {
   font-weight: bold;
+  position: relative;
+  top: -1px;
 }
 .connection--port,
 .connection--database {
@@ -423,10 +441,12 @@ span.connection--user:before {
 .mysql span.connection--user:before {
   content: 'my';
   border-color: orange;
+  line-height: 18px;
   color: #46b;
 }
 .pg span.connection--user:before {
   content: 'pg';
+  line-height: 18px;
   border-color: #46b;
   color: #000;
 }
