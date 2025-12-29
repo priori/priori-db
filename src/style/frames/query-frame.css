@@ -455,6 +455,38 @@ button.query-tab--save-stdout {
   margin-left: 0;
   margin-right: 0;
 }
+.query-tab--save-dialog button:before,
+.query-tab--open-dialog button:before {
+  content: '\f0da';
+  position: absolute;
+  font-family: 'FontAwesome';
+  margin-left: -8px;
+  margin-top: 1px;
+  visibility: hidden;
+}
+.query-tab--save-dialog:focus-within:not(:focus-visible, :focus) button,
+.query-tab--open-dialog:focus-within:not(:focus-visible, :focus) button {
+  opacity: 0.3;
+}
+.query-tab--save-dialog:focus-within:not(:focus-visible, :focus)
+  button:focus-visible:before,
+.query-tab--open-dialog:focus-within:not(:focus-visible, :focus)
+  button:focus-visible:before {
+  visibility: visible;
+}
+.query-tab--save-dialog:focus-within:not(:focus-visible, :focus) button:hover,
+.query-tab--open-dialog:focus-within:not(:focus-visible, :focus) button:hover,
+.query-tab--save-dialog:focus-within:not(:focus-visible, :focus) button:focus,
+.query-tab--open-dialog:focus-within:not(:focus-visible, :focus) button:focus {
+  opacity: 1;
+}
+.query-tab--save-dialog:focus-within:not(:focus-visible, :focus)
+  button:focus-visible,
+.query-tab--open-dialog:focus-within:not(:focus-visible, :focus)
+  button:focus-visible {
+  color: #15c;
+}
+
 div.CodeMirror-linenumber {
   color: #ccc;
   font-size: 11px;

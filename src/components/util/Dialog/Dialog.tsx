@@ -149,7 +149,14 @@ export function Dialog({
     if (onKeyDownProp) onKeyDownProp(e);
     if (e.isPropagationStopped()) return;
     if (e.key === 'Escape' && document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
+      const input = document.activeElement.closest('input, textarea');
+      if (!input) document.activeElement.blur();
+      else if (
+        input instanceof HTMLTextAreaElement ||
+        input instanceof HTMLInputElement
+      ) {
+        elRef.current?.focus();
+      }
     }
   });
   const onBlurListener = useEvent((e: React.FocusEvent<HTMLDivElement>) => {

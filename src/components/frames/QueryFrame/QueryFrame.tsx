@@ -280,7 +280,11 @@ export function QueryFrame({ uid }: { uid: number }) {
             height={popup ? popup.height : topHeight}
           />
           {saveDialogOpen ? (
-            <Dialog relativeTo="previousSibling" onBlur={onDialogBlur}>
+            <Dialog
+              relativeTo="previousSibling"
+              onBlur={onDialogBlur}
+              className="query-tab--save-dialog"
+            >
               <button
                 className="button query-tab--save-sql"
                 onClick={onSaveSqlQueryToFileClick}
@@ -302,7 +306,11 @@ export function QueryFrame({ uid }: { uid: number }) {
             </Dialog>
           ) : null}
           {openDialogOpen ? (
-            <Dialog relativeTo="previousSibling" onBlur={onDialogBlur}>
+            <Dialog
+              relativeTo="previousSibling"
+              onBlur={onDialogBlur}
+              className="query-tab--open-dialog"
+            >
               <button
                 className="button query-tab--save-sql"
                 ref={focus}
