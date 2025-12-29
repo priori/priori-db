@@ -29,9 +29,20 @@
   line-height: 44px;
   text-align: center;
   background: rgba(100, 100, 100, 0.25);
-  transition: 0.2s all;
+  transition: 0.2s background;
   position: absolute;
   bottom: 7px;
+  outline: none;
+}
+.connections--edit-button:focus-visible,
+.connections--add-button:focus-visible {
+  box-shadow:
+    1px 1px 0 #1976d2,
+    -1px -1px 0 #1976d2,
+    -1px 1px 0 #1976d2,
+    1px -1px 0 #1976d2;
+  border: 2px solid #1976d2;
+  padding: 8px;
 }
 .connections--add-button {
   right: 10px;
@@ -57,8 +68,26 @@
   outline: 0;
   position: relative;
 }
+.connections:focus-within .connection,
+.connections.focus-within .connection {
+  opacity: 0.3;
+}
+.connections:focus-within .connection:active,
+.connections:focus-within .connection:focus,
+.connections:focus-within .connection:focus-visible,
+.connections:focus-within .connection:active,
+.connections:focus-within .connection.selected,
+.connections.focus-within .connection:active,
+.connections.focus-within .connection:focus,
+.connections.focus-within .connection:focus-visible,
+.connections.focus-within .connection:active,
+.connections.focus-within .connection.selected {
+  opacity: 1;
+}
 .connection:active:after,
 .connection:focus:after,
+.connection:focus-visible:after,
+.connection:active:after,
 .connection.selected:after {
   content: '';
   left: 5px;
@@ -69,6 +98,15 @@
   bottom: -3px;
   border-radius: 7px;
 }
+.connection--editing:active:after,
+.connection--editing:focus:after,
+.connection--editing:focus-visible:after,
+.connection--editing:active:after,
+.connection--editing.selected:after {
+  left: 1px;
+  right: -1px;
+}
+
 .connection:last-of-type {
   margin-bottom: 80px;
 }
@@ -79,7 +117,7 @@
   background: #eee;
 }
 .connection i.fa.fa-pencil {
-  left: 7px;
+  left: 8px;
 
   position: absolute;
   color: #092;

@@ -229,7 +229,7 @@ export function Home(props: AppState) {
     );
   }
   return (
-    <div style={{ animation: 'show 1s' }}>
+    <div style={{ animation: 'show 1s', paddingTop: 5 }}>
       <Errors errors={props.errors} />
       {error ? (
         <HomeConnectionErrorDialog
