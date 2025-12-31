@@ -49,6 +49,7 @@ i.tabs-header__plus {
   top: 2px;
   color: #888;
   padding: 5px 5px 5px 2px;
+  cursor: pointer;
 }
 .tabs-header__close:hover {
   color: #000;
