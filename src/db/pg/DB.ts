@@ -25,6 +25,7 @@ import {
   query,
 } from './Connection';
 import { PgQueryExecutor } from './QueryExecutor';
+import { coerceArraysToText } from './valueTransform';
 
 function schemaCompare(a: string, b: string, publics: string[]) {
   const aPublic = publics.includes(a);
@@ -412,6 +413,7 @@ export const DB: DBInterface = {
             c.close().then(() => reject(grantError(err)));
             return;
           }
+          coerceArraysToText(rows);
 
           const ret = {
             rows,
@@ -445,6 +447,7 @@ export const DB: DBInterface = {
                           _reject(grantError(err2));
                           return;
                         }
+                        coerceArraysToText(newRows);
                         ret.rows = [...ret.rows, ...newRows];
                         ret.fetchMoreRows =
                           newRows.length === 500
@@ -473,6 +476,7 @@ export const DB: DBInterface = {
     }
 
     const result = await query(sql, params, true);
+    coerceArraysToText(result.rows);
     return {
       rows: result.rows,
       fields: result.fields,

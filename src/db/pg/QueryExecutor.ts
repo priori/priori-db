@@ -16,6 +16,7 @@ import { assert } from 'util/assert';
 import { grantError } from 'util/errors';
 import { openConnection } from './Connection';
 import { cancelBackend } from './DB';
+import { coerceArraysToText } from './valueTransform';
 
 function isMultipleQueries(q: string) {
   let inString = false;
@@ -221,6 +222,7 @@ export class PgQueryExecutor implements QueryExecutor {
         rowMode: 'array',
         values: [],
       });
+      coerceArraysToText(res2.rows as SimpleValue[][]);
       return {
         rows: res2.rows,
         fields: res2.fields as unknown as QueryResultDataField[],
@@ -242,6 +244,7 @@ export class PgQueryExecutor implements QueryExecutor {
           c.close().then(() => reject(grantError(err)));
           return;
         }
+        coerceArraysToText(rows);
         const ret = {
           rows,
           // eslint-disable-next-line no-underscore-dangle
@@ -265,6 +268,7 @@ export class PgQueryExecutor implements QueryExecutor {
                           _reject(grantError(err2));
                           return;
                         }
+                        coerceArraysToText(newRows);
                         ret.rows = [...ret.rows, ...newRows];
                         ret.fetchMoreRows =
                           newRows.length === fetchSize
