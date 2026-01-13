@@ -133,6 +133,7 @@ export interface ConnectionConfiguration {
   type: ConnectionType;
   requireSsl?: undefined | boolean;
   dbSelectionMode: 'always' | 'options';
+  lastUsedAt?: number;
 }
 
 export interface AppState {

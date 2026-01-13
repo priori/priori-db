@@ -1,5 +1,6 @@
 import { assert } from 'util/assert';
 import { useEffect } from 'react';
+import { ipcRenderer } from 'electron';
 import { grantError } from 'util/errors';
 import { updateConnection } from 'util/browserDb/actions';
 import { db, connect as dbConnect } from 'db/db';
@@ -119,6 +120,9 @@ export async function connect(conf: ConnectionConfiguration, database: string) {
         console.error('Error listing roles:', err);
       }
       state.connected(conf, database, schemas, roles);
+      if (typeof conf.id === 'number' && Number.isFinite(conf.id)) {
+        ipcRenderer.send('window:set-origin-connection', conf.id);
+      }
     } catch (err) {
       throw grantError(err);
     }

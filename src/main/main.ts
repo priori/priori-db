@@ -66,6 +66,7 @@ const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 let windowsCount = 0;
+const windowConnectionIds = new Map<number, number>();
 const installExtensions = async () => {
   const installer = require('electron-devtools-installer');
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
@@ -79,7 +80,7 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const createWindow = async () => {
+const createWindow = async (originConnectionId?: number | null) => {
   if (isDebug) {
     await installExtensions();
   }
@@ -106,7 +107,14 @@ const createWindow = async () => {
   });
   window.setMenu(null);
 
-  window.loadURL(resolveHtmlPath('index.html'));
+  const appUrl = new URL(resolveHtmlPath('index.html'));
+  if (
+    typeof originConnectionId === 'number' &&
+    Number.isFinite(originConnectionId)
+  ) {
+    appUrl.searchParams.set('originConnectionId', String(originConnectionId));
+  }
+  window.loadURL(appUrl.toString());
 
   window.on('ready-to-show', () => {
     window.show();
@@ -114,6 +122,7 @@ const createWindow = async () => {
 
   window.on('closed', () => {
     windowsCount -= 1;
+    windowConnectionIds.delete(window.id);
   });
 
   window.webContents.setWindowOpenHandler((edata) => {
@@ -139,7 +148,11 @@ const localShortcut = require('electron-localshortcut');
 
 localShortcut.register('CommandOrControl+R', () => {});
 localShortcut.register('CommandOrControl+N', () => {
-  createWindow();
+  const focusedWindow = BrowserWindow.getFocusedWindow();
+  const originConnectionId = focusedWindow
+    ? windowConnectionIds.get(focusedWindow.id)
+    : undefined;
+  createWindow(originConnectionId);
 });
 localShortcut.register('F5', () => {});
 
@@ -173,7 +186,11 @@ const dockMenu = Menu.buildFromTemplate([
   {
     label: 'New Window',
     click() {
-      createWindow();
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      const originConnectionId = focusedWindow
+        ? windowConnectionIds.get(focusedWindow.id)
+        : undefined;
+      createWindow(originConnectionId);
     },
   },
 ]);
@@ -192,5 +209,17 @@ app
     ipcMain.handle('dialog:saveAny', saveAny);
     ipcMain.handle('dialog:openSql', openSql);
     ipcMain.handle('dialog:saveSql', saveSql);
+    ipcMain.on(
+      'window:set-origin-connection',
+      (event, connectionId: number | null) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        if (!win) return;
+        if (typeof connectionId === 'number' && Number.isFinite(connectionId)) {
+          windowConnectionIds.set(win.id, connectionId);
+        } else {
+          windowConnectionIds.delete(win.id);
+        }
+      },
+    );
   })
   .catch(console.log);

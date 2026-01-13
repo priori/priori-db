@@ -5,6 +5,7 @@ import { closeTabNow, showError, updateTab } from 'state/actions';
 import {
   saveQuery as insertQuery,
   saveFavoriteQuery,
+  touchConnectionConfigurationUsage,
   updateFailedQuery,
   updateSuccessQuery,
 } from 'util/browserDb/actions';
@@ -68,6 +69,9 @@ export function useQueryFrame({ uid }: { uid: number }) {
           res.time,
           typeof res.length === 'number' ? res.length : null,
         );
+      touchConnectionConfigurationUsage(
+        currentState().currentConnectionConfiguration,
+      );
       updateTab(uid, 'success');
       if (isMounted()) {
         if (res?.stdOutMode) setStdOutFile(null);
@@ -78,6 +82,9 @@ export function useQueryFrame({ uid }: { uid: number }) {
       const id = queryIdRef.current;
       updateTab(uid, 'error');
       if (id) updateFailedQuery(id, time);
+      touchConnectionConfigurationUsage(
+        currentState().currentConnectionConfiguration,
+      );
     },
   });
 

@@ -84,6 +84,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
       type,
       requireSsl: !!state.requireSsl || undefined,
       dbSelectionMode: state.dbSelectionMode,
+      lastUsedAt: connection?.lastUsedAt,
     } as ConnectionConfiguration);
   }
 
@@ -108,6 +109,7 @@ export function ConnectionConfigurationForm(props: NewConnectionProps) {
       type,
       requireSsl: !!requireSsl || undefined,
       dbSelectionMode: state.dbSelectionMode,
+      lastUsedAt: connection?.lastUsedAt,
     } as ConnectionConfiguration);
   }
 

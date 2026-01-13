@@ -1,5 +1,5 @@
 import { listDatabases } from 'db/db';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { connect } from 'state/actions';
 import {
   deleteConnectionConfiguration,
@@ -17,6 +17,65 @@ import { Errors } from '../Errors';
 import { ConnectionConfigurationForm } from './ConnectionConfigurationForm';
 import { HomeConnectionErrorDialog } from './HomeConnectionErrorDialog';
 
+function formatLastUsedAt(timestamp: number, index: number): string {
+  const ago = Date.now() - timestamp;
+  if (ago < 60 * 1000) {
+    const seconds = Math.floor(ago / 1000);
+    return `${seconds}${index > 5 ? 's' : ` sec${seconds !== 1 ? 's' : ''}${!index ? ' ago' : ''}`}`;
+  }
+  if (ago < 60 * 60 * 1000) {
+    const minutes = Math.floor(ago / (60 * 1000));
+    return `${minutes}${index > 5 ? 'm' : ` min${minutes !== 1 ? 's' : ''}${!index ? ' ago' : ''}`}`;
+  }
+  if (ago < 24 * 60 * 60 * 1000) {
+    const hours = Math.floor(ago / (60 * 60 * 1000));
+    return `${hours}${index > 5 ? 'h' : ` hour${hours !== 1 ? 's' : ''}${!index ? ' ago' : ''}`}`;
+  }
+  const days = Math.floor(ago / (24 * 60 * 60 * 1000));
+  return `${days}${index > 5 ? 'd' : ` day${days !== 1 ? 's' : ''}${!index ? ' ago' : ''}`}`;
+}
+
+function nextTickTimeout(timestamp: number): number {
+  const ago = Date.now() - timestamp;
+  if (ago < 60 * 1000) {
+    return 1000 + 10;
+  }
+  if (ago < 60 * 60 * 1000) {
+    return 60 * 1000 + 10;
+  }
+  if (ago < 24 * 60 * 60 * 1000) {
+    return 60 * 60 * 1000 + 10;
+  }
+  return 24 * 60 * 60 * 1000 + 10;
+}
+
+function LastUsedAt({
+  timestamp,
+  index,
+}: {
+  timestamp: number;
+  index: number;
+}) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    function fn() {
+      setTick((t) => t + 1);
+      timeout = setTimeout(fn, nextTickTimeout(timestamp));
+    }
+    timeout = setTimeout(fn, nextTickTimeout(timestamp));
+    return () => clearTimeout(timeout);
+  }, [setTick, timestamp]);
+  return (
+    <span
+      className={`connection--last-used${index > 5 ? ' connection--last-used--short' : ''}`}
+      title={new Date(timestamp).toLocaleString()}
+    >
+      {formatLastUsedAt(timestamp, index)}
+    </span>
+  );
+}
+
 export function Home(props: AppState) {
   const service = useService(() => listConnectionConfigurations(), []);
 
@@ -28,6 +87,7 @@ export function Home(props: AppState) {
     selectedConnection: null as null | ConnectionConfiguration,
     editConnections: false,
     error: null as null | Error,
+    untouched: true,
   });
 
   useShortcuts({
@@ -56,10 +116,65 @@ export function Home(props: AppState) {
     basesService.status === 'reloading' || basesService.status === 'starting';
 
   const connectionConfigurations = service.lastValidData;
+  const sortedConnectionConfigurations = connectionConfigurations
+    ? [...connectionConfigurations].sort(
+        (a, b) => (b.lastUsedAt ?? 0) - (a.lastUsedAt ?? 0),
+      )
+    : connectionConfigurations;
+  const originConnectionId = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    const value = params.get('originConnectionId');
+    if (!value) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }, []);
+  const preferredConnection = useMemo(() => {
+    if (!sortedConnectionConfigurations?.length) return null;
+    if (originConnectionId !== null) {
+      const origin = sortedConnectionConfigurations.find(
+        (connection) => connection.id === originConnectionId,
+      );
+      if (origin) return origin;
+    }
+    return sortedConnectionConfigurations[0];
+  }, [originConnectionId, sortedConnectionConfigurations]);
+  const preferredConnectionId = preferredConnection?.id;
 
   useEventListener(window, 'keydown', (e) => {
     if (e.key === 'Escape') {
-      setState((s) => ({ ...s, error: null, openConnection: null }));
+      setState((s) => ({
+        ...s,
+        error: null,
+        openConnection: null,
+        untouched: false,
+      }));
+    } else if ((e.key === ' ' || e.key === 'Enter') && state.untouched) {
+      const con = preferredConnection;
+      if (con && !state.openConnection && !state.editConnection) {
+        e.preventDefault();
+        if (con.dbSelectionMode === 'always') {
+          (async () => {
+            try {
+              setState((s) => ({
+                ...s,
+                connecting: true,
+                openConnection: con,
+              }));
+              await connect(con, con.database);
+            } catch (err) {
+              setState((s) => ({
+                ...s,
+                connecting: false,
+                openConnection: null,
+                selectedConnection: con,
+                error: grantError(err),
+              }));
+            }
+          })();
+        } else {
+          setState((s) => ({ ...s, openConnection: con }));
+        }
+      }
     }
   });
 
@@ -114,25 +229,25 @@ export function Home(props: AppState) {
           }}
           onSaveAndConnect={async (c) => {
             const id = await insertConnectionConfiguration(c);
+            const connection = { ...c, id };
             if (c.dbSelectionMode === 'always') {
               setState((s) => ({
                 ...s,
                 newConnection: false,
                 editConnection: {
-                  ...c,
-                  id,
+                  ...connection,
                 },
                 editConnections: false,
                 connecting: true,
               }));
               try {
-                await connect(c, c.database);
+                await connect(connection, connection.database);
               } catch (err) {
                 setState((s) => ({
                   ...s,
                   connecting: false,
                   openConnection: null,
-                  selectedConnection: c,
+                  selectedConnection: connection,
                   error: grantError(err),
                 }));
               }
@@ -142,7 +257,7 @@ export function Home(props: AppState) {
                 ...s,
                 editConnection: null,
                 newConnection: false,
-                openConnection: c,
+                openConnection: connection,
                 editConnections: false,
               }));
             }
@@ -238,13 +353,13 @@ export function Home(props: AppState) {
           onEdit={onErrorEdit}
         />
       ) : null}
-      {connectionConfigurations?.length ? (
+      {sortedConnectionConfigurations?.length ? (
         <div className="connections">
-          {connectionConfigurations.map((p, i) => (
+          {sortedConnectionConfigurations.map((p, i) => (
             <div
               className={`connection${
                 state.editConnections ? ' connection--editing' : ''
-              }${p.type === 'postgres' ? ' pg' : ' mysql'}`}
+              }${p.type === 'postgres' ? ' pg' : ' mysql'}${state.untouched && preferredConnectionId === p.id ? ' connection--active' : ''}`}
               onClick={
                 listingBases
                   ? undefined
@@ -258,6 +373,7 @@ export function Home(props: AppState) {
                             ...s,
                             connecting: true,
                             openConnection: p,
+                            untouched: false,
                           }));
                           await connect(p, p.database);
                         } catch (err) {
@@ -270,7 +386,11 @@ export function Home(props: AppState) {
                           }));
                         }
                       } else {
-                        setState((s) => ({ ...s, openConnection: p }));
+                        setState((s) => ({
+                          ...s,
+                          openConnection: p,
+                          untouched: false,
+                        }));
                       }
                       if (document.activeElement instanceof HTMLElement)
                         document.activeElement.blur();
@@ -294,6 +414,7 @@ export function Home(props: AppState) {
                               ...s,
                               connecting: true,
                               openConnection: p,
+                              untouched: false,
                             }));
                             await connect(p, p.database);
                           } catch (err) {
@@ -306,13 +427,26 @@ export function Home(props: AppState) {
                             }));
                           }
                         } else {
-                          setState((s) => ({ ...s, openConnection: p }));
+                          setState((s) => ({
+                            ...s,
+                            openConnection: p,
+                            untouched: false,
+                          }));
                         }
+                        if (document.activeElement instanceof HTMLElement)
+                          document.activeElement.blur();
+                      } else if (e.key === 'Escape') {
                         if (document.activeElement instanceof HTMLElement)
                           document.activeElement.blur();
                       }
                     }
               }
+              onFocus={() => {
+                setState((s) => ({
+                  ...s,
+                  untouched: false,
+                }));
+              }}
               role="button"
               tabIndex={0}
               key={i}
@@ -335,6 +469,9 @@ export function Home(props: AppState) {
               >
                 /{p.database}
               </span>
+              {p.lastUsedAt ? (
+                <LastUsedAt timestamp={p.lastUsedAt} index={i} />
+              ) : null}
             </div>
           ))}
         </div>
@@ -371,6 +508,7 @@ export function Home(props: AppState) {
                         ...s,
                         editConnection: state.openConnection,
                         openConnection: null,
+                        untouched: false,
                       }));
                     }
               }
@@ -476,6 +614,7 @@ export function Home(props: AppState) {
                 setState({
                   ...state,
                   editConnections: !state.editConnections,
+                  untouched: false,
                 });
               }
         }
@@ -492,6 +631,7 @@ export function Home(props: AppState) {
                   ...state,
                   editConnections: false,
                   newConnection: true,
+                  untouched: false,
                 });
               }
         }

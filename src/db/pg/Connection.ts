@@ -4,6 +4,7 @@ import { grantError } from 'util/errors';
 import hls from 'util/hotLoadSafe';
 import { ConnectionConfiguration } from 'types';
 import { QueryResultData, SimpleValue } from 'db/db';
+import { touchConnectionConfigurationUsage } from 'util/browserDb/actions';
 import { existsSomePendingProcess } from './DB';
 import { PgQueryExecutor } from './QueryExecutor';
 
@@ -60,10 +61,26 @@ export async function connect(c: ConnectionConfiguration, db?: string) {
   }
 }
 
-export function openConnection() {
+function touchCurrentConnectionUsage() {
+  touchConnectionConfigurationUsage(
+    hls.current?.currentConnectionConfiguration,
+  );
+}
+
+function wrapPgClient<T extends { query: (...args: any[]) => any }>(client: T) {
+  const originalQuery = client.query.bind(client);
+  (client as { query: (...args: any[]) => any }).query = (...args: any[]) => {
+    touchCurrentConnectionUsage();
+    return originalQuery(...args);
+  };
+  return client;
+}
+
+export async function openConnection() {
   const { pool } = hls;
   assert(pool);
-  return pool.connect();
+  const client = await pool.connect();
+  return wrapPgClient(client);
 }
 
 export async function listFromConfiguration(
@@ -96,6 +113,7 @@ export async function listFromConfiguration(
   try {
     await client.connect();
     try {
+      if ('id' in c) touchConnectionConfigurationUsage(c);
       return await client.query(query, args ?? []);
     } catch (err2) {
       try {
@@ -128,6 +146,7 @@ export async function query(
 ): Promise<{ rows: { [key: string]: SimpleValue }[] } | QueryResultData> {
   const p = hls.pool;
   assert(p);
+  touchCurrentConnectionUsage();
   if (arrayRowMode) {
     return p.query({
       text: q,

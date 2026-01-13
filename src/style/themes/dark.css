@@ -609,6 +609,18 @@ body.dark-theme {
   .base:hover {
     background: #444;
   }
+  .connection--last-used {
+    background-color: #262626;
+  }
+  .connection:hover .connection--last-used {
+    background-color: #333;
+  }
+  .connection--last-used--short {
+    color: rgba(256, 256, 256, 0.6);
+  }
+  .connections .connection:first-of-type .connection--last-used {
+    color: #27e !important;
+  }
   .connections--edit-button2 {
     background: rgba(100, 100, 100, 0.25);
     color: #aaa;

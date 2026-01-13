@@ -1,11 +1,13 @@
 import mysql from 'mysql2/promise';
 import { ConnectionConfiguration } from 'types';
 import hotLoadSafe from 'util/hotLoadSafe';
+import { touchConnectionConfigurationUsage } from 'util/browserDb/actions';
 
 export async function mysqlListDatabases(
   c:
     | Omit<ConnectionConfiguration, 'id' | 'dbSelectionMode'>
-    | Omit<ConnectionConfiguration, 'id'>,
+    | Omit<ConnectionConfiguration, 'id'>
+    | ConnectionConfiguration,
 ) {
   const connection = await mysql.createConnection({
     host: c.host,
@@ -21,6 +23,7 @@ export async function mysqlListDatabases(
         }
       : undefined),
   });
+  if ('id' in c) touchConnectionConfigurationUsage(c);
   const [rows] = await connection.query('SHOW DATABASES');
   connection.end();
   const dbs = (rows as { Database: string }[]).map((r: any) => r.Database);
@@ -61,6 +64,60 @@ export async function mysqlConnect(c: ConnectionConfiguration, name: string) {
         }
       : undefined),
   });
+  const touchCurrentConnectionUsage = () => {
+    touchConnectionConfigurationUsage(
+      hotLoadSafe.current?.currentConnectionConfiguration,
+    );
+  };
+  const wrapMysqlQuery = <T extends { query: (...args: any[]) => any }>(
+    target: T,
+  ) => {
+    const originalQuery = target.query.bind(target);
+    (target as { query: (...args: any[]) => any }).query = (...args: any[]) => {
+      touchCurrentConnectionUsage();
+      return originalQuery(...args);
+    };
+    const targetWithExecute = target as T & {
+      execute?: (...args: any[]) => any;
+    };
+    if (typeof targetWithExecute.execute === 'function') {
+      const originalExecute = targetWithExecute.execute.bind(target);
+      targetWithExecute.execute = (...args: any[]) => {
+        touchCurrentConnectionUsage();
+        return originalExecute(...args);
+      };
+    }
+    const innerConnection = (
+      target as {
+        connection?: {
+          query?: (...args: any[]) => any;
+          execute?: (...args: any[]) => any;
+        };
+      }
+    ).connection;
+    if (innerConnection && typeof innerConnection.query === 'function') {
+      const originalInnerQuery = innerConnection.query.bind(innerConnection);
+      innerConnection.query = (...args: any[]) => {
+        touchCurrentConnectionUsage();
+        return originalInnerQuery(...args);
+      };
+    }
+    if (innerConnection && typeof innerConnection.execute === 'function') {
+      const originalInnerExecute =
+        innerConnection.execute.bind(innerConnection);
+      innerConnection.execute = (...args: any[]) => {
+        touchCurrentConnectionUsage();
+        return originalInnerExecute(...args);
+      };
+    }
+    return target;
+  };
+  wrapMysqlQuery(connection);
+  const originalGetConnection = connection.getConnection.bind(connection);
+  connection.getConnection = async () => {
+    const con = await originalGetConnection();
+    return wrapMysqlQuery(con);
+  };
   hotLoadSafe.mysql = connection;
   (window as any).mysql = connection;
 }

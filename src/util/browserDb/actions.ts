@@ -232,6 +232,37 @@ export async function updateConnectionConfiguration(
   );
 }
 
+const connectionUsageTimers = new Map<number, ReturnType<typeof setTimeout>>();
+const connectionUsagePending = new Map<number, number>();
+const connectionUsageDelayMs = 5;
+
+export function touchConnectionConfigurationUsage(
+  configuration:
+    | Partial<Pick<ConnectionConfiguration, 'id'>>
+    | null
+    | undefined,
+): void {
+  if (!configuration?.id) return;
+  const { id } = configuration;
+  const now = Date.now();
+  connectionUsagePending.set(id, now);
+  const existingTimer = connectionUsageTimers.get(id);
+  if (existingTimer) clearTimeout(existingTimer);
+  const timer = setTimeout(() => {
+    connectionUsageTimers.delete(id);
+    const lastUsedAt = connectionUsagePending.get(id);
+    connectionUsagePending.delete(id);
+    if (lastUsedAt === undefined) return;
+    transaction(({ connectionConfiguration }) =>
+      connectionConfiguration.patch({
+        id,
+        lastUsedAt,
+      }),
+    );
+  }, connectionUsageDelayMs);
+  connectionUsageTimers.set(id, timer);
+}
+
 export async function updateFailedQuery(queryId: number, time: number) {
   return transaction<void>(async ({ query, queryGroup }) => {
     const q = await query.get(queryId);
