@@ -111,8 +111,8 @@ export interface QueryResultDataField {
 }
 
 export interface QueryResult {
-  rows: SimpleValue[][];
-  fields: QueryResultDataField[];
+  rows?: undefined | SimpleValue[][];
+  fields?: undefined | QueryResultDataField[];
   rowCount: number;
   stdOutResult?: string;
   stdOutMode?: boolean;

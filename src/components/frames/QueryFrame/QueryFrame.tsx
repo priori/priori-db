@@ -1,6 +1,7 @@
 import { Dialog } from 'components/util/Dialog/Dialog';
 import { useRef, useState } from 'react';
 import { currentState } from 'state/state';
+import { QueryResultDataField } from 'db/db';
 import { Editor } from '../../Editor';
 import { DataGrid } from '../../util/DataGrid/DataGrid';
 import { FavoriteControl } from './FavoriteControl';
@@ -177,7 +178,7 @@ export function QueryFrame({ uid }: { uid: number }) {
                   </div>
                 ) : null}
                 {res && res.fields && res.fields.length ? (
-                  res.fetchMoreRows ? (
+                  res.fetchMoreRows && res.rows ? (
                     <>
                       {res.rows.length} row
                       {res.rows.length > 1 ? 's' : ''} fetched
@@ -186,7 +187,7 @@ export function QueryFrame({ uid }: { uid: number }) {
                       )}
                       .
                     </>
-                  ) : (
+                  ) : res.rows ? (
                     <>
                       Query returned {res.rows.length} row
                       {res.rows.length > 1 ? 's' : ''}
@@ -194,6 +195,8 @@ export function QueryFrame({ uid }: { uid: number }) {
                         <>, {time} ms execution time</>
                       )}
                     </>
+                  ) : (
+                    <br />
                   )
                 ) : (
                   <br />
@@ -357,17 +360,17 @@ export function QueryFrame({ uid }: { uid: number }) {
           ) : null}
           {res && res.fields && res.fields.length ? (
             <span className="mensagem">
-              {res.fetchMoreRows ? (
+              {res.fetchMoreRows && res.rows ? (
                 <>
                   {res.rows.length} row
                   {res.rows.length > 1 ? 's' : ''} fetched
                 </>
-              ) : (
+              ) : res.rows ? (
                 <>
                   Query returned {res.rows.length} row
                   {res.rows.length > 1 ? 's' : ''}
                 </>
-              )}
+              ) : null}
               {time === null ? undefined : <>, {time} ms execution time</>}.
             </span>
           ) : undefined}
@@ -499,7 +502,12 @@ export function QueryFrame({ uid }: { uid: number }) {
                   inset: 0,
                 }}
                 fetchMoreRows={fetchMoreRows}
-                result={res}
+                result={
+                  res as {
+                    rows: any[];
+                    fields: QueryResultDataField[];
+                  }
+                }
               />
             </div>
           ) : (
@@ -509,7 +517,12 @@ export function QueryFrame({ uid }: { uid: number }) {
                 inset: 0,
               }}
               fetchMoreRows={fetchMoreRows}
-              result={res}
+              result={
+                res as {
+                  rows: any[];
+                  fields: QueryResultDataField[];
+                }
+              }
             />
           )
         ) : res || notices?.length ? (

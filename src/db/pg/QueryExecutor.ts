@@ -217,15 +217,20 @@ export class PgQueryExecutor implements QueryExecutor {
       };
     }
     if (isMultipleQueries(q)) {
-      const res2 = await this.db.query({
+      const res2: {
+        rows?: SimpleValue[][];
+        fields?: QueryResultDataField[];
+        rowCount?: null | number;
+      } = await this.db.query({
         text: q as string,
         rowMode: 'array',
         values: [],
       });
-      coerceArraysToText(
-        res2.rows as SimpleValue[][],
-        res2.fields as unknown as QueryResultDataField[],
-      );
+      if (res2.rows?.length && res2.fields?.length)
+        coerceArraysToText(
+          res2.rows as SimpleValue[][],
+          res2.fields as unknown as QueryResultDataField[],
+        );
       return {
         rows: res2.rows,
         fields: res2.fields as unknown as QueryResultDataField[],
