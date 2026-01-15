@@ -413,12 +413,13 @@ export const DB: DBInterface = {
             c.close().then(() => reject(grantError(err)));
             return;
           }
-          coerceArraysToText(rows);
+          // eslint-disable-next-line no-underscore-dangle
+          const fields = (c as any)._result.fields as QueryResultDataField[];
+          coerceArraysToText(rows, fields);
 
           const ret = {
             rows,
-            // eslint-disable-next-line no-underscore-dangle
-            fields: (c as any)._result.fields as QueryResultDataField[],
+            fields,
             release:
               rows.length === 500
                 ? () => {
@@ -447,7 +448,7 @@ export const DB: DBInterface = {
                           _reject(grantError(err2));
                           return;
                         }
-                        coerceArraysToText(newRows);
+                        coerceArraysToText(newRows, fields);
                         ret.rows = [...ret.rows, ...newRows];
                         ret.fetchMoreRows =
                           newRows.length === 500
@@ -476,7 +477,7 @@ export const DB: DBInterface = {
     }
 
     const result = await query(sql, params, true);
-    coerceArraysToText(result.rows);
+    coerceArraysToText(result.rows, result.fields);
     return {
       rows: result.rows,
       fields: result.fields,

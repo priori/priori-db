@@ -1,7 +1,7 @@
 /* eslint no-use-before-define: "off" */
 
 import { defaults } from 'pg';
-import { SimpleValue } from 'db/db';
+import { QueryResultDataField, SimpleValue } from 'db/db';
 import { isDate } from 'node:util/types';
 
 // based in https://github.com/brianc/node-postgres/blob/master/packages/pg/lib/utils.js
@@ -148,18 +148,32 @@ function prepareObject(
   return JSON.stringify(val);
 }
 
+const JSON_TYPE_IDS = new Set([114, 3802]);
+
+function isJsonField(field?: QueryResultDataField | { dataTypeID?: number }) {
+  if (!field) return false;
+  if ('type' in field && field.type) return /^jsonb?$/i.test(field.type);
+  const { dataTypeID } = field as { dataTypeID?: number };
+  return dataTypeID ? JSON_TYPE_IDS.has(dataTypeID) : false;
+}
+
 function arrayToPgText(value: SimpleValue[]): string {
   const prepared = prepareValue(value);
   if (typeof prepared === 'string') return prepared;
   return JSON.stringify(value);
 }
 
-export function coerceArraysToText(rows: SimpleValue[][]): SimpleValue[][] {
+export function coerceArraysToText(
+  rows: SimpleValue[][],
+  fields?: Array<QueryResultDataField | { dataTypeID?: number }>,
+): SimpleValue[][] {
   for (const row of rows) {
     for (let i = 0; i < row.length; i += 1) {
       const cell = row[i];
       if (Array.isArray(cell)) {
-        row[i] = arrayToPgText(cell);
+        if (!isJsonField(fields?.[i])) {
+          row[i] = arrayToPgText(cell);
+        }
       }
     }
   }

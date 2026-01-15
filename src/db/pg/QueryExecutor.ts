@@ -222,7 +222,10 @@ export class PgQueryExecutor implements QueryExecutor {
         rowMode: 'array',
         values: [],
       });
-      coerceArraysToText(res2.rows as SimpleValue[][]);
+      coerceArraysToText(
+        res2.rows as SimpleValue[][],
+        res2.fields as unknown as QueryResultDataField[],
+      );
       return {
         rows: res2.rows,
         fields: res2.fields as unknown as QueryResultDataField[],
@@ -244,11 +247,12 @@ export class PgQueryExecutor implements QueryExecutor {
           c.close().then(() => reject(grantError(err)));
           return;
         }
-        coerceArraysToText(rows);
+        // eslint-disable-next-line no-underscore-dangle
+        const fields = (c as any)._result.fields as QueryResultDataField[];
+        coerceArraysToText(rows, fields);
         const ret = {
           rows,
-          // eslint-disable-next-line no-underscore-dangle
-          fields: (c as any)._result.fields as QueryResultDataField[],
+          fields,
           // eslint-disable-next-line no-underscore-dangle
           rowCount: (c as any)._result.rowCount,
           fetchMoreRows:
@@ -268,7 +272,7 @@ export class PgQueryExecutor implements QueryExecutor {
                           _reject(grantError(err2));
                           return;
                         }
-                        coerceArraysToText(newRows);
+                        coerceArraysToText(newRows, fields);
                         ret.rows = [...ret.rows, ...newRows];
                         ret.fetchMoreRows =
                           newRows.length === fetchSize
