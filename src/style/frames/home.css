@@ -84,6 +84,9 @@
 .connections.focus-within .connection.selected {
   opacity: 1;
 }
+.connection--active {
+  z-index: 1;
+}
 .connection:active:after,
 .connection:focus:after,
 .connection:focus-visible:after,
