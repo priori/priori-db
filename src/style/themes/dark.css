@@ -363,6 +363,12 @@ body.dark-theme {
     color: white;
     background: #000;
   }
+  .grid td {
+    color: black;
+  }
+  .grid .grid__active-cell {
+    color: black;
+  }
   .grid .fa-sort,
   .grid .fa-filter,
   .grid .fa-plus {
