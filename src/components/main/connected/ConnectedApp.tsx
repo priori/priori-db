@@ -1,5 +1,6 @@
 /* eslint-disable no-return-assign */
 import { db } from 'db/db';
+import { ipcRenderer } from 'electron';
 import * as React from 'react';
 import { useContext, useEffect } from 'react';
 import { AppState, FrameType } from 'types';
@@ -201,9 +202,21 @@ export function ConnectedApp({ state }: { state: AppState }) {
   useWindowCloseConfirm(async (close, decline) => {
     // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, 100));
-    if (await db().hasOpenConnection()) {
+    let hasOpenConnection = false;
+    try {
+      hasOpenConnection = await db().hasOpenConnection();
+    } catch {
+      hasOpenConnection = false;
+    }
+    if (hasOpenConnection) {
       setCloseState({ close, decline });
     } else {
+      ipcRenderer.send('window:set-origin-connection', null);
+      try {
+        await db().closeAll();
+      } catch {
+        // ignore close errors while shutting down the window
+      }
       close();
     }
   });
