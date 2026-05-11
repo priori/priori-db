@@ -5,6 +5,7 @@ import { app, BrowserWindow, shell, Menu, dialog, ipcMain } from 'electron';
 // import { autoUpdater } from 'electron-updater';
 import { URL } from 'url';
 import path from 'path';
+import fs from 'fs';
 
 let resolveHtmlPath: (htmlFileName: string) => string;
 
@@ -64,6 +65,27 @@ if (process.env.NODE_ENV === 'production') {
 
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+const devToolsStatePath = path.join(app.getPath('userData'), 'devtools.json');
+
+function readDevToolsOpenState() {
+  if (!isDebug) return false;
+  try {
+    const state = JSON.parse(fs.readFileSync(devToolsStatePath, 'utf8'));
+    return state?.open === true;
+  } catch {
+    return false;
+  }
+}
+
+function writeDevToolsOpenState(open: boolean) {
+  if (!isDebug) return;
+  try {
+    fs.mkdirSync(path.dirname(devToolsStatePath), { recursive: true });
+    fs.writeFileSync(devToolsStatePath, JSON.stringify({ open }));
+  } catch (error) {
+    console.log('Failed to persist devtools state', error);
+  }
+}
 
 let windowsCount = 0;
 const windowConnectionIds = new Map<number, number>();
@@ -120,6 +142,21 @@ const createWindow = async (originConnectionId?: number | null) => {
     window.show();
   });
 
+  if (isDebug) {
+    const shouldOpenDevTools = readDevToolsOpenState();
+    if (shouldOpenDevTools) {
+      window.webContents.openDevTools();
+    }
+
+    window.webContents.on('devtools-opened', () => {
+      writeDevToolsOpenState(true);
+    });
+
+    window.webContents.on('devtools-closed', () => {
+      writeDevToolsOpenState(false);
+    });
+  }
+
   window.on('closed', () => {
     windowsCount -= 1;
     windowConnectionIds.delete(window.id);
@@ -142,7 +179,7 @@ const createWindow = async (originConnectionId?: number | null) => {
 };
 
 if (isDebug) {
-  require('electron-debug').default();
+  require('electron-debug').default({ showDevTools: false });
 }
 const localShortcut = require('electron-localshortcut');
 
