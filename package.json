@@ -112,7 +112,7 @@
     "electron-log": "^5.3.2",
     "electron-updater": "^6.3.9",
     "monaco-editor": "^0.52.2",
-    "mysql2": "^3.10.0",
+    "mysql2": "^3.22.0",
     "pg": "^8.7.3",
     "pg-copy-streams": "^6.0.6",
     "pg-cursor": "^2.10.3",
